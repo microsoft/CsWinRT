@@ -96,6 +96,16 @@ Thank you in advance for your contribution!
 > [!NOTE]
 > Projection projects under `src/Projections` only generate sources in `Release` by default. To generate them in `Debug`, set the property `GenerateTestProjection` to `true`. This configuration will enable a faster inner loop in Visual Studio. "Generated Files" remain under the Generated Files folder regardless of configuration.
 
+### Shared SDK implementation builds
+
+Repository builds share matching `WinRT.Sdk.Projection.dll` and `WinRT.Sdk.Xaml.Projection.dll` implementations under `src\_build\shared-sdk-projections`. The first application builds them with the repository's current projection generator; subsequent applications copy the completed implementations instead of recompiling the Windows SDK. Merged projections and `WinRT.Interop.dll` are still generated separately for each application, and no tests are skipped.
+
+Sharing is keyed by the contents of the built projection tool and its dependencies, the runtime and SDK/framework reference assemblies, Windows SDK contracts and selection manifests, all supplemental WinMD inputs (including internal interop metadata), and the generation settings/targets. Updating the tool or runtime invalidates shared outputs even if its assembly version is unchanged. Different input sets may produce separate shared entries. This does not use projections downloaded from a package or an earlier build with different tools.
+
+Pass `/p:CsWinRTUseSharedSdkProjections=false` to compare with the original per-application generation path. Debug-repro requests, additional generator arguments, and nonstandard metadata selections automatically retain that path. The optional `CsWinRTSdkProjectionImplementationPath` and `CsWinRTSdkXamlProjectionImplementationPath` properties select explicit prebuilt implementations; those files must exist and are tracked as incremental inputs. These repository changes do not enable shared caching for consumers of the NuGet package.
+
+Run `msbuild src\Tests\SharedSdkProjectionsTest.proj /t:Test` from a developer command prompt to check content-based invalidation and atomic publication, including identical and conflicting concurrent outputs. This uses temporary fixtures and does not require rebuilding the solution.
+
 ### Customizing `build.cmd` options
 
 You can specify platform, configuration, and version parameters:

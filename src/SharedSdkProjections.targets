@@ -1,0 +1,177 @@
+<Project>
+  <PropertyGroup>
+    <CsWinRTUseSharedSdkProjections Condition="'$(CsWinRTUseSharedSdkProjections)' == ''">true</CsWinRTUseSharedSdkProjections>
+  </PropertyGroup>
+
+  <UsingTask TaskName="PublishRepositorySdkProjection"
+             TaskFactory="RoslynCodeTaskFactory"
+             AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.Core.dll">
+    <ParameterGroup>
+      <SourceFile ParameterType="System.String" Required="true" />
+      <DestinationFile ParameterType="System.String" Required="true" />
+    </ParameterGroup>
+    <Task>
+      <Using Namespace="System.IO" />
+      <Using Namespace="System.Linq" />
+      <Using Namespace="System.Security.Cryptography" />
+      <Code Type="Fragment" Language="cs"><![CDATA[
+        try
+        {
+            File.Move(SourceFile, DestinationFile);
+        }
+        catch (IOException) when (File.Exists(SourceFile) && File.Exists(DestinationFile))
+        {
+            // Another build may have published this same entry while this one was compiling.
+            using (SHA256 hash = SHA256.Create())
+            using (FileStream source = File.OpenRead(SourceFile))
+            using (FileStream destination = File.OpenRead(DestinationFile))
+            {
+                if (!hash.ComputeHash(source).SequenceEqual(hash.ComputeHash(destination)))
+                {
+                    Log.LogError("Concurrent SDK projection outputs differ: {0}", DestinationFile);
+                    return false;
+                }
+            }
+            File.Delete(SourceFile);
+            Log.LogMessage("Reusing concurrently generated SDK projection: {0}", DestinationFile);
+        }
+      ]]></Code>
+    </Task>
+  </UsingTask>
+
+  <!--
+    Repository builds use the tools and runtime just built from source, not the packaged SDK
+    implementations. Share only the SDK implementations; merged projections and interop stay per app.
+    Hash file contents, including the built tools, rather than relying on their version numbers.
+  -->
+  <Target Name="_PrepareRepositorySdkProjections"
+          BeforeTargets="_ComputeRunCsWinRTGeneratorCache"
+          DependsOnTargets="_ComputeRepositorySdkProjectionInputs;_SelectRepositorySdkProjections;_GenerateRepositorySdkProjection;_GenerateRepositorySdkXamlProjection"
+          Condition="'$(CsWinRTUseSharedSdkProjections)' == 'true' and
+                     '$(CsWinRTGenerateInteropAssembly2)' == 'true' and
+                     '$(DesignTimeBuild)' != 'true' and
+                     '$(CsWinRTSwapRuntimeReferenceAssembly)' != 'true' and
+                     '$(CsWinRTToolsArchitecture)' == 'AnyCPU' and
+                     '$(CsWinRTGeneratorDebugReproDirectory)' == '' and
+                     '@(CsWinRTGeneratorAdditionalArgument)' == '' and
+                     '$(CsWinRTSdkProjectionImplementationPath)' == '' and
+                     '$(CsWinRTSdkXamlProjectionImplementationPath)' == ''">
+    <Message Importance="Normal" Condition="'$(_RepositorySdkSharingEnabled)' == 'true'" Text="Using repository SDK projection: $(CsWinRTSdkProjectionImplementationPath)" />
+  </Target>
+
+  <Target Name="_ComputeRepositorySdkProjectionInputs"
+          DependsOnTargets="FindReferenceAssembliesForReferences;CsWinRTRemoveWinMDReferences;CsWinRTResolveWindowsMetadata;_ResolveCsWinRToolsDirectory">
+    <PropertyGroup>
+      <_RepositorySdkRoot>$([MSBuild]::GetRegistryValue('HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Microsoft\Windows Kits\Installed Roots', 'KitsRoot10', ''))</_RepositorySdkRoot>
+      <_RepositorySdkRoot Condition="'$(_RepositorySdkRoot)' == ''">$([MSBuild]::GetRegistryValue('HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows Kits\Installed Roots', 'KitsRoot10', ''))</_RepositorySdkRoot>
+      <_RepositoryProjectionToolsDirectory>$([MSBuild]::NormalizeDirectory('$(CsWinRTMergedProjectionEffectiveToolsDirectory)'))</_RepositoryProjectionToolsDirectory>
+      <_RepositorySdkMetadataSupported Condition="'$(CsWinRTWindowsMetadata)' == 'sdk' or '$(CsWinRTWindowsMetadata)' == 'sdk+' or $([System.Text.RegularExpressions.Regex]::IsMatch('$(CsWinRTWindowsMetadata)', '^\d+\.\d+\.\d+\.\d+\+?$'))">true</_RepositorySdkMetadataSupported>
+    </PropertyGroup>
+
+    <!-- Use a canonical reference set: SDK code does not depend on the consuming application's libraries. -->
+    <ItemGroup>
+      <_RepositorySdkReferences Include="@(ReferencePathWithRefAssemblies)"
+                                Condition="'%(ReferencePathWithRefAssemblies.FrameworkReferenceName)' == 'Microsoft.NETCore.App' or
+                                           '%(Filename)' == 'WinRT.Runtime' or
+                                           '%(Filename)' == 'Microsoft.Windows.SDK.NET' or
+                                           '%(Filename)' == 'Microsoft.Windows.UI.Xaml'" />
+      <_RepositorySdkReference Include="@(_RepositorySdkReferences)" Condition="'%(Filename)' == 'Microsoft.Windows.SDK.NET'" />
+      <_RepositorySdkRuntime Include="@(_RepositorySdkReferences)" Condition="'%(Filename)' == 'WinRT.Runtime'" />
+      <_RepositorySdkWinMDPaths Include="@(CsWinRTInputs)" />
+      <_RepositorySdkWinMDPaths Include="%(ReferencePathWithRefAssemblies.CsWinRTInputs)"
+                               Condition="'%(ReferencePathWithRefAssemblies.CsWinRTInputs)' != ''" />
+      <_RepositorySdkWinMDPaths Include="$(CsWinRTInteropMetadata)" />
+      <_RepositorySdkNonFileWinMDInputs Include="@(_RepositorySdkWinMDPaths)" Condition="!$([System.IO.File]::Exists('%(Identity)'))" />
+    </ItemGroup>
+
+    <!-- Unusual metadata selections keep using the normal per-project generator. -->
+    <PropertyGroup>
+      <_RepositorySdkSharingEnabled Condition="'$(_RepositorySdkMetadataSupported)' == 'true' and
+                                              Exists('$(_RepositorySdkRoot)References') and
+                                              Exists('$(CsWinRTInteropMetadata)') and
+                                              '@(_RepositorySdkNonFileWinMDInputs)' == '' and
+                                              '@(_RepositorySdkReference)' != '' and '@(_RepositorySdkRuntime)' != ''">true</_RepositorySdkSharingEnabled>
+    </PropertyGroup>
+  </Target>
+
+  <Target Name="_SelectRepositorySdkProjections" Condition="'$(_RepositorySdkSharingEnabled)' == 'true'">
+    <ItemGroup>
+      <!-- Include manifests too: they decide which contracts the SDK/version token expands to. -->
+      <_RepositorySdkCacheFiles Include="$(_RepositorySdkRoot)References\**\*.winmd;
+                                         $(_RepositorySdkRoot)Platforms\UAP\**\Platform.xml;
+                                         $(_RepositorySdkRoot)Extension SDKs\**\SDKManifest.xml;
+                                         @(_RepositorySdkWinMDPaths);
+                                         @(_RepositorySdkReferences);
+                                         $(_RepositoryProjectionToolsDirectory)cswinrtprojectiongen.exe;
+                                         $(_RepositoryProjectionToolsDirectory)*.dll;
+                                         $(_RepositoryProjectionToolsDirectory)*.json;
+                                         $(CsWinRTGenTasksAssembly);
+                                         $(MSBuildThisFileFullPath);
+                                         $(MSBuildThisFileDirectory)..\nuget\Microsoft.Windows.CsWinRT.CsWinRTGen.targets" />
+    </ItemGroup>
+    <GetFileHash Files="@(_RepositorySdkCacheFiles)" Algorithm="SHA256">
+      <Output TaskParameter="Items" ItemName="_RepositorySdkHashedFiles" />
+    </GetFileHash>
+    <Hash ItemsToHash="@(_RepositorySdkHashedFiles->'%(FullPath)=%(FileHash)');$(CsWinRTWindowsMetadata);$(CsWinRTExeTFM);$(CsWinRTToolsArchitecture);$(CsWinRTGeneratorMaxDegreesOfParallelism);$(CsWinRTGeneratorLogStandardErrorAsError)">
+      <Output TaskParameter="HashResult" PropertyName="_RepositorySdkCacheKey" />
+    </Hash>
+    <PropertyGroup>
+      <_RepositorySdkDirectory>$(MSBuildThisFileDirectory)_build\shared-sdk-projections\$(_RepositorySdkCacheKey)\</_RepositorySdkDirectory>
+      <CsWinRTSdkProjectionImplementationPath>$(_RepositorySdkDirectory)WinRT.Sdk.Projection.dll</CsWinRTSdkProjectionImplementationPath>
+      <CsWinRTSdkXamlProjectionImplementationPath Condition="'$(CsWinRTUseWindowsUIXamlProjections)' == 'true'">$(_RepositorySdkDirectory)WinRT.Sdk.Xaml.Projection.dll</CsWinRTSdkXamlProjectionImplementationPath>
+    </PropertyGroup>
+  </Target>
+
+  <Target Name="_GenerateRepositorySdkProjection"
+          Condition="'$(_RepositorySdkSharingEnabled)' == 'true' and !Exists('$(CsWinRTSdkProjectionImplementationPath)')">
+    <PropertyGroup>
+      <_RepositorySdkWorkDirectory>$(_RepositorySdkDirectory)$([System.Guid]::NewGuid())\</_RepositorySdkWorkDirectory>
+    </PropertyGroup>
+    <MakeDir Directories="$(_RepositorySdkWorkDirectory)" />
+    <RunCsWinRTMergedProjectionGenerator
+      ReferenceAssemblyPaths="@(_RepositorySdkReferences)"
+      GeneratedAssemblyDirectory="$(_RepositorySdkWorkDirectory)"
+      WinMDPaths="@(_RepositorySdkWinMDPaths)"
+      TargetFramework="$(CsWinRTExeTFM)"
+      WindowsMetadata="$(CsWinRTWindowsMetadata)"
+      AssemblyName="WinRT.Sdk.Projection"
+      WindowsSdkOnly="true"
+      CsWinRTToolsDirectory="$(CsWinRTMergedProjectionEffectiveToolsDirectory)"
+      CsWinRTToolsArchitecture="$(CsWinRTToolsArchitecture)"
+      MaxDegreesOfParallelism="$(CsWinRTGeneratorMaxDegreesOfParallelism)"
+      StandardOutputImportance="$(CsWinRTGeneratorStandardOutputImportance)"
+      StandardErrorImportance="$(CsWinRTGeneratorStandardErrorImportance)"
+      LogStandardErrorAsError="$(CsWinRTGeneratorLogStandardErrorAsError)" />
+    <!-- Publish a completed file, never a DLL that the generator is still writing. -->
+    <PublishRepositorySdkProjection SourceFile="$(_RepositorySdkWorkDirectory)WinRT.Sdk.Projection.dll" DestinationFile="$(CsWinRTSdkProjectionImplementationPath)" />
+    <RemoveDir Directories="$(_RepositorySdkWorkDirectory)" />
+  </Target>
+
+  <Target Name="_GenerateRepositorySdkXamlProjection"
+          Condition="'$(_RepositorySdkSharingEnabled)' == 'true' and '$(CsWinRTUseWindowsUIXamlProjections)' == 'true' and !Exists('$(CsWinRTSdkXamlProjectionImplementationPath)')">
+    <PropertyGroup>
+      <_RepositorySdkXamlWorkDirectory>$(_RepositorySdkDirectory)$([System.Guid]::NewGuid())\</_RepositorySdkXamlWorkDirectory>
+    </PropertyGroup>
+    <MakeDir Directories="$(_RepositorySdkXamlWorkDirectory)" />
+    <ItemGroup>
+      <_RepositorySdkXamlReferences Include="@(_RepositorySdkReferences);$(CsWinRTSdkProjectionImplementationPath)" />
+    </ItemGroup>
+    <RunCsWinRTMergedProjectionGenerator
+      ReferenceAssemblyPaths="@(_RepositorySdkXamlReferences)"
+      GeneratedAssemblyDirectory="$(_RepositorySdkXamlWorkDirectory)"
+      WinMDPaths="@(_RepositorySdkWinMDPaths)"
+      TargetFramework="$(CsWinRTExeTFM)"
+      WindowsMetadata="$(CsWinRTWindowsMetadata)"
+      AssemblyName="WinRT.Sdk.Xaml.Projection"
+      WindowsSdkOnly="true"
+      WindowsUIXamlProjection="true"
+      CsWinRTToolsDirectory="$(CsWinRTMergedProjectionEffectiveToolsDirectory)"
+      CsWinRTToolsArchitecture="$(CsWinRTToolsArchitecture)"
+      MaxDegreesOfParallelism="$(CsWinRTGeneratorMaxDegreesOfParallelism)"
+      StandardOutputImportance="$(CsWinRTGeneratorStandardOutputImportance)"
+      StandardErrorImportance="$(CsWinRTGeneratorStandardErrorImportance)"
+      LogStandardErrorAsError="$(CsWinRTGeneratorLogStandardErrorAsError)" />
+    <PublishRepositorySdkProjection SourceFile="$(_RepositorySdkXamlWorkDirectory)WinRT.Sdk.Xaml.Projection.dll" DestinationFile="$(CsWinRTSdkXamlProjectionImplementationPath)" />
+    <RemoveDir Directories="$(_RepositorySdkXamlWorkDirectory)" />
+  </Target>
+</Project>

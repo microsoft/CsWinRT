@@ -1,0 +1,107 @@
+<Project Sdk="Microsoft.NET.Sdk" DefaultTargets="Test">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <FixtureDirectory Condition="'$(FixtureDirectory)' == ''">$(MSBuildProjectDirectory)\obj\SharedSdkProjectionsTest\$([System.Guid]::NewGuid())\</FixtureDirectory>
+  </PropertyGroup>
+
+  <Import Project="..\SharedSdkProjections.targets" />
+
+  <PropertyGroup Condition="'$(CacheProbe)' == 'true'">
+    <_RepositorySdkSharingEnabled>true</_RepositorySdkSharingEnabled>
+    <_RepositorySdkRoot>$(FixtureDirectory)sdk\</_RepositorySdkRoot>
+    <_RepositoryProjectionToolsDirectory>$(FixtureDirectory)tools\</_RepositoryProjectionToolsDirectory>
+    <CsWinRTGenTasksAssembly>$(FixtureDirectory)tasks.dll</CsWinRTGenTasksAssembly>
+    <CsWinRTWindowsMetadata Condition="'$(CsWinRTWindowsMetadata)' == ''">sdk</CsWinRTWindowsMetadata>
+    <CsWinRTExeTFM>net10.0</CsWinRTExeTFM>
+  </PropertyGroup>
+  <ItemGroup Condition="'$(CacheProbe)' == 'true'">
+    <_RepositorySdkReferences Include="$(FixtureDirectory)WinRT.Runtime.dll;$(FixtureDirectory)System.Runtime.dll" />
+    <_RepositorySdkWinMDPaths Include="$(FixtureDirectory)internal.winmd" />
+  </ItemGroup>
+
+  <Target Name="GetCacheKey" DependsOnTargets="_SelectRepositorySdkProjections" Returns="@(_TestCacheKey)">
+    <ItemGroup>
+      <_TestCacheKey Include="$(_RepositorySdkCacheKey)" />
+    </ItemGroup>
+  </Target>
+
+  <Target Name="Initialize">
+    <MakeDir Directories="$(FixtureDirectory)tools;$(FixtureDirectory)sdk\References;$(FixtureDirectory)sdk\Platforms\UAP\10.0.26100.0" />
+    <ItemGroup>
+      <_FixtureFiles Include="$(FixtureDirectory)tools\cswinrtprojectiongen.exe;
+                              $(FixtureDirectory)tasks.dll;
+                              $(FixtureDirectory)WinRT.Runtime.dll;
+                              $(FixtureDirectory)System.Runtime.dll;
+                              $(FixtureDirectory)internal.winmd;
+                              $(FixtureDirectory)sdk\References\contract.winmd;
+                              $(FixtureDirectory)sdk\Platforms\UAP\10.0.26100.0\Platform.xml" />
+    </ItemGroup>
+    <WriteLinesToFile File="%(_FixtureFiles.Identity)" Lines="initial" Overwrite="true" />
+  </Target>
+
+  <Target Name="TestPublication">
+    <WriteLinesToFile File="$(FixtureDirectory)first.dll" Lines="same output" Overwrite="true" />
+    <WriteLinesToFile File="$(FixtureDirectory)second.dll" Lines="same output" Overwrite="true" />
+    <WriteLinesToFile File="$(FixtureDirectory)different.dll" Lines="different output" Overwrite="true" />
+    <PublishRepositorySdkProjection SourceFile="$(FixtureDirectory)first.dll" DestinationFile="$(FixtureDirectory)published.dll" />
+    <PublishRepositorySdkProjection SourceFile="$(FixtureDirectory)second.dll" DestinationFile="$(FixtureDirectory)published.dll" />
+    <Error Condition="Exists('$(FixtureDirectory)first.dll') or Exists('$(FixtureDirectory)second.dll')" Text="Published work files were not consumed." />
+    <PublishRepositorySdkProjection SourceFile="$(FixtureDirectory)different.dll" DestinationFile="$(FixtureDirectory)published.dll" ContinueOnError="WarnAndContinue" />
+    <Error Condition="'$(MSBuildLastTaskResult)' != 'false'" Text="Different concurrent outputs were incorrectly accepted." />
+    <ReadLinesFromFile File="$(FixtureDirectory)published.dll">
+      <Output TaskParameter="Lines" ItemName="_PublishedContents" />
+    </ReadLinesFromFile>
+    <Error Condition="'@(_PublishedContents)' != 'same output'" Text="An existing shared output was overwritten." />
+  </Target>
+
+  <Target Name="TestCacheInputs">
+    <MSBuild Projects="$(MSBuildProjectFullPath)" Targets="GetCacheKey" Properties="CacheProbe=true;FixtureDirectory=$(FixtureDirectory);Probe=initial">
+      <Output TaskParameter="TargetOutputs" ItemName="_InitialKey" />
+    </MSBuild>
+    <MSBuild Projects="$(MSBuildProjectFullPath)" Targets="GetCacheKey" Properties="CacheProbe=true;FixtureDirectory=$(FixtureDirectory);Probe=unchanged">
+      <Output TaskParameter="TargetOutputs" ItemName="_UnchangedKey" />
+    </MSBuild>
+    <Error Condition="'@(_InitialKey)' == '' or '@(_InitialKey)' != '@(_UnchangedKey)'" Text="Unchanged inputs did not share a cache entry." />
+
+    <!-- Same file paths and assembly-version-independent bytes: content must invalidate the entry. -->
+    <WriteLinesToFile File="$(FixtureDirectory)tools\cswinrtprojectiongen.exe" Lines="new tool" Overwrite="true" />
+    <MSBuild Projects="$(MSBuildProjectFullPath)" Targets="GetCacheKey" Properties="CacheProbe=true;FixtureDirectory=$(FixtureDirectory);Probe=tool">
+      <Output TaskParameter="TargetOutputs" ItemName="_ToolKey" />
+    </MSBuild>
+    <Error Condition="'@(_InitialKey)' == '@(_ToolKey)'" Text="Changing the built tool did not invalidate the entry." />
+
+    <WriteLinesToFile File="$(FixtureDirectory)WinRT.Runtime.dll" Lines="new runtime" Overwrite="true" />
+    <MSBuild Projects="$(MSBuildProjectFullPath)" Targets="GetCacheKey" Properties="CacheProbe=true;FixtureDirectory=$(FixtureDirectory);Probe=runtime">
+      <Output TaskParameter="TargetOutputs" ItemName="_RuntimeKey" />
+    </MSBuild>
+    <Error Condition="'@(_ToolKey)' == '@(_RuntimeKey)'" Text="Changing the runtime did not invalidate the entry." />
+
+    <WriteLinesToFile File="$(FixtureDirectory)internal.winmd" Lines="new interop metadata" Overwrite="true" />
+    <MSBuild Projects="$(MSBuildProjectFullPath)" Targets="GetCacheKey" Properties="CacheProbe=true;FixtureDirectory=$(FixtureDirectory);Probe=interop">
+      <Output TaskParameter="TargetOutputs" ItemName="_InteropKey" />
+    </MSBuild>
+    <Error Condition="'@(_RuntimeKey)' == '@(_InteropKey)'" Text="Changing supplemental WinMD content did not invalidate the entry." />
+
+    <WriteLinesToFile File="$(FixtureDirectory)sdk\References\contract.winmd" Lines="new SDK metadata" Overwrite="true" />
+    <MSBuild Projects="$(MSBuildProjectFullPath)" Targets="GetCacheKey" Properties="CacheProbe=true;FixtureDirectory=$(FixtureDirectory);Probe=sdk">
+      <Output TaskParameter="TargetOutputs" ItemName="_SdkKey" />
+    </MSBuild>
+    <Error Condition="'@(_InteropKey)' == '@(_SdkKey)'" Text="Changing SDK metadata did not invalidate the entry." />
+
+    <WriteLinesToFile File="$(FixtureDirectory)sdk\Platforms\UAP\10.0.26100.0\Platform.xml" Lines="new contract selection" Overwrite="true" />
+    <MSBuild Projects="$(MSBuildProjectFullPath)" Targets="GetCacheKey" Properties="CacheProbe=true;FixtureDirectory=$(FixtureDirectory);Probe=manifest">
+      <Output TaskParameter="TargetOutputs" ItemName="_ManifestKey" />
+    </MSBuild>
+    <Error Condition="'@(_SdkKey)' == '@(_ManifestKey)'" Text="Changing SDK contract selection did not invalidate the entry." />
+
+    <MSBuild Projects="$(MSBuildProjectFullPath)" Targets="GetCacheKey" Properties="CacheProbe=true;FixtureDirectory=$(FixtureDirectory);Probe=selection;CsWinRTWindowsMetadata=sdk+">
+      <Output TaskParameter="TargetOutputs" ItemName="_SelectionKey" />
+    </MSBuild>
+    <Error Condition="'@(_ManifestKey)' == '@(_SelectionKey)'" Text="Changing metadata selection did not invalidate the entry." />
+  </Target>
+
+  <Target Name="Test" DependsOnTargets="Initialize;TestPublication;TestCacheInputs">
+    <RemoveDir Directories="$(FixtureDirectory)" />
+    <Message Importance="High" Text="Shared SDK projection publication and invalidation tests passed." />
+  </Target>
+</Project>

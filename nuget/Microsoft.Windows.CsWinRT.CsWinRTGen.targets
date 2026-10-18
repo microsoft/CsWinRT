@@ -311,6 +311,8 @@ Copyright (C) Microsoft Corporation. All rights reserved.
       <_RunCsWinRTGeneratorInputsCacheToHash Include="$(CsWinRTMergedProjectionEffectiveToolsDirectory)" />
       <_RunCsWinRTGeneratorInputsCacheToHash Include="$(CsWinRTToolsArchitecture)" />
       <_RunCsWinRTGeneratorInputsCacheToHash Include="$(CsWinRTGeneratorInteropAssemblyDirectory)" />
+      <_RunCsWinRTGeneratorInputsCacheToHash Include="$(CsWinRTSdkProjectionImplementationPath)" />
+      <_RunCsWinRTGeneratorInputsCacheToHash Include="$(CsWinRTSdkXamlProjectionImplementationPath)" />
       <_RunCsWinRTGeneratorInputsCacheToHash Include="$(CsWinRTGeneratorDebugReproDirectory)" />
       <_RunCsWinRTGeneratorInputsCacheToHash Include="$(CsWinRTGeneratorLogDirectory)" />
 
@@ -824,16 +826,20 @@ Copyright (C) Microsoft Corporation. All rights reserved.
   <Target
     Name="_RunCsWinRTSdkProjectionGenerator"
     DependsOnTargets="_CsWinRTResolveGeneratorInputs;_CsWinRTComputeProjectionGenWinMDInputs"
-    Inputs="@(ReferencePathWithRefAssemblies);@(CsWinRTInputs);$(_RunCsWinRTGeneratorPropertyInputsCachePath);$(_CsWinRTProjectionGenWinMDInputsCachePath)"
+    Inputs="@(ReferencePathWithRefAssemblies);@(CsWinRTInputs);$(_RunCsWinRTGeneratorPropertyInputsCachePath);$(_CsWinRTProjectionGenWinMDInputsCachePath);$(CsWinRTSdkProjectionImplementationPath)"
     Outputs="$(_CsWinRTSdkProjectionAssemblyPath)"
     Condition="'$(CsWinRTGenerateInteropAssembly2)' == 'true' and '$(DesignTimeBuild)' != 'true'">
 
     <!-- Determine the OS build number from the target platform version (e.g. 10.0.22621.0 -> 22621) -->
     <PropertyGroup>
         <_SdkProjectionOsBuild Condition="'$(EffectiveTargetPlatformVersion)' != ''">$([System.Version]::Parse('$(EffectiveTargetPlatformVersion)').Build)</_SdkProjectionOsBuild>
-        <_SdkProjectionImplPath>$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)', '..', 'impl', 'net10', '$(_SdkProjectionOsBuild)', 'WinRT.Sdk.Projection.dll'))</_SdkProjectionImplPath>
+        <_SdkProjectionImplPath Condition="'$(CsWinRTSdkProjectionImplementationPath)' == ''">$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)', '..', 'impl', 'net10', '$(_SdkProjectionOsBuild)', 'WinRT.Sdk.Projection.dll'))</_SdkProjectionImplPath>
+        <_SdkProjectionImplPath Condition="'$(CsWinRTSdkProjectionImplementationPath)' != ''">$(CsWinRTSdkProjectionImplementationPath)</_SdkProjectionImplPath>
         <_SdkProjectionImplExists Condition="Exists('$(_SdkProjectionImplPath)')">true</_SdkProjectionImplExists>
     </PropertyGroup>
+
+    <Error Condition="'$(CsWinRTSdkProjectionImplementationPath)' != '' and !Exists('$(CsWinRTSdkProjectionImplementationPath)')"
+           Text="SDK projection implementation not found: $(CsWinRTSdkProjectionImplementationPath)" />
 
     <!-- If pre-built impl assembly exists - copy it to the intermediate output -->
     <Copy
@@ -910,16 +916,20 @@ Copyright (C) Microsoft Corporation. All rights reserved.
   <Target
     Name="_RunCsWinRTSdkXamlProjectionGenerator"
     DependsOnTargets="_CsWinRTResolveGeneratorInputs;_CsWinRTComputeProjectionGenWinMDInputs"
-    Inputs="@(ReferencePathWithRefAssemblies);@(CsWinRTInputs);$(_RunCsWinRTGeneratorPropertyInputsCachePath);$(_CsWinRTProjectionGenWinMDInputsCachePath)"
+    Inputs="@(ReferencePathWithRefAssemblies);@(CsWinRTInputs);$(_RunCsWinRTGeneratorPropertyInputsCachePath);$(_CsWinRTProjectionGenWinMDInputsCachePath);$(CsWinRTSdkXamlProjectionImplementationPath)"
     Outputs="$(_CsWinRTSdkXamlAssemblyPath)"
     Condition="'$(CsWinRTGenerateInteropAssembly2)' == 'true' and '$(CsWinRTUseWindowsUIXamlProjections)' == 'true' and '$(DesignTimeBuild)' != 'true'">
 
     <!-- Determine the OS build number from the target platform version (e.g. 10.0.22621.0 -> 22621) -->
     <PropertyGroup>
         <_SdkXamlOsBuild Condition="'$(EffectiveTargetPlatformVersion)' != ''">$([System.Version]::Parse('$(EffectiveTargetPlatformVersion)').Build)</_SdkXamlOsBuild>
-        <_SdkXamlImplPath>$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)', '..', 'impl', 'net10', '$(_SdkXamlOsBuild)', 'WinRT.Sdk.Xaml.Projection.dll'))</_SdkXamlImplPath>
+        <_SdkXamlImplPath Condition="'$(CsWinRTSdkXamlProjectionImplementationPath)' == ''">$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)', '..', 'impl', 'net10', '$(_SdkXamlOsBuild)', 'WinRT.Sdk.Xaml.Projection.dll'))</_SdkXamlImplPath>
+        <_SdkXamlImplPath Condition="'$(CsWinRTSdkXamlProjectionImplementationPath)' != ''">$(CsWinRTSdkXamlProjectionImplementationPath)</_SdkXamlImplPath>
         <_SdkXamlImplExists Condition="Exists('$(_SdkXamlImplPath)')">true</_SdkXamlImplExists>
     </PropertyGroup>
+
+    <Error Condition="'$(CsWinRTSdkXamlProjectionImplementationPath)' != '' and !Exists('$(CsWinRTSdkXamlProjectionImplementationPath)')"
+           Text="XAML projection implementation not found: $(CsWinRTSdkXamlProjectionImplementationPath)" />
 
     <!-- If pre-built impl assembly exists - copy it to the intermediate output -->
     <Copy
