@@ -79,16 +79,9 @@ internal sealed class TypeDescriptorComparer : IComparer<ITypeDescriptor>
     {
         DefaultInterpolatedStringHandler handler = new(0, 0, null, stackalloc char[256]);
 
-        try
-        {
-            AppendFullyQualifiedName(type, _runtimeContext, ref handler, _assemblyNames, _definitionNames);
+        AppendFullyQualifiedName(type, _runtimeContext, ref handler, _assemblyNames, _definitionNames);
 
-            return handler.Text.ToString();
-        }
-        finally
-        {
-            handler.Clear();
-        }
+        return handler.ToStringAndClear();
     }
 
     /// <summary>
@@ -152,16 +145,9 @@ internal sealed class TypeDescriptorComparer : IComparer<ITypeDescriptor>
     {
         DefaultInterpolatedStringHandler handler = new(0, 0, null, stackalloc char[256]);
 
-        try
-        {
-            AppendNamedType(type, ref handler, assemblyNames);
+        AppendNamedType(type, ref handler, assemblyNames);
 
-            return handler.Text.ToString();
-        }
-        finally
-        {
-            handler.Clear();
-        }
+        return handler.ToStringAndClear();
     }
 
     /// <summary>Appends a named type and its assembly identity.</summary>
