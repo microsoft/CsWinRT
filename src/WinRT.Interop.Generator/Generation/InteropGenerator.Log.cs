@@ -173,8 +173,8 @@ internal partial class InteropGenerator
             token.ThrowIfCancellationRequested();
 
             return new InteropGeneratorLog.TypeWithInterfaces(
-                GetTypeName(pair.Key, context),
-                [.. pair.Value.Select(iface => GetTypeName(iface, context)).Order(StringComparer.Ordinal)]);
+                Type: GetTypeName(pair.Key, context),
+                Interfaces: [.. pair.Value.Select(interfaceType => GetTypeName(interfaceType, context)).Order(StringComparer.Ordinal)]);
         }).OrderBy(static entry => entry.Type, StringComparer.Ordinal)];
     }
 
