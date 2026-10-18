@@ -198,23 +198,24 @@ internal sealed class AbiTypeKindResolver(MetadataCache cache)
 
     /// <summary>
     /// Returns whether <paramref name="signature"/> is a recognised SZ-array element shape for which
-    /// the projection has an ABI marshalling story. This is the union of all five concrete element
+    /// the projection has an ABI marshalling story. This is the union of the concrete element
     /// shapes that the receive-array paths know how to handle:
     /// <list type="bullet">
     ///   <item>Blittable element (primitive or blittable struct) — see <see cref="IsBlittableAbiElement"/></item>
-    ///   <item>Ref-like (string / runtime class / interface / object) — see <see cref="TypeSignatureExtensions.IsAbiArrayElementRefLike"/></item>
+    ///   <item>Ref-like (string / runtime class / interface / object / generic instance) — see <see cref="TypeSignatureExtensions.IsAbiArrayElementRefLike"/></item>
+    ///   <item><see cref="System.Type"/> (mapped from WinRT <c>TypeName</c>) — see <see cref="TypeSignatureExtensions.IsSystemType"/></item>
     ///   <item>Complex struct — see <see cref="IsNonBlittableStruct"/></item>
     ///   <item><see cref="System.Exception"/> (mapped from WinRT <c>HResult</c>) — see <see cref="TypeSignatureExtensions.IsHResultException"/></item>
     ///   <item>Mapped value type (e.g. WinRT <c>DateTime</c> / <c>TimeSpan</c>) — see <see cref="IsMappedAbiValueType"/></item>
     /// </list>
-    /// Element types outside this set (e.g. generic instances, <see cref="System.Type"/>, unresolved
-    /// references) cannot be returned as a receive-array.
+    /// Element types outside this set (e.g. unresolved references) cannot be returned as a receive-array.
     /// </summary>
     /// <param name="signature">The element type to classify.</param>
     /// <returns><see langword="true"/> when the element is one of the recognised receive-array shapes; otherwise <see langword="false"/>.</returns>
     public bool IsRecognizedReceiveArrayElement(TypeSignature signature)
         => IsBlittableAbiElement(signature)
             || signature.IsAbiArrayElementRefLike(this)
+            || signature.IsSystemType()
             || IsNonBlittableStruct(signature)
             || signature.IsHResultException()
             || IsMappedAbiValueType(signature);
@@ -257,7 +258,7 @@ internal sealed class AbiTypeKindResolver(MetadataCache cache)
         => Resolve(signature) is AbiTypeKind.NonBlittableStruct or AbiTypeKind.MappedAbiValueType or AbiTypeKind.HResultException;
 
     /// <summary>
-    /// Classifies <paramref name="elementType"/> into one of the six
+    /// Classifies <paramref name="elementType"/> into one of the
     /// <see cref="AbiArrayElementKind"/> values used by the per-element pointer-type ladders.
     /// This is the discriminator-only form -- callers translate the kind into the per-site
     /// emission output.
@@ -270,6 +271,11 @@ internal sealed class AbiTypeKindResolver(MetadataCache cache)
         if (elementType.IsAbiArrayElementRefLike(this))
         {
             return AbiArrayElementKind.RefLikeVoidStar;
+        }
+
+        if (elementType.IsSystemType())
+        {
+            return AbiArrayElementKind.SystemType;
         }
 
         if (elementType.IsHResultException())

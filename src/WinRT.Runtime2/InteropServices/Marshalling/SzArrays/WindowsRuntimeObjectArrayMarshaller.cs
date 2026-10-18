@@ -97,10 +97,11 @@ public static unsafe class WindowsRuntimeObjectArrayMarshaller
         }
         catch
         {
-            // Release resources for any items, if we failed
+            // Reset released slots so caller cleanup cannot release the same resources twice.
             for (int j = 0; j < i; j++)
             {
                 WindowsRuntimeUnknownMarshaller.Free(destination[j]);
+                destination[j] = default;
             }
 
             throw;

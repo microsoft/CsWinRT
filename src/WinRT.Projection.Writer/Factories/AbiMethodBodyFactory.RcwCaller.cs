@@ -367,6 +367,14 @@ internal static partial class AbiMethodBodyFactory
                     : ({{names.ArrayFromPool}} = global::System.Buffers.ArrayPool<{{storageT}}>.Shared.Rent({{callName}}.Length)).AsSpan(0, {{callName}}.Length);
                 """);
 
+            if (!context.AbiTypeKindResolver.IsMappedAbiValueType(szArr.BaseType)
+                && !szArr.BaseType.IsHResultException()
+                && !(szArr.BaseType.IsString() && cat == ParameterCategory.PassArray))
+            {
+                // Cleanup can run before conversion, or after a native call only partially fills the buffer.
+                writer.WriteLine($"{names.Span}.Clear();");
+            }
+
             if (szArr.BaseType.IsString() && cat == ParameterCategory.PassArray)
             {
                 // Strings need an additional InlineArray16<HStringHeader> + InlineArray16<nint> (pinned handles).
@@ -385,6 +393,7 @@ internal static partial class AbiMethodBodyFactory
                     Span<nint> {{names.PinnedHandleSpan}} = {{callName}}.Length <= 16
                         ? {{names.InlinePinnedHandleArray}}[..{{callName}}.Length]
                         : ({{names.PinnedHandleArrayFromPool}} = global::System.Buffers.ArrayPool<nint>.Shared.Rent({{callName}}.Length)).AsSpan(0, {{callName}}.Length);
+                    {{names.PinnedHandleSpan}}.Clear();
                     """);
             }
         }
@@ -702,34 +711,8 @@ internal static partial class AbiMethodBodyFactory
 
                 IndentedTextWriterCallback elementProjected = TypedefNameWriter.WriteProjectionType(context, TypeSemanticsFactory.Get(szArr.BaseType));
 
-                // For mapped value types (DateTime/TimeSpan) and complex structs, the storage
-                // element is the ABI struct type; the data pointer parameter type uses that
-                // ABI struct. The fixed() opens with void* (per truth's pattern), so a cast
-                // is required at the call site. For runtime classes/objects, use void**.
-                string dataParamType;
-                string dataCastType;
-
-                if (context.AbiTypeKindResolver.IsMappedAbiValueType(szArr.BaseType))
-                {
-                    dataParamType = AbiTypeHelpers.GetMappedAbiTypeName(szArr.BaseType) + "*";
-                    dataCastType = "(" + AbiTypeHelpers.GetMappedAbiTypeName(szArr.BaseType) + "*)";
-                }
-                else if (szArr.BaseType.IsHResultException())
-                {
-                    dataParamType = WellKnownAbiTypeNames.AbiSystemExceptionPointer;
-                    dataCastType = "(global::ABI.System.Exception*)";
-                }
-                else if (context.AbiTypeKindResolver.IsNonBlittableStruct(szArr.BaseType))
-                {
-                    string abiStructName = AbiTypeHelpers.GetAbiStructTypeName(context, szArr.BaseType);
-                    dataParamType = abiStructName + "*";
-                    dataCastType = "(" + abiStructName + "*)";
-                }
-                else
-                {
-                    dataParamType = "void**";
-                    dataCastType = "(void**)";
-                }
+                string dataParamType = AbiTypeHelpers.GetArrayElementAbiType(context, szArr.BaseType) + "*";
+                string dataCastType = "(" + dataParamType + ")";
 
                 UnsafeAccessorFactory.EmitStaticMethod(
                     writer,
@@ -1206,10 +1189,7 @@ internal static partial class AbiMethodBodyFactory
 
                 if (szArr.BaseType.IsString())
                 {
-                    // The HStringArrayMarshaller.Dispose + ArrayPool returns for strings only
-                    // apply to PassArray (where we set up the pinned handles + headers in the
-                    // first place). FillArray writes back HSTRING handles into the nint storage
-                    // array directly, with no per-element pinned handle / header to release.
+                    // PassArray uses borrowed fast-pass HSTRINGs; FillArray receives owned HSTRINGs.
                     if (cat == ParameterCategory.PassArray)
                     {
                         writer.WriteLine(isMultiline: true, $$"""
@@ -1226,6 +1206,15 @@ internal static partial class AbiMethodBodyFactory
                             }
                             """);
                     }
+                    else
+                    {
+                        writer.WriteLine(isMultiline: true, $$"""
+                            fixed(void* _{{localName}} = {{names.Span}})
+                            {
+                                HStringArrayMarshaller.Dispose((uint){{names.Span}}.Length, (void**)_{{localName}});
+                            }
+                            """);
+                    }
                 }
                 else if (!context.AbiTypeKindResolver.IsMappedAbiValueType(szArr.BaseType))
                 {
@@ -1237,7 +1226,7 @@ internal static partial class AbiMethodBodyFactory
                     string fixedPtrType;
                     string disposeCastType;
 
-                    if (context.AbiTypeKindResolver.IsNonBlittableStruct(szArr.BaseType))
+                    if (context.AbiTypeKindResolver.IsNonBlittableStruct(szArr.BaseType) || szArr.BaseType.IsSystemType())
                     {
                         string abiStructName = AbiTypeHelpers.GetAbiStructTypeName(context, szArr.BaseType);
                         disposeDataParamType = abiStructName + "* data";

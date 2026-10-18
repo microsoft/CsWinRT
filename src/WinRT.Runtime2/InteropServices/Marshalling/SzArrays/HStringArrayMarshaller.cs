@@ -191,10 +191,11 @@ public static unsafe class HStringArrayMarshaller
         }
         catch
         {
-            // Release resources for any items, if we failed
+            // Reset released slots so caller cleanup cannot release the same resources twice.
             for (int j = 0; j < i; j++)
             {
                 HStringMarshaller.Free(destination[j]);
+                destination[j] = default;
             }
 
             throw;

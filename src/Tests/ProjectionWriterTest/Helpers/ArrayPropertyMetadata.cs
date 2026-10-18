@@ -68,6 +68,27 @@ internal static class ArrayPropertyMetadata
         module.TopLevelTypes.Add(dateTime);
         payload.Fields.Add(new FieldDefinition("Timestamp", FieldAttributes.Public, dateTime.ToTypeSignature(true)));
 
+        TypeDefinition reference = new("Windows.Foundation", "IReference`1",
+            TypeAttributes.Public | TypeAttributes.Interface | TypeAttributes.Abstract | TypeAttributes.WindowsRuntime);
+        reference.GenericParameters.Add(new GenericParameter("T"));
+        module.TopLevelTypes.Add(reference);
+        TypeDefinition pair = new("Windows.Foundation.Collections", "IKeyValuePair`2",
+            TypeAttributes.Public | TypeAttributes.Interface | TypeAttributes.Abstract | TypeAttributes.WindowsRuntime);
+        pair.GenericParameters.Add(new GenericParameter("K"));
+        pair.GenericParameters.Add(new GenericParameter("V"));
+        module.TopLevelTypes.Add(pair);
+        TypeDefinition typeKind = new("Windows.UI.Xaml.Interop", "TypeKind",
+            TypeAttributes.Public | TypeAttributes.Sealed | TypeAttributes.WindowsRuntime,
+            new TypeReference(module, corlib, "System", "Enum"));
+        typeKind.Fields.Add(new FieldDefinition("value__", FieldAttributes.Public | FieldAttributes.SpecialName | FieldAttributes.RuntimeSpecialName,
+            module.CorLibTypeFactory.Int32));
+        module.TopLevelTypes.Add(typeKind);
+        TypeDefinition typeName = new("Windows.UI.Xaml.Interop", "TypeName",
+            TypeAttributes.Public | TypeAttributes.Sealed | TypeAttributes.SequentialLayout | TypeAttributes.WindowsRuntime, valueType);
+        typeName.Fields.Add(new FieldDefinition("Name", FieldAttributes.Public, module.CorLibTypeFactory.String));
+        typeName.Fields.Add(new FieldDefinition("Kind", FieldAttributes.Public, typeKind.ToTypeSignature(true)));
+        module.TopLevelTypes.Add(typeName);
+
         TypeDefinition tag = new("Contoso", "Tag",
             TypeAttributes.Public | TypeAttributes.Sealed | TypeAttributes.WindowsRuntime,
             new TypeReference(module, corlib, "System", "Enum"));
@@ -124,8 +145,26 @@ internal static class ArrayPropertyMetadata
         _ = AddMethod("AcceptDates", module.CorLibTypeFactory.Void, new SzArrayTypeSignature(dateTime.ToTypeSignature(true)));
         MethodDefinition fillNames = AddMethod("FillNames", module.CorLibTypeFactory.Void, new SzArrayTypeSignature(module.CorLibTypeFactory.String));
         fillNames.ParameterDefinitions[0].Attributes = ParameterAttributes.Out;
+        MethodDefinition fillObjects = AddMethod("FillObjects", module.CorLibTypeFactory.Void, new SzArrayTypeSignature(module.CorLibTypeFactory.Object));
+        fillObjects.ParameterDefinitions[0].Attributes = ParameterAttributes.Out;
         MethodDefinition fill = AddMethod("FillValues", module.CorLibTypeFactory.Void, new SzArrayTypeSignature(module.CorLibTypeFactory.Int32));
         fill.ParameterDefinitions[0].Attributes = ParameterAttributes.Out;
+
+        foreach ((string name, TypeSignature element) in new (string, TypeSignature)[]
+        {
+            ("Nullable", new GenericInstanceTypeSignature(reference, false, [module.CorLibTypeFactory.Int32])),
+            ("Pairs", new GenericInstanceTypeSignature(pair, false, [module.CorLibTypeFactory.String, module.CorLibTypeFactory.String])),
+            ("Types", typeName.ToTypeSignature(true))
+        })
+        {
+            SzArrayTypeSignature array = new(element);
+            _ = AddMethod($"Accept{name}", module.CorLibTypeFactory.Void, array);
+            MethodDefinition fillArray = AddMethod($"Fill{name}", module.CorLibTypeFactory.Void, array);
+            fillArray.ParameterDefinitions[0].Attributes = ParameterAttributes.Out;
+            _ = AddMethod($"Get{name}", array);
+            MethodDefinition receiveArray = AddMethod($"Receive{name}", module.CorLibTypeFactory.Void, new ByReferenceTypeSignature(array));
+            receiveArray.ParameterDefinitions[0].Attributes = ParameterAttributes.Out;
+        }
 
         module.Write(path);
         return path;

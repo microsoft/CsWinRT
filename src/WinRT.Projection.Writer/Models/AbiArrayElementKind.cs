@@ -10,8 +10,11 @@ namespace WindowsRuntime.ProjectionWriter.Models;
 /// </summary>
 internal enum AbiArrayElementKind
 {
-    /// <summary>The element flows as a <c>void*</c> at the ABI (strings, runtime classes/interfaces, objects).</summary>
+    /// <summary>The element flows as a <c>void*</c> at the ABI (strings, runtime classes/interfaces, objects, generic instances).</summary>
     RefLikeVoidStar,
+
+    /// <summary>The element is <see cref="System.Type"/> (mapped from WinRT <c>TypeName</c>).</summary>
+    SystemType,
 
     /// <summary>The element is <see cref="System.Exception"/> (mapped from WinRT <c>HResult</c>).</summary>
     HResultException,

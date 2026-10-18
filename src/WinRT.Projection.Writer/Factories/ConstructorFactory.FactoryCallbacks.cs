@@ -308,6 +308,13 @@ internal static partial class ConstructorFactory
                     : ({{names.ArrayFromPool}} = global::System.Buffers.ArrayPool<{{storageT}}>.Shared.Rent({{callName}}.Length)).AsSpan(0, {{callName}}.Length);
                 """);
 
+            if (!context.AbiTypeKindResolver.IsMappedAbiValueType(szArr.BaseType)
+                && !szArr.BaseType.IsHResultException() && !szArr.BaseType.IsString())
+            {
+                // A preceding parameter's conversion can fail before this buffer is populated.
+                writer.WriteLine($"{names.Span}.Clear();");
+            }
+
             if (szArr.BaseType.IsString())
             {
                 writer.WriteLine();
@@ -323,6 +330,7 @@ internal static partial class ConstructorFactory
                     Span<nint> {{names.PinnedHandleSpan}} = {{callName}}.Length <= 16
                         ? {{names.InlinePinnedHandleArray}}[..{{callName}}.Length]
                         : ({{names.PinnedHandleArrayFromPool}} = global::System.Buffers.ArrayPool<nint>.Shared.Rent({{callName}}.Length)).AsSpan(0, {{callName}}.Length);
+                    {{names.PinnedHandleSpan}}.Clear();
                     """);
             }
         }
@@ -509,25 +517,7 @@ internal static partial class ConstructorFactory
             {
                 IndentedTextWriterCallback elementProjected = TypedefNameWriter.WriteProjectionType(context, TypeSemanticsFactory.Get(szArr.BaseType));
 
-                // Data pointer type must match the array marshaller's 'CopyToUnmanaged' signature
-                string dataParamType;
-
-                if (context.AbiTypeKindResolver.IsMappedAbiValueType(szArr.BaseType))
-                {
-                    dataParamType = AbiTypeHelpers.GetMappedAbiTypeName(szArr.BaseType) + "*";
-                }
-                else if (szArr.BaseType.IsHResultException())
-                {
-                    dataParamType = "global::ABI.System.Exception*";
-                }
-                else if (context.AbiTypeKindResolver.IsNonBlittableStruct(szArr.BaseType))
-                {
-                    dataParamType = AbiTypeHelpers.GetAbiStructTypeName(context, szArr.BaseType) + "*";
-                }
-                else
-                {
-                    dataParamType = "void**";
-                }
+                string dataParamType = AbiTypeHelpers.GetArrayElementAbiType(context, szArr.BaseType) + "*";
 
                 UnsafeAccessorFactory.EmitStaticMethod(
                     writer,
@@ -741,7 +731,7 @@ internal static partial class ConstructorFactory
                     string fixedPtrType;
                     string disposeCastType;
 
-                    if (context.AbiTypeKindResolver.IsNonBlittableStruct(szArr.BaseType))
+                    if (context.AbiTypeKindResolver.IsNonBlittableStruct(szArr.BaseType) || szArr.BaseType.IsSystemType())
                     {
                         string abiStructName = AbiTypeHelpers.GetAbiStructTypeName(context, szArr.BaseType);
                         disposeDataParamType = abiStructName + "* data";

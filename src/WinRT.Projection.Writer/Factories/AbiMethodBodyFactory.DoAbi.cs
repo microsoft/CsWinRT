@@ -28,6 +28,7 @@ internal static partial class AbiMethodBodyFactory
         bool returnIsReceiveArrayDoAbi = rt is SzArrayTypeSignature retSzAbi
             && (context.AbiTypeKindResolver.IsBlittableAbiElement(retSzAbi.BaseType)
                 || retSzAbi.BaseType.IsAbiArrayElementRefLike(context.AbiTypeKindResolver)
+                || retSzAbi.BaseType.IsSystemType()
                 || context.AbiTypeKindResolver.IsNonBlittableStruct(retSzAbi.BaseType));
         bool returnIsHResultExceptionDoAbi = rt is not null && rt.IsHResultException();
         bool returnIsString = rt is not null && rt.IsString();
@@ -271,6 +272,10 @@ internal static partial class AbiMethodBodyFactory
                                 ? __{{raw}}_inlineArray[..(int)__{{raw}}Size]
                                 : (__{{raw}}_arrayFromPool = global::System.Buffers.ArrayPool<{{elementProjected}}>.Shared.Rent((int)__{{raw}}Size)).AsSpan(0, (int)__{{raw}}Size);
                         """);
+                    if (cat == ParameterCategory.FillArray)
+                    {
+                        writer.WriteLine($"__{raw}.Clear();");
+                    }
                 }
             }
             writer.WriteLine(isMultiline: true, """
@@ -731,7 +736,8 @@ internal static partial class AbiMethodBodyFactory
                     writer.WriteLine(isMultiline: true, $$"""
                         if (__{{raw}}_arrayFromPool is not null)
                         {
-                            global::System.Buffers.ArrayPool<{{elementProjected}}>.Shared.Return(__{{raw}}_arrayFromPool);
+                            global::System.Buffers.ArrayPool<{{elementProjected}}>.Shared.Return(
+                                __{{raw}}_arrayFromPool, clearArray: RuntimeHelpers.IsReferenceOrContainsReferences<{{elementProjected}}>());
                         }
                         """);
                 }

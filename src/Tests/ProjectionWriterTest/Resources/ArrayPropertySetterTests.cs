@@ -3,6 +3,7 @@
 
 using System;
 using System.Buffers;
+using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -33,6 +34,13 @@ internal static unsafe class Program
 
         switch (args[0])
         {
+            case string scenario when scenario.StartsWith("array-abi:", StringComparison.Ordinal):
+                string[] parts = scenario.Split(':');
+                VerifyArrayAbi(target, ccw, parts[1], int.Parse(parts[2]));
+                break;
+            case string scenario when scenario.StartsWith("type-failure:", StringComparison.Ordinal):
+                VerifyTypeConversionFailure(ccw, int.Parse(scenario["type-failure:".Length..]));
+                break;
             case "conversion-failure":
                 VerifyConversionFailure(target, ccw);
                 break;
@@ -41,6 +49,24 @@ internal static unsafe class Program
                 break;
             case "other-members":
                 VerifyOtherMembers(target, ccw);
+                break;
+            case string scenario when scenario.StartsWith("retention:", StringComparison.Ordinal):
+                VerifyMarshalledObjectCollection(target, ccw, int.Parse(scenario["retention:".Length..]));
+                break;
+            case string scenario when scenario.StartsWith("string-fill:", StringComparison.Ordinal):
+                VerifyStringFillCleanup(ccw, int.Parse(scenario["string-fill:".Length..]));
+                break;
+            case string scenario when scenario.StartsWith("mapped-rental:", StringComparison.Ordinal):
+                VerifyMappedRental(target, ccw, int.Parse(scenario["mapped-rental:".Length..]));
+                break;
+            case string scenario when scenario.StartsWith("string-conversion-failure:", StringComparison.Ordinal):
+                VerifyStringConversionFailure(ccw, int.Parse(scenario["string-conversion-failure:".Length..]));
+                break;
+            case string scenario when scenario.StartsWith("fill-failure:", StringComparison.Ordinal):
+                VerifyArrayFailure(target, ccw, int.Parse(scenario["fill-failure:".Length..]), passArray: false);
+                break;
+            case string scenario when scenario.StartsWith("pass-failure:", StringComparison.Ordinal):
+                VerifyArrayFailure(target, ccw, int.Parse(scenario["pass-failure:".Length..]), passArray: true);
                 break;
             default:
                 bool methods = args[0].StartsWith("methods:", StringComparison.Ordinal);
@@ -343,9 +369,252 @@ internal static unsafe class Program
         return CallArrayMethod(ccw, $"put_{property}", length, data);
     }
 
+    private static void VerifyMarshalledObjectCollection(Target target, void* ccw, int length)
+    {
+        WeakReference value = PassObjectToGeneratedCallback(target, ccw, length);
+        for (int attempt = 0; attempt < 5 && value.IsAlive; attempt++)
+        {
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+            GC.Collect();
+        }
+        Check(!value.IsAlive, "generated callback retains a marshalled object after the call");
+    }
+
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private static WeakReference PassObjectToGeneratedCallback(Target target, void* ccw, int length)
+    {
+        object value = new();
+        object[] values = Enumerable.Repeat(value, length).ToArray();
+        WeakReference reference = new(value);
+        WindowsRuntimeObjectArrayMarshaller.ConvertToUnmanaged(values, out uint size, out void** native);
+        try
+        {
+            Check(CallArrayMethod(ccw, "AcceptObjects", size, native) == 0, "object callback");
+            Check(target.SeenObjects.Length == length && target.SeenObjects.All(item => ReferenceEquals(item, value)),
+                "generated callback did not receive the marshalled object");
+            target.ForgetSeenObjects();
+        }
+        finally
+        {
+            WindowsRuntimeUnknownArrayMarshaller.Free(size, native);
+        }
+        return reference;
+    }
+
+    private static void VerifyStringFillCleanup(void* ccw, int length)
+    {
+        using WindowsRuntimeObjectReference reference =
+            WindowsRuntimeComWrappersMarshal.CreateObjectReferenceUnsafe(ccw, in ABI.Contoso.IWidget2Impl.IID, out _);
+        var counter = typeof(HStringMarshaller).GetField("TestFreeCount")!;
+        for (int iteration = 0; iteration < 3; iteration++)
+        {
+            string[] values = new string[length];
+            int before = (int)counter.GetValue(null)!;
+            ABI.Contoso.IWidget2Methods.FillNames(reference, values);
+            int released = (int)counter.GetValue(null)! - before;
+            Check(values.SequenceEqual(Enumerable.Range(0, length).Select(i => $"filled-{i}")), "projected string fill contents");
+            Check(released == length, $"projected fill released {released} HSTRINGs instead of {length}");
+        }
+    }
+
+    private static void VerifyStringConversionFailure(void* ccw, int length)
+    {
+        using WindowsRuntimeObjectReference reference =
+            WindowsRuntimeComWrappersMarshal.CreateObjectReferenceUnsafe(ccw, in ABI.Contoso.IWidget2Impl.IID, out _);
+        var failure = typeof(HStringMarshaller).GetField("TestFailCreateCountdown")!;
+        var counter = typeof(HStringMarshaller).GetField("TestFreeCount")!;
+        int completed = length / 2;
+        for (int iteration = 0; iteration < 3; iteration++)
+        {
+            string[] values = Enumerable.Repeat("unchanged", length).ToArray();
+            int before = (int)counter.GetValue(null)!;
+            bool failed = false;
+            failure.SetValue(null, completed + 1);
+            try
+            {
+                ABI.Contoso.IWidget2Methods.FillNames(reference, values);
+            }
+            catch (InvalidOperationException)
+            {
+                failed = true;
+            }
+            finally
+            {
+                failure.SetValue(null, 0);
+            }
+            Check(failed, "projected fill did not propagate the allocation failure");
+            Check(values.All(value => value == "unchanged"), "failed fill copied incomplete native output");
+            Check((int)counter.GetValue(null)! - before == completed, "failed fill did not release each completed HSTRING exactly once");
+
+            before = (int)counter.GetValue(null)!;
+            ABI.Contoso.IWidget2Methods.FillNames(reference, values);
+            Check(values.SequenceEqual(Enumerable.Range(0, length).Select(i => $"filled-{i}")), "projected fill did not recover after failure");
+            Check((int)counter.GetValue(null)! - before == length, "successful fill after failure did not release each HSTRING exactly once");
+        }
+    }
+
+    private static void VerifyMappedRental(Target target, void* ccw, int length)
+    {
+        using WindowsRuntimeObjectReference reference =
+            WindowsRuntimeComWrappersMarshal.CreateObjectReferenceUnsafe(ccw, in ABI.Contoso.IWidget2Impl.IID, out _);
+        DateTimeOffset[] values = Enumerable.Range(0, length).Select(i => DateTimeOffset.FromUnixTimeSeconds(i)).ToArray();
+        ABI.Contoso.IWidget2Methods.AcceptDates(reference, values);
+        ABI.System.DateTimeOffset[] expected = ArrayPool<ABI.System.DateTimeOffset>.Shared.Rent(length);
+        ArrayPool<ABI.System.DateTimeOffset>.Shared.Return(expected);
+        ABI.Contoso.IWidget2Methods.AcceptDates(reference, values);
+        Check(target.SeenDates.SequenceEqual(values), "projected mapped array contents");
+        ABI.System.DateTimeOffset[] returned = ArrayPool<ABI.System.DateTimeOffset>.Shared.Rent(length);
+        try
+        {
+            Check(ReferenceEquals(expected, returned), "projection did not return its temporary ABI buffer");
+        }
+        finally
+        {
+            ArrayPool<ABI.System.DateTimeOffset>.Shared.Return(returned);
+        }
+    }
+
+    private static void VerifyArrayFailure(Target target, void* ccw, int length, bool passArray)
+    {
+        using WindowsRuntimeObjectReference reference =
+            WindowsRuntimeComWrappersMarshal.CreateObjectReferenceUnsafe(ccw, in ABI.Contoso.IWidget2Impl.IID, out _);
+        object[] values = Enumerable.Range(0, length).Select(i => (object)new Uri($"https://example.com/{i}")).ToArray();
+        ABI.Contoso.IWidget2Methods.AcceptObjects(reference, values.AsSpan(0, 1));
+        values[length / 2] = new Uri("relative", UriKind.Relative);
+        void** vtable = stackalloc void*[3];
+        vtable[0] = null;
+        vtable[1] = null;
+        vtable[2] = (delegate* unmanaged[MemberFunction]<void*, uint>)&ReleaseMarker;
+        NativeMarker marker = new() { Vtable = vtable };
+        nint[] poisoned = ArrayPool<nint>.Shared.Rent(length);
+        poisoned.AsSpan().Fill((nint)(&marker));
+        ArrayPool<nint>.Shared.Return(poisoned);
+        target.ThrowOnFill = !passArray;
+        bool failed = false;
+        bool seedReturned = false;
+        bool slotsCleared = false;
+        try
+        {
+            try
+            {
+                if (passArray)
+                {
+                    ABI.Contoso.IWidget2Methods.AcceptObjects(reference, values);
+                }
+                else
+                {
+                    ABI.Contoso.IWidget2Methods.FillObjects(reference, new object[length]);
+                }
+            }
+            catch (ArgumentException) when (passArray)
+            {
+                failed = true;
+            }
+            catch (UnauthorizedAccessException) when (!passArray)
+            {
+                failed = true;
+            }
+        }
+        finally
+        {
+            nint[] cleanup = ArrayPool<nint>.Shared.Rent(length);
+            try
+            {
+                seedReturned = ReferenceEquals(poisoned, cleanup);
+                slotsCleared = cleanup.Take(length).All(value => value == 0);
+            }
+            finally
+            {
+                ArrayPool<nint>.Shared.Return(cleanup, clearArray: true);
+            }
+        }
+        Check(failed, "projected array call did not propagate the expected failure");
+        Check(seedReturned, "projection did not return the seeded ABI buffer");
+        Check(marker.Releases == 0, "failure cleanup released stale pooled COM pointers");
+        Check(slotsCleared, "projection left stale or released ABI slots in the seeded buffer");
+    }
+
+    private struct NativeMarker
+    {
+        public void** Vtable;
+        public int Releases;
+    }
+
+    [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
+    private static uint ReleaseMarker(void* value)
+    {
+        ((NativeMarker*)value)->Releases++;
+        return 1;
+    }
+
     private static int CallArrayMethod(void* ccw, string name, uint length, void* data)
     {
         return ((delegate* unmanaged[MemberFunction]<void*, uint, void*, int>)Entry(ccw, name))(ccw, length, data);
+    }
+
+    private static void VerifyArrayAbi(Target target, void* ccw, string elementType, int length)
+    {
+        target.ArrayLength = length;
+        using WindowsRuntimeObjectReference reference =
+            WindowsRuntimeComWrappersMarshal.CreateObjectReferenceUnsafe(ccw, in ABI.Contoso.IWidget2Impl.IID, out _);
+        switch (elementType)
+        {
+            case "nullable":
+                int?[] nullable = Target.NullableValues(length);
+                ABI.Contoso.IWidget2Methods.AcceptNullable(reference, nullable);
+                Check(target.SeenNullable.SequenceEqual(nullable), "nullable pass array");
+                int?[] nullableFill = new int?[length];
+                ABI.Contoso.IWidget2Methods.FillNullable(reference, nullableFill);
+                Check(nullableFill.SequenceEqual(nullable), "nullable fill array");
+                Check(ABI.Contoso.IWidget2Methods.GetNullable(reference).SequenceEqual(nullable), "nullable return array");
+                ABI.Contoso.IWidget2Methods.ReceiveNullable(reference, out int?[] nullableReceive);
+                Check(nullableReceive.SequenceEqual(nullable), "nullable receive array");
+                break;
+            case "pairs":
+                KeyValuePair<string, string>[] pairs = Target.PairValues(length);
+                ABI.Contoso.IWidget2Methods.AcceptPairs(reference, pairs);
+                Check(target.SeenPairs.SequenceEqual(pairs), "KVP pass array");
+                KeyValuePair<string, string>[] pairsFill = new KeyValuePair<string, string>[length];
+                ABI.Contoso.IWidget2Methods.FillPairs(reference, pairsFill);
+                Check(pairsFill.SequenceEqual(pairs), "KVP fill array");
+                Check(ABI.Contoso.IWidget2Methods.GetPairs(reference).SequenceEqual(pairs), "KVP return array");
+                ABI.Contoso.IWidget2Methods.ReceivePairs(reference, out KeyValuePair<string, string>[] pairsReceive);
+                Check(pairsReceive.SequenceEqual(pairs), "KVP receive array");
+                break;
+            case "types":
+                Type[] types = Target.TypeValues(length);
+                ABI.Contoso.IWidget2Methods.AcceptTypes(reference, types);
+                Check(target.SeenTypes.SequenceEqual(types), "Type pass array");
+                Type[] typesFill = new Type[length];
+                ABI.Contoso.IWidget2Methods.FillTypes(reference, typesFill);
+                Check(typesFill.SequenceEqual(types), "Type fill array");
+                Check(ABI.Contoso.IWidget2Methods.GetTypes(reference).SequenceEqual(types), "Type return array");
+                ABI.Contoso.IWidget2Methods.ReceiveTypes(reference, out Type[] typesReceive);
+                Check(typesReceive.SequenceEqual(types), "Type receive array");
+                break;
+            default:
+                throw new ArgumentException("Unknown array element type.", nameof(elementType));
+        }
+    }
+
+    private static void VerifyTypeConversionFailure(void* ccw, int length)
+    {
+        using WindowsRuntimeObjectReference reference =
+            WindowsRuntimeComWrappersMarshal.CreateObjectReferenceUnsafe(ccw, in ABI.Contoso.IWidget2Impl.IID, out _);
+        Type[] types = Target.TypeValues(length);
+        types[length / 2] = null;
+        var count = typeof(HStringMarshaller).GetField("TestFreeCount")!;
+        int before = (int)count.GetValue(null)!;
+        try
+        {
+            ABI.Contoso.IWidget2Methods.AcceptTypes(reference, types);
+            throw new InvalidOperationException("Type conversion failure was not propagated.");
+        }
+        catch (ArgumentNullException)
+        {
+            Check((int)count.GetValue(null)! - before == length / 2, "Type conversion freed names more than once");
+        }
     }
 
     private static void* Entry(void* ccw, string name)
@@ -383,6 +652,7 @@ internal static unsafe class Program
     private sealed class Target : IWidget2
     {
         public bool ThrowOnSet { get; set; }
+        public bool ThrowOnFill { get; set; }
         public int PayloadSetterCalls { get; private set; }
         public int[] Values
         {
@@ -413,6 +683,25 @@ internal static unsafe class Program
         public Tag[] Tags { get; set; } = [];
         public string Label { get; set; } = "";
         public int[] SeenValues { get; private set; } = [];
+        public int ArrayLength { get; set; }
+        public int?[] SeenNullable { get; private set; } = [];
+        public KeyValuePair<string, string>[] SeenPairs { get; private set; } = [];
+        public Type[] SeenTypes { get; private set; } = [];
+        public static int?[] NullableValues(int length) => Enumerable.Range(0, length).Select(i => i % 3 == 0 ? (int?)null : i).ToArray();
+        public static KeyValuePair<string, string>[] PairValues(int length) => Enumerable.Range(0, length).Select(i => new KeyValuePair<string, string>($"key-{i}", $"value-{i}")).ToArray();
+        public static Type[] TypeValues(int length) => Enumerable.Range(0, length).Select(i => (i % 3) switch { 0 => typeof(int), 1 => typeof(string), _ => typeof(Payload) }).ToArray();
+        public void AcceptNullable(ReadOnlySpan<int?> value) => SeenNullable = value.ToArray();
+        public void AcceptPairs(ReadOnlySpan<KeyValuePair<string, string>> value) => SeenPairs = value.ToArray();
+        public void AcceptTypes(ReadOnlySpan<Type> value) => SeenTypes = value.ToArray();
+        public void FillNullable(Span<int?> value) => NullableValues(value.Length).AsSpan().CopyTo(value);
+        public void FillPairs(Span<KeyValuePair<string, string>> value) => PairValues(value.Length).AsSpan().CopyTo(value);
+        public void FillTypes(Span<Type> value) => TypeValues(value.Length).AsSpan().CopyTo(value);
+        public int?[] GetNullable() => NullableValues(ArrayLength);
+        public KeyValuePair<string, string>[] GetPairs() => PairValues(ArrayLength);
+        public Type[] GetTypes() => TypeValues(ArrayLength);
+        public void ReceiveNullable(out int?[] value) => value = GetNullable();
+        public void ReceivePairs(out KeyValuePair<string, string>[] value) => value = GetPairs();
+        public void ReceiveTypes(out Type[] value) => value = GetTypes();
         public string[] SeenNames { get; private set; } = [];
         public object[] SeenObjects { get; private set; } = [];
         public Widget[] SeenWidgets { get; private set; } = [];
@@ -422,6 +711,7 @@ internal static unsafe class Program
         public void AcceptValues(ReadOnlySpan<int> value) => SeenValues = value.ToArray();
         public void AcceptNames(ReadOnlySpan<string> value) => SeenNames = value.ToArray();
         public void AcceptObjects(ReadOnlySpan<object> value) => SeenObjects = value.ToArray();
+        public void ForgetSeenObjects() => SeenObjects = [];
         public void AcceptWidgets(ReadOnlySpan<Widget> value) => SeenWidgets = value.ToArray();
         public void AcceptInterfaces(ReadOnlySpan<IWidget2> value) => SeenInterfaces = value.ToArray();
         public void AcceptPayloads(ReadOnlySpan<Payload> value) => SeenPayloads = value.ToArray();
@@ -432,6 +722,14 @@ internal static unsafe class Program
             {
                 value[i] = $"filled-{i}";
             }
+        }
+        public void FillObjects(Span<object> value)
+        {
+            if (ThrowOnFill)
+            {
+                throw new UnauthorizedAccessException();
+            }
+            value.Clear();
         }
         public void FillValues(Span<int> value) => value.Fill(42);
     }
