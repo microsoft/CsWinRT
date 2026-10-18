@@ -2693,16 +2693,18 @@ internal partial class InteropGenerator
         }
 
         // Next, we can emit the actual proxy types for each user-defined type exposed as a CCW
-        foreach ((TypeSignature typeSignature, TypeSignatureEquatableSet vtableTypes, UserDefinedVtableGroup group) in inputs.EnumerateUserDefinedAndVtableTypes())
+        foreach (UserDefinedTypeInput input in inputs.EnumerateUserDefinedAndVtableTypes())
         {
             args.Token.ThrowIfCancellationRequested();
+
+            TypeSignature typeSignature = input.Type;
 
             try
             {
                 InteropTypeDefinitionBuilder.UserDefinedType.Proxy(
                     userDefinedType: typeSignature,
-                    vtableTypes: vtableTypes,
-                    comWrappersMarshallerAttributeType: group.MarshallerAttributeType!,
+                    vtableTypes: input.VtableTypes,
+                    comWrappersMarshallerAttributeType: input.Group.MarshallerAttributeType!,
                     interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     module: module,

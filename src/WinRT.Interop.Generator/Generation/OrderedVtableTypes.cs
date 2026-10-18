@@ -15,7 +15,10 @@ namespace WindowsRuntime.InteropGenerator.Generation;
 /// </summary>
 internal sealed class OrderedVtableTypes : IComparable<OrderedVtableTypes>
 {
+    /// <summary>The shared comparer used to resolve structural ties between equal ordering keys.</summary>
     private readonly TypeDescriptorComparer _comparer;
+
+    /// <summary>The cached primary ordering keys corresponding to the ordered interface signatures.</summary>
     private readonly string[] _keys;
 
     /// <summary>
@@ -25,27 +28,25 @@ internal sealed class OrderedVtableTypes : IComparable<OrderedVtableTypes>
     /// <param name="comparer">The comparer shared by this invocation's user-defined type preparation.</param>
     public OrderedVtableTypes(TypeSignatureEquatableSet set, TypeDescriptorComparer comparer)
     {
-        Set = set;
-        _comparer = comparer;
-
         IEnumerable<(TypeSignature Type, string Key)> ordered = set
-            .Select(type => (Type: type, Key: _comparer.GetOrderKey(type)))
+            .Select(type => (Type: type, Key: comparer.GetOrderKey(type)))
             .OrderBy(static entry => entry.Key, StringComparer.Ordinal)
-            .ThenBy(static entry => entry.Type, _comparer);
+            .ThenBy(static entry => entry.Type, comparer);
 
         TypeSignature[] types = new TypeSignature[set.Count];
         string[] keys = new string[set.Count];
-        int index = 0;
 
-        foreach ((TypeSignature type, string key) in ordered)
+        foreach ((int index, (TypeSignature type, string key)) in ordered.Index())
         {
             types[index] = type;
             keys[index] = key;
-            index++;
         }
 
-        Types = types;
+        _comparer = comparer;
         _keys = keys;
+
+        Set = set;
+        Types = types;
     }
 
     /// <summary>

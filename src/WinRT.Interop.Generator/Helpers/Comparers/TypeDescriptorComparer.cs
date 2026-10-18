@@ -240,7 +240,7 @@ internal sealed class TypeDescriptorComparer : IComparer<ITypeDescriptor>
             return 0;
         }
 
-        // Matching display keys can still hide different generic arguments or specification shapes.
+        // Matching display keys can still hide different generic arguments or specification shapes
         if (x is GenericInstanceTypeSignature xGeneric && y is GenericInstanceTypeSignature yGeneric)
         {
             int result = xGeneric.TypeArguments.Count.CompareTo(yGeneric.TypeArguments.Count);

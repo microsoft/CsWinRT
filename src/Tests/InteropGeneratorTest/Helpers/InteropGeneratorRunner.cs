@@ -179,7 +179,7 @@ internal sealed class InteropGeneratorRunner : IDisposable
                     index,
                     index % 2 == 0 ? "IEnumerable<IStringable>, IDisposable" : "IDisposable, IEnumerable<IStringable>")));
 
-            // A separate declaration order still describes the same semantic interface set.
+            // A separate declaration order still describes the same semantic interface set
             source += """
 
                 public sealed class DisposableOnly : System.IDisposable
@@ -550,7 +550,7 @@ internal sealed class InteropGeneratorRunner : IDisposable
         Assert.AreEqual("System.Runtime", typeReference.Scope!.GetAssembly()!.Name!.ToString());
         typeReference.Scope = scope;
 
-        // Model valid inputs from older reference packs and implementation metadata, not patched generator output.
+        // Model valid inputs from older reference packs and implementation metadata, not patched generator output
         using MemoryStream stream = new();
         module.Write(stream);
         File.WriteAllBytes(path, stream.ToArray());

@@ -179,7 +179,7 @@ internal sealed class InteropGeneratorEmitInputs
 
     /// <summary>Enumerates user-defined proxy inputs in global canonical type order.</summary>
     /// <returns>Each type's own canonical interface set and its shared group.</returns>
-    public IEnumerable<(TypeSignature Type, TypeSignatureEquatableSet VtableTypes, UserDefinedVtableGroup Group)> EnumerateUserDefinedAndVtableTypes()
+    public IEnumerable<UserDefinedTypeInput> EnumerateUserDefinedAndVtableTypes()
     {
         return UserDefinedTypes.Types;
     }
@@ -200,10 +200,10 @@ internal sealed class InteropGeneratorEmitInputs
                     VtableTypes: CanonicalizeVtableSet(pair.Value));
             })];
 
-        // Identities are now stable; share cached display names across type and interface ordering.
+        // Identities are now stable, so share cached display names across type and interface ordering
         TypeDescriptorComparer comparer = TypeDescriptorComparer.CreateForEmission(_runtimeContext);
 
-        // Compute each primary key once for 'OrderBy'; preserve the structural tie-break with 'ThenBy'.
+        // Compute each primary key once for 'OrderBy' and preserve the structural tie-break with 'ThenBy'
         IEnumerable<(TypeSignature Type, TypeSignatureEquatableSet VtableTypes)> orderedTypes = imported
             .Select(pair => (pair.Type, pair.VtableTypes, Key: comparer.GetOrderKey(pair.Type)))
             .OrderBy(static pair => pair.Key, StringComparer.Ordinal)
@@ -215,8 +215,7 @@ internal sealed class InteropGeneratorEmitInputs
         Dictionary<TypeSignatureEquatableSet, UserDefinedVtableGroup> groupsBySet = [];
         Dictionary<TypeSignatureEquatableSet, UserDefinedVtableGroup> groupsByIdentity = new(ReferenceEqualityComparer.Instance);
         List<UserDefinedVtableGroup> groups = [];
-        (TypeSignature Type, TypeSignatureEquatableSet VtableTypes, UserDefinedVtableGroup Group)[] types =
-            new (TypeSignature, TypeSignatureEquatableSet, UserDefinedVtableGroup)[imported.Length];
+        UserDefinedTypeInput[] types = new UserDefinedTypeInput[imported.Length];
         int index = 0;
 
         // The first type with a set names its shared generated types, so choose representatives
@@ -226,12 +225,16 @@ internal sealed class InteropGeneratorEmitInputs
             _token.ThrowIfCancellationRequested();
 
             ref UserDefinedVtableGroup? identityGroup = ref CollectionsMarshal.GetValueRefOrAddDefault(
-                groupsByIdentity, vtableTypes, out _);
+                dictionary: groupsByIdentity,
+                key: vtableTypes,
+                exists: out _);
 
             if (identityGroup is null)
             {
                 ref UserDefinedVtableGroup? semanticGroup = ref CollectionsMarshal.GetValueRefOrAddDefault(
-                    groupsBySet, vtableTypes, out _);
+                    dictionary: groupsBySet,
+                    key: vtableTypes,
+                    exists: out _);
 
                 if (semanticGroup is null)
                 {
@@ -242,11 +245,11 @@ internal sealed class InteropGeneratorEmitInputs
                 identityGroup = semanticGroup;
             }
 
-            // Proxies keep global type order and their own interface set, while sharing the group's marshaller.
-            types[index++] = (type, vtableTypes, identityGroup);
+            // Proxies keep global type order and their own interface set, while sharing the group's marshaller
+            types[index++] = new(type, vtableTypes, identityGroup);
         }
 
-        // 'OrderBy' keeps interface-set ties stable; proxies independently keep global type order.
+        // 'OrderBy' keeps interface-set ties stable, while proxies independently keep global type order
         return new([.. groups.OrderBy(static group => group.OrderedTypes)], types);
     }
 
@@ -309,12 +312,12 @@ internal sealed class InteropGeneratorEmitInputs
     /// <param name="types">The globally ordered proxy inputs, retaining each type's own interface set.</param>
     private sealed class UserDefinedTypeInputs(
         IReadOnlyList<UserDefinedVtableGroup> vtableGroups,
-        IReadOnlyList<(TypeSignature Type, TypeSignatureEquatableSet VtableTypes, UserDefinedVtableGroup Group)> types)
+        IReadOnlyList<UserDefinedTypeInput> types)
     {
         /// <summary>Gets the shared groups in interface-set order.</summary>
         public IReadOnlyList<UserDefinedVtableGroup> VtableGroups { get; } = vtableGroups;
 
         /// <summary>Gets the globally ordered types, their own canonical interface sets, and their shared groups.</summary>
-        public IReadOnlyList<(TypeSignature Type, TypeSignatureEquatableSet VtableTypes, UserDefinedVtableGroup Group)> Types { get; } = types;
+        public IReadOnlyList<UserDefinedTypeInput> Types { get; } = types;
     }
 }
