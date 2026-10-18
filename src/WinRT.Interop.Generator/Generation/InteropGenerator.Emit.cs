@@ -2682,6 +2682,8 @@ internal partial class InteropGenerator
                     module: module,
                     out TypeDefinition comWrappersMarshallerType);
 
+                // Track the marshaller attribute for the later proxy pass, which runs in global type order
+                // rather than group order. Each proxy must reuse its group's single generated attribute type.
                 group.MarshallerAttributeType = comWrappersMarshallerType;
             }
             catch (Exception e)
