@@ -161,6 +161,35 @@ internal sealed class InteropGeneratorRunner : IDisposable
 
     public string Root { get; }
 
+    public void SetPrivateAttribute(int value, bool implementPrivateInterface = false)
+    {
+        string attributeAssembly = Compile("PrivateAttributes", """
+            namespace MissingAttributes;
+
+            public enum Mode { Enabled }
+
+            public sealed class MarkerAttribute(Mode mode, System.Type type) : System.Attribute
+            {
+                public int Value { get; set; }
+            }
+
+            public sealed class Argument;
+            public interface IPrivate;
+            """);
+
+        _ = Compile("CurrentTypes", DictionarySource + $$"""
+
+            [MissingAttributes.Marker(MissingAttributes.Mode.Enabled, typeof(MissingAttributes.Argument), Value = {{value}})]
+            public sealed class PrivateAttributeInput : System.IDisposable{{(implementPrivateInterface ? ", MissingAttributes.IPrivate" : "")}}
+            {
+                public void Dispose() { }
+            }
+            """, references: [.. Net100.References.All, MetadataReference.CreateFromFile(attributeAssembly)]);
+
+        // The compiler-only dependency is absent from the consuming application's generator inputs
+        File.Delete(attributeAssembly);
+    }
+
     public async Task<string> GenerateAsync(
         string name,
         bool reverseInputs = false,

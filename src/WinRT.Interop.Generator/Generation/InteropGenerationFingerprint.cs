@@ -464,7 +464,8 @@ internal sealed partial class InteropGenerationFingerprint
             {
                 if (implementation.Interface is { } interfaceType)
                 {
-                    _pendingTypes.Enqueue(interfaceType.ToTypeSignature(_state.RuntimeContext));
+                    // An unresolved interface already skipped by discovery must remain a non-blocking dependency
+                    _pendingTypes.Enqueue(interfaceType.ToTypeSignature(isValueType: false));
                 }
             }
 
@@ -509,10 +510,10 @@ internal sealed partial class InteropGenerationFingerprint
         writer.Write(type.ClassLayout?.PackingSize ?? 0);
         writer.Write(type.Interfaces.Count);
 
-        // Preserve interface declaration order as well as identity, since emission can select a representative interface
+        // Preserve declaration order and reference identity, including interfaces skipped by discovery as unresolved
         foreach (InterfaceImplementation implementation in type.Interfaces)
         {
-            writer.Write(implementation.Interface is { } interfaceType ? GetTypeName(interfaceType.ToTypeSignature(_state.RuntimeContext)) : "");
+            writer.Write(implementation.Interface is { } interfaceType ? GetTypeName(interfaceType.ToTypeSignature(isValueType: false)) : "");
         }
 
         // Generic parameter flags include variance, which affects the interfaces exposed by a CCW
@@ -569,9 +570,11 @@ internal sealed partial class InteropGenerationFingerprint
 
         foreach (CustomAttribute attribute in type.CustomAttributes)
         {
-            writer.Write(attribute.Type is { } attributeType ? GetTypeName(attributeType.ToTypeSignature(_state.RuntimeContext)) : "");
+            // Attributes are reference types: identifying one must not require resolving a compiler-only dependency
+            writer.Write(attribute.Type is { } attributeType ? GetTypeName(attributeType.ToTypeSignature(isValueType: false)) : "");
             writer.Write(attribute.Constructor?.FullName ?? "");
 
+            // Keep the raw payload so enum and 'System.Type' arguments do not require their defining assemblies
             CustomAttributeRow row = tables.GetTable<CustomAttributeRow>().GetByRid(attribute.MetadataToken.Rid);
             byte[] blob = blobs.GetBlobByIndex(row.Value) ?? throw new BadImageFormatException("An attribute dependency has an invalid blob.");
 

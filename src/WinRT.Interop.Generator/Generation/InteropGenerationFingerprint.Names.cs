@@ -140,6 +140,7 @@ internal partial class InteropGenerationFingerprint
             type = definition;
         }
 
+        // Preserve the original reference and assembly scope when an optional dependency is unavailable
         AppendPart(ref builder, type.Namespace);
         AppendPart(ref builder, type.Name);
 
