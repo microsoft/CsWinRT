@@ -341,7 +341,7 @@ A **WinRT test component** (defined in `TestComponentCSharp.idl`, implemented in
 
 ## Experimental CI code coverage
 
-The CI solution build uses bounded project parallelism (`/m:2`). Its binary log is staged on success, failure, or cancellation, and GitHub CI publishes staging artifacts for every configuration, including successful Debug jobs. Native AOT, trimmed functional, and JIT coverage builds/publishes also write uniquely named binary logs directly under the staging artifact's `binlog` folder. These logs allow the parallel-build experiment and repeated projection generation to be measured before adding shared SDK projection reuse.
+The CI solution build uses MSBuild's default single node. The `/m:2` experiment exposed file contention in shared authoring outputs, so parallel solution builds require output isolation before being re-enabled. The solution binary log is staged on success, failure, or cancellation, and GitHub CI publishes staging artifacts for every configuration, including successful Debug jobs. Native AOT, trimmed functional, and JIT coverage builds/publishes also write uniquely named binary logs directly under the staging artifact's `binlog` folder for timing and incremental-generation analysis.
 
 Keep the configuration spelling identical across solution builds and later publish passes by using `$(BuildConfiguration)`. Changing `release` to `Release` changes the tool/output path strings hashed by the generator cache even on Windows, unnecessarily invalidating projections. Managed projects that import WinUI build assets, including `AuthoringTest`, must directly reference the central MSIX BuildTools version so parallel MSBuild nodes cannot load the older transitive task DLL first.
 
