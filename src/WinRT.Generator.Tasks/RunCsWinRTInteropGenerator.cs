@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -173,6 +174,11 @@ public sealed class RunCsWinRTInteropGenerator : ToolTask
     public int MaxDegreesOfParallelism { get; set; } = -1;
 
     /// <summary>
+    /// Gets or sets whether the interop generator uses Server GC. Empty selects automatically.
+    /// </summary>
+    public string? EnableServerGC { get; set; }
+
+    /// <summary>
     /// Gets or sets additional arguments to pass to the tool.
     /// </summary>
     public ITaskItem[]? AdditionalArguments { get; set; }
@@ -284,7 +290,38 @@ public sealed class RunCsWinRTInteropGenerator : ToolTask
             return false;
         }
 
+        // The GC mode must be empty for automatic selection or a valid boolean override
+        if (!string.IsNullOrEmpty(EnableServerGC) && !bool.TryParse(EnableServerGC, out _))
+        {
+            Log.LogError("Invalid 'CsWinRTEnableInteropGeneratorServerGC' value '{0}'. It must be empty (automatic), 'true', or 'false'.", EnableServerGC);
+
+            return false;
+        }
+
         return true;
+    }
+
+    /// <inheritdoc/>
+    protected override ProcessStartInfo GetProcessStartInfo(string pathToTool, string commandLineCommands, string responseFileSwitch)
+    {
+        ProcessStartInfo startInfo = base.GetProcessStartInfo(pathToTool, commandLineCommands, responseFileSwitch);
+
+        // Set the child's GC mode: explicit property first, existing environment next, otherwise automatic selection
+        if (!string.IsNullOrEmpty(EnableServerGC))
+        {
+            startInfo.EnvironmentVariables["DOTNET_gcServer"] = bool.Parse(EnableServerGC) ? "1" : "0";
+        }
+        else if (!startInfo.EnvironmentVariables.ContainsKey("DOTNET_gcServer") ||
+                 string.IsNullOrEmpty(startInfo.EnvironmentVariables["DOTNET_gcServer"]))
+        {
+            bool enabled = InteropGeneratorGCPolicy.ShouldUseServerGC();
+
+            startInfo.EnvironmentVariables["DOTNET_gcServer"] = enabled ? "1" : "0";
+        }
+
+        Log.LogMessage(MessageImportance.Low, "Interop generator DOTNET_gcServer={0}.", startInfo.EnvironmentVariables["DOTNET_gcServer"]);
+
+        return startInfo;
     }
 
     /// <summary>

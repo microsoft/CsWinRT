@@ -26,7 +26,7 @@
     <PackageVersion Include="Microsoft.SourceLink.GitHub" Version="10.0.402" />
     <PackageVersion Include="Microsoft.VCRTForwarders.140" Version="1.1.0" />
     <PackageVersion Include="Microsoft.Web.WebView2" Version="1.0.3179.45" />
-    <PackageVersion Include="Microsoft.Windows.CsWin32" Version="0.1.635-beta" />
+    <PackageVersion Include="Microsoft.Windows.CsWin32" Version="0.3.363" />
     <PackageVersion Include="Microsoft.Windows.CsWinRT" Version="2.2.0" />
     <PackageVersion Include="Microsoft.Windows.SDK.BuildTools" Version="[10.0.26100.9169]" />
     <PackageVersion Include="Microsoft.Windows.SDK.BuildTools.MSIX" Version="1.7.260930100" />

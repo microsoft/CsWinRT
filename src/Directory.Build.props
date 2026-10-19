@@ -60,6 +60,9 @@
     <!-- Enforce the same language version for all projects -->
     <LangVersion>14.0</LangVersion>
 
+    <!-- Run CsWin32 code generation as an MSBuild task rather than a source generator -->
+    <CsWin32RunAsBuildTask>true</CsWin32RunAsBuildTask>
+
     <!-- Allow unsafe code in all projects (the runtime and build tools rely heavily on pointers and other unsafe constructs for interop) -->
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 

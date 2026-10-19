@@ -66,6 +66,9 @@ Properties consumers may set on the vcxproj:
   <Target Name="_DetectCsWinRTNativeComponentReferences"
           DependsOnTargets="ResolveProjectReferences;ResolveAssemblyReferences">
 
+    <!-- Validate the interop generator GC mode before forwarding it to the aggregator: empty (Auto), true, or false -->
+    <Error Condition="'$(CsWinRTEnableInteropGeneratorServerGC)' != '' and '$(CsWinRTEnableInteropGeneratorServerGC)' != 'true' and '$(CsWinRTEnableInteropGeneratorServerGC)' != 'false'"
+           Text="Invalid 'CsWinRTEnableInteropGeneratorServerGC' value '$(CsWinRTEnableInteropGeneratorServerGC)'. It must be empty (automatic), 'true', or 'false'." />
     <ItemGroup>
       <!-- Component csprojs from <ProjectReference> with CsWinRTComponent=true metadata. -->
       <_CsWinRTComponentProjectPaths Include="%(_ResolvedProjectReferencePaths.MSBuildSourceProjectFile)"
@@ -187,6 +190,7 @@ Properties consumers may set on the vcxproj:
       <!-- Direct <Import> of cswinrt's props/targets so the synthesized csproj can use CsWinRT properties without a PackageReference. -->
       <_CsWinRTPropsForAggregator>$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)..\Microsoft.Windows.CsWinRT.props'))</_CsWinRTPropsForAggregator>
       <_CsWinRTTargetsForAggregator>$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)..\Microsoft.Windows.CsWinRT.targets'))</_CsWinRTTargetsForAggregator>
+      <_CsWinRTGCPropertyForAggregator Condition="'$(CsWinRTEnableInteropGeneratorServerGC)' != ''">;CsWinRTEnableInteropGeneratorServerGC=$(CsWinRTEnableInteropGeneratorServerGC)</_CsWinRTGCPropertyForAggregator>
     </PropertyGroup>
 
     <MakeDir Condition="'$(_CsWinRTHasComponentReferences)' == 'true'" Directories="$(_CsWinRTTempProjectDir)" />
@@ -248,12 +252,12 @@ Properties consumers may set on the vcxproj:
     <MSBuild Condition="'$(_CsWinRTHasComponentReferences)' == 'true'"
              Projects="$(_CsWinRTTempProjectPath)"
              Targets="Restore"
-             Properties="Configuration=$(Configuration);Platform=$(_CsWinRTNormalizedPlatform)" />
+             Properties="Configuration=$(Configuration);Platform=$(_CsWinRTNormalizedPlatform)$(_CsWinRTGCPropertyForAggregator)" />
 
     <MSBuild Condition="'$(_CsWinRTHasComponentReferences)' == 'true'"
              Projects="$(_CsWinRTTempProjectPath)"
              Targets="Build"
-             Properties="Configuration=$(Configuration);Platform=$(_CsWinRTNormalizedPlatform)" />
+             Properties="Configuration=$(Configuration);Platform=$(_CsWinRTNormalizedPlatform)$(_CsWinRTGCPropertyForAggregator)" />
 
     <ItemGroup Condition="'$(_CsWinRTHasComponentReferences)' == 'true'">
       <_CsWinRTGeneratedDlls Include="$(_CsWinRTTempProjectIntermediateDir)WinRT.Component.dll" Condition="Exists('$(_CsWinRTTempProjectIntermediateDir)WinRT.Component.dll')" />
