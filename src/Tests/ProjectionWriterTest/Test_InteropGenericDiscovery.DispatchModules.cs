@@ -293,12 +293,13 @@ public partial class Test_InteropGenericDiscovery
                 """], Path.Combine(directory, "App.dll"), outputKind: OutputKind.ConsoleApplication,
                 additionalReferences: [contracts, defaults, caller, receivers]);
             byte[]? firstOutput = null;
+            string[]? firstWarnings = null;
 
-            foreach (bool reverse in new[] { false, true })
+            foreach ((string[] inputs, int parallelism) in EnumerateDiscoveryInputs([contracts, defaults, caller, receivers]))
             {
                 (int exitCode, string log) = RunGenerator(directory, app,
-                    additionalReferences: reverse ? [receivers, caller, defaults, contracts] : [contracts, defaults, caller, receivers],
-                    maxDegreesOfParallelism: reverse ? 4 : 1,
+                    additionalReferences: inputs,
+                    maxDegreesOfParallelism: parallelism,
                     timeout: TimeSpan.FromMinutes(2));
 
                 Assert.AreEqual(0, exitCode, log);
@@ -314,13 +315,20 @@ public partial class Test_InteropGenericDiscovery
                 Assert.IsTrue(nodes.Any(static type => type.StartsWith("LateCutoff.Node`1[[LateCutoff.Pair`2[[LateCutoff.Marker1023,", StringComparison.Ordinal)));
 
                 byte[] output = File.ReadAllBytes(interop);
+                string[] warnings = GetDiscoveryWarnings(log);
+
+                Assert.IsTrue(warnings.Any(static warning => warning.StartsWith($"warning {ExpansionWarning}:", StringComparison.Ordinal)), log);
 
                 if (firstOutput is not null)
                 {
-                    CollectionAssert.AreEqual(firstOutput, output);
+                    CollectionAssert.AreEqual(firstOutput, output,
+                        $"Bounded dispatch changed with DOP {parallelism} and inputs '{string.Join(',', inputs)}'.");
+                    CollectionAssert.AreEqual(firstWarnings, warnings,
+                        $"Discovery warning multiset changed with DOP {parallelism} and inputs '{string.Join(',', inputs)}'.");
                 }
 
                 firstOutput = output;
+                firstWarnings = warnings;
             }
         }
         finally

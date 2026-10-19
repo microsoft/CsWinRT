@@ -14,7 +14,10 @@ namespace ProjectionWriterTest;
 public partial class Test_InteropGenericDiscovery
 {
     [TestMethod]
-    public void DiscoveryMarks_RepeatedCrossModuleCascadesRemainDeterministic()
+    [DataRow("all")]
+    [DataRow("minimal")]
+    [DataRow("strict")]
+    public void DiscoveryMarks_RepeatedCrossModuleCascadesRemainDeterministic(string marshallingMode)
     {
         string directory = Directory.CreateTempSubdirectory("InteropRepeatedDiscoveryMarks_").FullName;
 
@@ -77,14 +80,23 @@ public partial class Test_InteropGenericDiscovery
                 outputKind: OutputKind.ConsoleApplication,
                 additionalReferences: [.. references]);
             byte[]? previous = null;
+            string[]? previousWarnings = null;
 
-            foreach (int parallelism in new[] { 1, 4, 4 })
+            foreach ((string[] inputs, int parallelism) in EnumerateDiscoveryInputs([.. references], fullMatrix: marshallingMode != "all"))
             {
                 (int exitCode, string log) = RunGenerator(
                     directory,
                     app,
-                    treatWarningsAsErrors: true,
-                    additionalReferences: parallelism == 1 ? [.. references] : [.. references.AsEnumerable().Reverse()],
+                    treatWarningsAsErrors: marshallingMode != "all",
+                    additionalReferences: inputs,
+                    additionalArguments:
+                    [
+                        $"--marshalling-mode {marshallingMode}",
+                        .. marshallingMode == "strict"
+                            ? new[] { $"--marshalling-enabled-assembly-names StateMarksApp,{string.Join(',', Enumerable.Range(0, moduleCount).Select(static index => $"Consumer{index}"))}" }
+                            : []
+                    ],
+                    timeout: TimeSpan.FromMinutes(2),
                     maxDegreesOfParallelism: parallelism);
 
                 Assert.AreEqual(0, exitCode, log);
@@ -103,13 +115,23 @@ public partial class Test_InteropGenericDiscovery
                     type.StartsWith("System.Collections.ObjectModel.ReadOnlyCollection`1[[System.Int32,", StringComparison.Ordinal)), log);
 
                 byte[] output = File.ReadAllBytes(interop);
+                string[] warnings = GetDiscoveryWarnings(log);
+
+                if (marshallingMode != "all")
+                {
+                    Assert.IsEmpty(warnings, log);
+                }
 
                 if (previous is not null)
                 {
-                    CollectionAssert.AreEqual(previous, output);
+                    CollectionAssert.AreEqual(previous, output,
+                        $"Discovery changed with mode '{marshallingMode}', DOP {parallelism}, and inputs '{string.Join(',', inputs)}'.");
+                    CollectionAssert.AreEqual(previousWarnings, warnings,
+                        $"Discovery warning multiset changed with mode '{marshallingMode}', DOP {parallelism}, and inputs '{string.Join(',', inputs)}'.");
                 }
 
                 previous = output;
+                previousWarnings = warnings;
             }
         }
         finally
