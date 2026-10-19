@@ -94,7 +94,7 @@ CsWinRT 3.0 will update the projection of `T[]` parameters to use first-class sp
 
 This means you no longer need to allocate and copy stuff into arrays all over the place (because you also need the size to be exactly right, so you can't even use the array pool). Instead, you'll be able to just use spans normally. Which also means you can now even make it 0-alloc and pass stack-allocated params entirely. This is source compatible thanks to the [first class span](https://learn.microsoft.com/dotnet/csharp/language-reference/proposals/first-class-span-types) types feature of C# 14.
 
-For authored components, `Span<T>` parameters are write-only fill arrays: the implementation must not read the caller's existing buffer contents. The default-enabled [CSWINRT2023 analyzer](diagnostics/cswinrt2023.md) detects potential reads while allowing write-only operations and reads covered by recognized initialization.
+For authored components, `Span<T>` parameters are write-only fill arrays: the implementation must not read the caller's existing buffer contents. The default-enabled [CSWINRT2028 analyzer](diagnostics/cswinrt2028.md) detects potential reads while allowing write-only operations and reads covered by recognized initialization.
 
 Array-valued properties remain `T[]`, as do array return values. When native code calls a managed array property setter, the projection marshals the input into an independently owned, exactly sized managed array. The setter can retain or modify that array without aliasing the caller's native buffer or temporary pooled storage.
 

@@ -411,12 +411,12 @@ public sealed class Test_WriteOnlySpanParameterAnalyzer
             {
                 public void Fill(Span<int> span)
                 {
-                    int value = {|CSWINRT2023:span[0]|};
-                    Value({|CSWINRT2023:span[1]|});
-                    ref readonly int readOnlyReference = ref {|CSWINRT2023:span[2]|};
-                    In(in {|CSWINRT2023:span[3]|});
-                    {|CSWINRT2023:span[4]|}++;
-                    {|CSWINRT2023:span[5]|} += 1;
+                    int value = {|CSWINRT2028:span[0]|};
+                    Value({|CSWINRT2028:span[1]|});
+                    ref readonly int readOnlyReference = ref {|CSWINRT2028:span[2]|};
+                    In(in {|CSWINRT2028:span[3]|});
+                    {|CSWINRT2028:span[4]|}++;
+                    {|CSWINRT2028:span[5]|} += 1;
                 }
 
                 private static void Value(int x)
@@ -442,10 +442,10 @@ public sealed class Test_WriteOnlySpanParameterAnalyzer
             {
                 public void Fill(Span<int> span)
                 {
-                    ReadOnlySpan<int> implicitConversion = {|CSWINRT2023:span|};
-                    ReadOnlySpan<int> explicitConversion = {|CSWINRT2023:(ReadOnlySpan<int>)span|};
+                    ReadOnlySpan<int> implicitConversion = {|CSWINRT2028:span|};
+                    ReadOnlySpan<int> explicitConversion = {|CSWINRT2028:(ReadOnlySpan<int>)span|};
 
-                    Read({|CSWINRT2023:span|});
+                    Read({|CSWINRT2028:span|});
                 }
 
                 private static void Read(ReadOnlySpan<int> span)
@@ -467,11 +467,11 @@ public sealed class Test_WriteOnlySpanParameterAnalyzer
             {
                 public void Fill(Span<int> span)
                 {
-                    foreach (int x in {|CSWINRT2023:span|})
+                    foreach (int x in {|CSWINRT2028:span|})
                     {
                     }
 
-                    foreach (ref readonly int y in {|CSWINRT2023:span|})
+                    foreach (ref readonly int y in {|CSWINRT2028:span|})
                     {
                     }
                 }
@@ -493,17 +493,17 @@ public sealed class Test_WriteOnlySpanParameterAnalyzer
                 {
                     foreach (ref int x in span)
                     {
-                        int value = {|CSWINRT2023:x|};
-                        Value({|CSWINRT2023:x|});
-                        In(in {|CSWINRT2023:x|});
-                        RefReadOnly(in {|CSWINRT2023:x|});
-                        ref readonly int readOnlyReference = ref {|CSWINRT2023:x|};
-                        {|CSWINRT2023:x|}++;
-                        {|CSWINRT2023:x|} += 1;
+                        int value = {|CSWINRT2028:x|};
+                        Value({|CSWINRT2028:x|});
+                        In(in {|CSWINRT2028:x|});
+                        RefReadOnly(in {|CSWINRT2028:x|});
+                        ref readonly int readOnlyReference = ref {|CSWINRT2028:x|};
+                        {|CSWINRT2028:x|}++;
+                        {|CSWINRT2028:x|} += 1;
 
                         if (value > 0)
                         {
-                            Value({|CSWINRT2023:x|});               // Nested reads are detected as well
+                            Value({|CSWINRT2028:x|});               // Nested reads are detected as well
                         }
 
                         x = 0;                                      // Writing through the alias is valid
@@ -547,7 +547,7 @@ public sealed class Test_WriteOnlySpanParameterAnalyzer
             {
                 public static void Fill(Span<int> span)
                 {
-                    int x = {|CSWINRT2023:span[0]|};
+                    int x = {|CSWINRT2028:span[0]|};
                 }
             }
             """;
@@ -565,7 +565,7 @@ public sealed class Test_WriteOnlySpanParameterAnalyzer
             {
                 public Sample(Span<int> span)
                 {
-                    int x = {|CSWINRT2023:span[0]|};
+                    int x = {|CSWINRT2028:span[0]|};
                 }
             }
             """;
@@ -588,7 +588,7 @@ public sealed class Test_WriteOnlySpanParameterAnalyzer
             {
                 void IFillable.Fill(Span<int> span)
                 {
-                    int x = {|CSWINRT2023:span[0]|};
+                    int x = {|CSWINRT2028:span[0]|};
                 }
             }
             """;
@@ -607,7 +607,7 @@ public sealed class Test_WriteOnlySpanParameterAnalyzer
                 public void Fill(Span<int> span)
                 {
                     // The write only covers reads that come after it
-                    int value = {|CSWINRT2023:span[0]|};
+                    int value = {|CSWINRT2028:span[0]|};
 
                     span[0] = 1;
                     span.Clear();
@@ -629,15 +629,15 @@ public sealed class Test_WriteOnlySpanParameterAnalyzer
                 public void Fill(Span<int> span, int index)
                 {
                     span[0] = 1;
-                    int value = {|CSWINRT2023:span[1]|};         // A different constant index
+                    int value = {|CSWINRT2028:span[1]|};         // A different constant index
 
                     span[index] = 2;
-                    int other = {|CSWINRT2023:span[index + 1]|}; // Not provably the same index
+                    int other = {|CSWINRT2028:span[index + 1]|}; // Not provably the same index
 
                     // A single element being initialized says nothing about all the other ones
-                    ReadOnlySpan<int> readOnlySpan = {|CSWINRT2023:span|};
+                    ReadOnlySpan<int> readOnlySpan = {|CSWINRT2028:span|};
 
-                    foreach (int x in {|CSWINRT2023:span|})
+                    foreach (int x in {|CSWINRT2028:span|})
                     {
                     }
                 }
@@ -662,7 +662,7 @@ public sealed class Test_WriteOnlySpanParameterAnalyzer
                     span[i] = 1;
                     i++;                                    // The two accesses no longer target the same element
 
-                    int value = {|CSWINRT2023:span[i]|};
+                    int value = {|CSWINRT2028:span[i]|};
                 }
             }
             """;
@@ -683,7 +683,7 @@ public sealed class Test_WriteOnlySpanParameterAnalyzer
                     span.Clear();
                     span = default;                         // The write applies to a different buffer
 
-                    int value = {|CSWINRT2023:span[0]|};
+                    int value = {|CSWINRT2028:span[0]|};
                 }
             }
             """;
@@ -706,14 +706,14 @@ public sealed class Test_WriteOnlySpanParameterAnalyzer
                         span.Clear();
                     }
 
-                    int value = {|CSWINRT2023:span[0]|};
+                    int value = {|CSWINRT2028:span[0]|};
 
                     while (condition)
                     {
                         span.Fill(1);                       // A loop body might never run
                     }
 
-                    int other = {|CSWINRT2023:span[1]|};
+                    int other = {|CSWINRT2028:span[1]|};
 
                     try
                     {
@@ -723,7 +723,7 @@ public sealed class Test_WriteOnlySpanParameterAnalyzer
                     {
                     }
 
-                    int last = {|CSWINRT2023:span[2]|};
+                    int last = {|CSWINRT2028:span[2]|};
                 }
             }
             """;
@@ -742,16 +742,16 @@ public sealed class Test_WriteOnlySpanParameterAnalyzer
                 public void Fill(Span<int> span)
                 {
                     Ref(ref span[0]);                       // The callee might never write to the element
-                    int value = {|CSWINRT2023:span[0]|};
+                    int value = {|CSWINRT2028:span[0]|};
 
                     ref int slot = ref span[1];             // The alias might never be written to
-                    int other = {|CSWINRT2023:span[1]|};
+                    int other = {|CSWINRT2028:span[1]|};
 
                     foreach (ref int x in span)
                     {
                         Ref(ref x);
 
-                        int nested = {|CSWINRT2023:x|};
+                        int nested = {|CSWINRT2028:x|};
                     }
                 }
 
@@ -777,7 +777,7 @@ public sealed class Test_WriteOnlySpanParameterAnalyzer
                     other.Clear();
                     other[0] = 1;
 
-                    int value = {|CSWINRT2023:span[0]|};
+                    int value = {|CSWINRT2028:span[0]|};
                 }
             }
             """;
@@ -803,7 +803,7 @@ public sealed class Test_WriteOnlySpanParameterAnalyzer
                     span.Clear();
 
                 Read:
-                    int value = {|CSWINRT2023:span[0]|};
+                    int value = {|CSWINRT2028:span[0]|};
                 }
             }
             """;
@@ -823,7 +823,7 @@ public sealed class Test_WriteOnlySpanParameterAnalyzer
                 {
                     foreach (ref int x in span)
                     {
-                        int value = {|CSWINRT2023:x|};      // The write only covers later reads
+                        int value = {|CSWINRT2028:x|};      // The write only covers later reads
 
                         x = 0;
                     }
@@ -835,7 +835,7 @@ public sealed class Test_WriteOnlySpanParameterAnalyzer
                             y = 0;                          // The write might not happen
                         }
 
-                        int value = {|CSWINRT2023:y|};
+                        int value = {|CSWINRT2028:y|};
                     }
                 }
             }
@@ -864,7 +864,7 @@ public sealed class Test_WriteOnlySpanParameterAnalyzer
                             break;
                     }
 
-                    int value = {|CSWINRT2023:span[0]|};
+                    int value = {|CSWINRT2028:span[0]|};
                 }
             }
             """;
@@ -885,7 +885,7 @@ public sealed class Test_WriteOnlySpanParameterAnalyzer
                     // The write is only reached when the left operand is 'true'
                     bool result = condition && Set(out span[0]);
 
-                    int value = {|CSWINRT2023:span[0]|};
+                    int value = {|CSWINRT2028:span[0]|};
                 }
 
                 private static bool Set(out int x)
@@ -919,7 +919,7 @@ public sealed class Test_WriteOnlySpanParameterAnalyzer
                 {
                     span.Clear(true);                       // Not the 'Span<T>.Clear()' method
 
-                    int value = {|CSWINRT2023:span[0]|};
+                    int value = {|CSWINRT2028:span[0]|};
                 }
             }
             """;
@@ -935,11 +935,11 @@ public sealed class Test_WriteOnlySpanParameterAnalyzer
 
             public class Sample(Span<int> span)
             {
-                private int _field = {|CSWINRT2023:span[0]|};
+                private int _field = {|CSWINRT2028:span[0]|};
 
-                private int Property { get; } = {|CSWINRT2023:span[1]|};
+                private int Property { get; } = {|CSWINRT2028:span[1]|};
 
-                private int _converted = Read({|CSWINRT2023:span|});
+                private int _converted = Read({|CSWINRT2028:span|});
 
                 private static int Read(ReadOnlySpan<int> span) => span.Length;
             }
@@ -963,7 +963,7 @@ public sealed class Test_WriteOnlySpanParameterAnalyzer
                     span[i] = 1;
                     (i, _) = (5, 0);                        // A deconstruction also modifies the index
 
-                    int value = {|CSWINRT2023:span[i]|};
+                    int value = {|CSWINRT2028:span[i]|};
                 }
             }
             """;
@@ -987,7 +987,7 @@ public sealed class Test_WriteOnlySpanParameterAnalyzer
                     span[i] = 1;
                     alias = 5;
 
-                    int value = {|CSWINRT2023:span[i]|};
+                    int value = {|CSWINRT2028:span[i]|};
                 }
 
                 public void FillWithAliasedSpan(Span<int> span, Span<int> other)
@@ -997,7 +997,7 @@ public sealed class Test_WriteOnlySpanParameterAnalyzer
                     span.Clear();
                     alias = other;
 
-                    int value = {|CSWINRT2023:span[0]|};
+                    int value = {|CSWINRT2028:span[0]|};
                 }
             }
             """;
@@ -1022,7 +1022,7 @@ public sealed class Test_WriteOnlySpanParameterAnalyzer
                     span[i] = 1;
                     Advance();
 
-                    int value = {|CSWINRT2023:span[i]|};
+                    int value = {|CSWINRT2028:span[i]|};
                 }
             }
             """;
@@ -1044,7 +1044,7 @@ public sealed class Test_WriteOnlySpanParameterAnalyzer
                     // The whole call, arguments included, is removed when 'DEBUG' is not defined
                     Log(span[0] = 1);
 
-                    int value = {|CSWINRT2023:span[0]|};
+                    int value = {|CSWINRT2028:span[0]|};
                 }
 
                 [Conditional("DEBUG")]
@@ -1083,7 +1083,7 @@ public sealed class Test_WriteOnlySpanParameterAnalyzer
                 {
                     Log(span[0] = 1);
 
-                    int value = {|CSWINRT2023:span[0]|};
+                    int value = {|CSWINRT2028:span[0]|};
                 }
             }
             """;
@@ -1108,7 +1108,7 @@ public sealed class Test_WriteOnlySpanParameterAnalyzer
                     span[i] = 1;
                     alias = 5;
 
-                    int value = {|CSWINRT2023:span[i]|};
+                    int value = {|CSWINRT2028:span[i]|};
                 }
 
                 public void FillWithReturnedAlias(Span<int> span)
@@ -1119,7 +1119,7 @@ public sealed class Test_WriteOnlySpanParameterAnalyzer
                     span[i] = 1;
                     alias = 5;
 
-                    int value = {|CSWINRT2023:span[i]|};
+                    int value = {|CSWINRT2028:span[i]|};
                 }
 
                 public unsafe void FillWithPointer(Span<int> span)
@@ -1130,7 +1130,7 @@ public sealed class Test_WriteOnlySpanParameterAnalyzer
                     span[i] = 1;
                     *pointer = 5;
 
-                    int value = {|CSWINRT2023:span[i]|};
+                    int value = {|CSWINRT2028:span[i]|};
                 }
 
                 private static ref int Identity(ref int x) => ref x;
@@ -1158,7 +1158,7 @@ public sealed class Test_WriteOnlySpanParameterAnalyzer
                     span[i] = 1;
                     _index = 5;
 
-                    int value = {|CSWINRT2023:span[i]|};
+                    int value = {|CSWINRT2028:span[i]|};
                 }
 
                 public void FillWithReadOnlyFieldIndex(Span<int> span)
@@ -1168,7 +1168,7 @@ public sealed class Test_WriteOnlySpanParameterAnalyzer
                     span[i] = 1;
                     Reset();
 
-                    int value = {|CSWINRT2023:span[i]|};
+                    int value = {|CSWINRT2028:span[i]|};
                 }
 
                 public void FillWithArrayIndex(Span<int> span, int[] indices)
@@ -1178,7 +1178,7 @@ public sealed class Test_WriteOnlySpanParameterAnalyzer
                     span[i] = 1;
                     indices[0] = 5;
 
-                    int value = {|CSWINRT2023:span[i]|};
+                    int value = {|CSWINRT2028:span[i]|};
                 }
 
                 private void Reset() => _index = 5;
@@ -1217,7 +1217,7 @@ public sealed class Test_WriteOnlySpanParameterAnalyzer
                     span[i] = 1;
                     cursor.Advance();
 
-                    int value = {|CSWINRT2023:span[i]|};
+                    int value = {|CSWINRT2028:span[i]|};
                 }
 
                 public void FillWithSpanOverIndex(Span<int> span)
@@ -1228,7 +1228,7 @@ public sealed class Test_WriteOnlySpanParameterAnalyzer
                     span[i] = 1;
                     window[0] = 5;
 
-                    int value = {|CSWINRT2023:span[i]|};
+                    int value = {|CSWINRT2028:span[i]|};
                 }
             }
             """;
@@ -1252,7 +1252,7 @@ public sealed class Test_WriteOnlySpanParameterAnalyzer
                 {
                     Log(span[0] = 1);
 
-                    int value = {|CSWINRT2023:span[0]|};
+                    int value = {|CSWINRT2028:span[0]|};
                 }
             }
             """;
@@ -1273,7 +1273,7 @@ public sealed class Test_WriteOnlySpanParameterAnalyzer
                     // The handler can report failure, in which case the holes are never evaluated
                     destination.TryWrite($"{span[0] = 1}", out int written);
 
-                    int value = {|CSWINRT2023:span[0]|};
+                    int value = {|CSWINRT2028:span[0]|};
                 }
             }
             """;
@@ -1292,7 +1292,7 @@ public sealed class Test_WriteOnlySpanParameterAnalyzer
                 public void Fill(Span<int> span)
                 {
                     // The write happens after each element has already been read
-                    foreach (int x in {|CSWINRT2023:span|})
+                    foreach (int x in {|CSWINRT2028:span|})
                     {
                         span.Clear();
                     }
@@ -1372,23 +1372,23 @@ public sealed class Test_WriteOnlySpanParameterAnalyzer
             {
                 public void Fill(Span<Pair> span, Span<Node> nodes)
                 {
-                    int x = {|CSWINRT2023:span[0]|}.X;
-                    {|CSWINRT2023:span[1]|}.X += 1;
-                    {|CSWINRT2023:span[2]|}.X++;
-                    Value({|CSWINRT2023:span[3]|}.Y);
-                    {|CSWINRT2023:span[4]|}.Touch();
+                    int x = {|CSWINRT2028:span[0]|}.X;
+                    {|CSWINRT2028:span[1]|}.X += 1;
+                    {|CSWINRT2028:span[2]|}.X++;
+                    Value({|CSWINRT2028:span[3]|}.Y);
+                    {|CSWINRT2028:span[4]|}.Touch();
 
                     // Writing a field through a reference stored in the element reads that reference
-                    {|CSWINRT2023:span[5]|}.Node.Value = 1;
-                    {|CSWINRT2023:nodes[0]|}.Value = 1;
+                    {|CSWINRT2028:span[5]|}.Node.Value = 1;
+                    {|CSWINRT2028:nodes[0]|}.Value = 1;
 
                     // Writing one field says nothing about the other ones
                     span[6].X = 1;
-                    int y = {|CSWINRT2023:span[6]|}.Y;
+                    int y = {|CSWINRT2028:span[6]|}.Y;
 
                     foreach (ref Pair pair in span)
                     {
-                        int value = {|CSWINRT2023:pair|}.X;
+                        int value = {|CSWINRT2028:pair|}.X;
                     }
                 }
 
@@ -1441,13 +1441,13 @@ public sealed class Test_WriteOnlySpanParameterAnalyzer
             {
                 public void Fill(Span<int> span)
                 {
-                    (int a, int b) = ({|CSWINRT2023:span[0]|}, {|CSWINRT2023:span[1]|});
-                    var tuple = ({|CSWINRT2023:span[2]|}, 0);
-                    (span[3], int c) = ({|CSWINRT2023:span[4]|}, 1);
+                    (int a, int b) = ({|CSWINRT2028:span[0]|}, {|CSWINRT2028:span[1]|});
+                    var tuple = ({|CSWINRT2028:span[2]|}, 0);
+                    (span[3], int c) = ({|CSWINRT2028:span[4]|}, 1);
 
                     foreach (ref int x in span)
                     {
-                        (int d, int e) = ({|CSWINRT2023:x|}, 0);
+                        (int d, int e) = ({|CSWINRT2028:x|}, 0);
                     }
                 }
             }
@@ -1564,14 +1564,14 @@ public sealed class Test_WriteOnlySpanParameterAnalyzer
             {
                 public void Fill(Span<int> span, bool flag)
                 {
-                    int value = flag ? {|CSWINRT2023:span[0]|} : {|CSWINRT2023:span[1]|};
-                    int other = (flag ? ref {|CSWINRT2023:span[2]|} : ref {|CSWINRT2023:span[3]|});
-                    (flag ? ref {|CSWINRT2023:span[4]|} : ref {|CSWINRT2023:span[5]|}) += 1;
-                    In(in (flag ? ref {|CSWINRT2023:span[6]|} : ref {|CSWINRT2023:span[7]|}));
+                    int value = flag ? {|CSWINRT2028:span[0]|} : {|CSWINRT2028:span[1]|};
+                    int other = (flag ? ref {|CSWINRT2028:span[2]|} : ref {|CSWINRT2028:span[3]|});
+                    (flag ? ref {|CSWINRT2028:span[4]|} : ref {|CSWINRT2028:span[5]|}) += 1;
+                    In(in (flag ? ref {|CSWINRT2028:span[6]|} : ref {|CSWINRT2028:span[7]|}));
 
                     foreach (ref int x in span)
                     {
-                        int nested = (flag ? ref {|CSWINRT2023:x|} : ref value);
+                        int nested = (flag ? ref {|CSWINRT2028:x|} : ref value);
                     }
                 }
 
@@ -1628,7 +1628,7 @@ public sealed class Test_WriteOnlySpanParameterAnalyzer
                 {
                     public void Fill(Span<int> span)
                     {
-                        int x = {|CSWINRT2023:span[0]|};
+                        int x = {|CSWINRT2028:span[0]|};
                     }
                 }
             }
@@ -1639,7 +1639,7 @@ public sealed class Test_WriteOnlySpanParameterAnalyzer
                 {
                     public void Fill(Span<int> span)
                     {
-                        int x = {|CSWINRT2023:span[0]|};
+                        int x = {|CSWINRT2028:span[0]|};
                     }
                 }
             }
@@ -1650,7 +1650,7 @@ public sealed class Test_WriteOnlySpanParameterAnalyzer
                 {
                     public void Fill(Span<int> span)
                     {
-                        int x = {|CSWINRT2023:span[0]|};
+                        int x = {|CSWINRT2028:span[0]|};
                     }
                 }
             }
@@ -1765,7 +1765,7 @@ public sealed class Test_WriteOnlySpanParameterAnalyzer
                 // A public method is still part of the class surface, regardless of the interface
                 public bool TryFormat(Span<char> destination, out int charsWritten, ReadOnlySpan<char> format, IFormatProvider provider)
                 {
-                    destination[0] = char.ToUpperInvariant({|CSWINRT2023:destination[0]|});
+                    destination[0] = char.ToUpperInvariant({|CSWINRT2028:destination[0]|});
                     charsWritten = 1;
 
                     return true;
@@ -1796,7 +1796,7 @@ public sealed class Test_WriteOnlySpanParameterAnalyzer
             {
                 void Contoso.IFillable.Fill(Span<int> span)
                 {
-                    int x = {|CSWINRT2023:span[0]|};
+                    int x = {|CSWINRT2028:span[0]|};
                 }
             }
             """;
@@ -1917,7 +1917,7 @@ public sealed class Test_WriteOnlySpanParameterAnalyzer
                     span[i] = 1;
                     holder.Set();
 
-                    int value = {|CSWINRT2023:span[i]|};
+                    int value = {|CSWINRT2028:span[i]|};
                 }
             }
             """;
@@ -1941,7 +1941,7 @@ public sealed class Test_WriteOnlySpanParameterAnalyzer
                     span[i] = 1;
                     (flag ? ref i : ref j) = 5;
 
-                    int value = {|CSWINRT2023:span[i]|};
+                    int value = {|CSWINRT2028:span[i]|};
                 }
 
                 public void FillWithConditionalOutIndex(Span<int> span, bool flag)
@@ -1952,7 +1952,7 @@ public sealed class Test_WriteOnlySpanParameterAnalyzer
                     span[i] = 1;
                     Set(out (flag ? ref i : ref j));
 
-                    int value = {|CSWINRT2023:span[i]|};
+                    int value = {|CSWINRT2028:span[i]|};
                 }
 
                 public void FillWithConditionalDeconstructedIndex(Span<int> span, bool flag)
@@ -1963,7 +1963,7 @@ public sealed class Test_WriteOnlySpanParameterAnalyzer
                     span[i] = 1;
                     ((flag ? ref i : ref j), _) = (5, 0);
 
-                    int value = {|CSWINRT2023:span[i]|};
+                    int value = {|CSWINRT2028:span[i]|};
                 }
 
                 public void FillWithConditionalSpan(Span<int> span, Span<int> other, bool flag)
@@ -1971,7 +1971,7 @@ public sealed class Test_WriteOnlySpanParameterAnalyzer
                     span.Clear();
                     (flag ? ref span : ref other) = other;
 
-                    int value = {|CSWINRT2023:span[0]|};
+                    int value = {|CSWINRT2028:span[0]|};
                 }
 
                 public void FillWithConditionalSpanAlias(Span<int> span, Span<int> other, bool flag)
@@ -1981,7 +1981,7 @@ public sealed class Test_WriteOnlySpanParameterAnalyzer
                     span.Clear();
                     alias = other;
 
-                    int value = {|CSWINRT2023:span[0]|};
+                    int value = {|CSWINRT2028:span[0]|};
                 }
 
                 private static void Set(out int x) => x = 0;
@@ -2051,9 +2051,9 @@ public sealed class Test_WriteOnlySpanParameterAnalyzer
             {
                 public void Fill(Span<int> span)
                 {
-                    Trace({|CSWINRT2023:span[0]|});
-                    TraceIn(in {|CSWINRT2023:span[1]|});
-                    Debug.Assert({|CSWINRT2023:span[2]|} == 0);
+                    Trace({|CSWINRT2028:span[0]|});
+                    TraceIn(in {|CSWINRT2028:span[1]|});
+                    Debug.Assert({|CSWINRT2028:span[2]|} == 0);
                 }
 
                 [Conditional("TRACE_ENABLED")]
@@ -2111,7 +2111,7 @@ public sealed class Test_WriteOnlySpanParameterAnalyzer
 
                 public void Fill(Span<int> span)
                 {
-                    Trace({|CSWINRT2023:span[0]|});
+                    Trace({|CSWINRT2028:span[0]|});
                 }
             }
             """;
@@ -2168,12 +2168,12 @@ public sealed class Test_WriteOnlySpanParameterAnalyzer
             {
                 public void Fill(Span<Buffer4> span)
                 {
-                    int value = {|CSWINRT2023:span[0]|}[1];
-                    {|CSWINRT2023:span[1]|}[2] += 1;
+                    int value = {|CSWINRT2028:span[0]|}[1];
+                    {|CSWINRT2028:span[1]|}[2] += 1;
 
                     foreach (ref Buffer4 buffer in span)
                     {
-                        int nested = {|CSWINRT2023:buffer|}[3];
+                        int nested = {|CSWINRT2028:buffer|}[3];
                     }
                 }
             }
@@ -2213,24 +2213,24 @@ public sealed class Test_WriteOnlySpanParameterAnalyzer
                 {
                     // Read-only views, address-only uses and 'ref readonly' aliases are conservatively reported,
                     // even when they are not actually used to read any element of the span.
-                    ReadOnlySpan<int> view = {|CSWINRT2023:span|};
+                    ReadOnlySpan<int> view = {|CSWINRT2028:span|};
                     int length = view.Length;
 
-                    bool overlaps = source.Overlaps({|CSWINRT2023:span|});
-                    bool reverseOverlaps = {|CSWINRT2023:span|}.Overlaps(source);
-                    bool same = source == {|CSWINRT2023:span|};
+                    bool overlaps = source.Overlaps({|CSWINRT2028:span|});
+                    bool reverseOverlaps = {|CSWINRT2028:span|}.Overlaps(source);
+                    bool same = source == {|CSWINRT2028:span|};
 
-                    ref readonly int slot = ref {|CSWINRT2023:span[0]|};
+                    ref readonly int slot = ref {|CSWINRT2028:span[0]|};
 
                     int n = 0;
                     ref readonly int rebound = ref n;
-                    rebound = ref {|CSWINRT2023:span[1]|};
+                    rebound = ref {|CSWINRT2028:span[1]|};
 
-                    fixed (int* pointer = &{|CSWINRT2023:span[2]|})
+                    fixed (int* pointer = &{|CSWINRT2028:span[2]|})
                     {
                     }
 
-                    foreach (ref readonly int x in {|CSWINRT2023:span|})
+                    foreach (ref readonly int x in {|CSWINRT2028:span|})
                     {
                     }
                 }
@@ -2310,7 +2310,7 @@ public sealed class Test_WriteOnlySpanParameterAnalyzer
                     span[i] = 1;
                     Bump(ref i);
 
-                    _ = {|CSWINRT2023:span[i]|};
+                    _ = {|CSWINRT2028:span[i]|};
                 }
 
                 [Conditional("BUMP_ENABLED")]
@@ -2378,7 +2378,7 @@ public sealed class Test_WriteOnlySpanParameterAnalyzer
                     span[i] = 1;
                     i = 1;
 
-                    _ = {|CSWINRT2023:span[i]|};
+                    _ = {|CSWINRT2028:span[i]|};
                 }
 
                 public void FillWithReassignedSpan(Span<int> span, Span<int> other)
@@ -2390,7 +2390,7 @@ public sealed class Test_WriteOnlySpanParameterAnalyzer
                     span[i] = 1;
                     i = 1;
 
-                    _ = {|CSWINRT2023:span[i]|};
+                    _ = {|CSWINRT2028:span[i]|};
                 }
             }
             """;
@@ -2412,9 +2412,9 @@ public sealed class Test_WriteOnlySpanParameterAnalyzer
                     ref int slot = ref n;
 
                     // The result of a ref assignment is the new referent, so consuming it by value reads the element
-                    _ = (slot = ref {|CSWINRT2023:span[0]|});
-                    int value = (slot = ref {|CSWINRT2023:span[1]|});
-                    Value(slot = ref {|CSWINRT2023:span[2]|});
+                    _ = (slot = ref {|CSWINRT2028:span[0]|});
+                    int value = (slot = ref {|CSWINRT2028:span[1]|});
+                    Value(slot = ref {|CSWINRT2028:span[2]|});
                 }
 
                 private static void Value(int x)
@@ -2496,22 +2496,22 @@ public sealed class Test_WriteOnlySpanParameterAnalyzer
                 public void Fill(Span<Pair> span)
                 {
                     span[0].X = 1;
-                    _ = {|CSWINRT2023:span[0]|}.Y;
-                    _ = {|CSWINRT2023:span[0]|};
+                    _ = {|CSWINRT2028:span[0]|}.Y;
+                    _ = {|CSWINRT2028:span[0]|};
 
                     span[1].Inner.Value = 2;
-                    _ = {|CSWINRT2023:span[1]|}.X;
+                    _ = {|CSWINRT2028:span[1]|}.X;
 
                     int i = 0;
                     span[i].X = 3;
                     i++;
-                    _ = {|CSWINRT2023:span[i]|}.X;
+                    _ = {|CSWINRT2028:span[i]|}.X;
 
                     foreach (ref Pair pair in span)
                     {
                         pair.X = 4;
-                        _ = {|CSWINRT2023:pair|}.Y;
-                        _ = {|CSWINRT2023:pair|};
+                        _ = {|CSWINRT2028:pair|}.Y;
+                        _ = {|CSWINRT2028:pair|};
                     }
                 }
             }
@@ -2617,17 +2617,17 @@ public sealed class Test_WriteOnlySpanParameterAnalyzer
                 public void Fill(Span<Pair> span)
                 {
                     span[0].Inner.Value = 42;
-                    _ = {|CSWINRT2023:span[0]|}.Inner;
-                    _ = {|CSWINRT2023:span[0]|}.Inner.Other;
+                    _ = {|CSWINRT2028:span[0]|}.Inner;
+                    _ = {|CSWINRT2028:span[0]|}.Inner.Other;
 
                     span[1].X = 42;
-                    _ = {|CSWINRT2023:span[1]|}.Touch();
+                    _ = {|CSWINRT2028:span[1]|}.Touch();
 
                     span[2].Inner.Value = 42;
-                    _ = {|CSWINRT2023:span[2]|}.Inner.Touch();
+                    _ = {|CSWINRT2028:span[2]|}.Inner.Touch();
 
                     span[3].X = 42;
-                    {|CSWINRT2023:span[3]|}.Node.Value = 42;
+                    {|CSWINRT2028:span[3]|}.Node.Value = 42;
                 }
 
                 public void FillWithReassignment(Span<Pair> span, Span<Pair> other)
@@ -2635,14 +2635,14 @@ public sealed class Test_WriteOnlySpanParameterAnalyzer
                     span[0].X = 42;
                     span = other;
 
-                    _ = {|CSWINRT2023:span[0]|}.X;
+                    _ = {|CSWINRT2028:span[0]|}.X;
                 }
 
                 public void FillWithIndirectReassignment(Span<Pair> span, Span<Pair> other)
                 {
                     span[0].X = Redirect(ref span, other);
 
-                    _ = {|CSWINRT2023:span[0]|}.X;
+                    _ = {|CSWINRT2028:span[0]|}.X;
                 }
 
                 private static int Redirect(ref Span<Pair> span, Span<Pair> other)
@@ -2672,14 +2672,14 @@ public sealed class Test_WriteOnlySpanParameterAnalyzer
                     span[0].{{writeField}} = 42;
 
                     _ = span[0].{{readField}};
-                    _ = {|CSWINRT2023:span[0]|}.Y;
+                    _ = {|CSWINRT2028:span[0]|}.Y;
 
                     foreach (ref (int X, int Y) pair in span)
                     {
                         pair.{{writeField}} = 42;
 
                         _ = pair.{{readField}};
-                        _ = {|CSWINRT2023:pair|}.Y;
+                        _ = {|CSWINRT2028:pair|}.Y;
                     }
                 }
             }
@@ -2712,7 +2712,7 @@ public sealed class Test_WriteOnlySpanParameterAnalyzer
                     TraceNeither(span[2]);
 
                     // Kept: at least one of the conditional symbols is defined
-                    TraceEither({|CSWINRT2023:span[3]|});
+                    TraceEither({|CSWINRT2028:span[3]|});
 
                     // A kept call is an unconditional write, so it covers a later read
                     TraceEither(span[4] = 1);
@@ -2761,7 +2761,7 @@ public sealed class Test_WriteOnlySpanParameterAnalyzer
                         span = other;
                         span.Clear();
 
-                        int value = {|CSWINRT2023:x|};
+                        int value = {|CSWINRT2028:x|};
                     }
                 }
 
@@ -2773,7 +2773,7 @@ public sealed class Test_WriteOnlySpanParameterAnalyzer
                         {
                             span.Clear();
 
-                            int value = {|CSWINRT2023:x|};
+                            int value = {|CSWINRT2028:x|};
                         }
 
                         span = other;
