@@ -97,10 +97,11 @@ public static unsafe class TypeArrayMarshaller
         }
         catch
         {
-            // Reset released slots so caller cleanup cannot release the same resources twice.
+            // Reset released slots so caller cleanup cannot release the same resources twice
             for (int j = 0; j < i; j++)
             {
                 ABI.System.TypeMarshaller.Dispose(destination[j]);
+
                 destination[j] = default;
             }
 

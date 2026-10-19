@@ -106,11 +106,12 @@ public static unsafe class WindowsRuntimeKeyValuePairTypeArrayMarshaller<TKey, T
         }
         catch
         {
-            // Reset released slots so caller cleanup cannot release the same resources twice.
+            // Reset released slots so caller cleanup cannot release the same resources twice
             for (int j = 0; j < i; j++)
             {
                 WindowsRuntimeUnknownMarshaller.Free(destination[j]);
-                destination[j] = default;
+
+                destination[j] = null;
             }
 
             throw;
