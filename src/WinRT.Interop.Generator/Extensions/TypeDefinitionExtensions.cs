@@ -105,6 +105,31 @@ internal static class TypeDefinitionExtensions
         }
 
         /// <summary>
+        /// Checks whether a method is identified as a 'MethodImpl' body on this type.
+        /// </summary>
+        /// <param name="method">The possible implementation body.</param>
+        /// <param name="runtimeContext">The context to assume when resolving implementation bodies.</param>
+        /// <returns>Whether a 'MethodImpl' entry on this type identifies the method as its body.</returns>
+        public bool IsExplicitImplementationBody(MethodDefinition method, RuntimeContext? runtimeContext)
+        {
+            // Explicit bodies need not have the slot's name; 'MethodImpl' metadata supplies their identity
+            foreach (MethodImplementation implementation in type.MethodImplementations)
+            {
+                if (implementation.Body?.TryResolve(runtimeContext, out MethodDefinition? body) is not true)
+                {
+                    continue;
+                }
+
+                if (ReferenceEquals(body, method))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        /// <summary>
         /// Gets the first method with a given name from the specified type.
         /// </summary>
         /// <param name="name">The name of the method to get.</param>

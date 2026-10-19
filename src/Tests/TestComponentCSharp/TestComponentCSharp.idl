@@ -32,6 +32,56 @@ namespace TestComponentCSharp
         Two,
     };
 
+    // Each discovery path and control needs an element type that no other test can root
+    enum InterfaceDispatchElement
+    {
+        First,
+        Second,
+        Third,
+    };
+
+    enum DirectDispatchElement
+    {
+        First,
+        Second,
+        Third,
+    };
+
+    enum AbstractDispatchElement
+    {
+        First,
+        Second,
+        Third,
+    };
+
+    enum VirtualDispatchElement
+    {
+        First,
+        Second,
+        Third,
+    };
+
+    enum SealedDispatchElement
+    {
+        First,
+        Second,
+        Third,
+    };
+
+    enum ClosedArgumentElement
+    {
+        First,
+        Second,
+        Third,
+    };
+
+    enum StaticChainElement
+    {
+        First,
+        Second,
+        Third,
+    };
+
     struct EnumStruct
     {
         EnumValue value;
@@ -387,6 +437,16 @@ namespace TestComponentCSharp
         Windows.Foundation.IAsyncOperation<Int32> GetIntAsync();
         Windows.Foundation.IAsyncOperationWithProgress<String, Int32> GetStringAsync();
         Windows.Foundation.Collections.IVectorView<Int32> GetIntVector();
+        Object GetInputStreamOptionsVector();
+        Object GetFileAccessModeVector();
+        Object GetCreationCollisionOptionVector();
+        Object GetInterfaceDispatchVector();
+        Object GetDirectDispatchVector();
+        Object GetAbstractDispatchVector();
+        Object GetVirtualDispatchVector();
+        Object GetSealedDispatchVector();
+        Object GetClosedArgumentVector();
+        Object GetStaticChainVector();
         Windows.Foundation.Collections.IVectorView<Boolean> GetBoolVector();
         Windows.Foundation.Collections.IVectorView<String> GetStringVector();
         Windows.Foundation.Collections.IVectorView<ComposedBlittableStruct> GetBlittableStructVector();

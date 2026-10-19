@@ -1,7 +1,11 @@
 # CSWINRTINTEROPGEN0106: Transitive generic discovery limit exceeded
 
-The interop generator follows at most 1024 distinct generic type instantiations with members eligible for scanning in each discovery pass. This prevents branching return types such as `Node<A<T>>` and `Node<B<T>>` from creating exponentially many work items even when each signature stays below the [complexity limit](CSWINRTINTEROPGEN0105.md) and the traversal stays below the [depth limit](CSWINRTINTEROPGEN0104.md). Types with no eligible members, such as framework generics excluded by the marshalling mode that have no static initializer, do not consume this budget. Their signatures are still considered for marshalling.
+The interop generator reached its limit of 1024 transitive generic type or method instantiations eligible for member analysis in a discovery pass. This prevents expanding generic patterns from causing excessive build time or memory use, even when they stay within the [depth limit](CSWINRTINTEROPGEN0104.md) and [signature complexity limit](CSWINRTINTEROPGEN0105.md).
 
-Explicit signatures in the input assembly are discovery roots and do not count toward this limit. After the limit is reached, additional types found through member traversal can still be discovered, but their members are not scanned. Other discovery branches continue, and types only reachable through unscanned members may not receive all required marshalling support.
+The message starts with `Generic member discovery reached` for ordinary discovery or `Supplemental generic discovery reached` for additional discovery, including interface implementations and virtual overrides.
 
-Simplify the expanding generic pattern if this warning affects a required interop path. Setting `CsWinRTGeneratorTreatWarningsAsErrors` to `true` (or passing `--treat-warnings-as-errors true` to the tool) makes reaching the limit fail generation.
+Already discovered types and other discovery branches are preserved. However, types reachable only through members that were not analyzed might not receive all required marshalling support, which can cause runtime interop failures. Explicitly referenced types do not count toward this limit.
+
+For discovery across assemblies, the warning can name the application assembly even when the expanding generic pattern is in a library.
+
+If this warning affects a required interop path, simplify the expanding generic pattern rather than suppressing the warning. Explicitly referencing required closed types in an analyzed assembly can also reduce reliance on indirect discovery. Setting `CsWinRTGeneratorTreatWarningsAsErrors` to `true` (or passing `--treat-warnings-as-errors true` to the tool) makes reaching the limit fail generation.

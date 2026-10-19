@@ -230,6 +230,8 @@ Changing this property invalidates the interop generator's property-input cache.
 
 Interop discovery compares signatures using the application's runtime context, following type forwarding while ignoring assembly versions. References from older libraries, portable libraries, and implementation assemblies that resolve to the same type therefore share a type-map entry, including when used in generic arguments, nested types, or arrays. Genuinely different assembly identities remain distinct. Generated helper names, ordering, and type-valued attribute serialization use resolved identities so output does not depend on which equivalent reference was discovered first.
 
+Marshalling discovery supports generic helpers, interface implementations, virtual overrides, and default or static interface members, including across analyzed assemblies. It is conservative and may generate support for more implementations than are used at runtime. Discovery uses constructed types visible in analyzed code; types or generic combinations available only through reflection are not guaranteed to be discovered, and assembly exclusions still apply. The [depth](diagnostics/CSWINRTINTEROPGEN0104.md), [signature complexity](diagnostics/CSWINRTINTEROPGEN0105.md), and [transitive discovery](diagnostics/CSWINRTINTEROPGEN0106.md) limits can leave some indirectly required marshalling support incomplete.
+
 ### Opting in specific assemblies
 
 The `CsWinRTMarshallingEnabledAssembly` item lets you analyze specific assemblies regardless of the marshalling mode, unless explicitly excluded. This is useful for fine-tuning binary size: for example, you can keep the `strict` mode (the smallest option) while opting in just the few assemblies you know need marshalling support:
