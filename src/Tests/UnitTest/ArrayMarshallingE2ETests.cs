@@ -72,6 +72,32 @@ public class ArrayMarshallingE2ETests
     }
 
     [TestMethod]
+    [DataRow(2)]
+    [DataRow(17)]
+    [DataRow(33)]
+    [DataRow(64)]
+    public void NativeTypeProperty_FailedConversionPreservesValueAndRecovers(int count)
+    {
+        MarshalledValuesTest instance = new()
+        {
+            TypeValues = Enumerable.Repeat(typeof(double), count).ToArray()
+        };
+        Type[] values = CreateValues(count).Types;
+        Type saved = values[count / 2];
+        for (int iteration = 0; iteration < 3; iteration++)
+        {
+            Type[] retained = instance.TypeValues;
+            values[count / 2] = null;
+            Assert.ThrowsExactly<ArgumentNullException>(() => instance.TypeValues = values);
+            CollectionAssert.AreEqual(retained, instance.TypeValues);
+
+            values[count / 2] = saved;
+            instance.TypeValues = values;
+            CollectionAssert.AreEqual(values, instance.TypeValues);
+        }
+    }
+
+    [TestMethod]
     [DataRow(0)]
     [DataRow(1)]
     [DataRow(16)]

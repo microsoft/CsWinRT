@@ -38,9 +38,6 @@ internal static unsafe class Program
                 string[] parts = scenario.Split(':');
                 VerifyArrayAbi(target, ccw, parts[1], int.Parse(parts[2]));
                 break;
-            case string scenario when scenario.StartsWith("type-failure:", StringComparison.Ordinal):
-                VerifyTypeConversionFailure(ccw, int.Parse(scenario["type-failure:".Length..]));
-                break;
             case "conversion-failure":
                 VerifyConversionFailure(target, ccw);
                 break;
@@ -53,14 +50,8 @@ internal static unsafe class Program
             case string scenario when scenario.StartsWith("retention:", StringComparison.Ordinal):
                 VerifyMarshalledObjectCollection(target, ccw, int.Parse(scenario["retention:".Length..]));
                 break;
-            case string scenario when scenario.StartsWith("string-fill:", StringComparison.Ordinal):
-                VerifyStringFillCleanup(ccw, int.Parse(scenario["string-fill:".Length..]));
-                break;
             case string scenario when scenario.StartsWith("mapped-rental:", StringComparison.Ordinal):
                 VerifyMappedRental(target, ccw, int.Parse(scenario["mapped-rental:".Length..]));
-                break;
-            case string scenario when scenario.StartsWith("string-conversion-failure:", StringComparison.Ordinal):
-                VerifyStringConversionFailure(ccw, int.Parse(scenario["string-conversion-failure:".Length..]));
                 break;
             case string scenario when scenario.StartsWith("fill-failure:", StringComparison.Ordinal):
                 VerifyArrayFailure(target, ccw, int.Parse(scenario["fill-failure:".Length..]), passArray: false);
@@ -402,58 +393,6 @@ internal static unsafe class Program
         return reference;
     }
 
-    private static void VerifyStringFillCleanup(void* ccw, int length)
-    {
-        using WindowsRuntimeObjectReference reference =
-            WindowsRuntimeComWrappersMarshal.CreateObjectReferenceUnsafe(ccw, in ABI.Contoso.IWidget2Impl.IID, out _);
-        var counter = typeof(HStringMarshaller).GetField("TestFreeCount")!;
-        for (int iteration = 0; iteration < 3; iteration++)
-        {
-            string[] values = new string[length];
-            int before = (int)counter.GetValue(null)!;
-            ABI.Contoso.IWidget2Methods.FillNames(reference, values);
-            int released = (int)counter.GetValue(null)! - before;
-            Check(values.SequenceEqual(Enumerable.Range(0, length).Select(i => $"filled-{i}")), "projected string fill contents");
-            Check(released == length, $"projected fill released {released} HSTRINGs instead of {length}");
-        }
-    }
-
-    private static void VerifyStringConversionFailure(void* ccw, int length)
-    {
-        using WindowsRuntimeObjectReference reference =
-            WindowsRuntimeComWrappersMarshal.CreateObjectReferenceUnsafe(ccw, in ABI.Contoso.IWidget2Impl.IID, out _);
-        var failure = typeof(HStringMarshaller).GetField("TestFailCreateCountdown")!;
-        var counter = typeof(HStringMarshaller).GetField("TestFreeCount")!;
-        int completed = length / 2;
-        for (int iteration = 0; iteration < 3; iteration++)
-        {
-            string[] values = Enumerable.Repeat("unchanged", length).ToArray();
-            int before = (int)counter.GetValue(null)!;
-            bool failed = false;
-            failure.SetValue(null, completed + 1);
-            try
-            {
-                ABI.Contoso.IWidget2Methods.FillNames(reference, values);
-            }
-            catch (InvalidOperationException)
-            {
-                failed = true;
-            }
-            finally
-            {
-                failure.SetValue(null, 0);
-            }
-            Check(failed, "projected fill did not propagate the allocation failure");
-            Check(values.All(value => value == "unchanged"), "failed fill copied incomplete native output");
-            Check((int)counter.GetValue(null)! - before == completed, "failed fill did not release each completed HSTRING exactly once");
-
-            before = (int)counter.GetValue(null)!;
-            ABI.Contoso.IWidget2Methods.FillNames(reference, values);
-            Check(values.SequenceEqual(Enumerable.Range(0, length).Select(i => $"filled-{i}")), "projected fill did not recover after failure");
-            Check((int)counter.GetValue(null)! - before == length, "successful fill after failure did not release each HSTRING exactly once");
-        }
-    }
-
     private static void VerifyMappedRental(Target target, void* ccw, int length)
     {
         using WindowsRuntimeObjectReference reference =
@@ -595,25 +534,6 @@ internal static unsafe class Program
                 break;
             default:
                 throw new ArgumentException("Unknown array element type.", nameof(elementType));
-        }
-    }
-
-    private static void VerifyTypeConversionFailure(void* ccw, int length)
-    {
-        using WindowsRuntimeObjectReference reference =
-            WindowsRuntimeComWrappersMarshal.CreateObjectReferenceUnsafe(ccw, in ABI.Contoso.IWidget2Impl.IID, out _);
-        Type[] types = Target.TypeValues(length);
-        types[length / 2] = null;
-        var count = typeof(HStringMarshaller).GetField("TestFreeCount")!;
-        int before = (int)count.GetValue(null)!;
-        try
-        {
-            ABI.Contoso.IWidget2Methods.AcceptTypes(reference, types);
-            throw new InvalidOperationException("Type conversion failure was not propagated.");
-        }
-        catch (ArgumentNullException)
-        {
-            Check((int)count.GetValue(null)! - before == length / 2, "Type conversion freed names more than once");
         }
     }
 

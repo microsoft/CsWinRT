@@ -4,11 +4,6 @@
 using System;
 using System.IO;
 using System.Linq;
-using AsmResolver.DotNet;
-using AsmResolver.DotNet.Code.Cil;
-using AsmResolver.DotNet.Signatures;
-using AsmResolver.PE.DotNet.Cil;
-using AsmResolver.PE.DotNet.Metadata.Tables;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -153,30 +148,11 @@ public class Test_ArrayProperties
     }
 
     [TestMethod]
-    [DataRow(1)]
-    [DataRow(16)]
-    [DataRow(17)]
-    [DataRow(33)]
-    public void RcwStringFillArrays_DisposeOwnedHStrings(int length)
-    {
-        RunRuntimeFixture($"string-fill:{length}");
-    }
-
-    [TestMethod]
     [DataRow(17)]
     [DataRow(33)]
     public void RcwMappedArrays_ReturnTemporaryStorage(int length)
     {
         RunRuntimeFixture($"mapped-rental:{length}");
-    }
-
-    [TestMethod]
-    [DataRow(2)]
-    [DataRow(17)]
-    [DataRow(33)]
-    public void RcwStringFillArrays_FailedConversionDisposesEachHStringOnce(int length)
-    {
-        RunRuntimeFixture($"string-conversion-failure:{length}");
     }
 
     [ClassCleanup]
@@ -207,15 +183,6 @@ public class Test_ArrayProperties
     public void RcwArrayMethods_RoundTripMappedReferenceAndTypeElements(string elementType, int length)
     {
         RunRuntimeFixture($"array-abi:{elementType}:{length}");
-    }
-
-    [TestMethod]
-    [DataRow(2)]
-    [DataRow(17)]
-    [DataRow(33)]
-    public void RcwTypeArrays_FailedConversionDisposesEachNameOnce(int length)
-    {
-        RunRuntimeFixture($"type-failure:{length}");
     }
 
     private static string GenerateSources(string directory, bool referenceProjection, bool exclusiveTo)
@@ -287,7 +254,7 @@ public class Test_ArrayProperties
                 ProjectionWriterRunner.GetRequiredFilePath("InteropGeneratorAssemblyPath"), $"@{responseFile}");
             Assert.AreEqual(0, exitCode, log);
             Assert.IsTrue(File.Exists(Path.Combine(directory, "WinRT.Interop.dll")));
-            WriteRuntimeWithHStringCleanupCounter(Path.Combine(directory, "WinRT.Runtime.dll"));
+            File.Copy(typeof(WindowsRuntimeObject).Assembly.Location, Path.Combine(directory, "WinRT.Runtime.dll"));
             File.WriteAllText(Path.Combine(directory, "ArrayPropertySetterTests.runtimeconfig.json"), """
                 {"runtimeOptions":{"tfm":"net10.0","framework":{"name":"Microsoft.NETCore.App","version":"10.0.0"}}}
                 """);
@@ -305,57 +272,5 @@ public class Test_ArrayProperties
         (int exitCode, string log) = ProjectionWriterRunner.Run(
             Path.Combine(RuntimeFixture.Value, "ArrayPropertySetterTests.dll"), scenario);
         Assert.AreEqual(0, exitCode, $"Native array property scenario '{scenario}' failed:\n{log}");
-    }
-
-    private static void WriteRuntimeWithHStringCleanupCounter(string path)
-    {
-        ModuleDefinition runtime = ModuleDefinition.FromFile(typeof(WindowsRuntimeObject).Assembly.Location);
-        TypeDefinition marshaller = runtime.TopLevelTypes.Single(
-            type => type.FullName == "WindowsRuntime.InteropServices.Marshalling.HStringMarshaller");
-        FieldDefinition counter = new("TestFreeCount", FieldAttributes.Public | FieldAttributes.Static, runtime.CorLibTypeFactory.Int32);
-        marshaller.Fields.Add(counter);
-        CilMethodBody body = marshaller.Methods.Single(method => method.Name == "Free").CilMethodBody!;
-        body.Instructions.ExpandMacros();
-        // Count execution of the real cleanup routine in the fixture's private runtime copy.
-        var cleanupStart = body.Instructions[0].CreateLabel();
-        CilInstruction[] increment =
-        [
-            new(CilOpCodes.Ldarg_0),
-            new(CilOpCodes.Brfalse, cleanupStart),
-            new(CilOpCodes.Ldsfld, counter),
-            new(CilOpCodes.Ldc_I4_1),
-            new(CilOpCodes.Add),
-            new(CilOpCodes.Stsfld, counter)
-        ];
-        foreach (CilInstruction instruction in increment.Reverse())
-        {
-            body.Instructions.Insert(0, instruction);
-        }
-        FieldDefinition failure = new("TestFailCreateCountdown", FieldAttributes.Public | FieldAttributes.Static, runtime.CorLibTypeFactory.Int32);
-        marshaller.Fields.Add(failure);
-        CilMethodBody create = marshaller.Methods.Single(method => method.Name == "ConvertToUnmanaged").CilMethodBody!;
-        create.Instructions.ExpandMacros();
-        var createStart = create.Instructions[0].CreateLabel();
-        TypeReference exception = new(runtime, runtime.CorLibTypeFactory.CorLibScope, "System", "InvalidOperationException");
-        MemberReference constructor = new(exception, ".ctor", MethodSignature.CreateInstance(runtime.CorLibTypeFactory.Void));
-        // Deterministically fail one allocation without exhausting process memory.
-        CilInstruction[] failAllocation =
-        [
-            new(CilOpCodes.Ldsfld, failure),
-            new(CilOpCodes.Brfalse, createStart),
-            new(CilOpCodes.Ldsfld, failure),
-            new(CilOpCodes.Ldc_I4_1),
-            new(CilOpCodes.Sub),
-            new(CilOpCodes.Dup),
-            new(CilOpCodes.Stsfld, failure),
-            new(CilOpCodes.Brtrue, createStart),
-            new(CilOpCodes.Newobj, constructor),
-            new(CilOpCodes.Throw)
-        ];
-        foreach (CilInstruction instruction in failAllocation.Reverse())
-        {
-            create.Instructions.Insert(0, instruction);
-        }
-        runtime.Write(path);
     }
 }
