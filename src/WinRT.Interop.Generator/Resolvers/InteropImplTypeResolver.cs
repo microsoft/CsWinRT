@@ -35,7 +35,7 @@ internal static class InteropImplTypeResolver
 
         // The IID will be in the generated 'ABI.InterfaceIIDs' type in 'WinRT.Interop.dll'
         Utf8String get_IIDMethodName = $"get_IID_{InteropUtf8NameFactory.TypeName(type, interopDefinitions)}";
-        MethodDefinition get_IIDMethod = interopDefinitions.InterfaceIIDs.GetMethod(get_IIDMethodName);
+        MethodDefinition get_IIDMethod = interopDefinitions.GetInterfaceIIDMethod(get_IIDMethodName);
 
         // Return the pair of methods from the ABI type in 'WinRT.Interop.dll'
         return (get_IIDMethod, get_VtableMethod);

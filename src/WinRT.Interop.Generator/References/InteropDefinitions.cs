@@ -4,7 +4,9 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using AsmResolver;
 using AsmResolver.DotNet;
+using WindowsRuntime.InteropGenerator.Errors;
 using WindowsRuntime.InteropGenerator.Factories;
 using WindowsRuntime.InteropGenerator.Models;
 using WindowsRuntime.InteropGenerator.Resolvers;
@@ -20,6 +22,11 @@ internal sealed class InteropDefinitions
     /// The <see cref="InteropReferences"/> instance to use.
     /// </summary>
     private readonly InteropReferences _interopReferences;
+
+    /// <summary>
+    /// The generated IID getters indexed by their unique names.
+    /// </summary>
+    private readonly Dictionary<Utf8String, MethodDefinition> _interfaceIIDMethods = [];
 
     /// <summary>
     /// The map of generated COM interface entries types for user-defined types.
@@ -110,7 +117,41 @@ internal sealed class InteropDefinitions
     /// <summary>
     /// Gets the <see cref="TypeDefinition"/> for the <c>InterfaceIIDs</c> type.
     /// </summary>
+    /// <remarks>
+    /// Use <see cref="AddInterfaceIID"/> and <see cref="GetInterfaceIIDMethod"/> to add and look up IIDs,
+    /// keeping the generated members and their lookup index in sync.
+    /// </remarks>
     public TypeDefinition InterfaceIIDs => field ??= WellKnownTypeDefinitionFactory.InterfaceIIDs(_interopReferences);
+
+    /// <summary>
+    /// Adds an IID's generated members and indexes its getter for subsequent lookup.
+    /// </summary>
+    /// <param name="iidRvaField">The field containing the IID bytes.</param>
+    /// <param name="getIidMethod">The IID getter.</param>
+    /// <param name="iidProperty">The IID property.</param>
+    public void AddInterfaceIID(FieldDefinition iidRvaField, MethodDefinition getIidMethod, PropertyDefinition iidProperty)
+    {
+        // Name mangling (e.g. '.' to '-') can map distinct input names to the same getter name.
+        // Reject collisions rather than emitting ambiguous metadata and resolving the wrong interface IID.
+        if (!_interfaceIIDMethods.TryAdd(getIidMethod.Name!, getIidMethod))
+        {
+            throw WellKnownInteropExceptions.DuplicateGeneratedInterfaceIID(getIidMethod.Name!.ToString());
+        }
+
+        RvaFields.Fields.Add(iidRvaField);
+        InterfaceIIDs.Methods.Add(getIidMethod);
+        InterfaceIIDs.Properties.Add(iidProperty);
+    }
+
+    /// <summary>
+    /// Gets the generated IID getter with the specified name.
+    /// </summary>
+    /// <param name="name">The getter name.</param>
+    /// <returns>The generated IID getter.</returns>
+    public MethodDefinition GetInterfaceIIDMethod(Utf8String name)
+    {
+        return _interfaceIIDMethods[name];
+    }
 
     /// <summary>
     /// Gets the <see cref="TypeDefinition"/> for the <c>IUnknownVftbl</c> type.

@@ -83,7 +83,8 @@ internal sealed class InteropGeneratorRunner : IDisposable
         bool useFrameworkImplementations = false,
         bool overlappingFrameworkReferences = false,
         bool forwardedEnumerableAliases = false,
-        bool ccwGroupingCases = false)
+        bool ccwGroupingCases = false,
+        bool iidNameCollisionCases = false)
     {
         Root = Directory.CreateTempSubdirectory("InteropGeneratorTest_").FullName;
         string referencesDirectory = Directory.CreateDirectory(Path.Combine(Root, "references")).FullName;
@@ -196,12 +197,42 @@ internal sealed class InteropGeneratorRunner : IDisposable
                 references: [.. Net100.References.All, MetadataReference.CreateFromFile(runtimePath)])];
         }
 
+        string[] iidNameCollisions = [];
+
+        if (iidNameCollisionCases)
+        {
+            string path = Compile("IidNameCollisions", """
+                namespace IidNames.A
+                {
+                    [WindowsRuntime.WindowsRuntimeType]
+                    public enum Value { First }
+                }
+
+                namespace IidNames_B
+                {
+                    [WindowsRuntime.WindowsRuntimeType]
+                    public enum Value { Second }
+                }
+
+                public sealed class FirstList : System.Collections.Generic.List<IidNames.A.Value>;
+                public sealed class SecondList : System.Collections.Generic.List<IidNames_B.Value>;
+                """, references: [.. Net100.References.All, MetadataReference.CreateFromFile(runtimePath)]);
+            ModuleDefinition module = ModuleDefinition.FromFile(path);
+            // Distinct metadata namespaces collide after '.' is replaced with '-' during name mangling.
+            module.TopLevelTypes.Single(type => type.Namespace == "IidNames_B").Namespace = "IidNames-A";
+            using MemoryStream stream = new();
+            module.Write(stream);
+            File.WriteAllBytes(path, stream.ToArray());
+            iidNameCollisions = [path];
+        }
+
         implementationPaths =
         [
             .. useFrameworkImplementations ? GetFrameworkImplementationPaths() : referencePaths,
             runtimePath, sdkReference, current, forwarded, firstDistinct, secondDistinct, standard,
             .. enumerableAliases,
             .. groupingTypes,
+            .. iidNameCollisions,
             .. useFrameworkImplementations ? new[] { implementation } : []
         ];
     }
@@ -255,6 +286,19 @@ internal sealed class InteropGeneratorRunner : IDisposable
         Assert.AreEqual(0, exitCode, log);
         Assert.IsTrue(File.Exists(outputPath), "The generator did not produce an interop assembly.");
         return outputPath;
+    }
+
+    public async Task<string> AssertFailureAsync(string name, string error, bool reverseInputs = false, int parallelism = 1)
+    {
+        (int exitCode, string log, string outputPath) = await RunAsync(
+            name, reverseInputs, parallelism, marshallingMode: "Minimal", optInNetStandard: false,
+            analyzeNetStandardAssemblies: null, debugReproDirectory: null, marshallingDisabledAssemblyNames: null,
+            treatWarningsAsErrors: false, logDirectory: null);
+
+        Assert.AreNotEqual(0, exitCode, log);
+        StringAssert.Contains(log, error);
+        Assert.IsFalse(File.Exists(outputPath), "Invalid generated names must fail before publishing the interop assembly.");
+        return log;
     }
 
     private async Task<(int ExitCode, string Log, string OutputPath)> RunAsync(
