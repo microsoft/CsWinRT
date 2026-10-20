@@ -21,13 +21,13 @@ if (args.Length > 0 && args[0] == "--interop-incremental")
 
 if (args.Length > 0 && args[0] == "--interop")
 {
-    if (args.Length != 3)
+    if (args.Length is not (3 or 4))
     {
-        Console.Error.WriteLine("Usage: BuildDeterminismTest --interop <generator.exe|generator.dll> <response.rsp>");
+        Console.Error.WriteLine("Usage: BuildDeterminismTest --interop <generator.exe|generator.dll> <response.rsp> [baseline.dll]");
         return 1;
     }
 
-    return InteropDeterminismRunner.Run(args[1], args[2]);
+    return InteropDeterminismRunner.Run(args[1], args[2], args.Length == 4 ? args[3] : null);
 }
 
 // Other command-line arguments are MSBuild properties forwarded from CI
