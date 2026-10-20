@@ -24,7 +24,7 @@ Check both open and closed issues before filing a new one. If none matches your 
 ### What to Describe
 
 * Versions of .NET, C#/WinRT, and SDK projections
-* Tools and IDEs used (e.g., VS 2022, VS Code)
+* Tools and IDEs used (e.g., VS 2026, VS Code)
 * Build version of Windows used
 * **Detailed reproduction steps** (most important)
 * Full error text or screenshots
@@ -69,11 +69,11 @@ Thank you in advance for your contribution!
 ### Prerequisites
 
 - [Visual Studio 2026](https://visualstudio.microsoft.com/downloads/)
-- [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet)
+- [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0)
 
 ### Build steps
 
-1. Open a Visual Studio Developer command prompt in the repo root.
+1. Open a Visual Studio 2026 Developer command prompt in the repo root.
 2. Run a script to install dependencies, set up the environment, build the compiler, and run unit tests.
     ```
     src\build.cmd

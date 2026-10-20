@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="MSTest.Sdk">
     <PropertyGroup>
         <OutputType>WinExe</OutputType>
         <TargetFrameworks>$(TestsBuildTFMs)</TargetFrameworks>
@@ -7,12 +7,13 @@
         <ApplicationManifest>app.manifest</ApplicationManifest>
         <Platforms>x86;x64;arm64</Platforms>
         <RuntimeIdentifiers>win-x86;win-x64;win-arm64</RuntimeIdentifiers>
-        <EnableMsixTooling>True</EnableMsixTooling>
+        <WindowsPackageType Condition="'$(WindowsPackageType)' == ''">None</WindowsPackageType>
+        <EnableMsixTooling Condition="'$(WindowsPackageType)' == 'None'">false</EnableMsixTooling>
+        <EnableMsixTooling Condition="'$(WindowsPackageType)' != 'None'">true</EnableMsixTooling>
         <PublishProfile>win-$(Platform).pubxml</PublishProfile>
         <PrepareMsixPackageDependsOn></PrepareMsixPackageDependsOn>
         <PublishReadyToRun>false</PublishReadyToRun>
         <WindowsAppSDKVerifyWinrtRuntimeVersion>false</WindowsAppSDKVerifyWinrtRuntimeVersion>
-        <WindowsPackageType>MSIX</WindowsPackageType>
         <UseWinUI>true</UseWinUI>
         <DefineConstants>$(DefineConstants);DISABLE_XAML_GENERATED_MAIN</DefineConstants>
         <WindowsAppSDKSelfContained>true</WindowsAppSDKSelfContained>
@@ -41,7 +42,7 @@
         <None Remove="RealMainPage.xaml" />
         <None Remove="Tests\RealMainPage.xaml" />
     </ItemGroup>
-    <ItemGroup>
+    <ItemGroup Condition="'$(WindowsPackageType)' != 'None'">
         <AppxManifest Include="Package.appxmanifest">
             <SubType>Designer</SubType>
         </AppxManifest>
@@ -52,7 +53,7 @@
         <FrameworkReference Remove="Microsoft.Windows.SDK.NET.Ref.Xaml" />
         <RuntimeHostConfigurationOption Include="System.Runtime.Loader.UseRidGraph" Value="true" />
     </ItemGroup>
-    <ItemGroup>
+    <ItemGroup Condition="'$(WindowsPackageType)' != 'None'">
         <Content Include="Images\LockScreenLogo.scale-200.png" />
         <Content Include="Images\SplashScreen.scale-200.png" />
         <Content Include="Images\Square150x150Logo.scale-200.png" />
@@ -66,28 +67,23 @@
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="Microsoft.TestPlatform.TestHost">
-            <ExcludeAssets>build</ExcludeAssets>
-        </PackageReference>
-        <PackageReference Include="MSTest.TestAdapter"/>
-        <PackageReference Include="MSTest.TestFramework"/>
         <PackageReference Include="Newtonsoft.Json" />
     </ItemGroup>
 
+    <!-- Switching from MSIX must also remove the old container watched by Test Explorer. -->
+    <Target Name="_CsWinRTRemoveStalePackagedTestContainer" BeforeTargets="PrepareForBuild"
+            Condition="'$(WindowsPackageType)' == 'None'">
+        <Delete Files="$(TargetDir)$(MSBuildProjectName).build.appxrecipe" />
+    </Target>
+
     <!-- The following workarounds are temporary until we have a WinUI package that addresses them. -->
 
-    <!-- When UseWinUI==true, MSTest references the WinUI flavor of MSTest.TestFramework.Extensions.dll,
-         which references the CsWinRT 2.x Microsoft.WinUI and Microsoft.InteractiveExperiences.Projection
-         assemblies. For now, we redirect to the non-WinUI version of them until they are updated. -->
-    <Target Name="_CsWinRTUsePlainMSTestFrameworkExtensions" BeforeTargets="ResolveAssemblyReferences">
-        <PropertyGroup>
-            <_MSTestExtWinUIHintPath>@(Reference->WithMetadataValue('Identity','MSTest.TestFramework.Extensions')->'%(HintPath)')</_MSTestExtWinUIHintPath>
-            <_MSTestExtPlainHintPath>$(_MSTestExtWinUIHintPath.Replace('winui/', '').Replace('winui\', ''))</_MSTestExtPlainHintPath>
-        </PropertyGroup>
-        <ItemGroup Condition="'$(_MSTestExtPlainHintPath)' != ''">
-            <Reference Remove="MSTest.TestFramework.Extensions" />
-            <Reference Include="MSTest.TestFramework.Extensions">
-                <HintPath>$(_MSTestExtPlainHintPath)</HintPath>
+    <!-- MSTest's WinUI adapter and framework extensions depend on CsWinRT 2.x. Use the ordinary
+         assemblies instead; these tests dispatch their own UI work through AsyncQueue. -->
+    <Target Name="_CsWinRTUsePlainMSTestAssemblies" BeforeTargets="ResolveAssemblyReferences">
+        <ItemGroup>
+            <Reference Update="MSTest.TestFramework.Extensions;MSTest.TestAdapter;MSTestAdapter.PlatformServices">
+                <HintPath>$([System.String]::Copy('%(Reference.HintPath)').Replace('winui/', '').Replace('winui\', ''))</HintPath>
             </Reference>
         </ItemGroup>
     </Target>
@@ -95,7 +91,7 @@
     <ItemGroup>
         <ProjectReference Include="..\..\Projections\Windows\Windows.csproj" />
         <ProjectReference Include="..\..\Projections\WinAppSDK\WinAppSDK.csproj" />
-        <ProjectReference Include="..\..\Authoring\WinRT.SourceGenerator2\WinRT.SourceGenerator2.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />    
+        <ProjectReference Include="..\..\Authoring\WinRT.SourceGenerator2\WinRT.SourceGenerator2.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" SetPlatform="Platform=AnyCPU" />
     </ItemGroup>
 
     <!-- CsWinRT 3.0 strips the SDK/WinUI winmds from @(ReferencePath) for the C# compile, but the WinUI
@@ -120,8 +116,8 @@
         </ItemGroup>
     </Target>
 
-    <!-- Inject the BCL ref assemblies (and the core MSTest.TestFramework/testhost compile assets, also
-         missing from this project's reference set) into @(ReferencePathWithRefAssemblies) once, before the
+    <!-- Inject the BCL ref assemblies and NuGet compile assets (including the MTP host dependencies),
+         also missing from this project's reference set, into @(ReferencePathWithRefAssemblies) before the
          passes that consume it: XamlPreCompile, MarkupCompilePass2, and CoreCompile. -->
     <Target Name="_CsWinRTAddFrameworkRefsToRefAssemblies"
             BeforeTargets="XamlPreCompile;MarkupCompilePass2;CoreCompile"
@@ -129,8 +125,7 @@
             Condition="'$(_CsWinRTFrameworkRefsAdded)' != 'true'">
         <ItemGroup>
             <ReferencePathWithRefAssemblies Include="@(_CsWinRTNetCoreRefAssemblies)" />
-            <ReferencePathWithRefAssemblies Include="@(ResolvedCompileFileDefinitions->WithMetadataValue('Filename','MSTest.TestFramework'))" />
-            <ReferencePathWithRefAssemblies Include="@(ResolvedCompileFileDefinitions->WithMetadataValue('Filename','testhost'))" />
+            <ReferencePathWithRefAssemblies Include="@(ResolvedCompileFileDefinitions)" />
         </ItemGroup>
         <PropertyGroup>
             <_CsWinRTFrameworkRefsAdded>true</_CsWinRTFrameworkRefsAdded>
@@ -190,6 +185,7 @@
     </Target>
     
     <ItemGroup>
+        <PackageReference Include="Microsoft.Windows.SDK.BuildTools.MSIX" />
         <PackageReference Include="Microsoft.WindowsAppSDK.WinUI" GeneratePathProperty="true">
             <ExcludeAssets>compile</ExcludeAssets>
         </PackageReference>

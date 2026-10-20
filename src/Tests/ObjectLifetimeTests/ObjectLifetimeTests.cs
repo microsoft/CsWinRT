@@ -18,6 +18,8 @@ using Microsoft.UI.Xaml.Shapes;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudio.TestTools.UnitTesting.Logging;
 
+[assembly: DoNotParallelize]
+
 namespace ObjectLifetimeTests
 {
     public class TestException : Exception
@@ -25,6 +27,9 @@ namespace ObjectLifetimeTests
         public TestException(string message) : base(message)
         { }
     }
+
+    [Bindable]
+    public sealed class TypedStyleControl : Control;
 
     // [GeneratedComInterface] replacements for the 2.x WinRT.Interop.WindowNative / InitializeWithWindow
     // helpers. A projected WinRT object casts directly to these (CsWinRT resolves the QI via IDynamicInterfaceCastable).
@@ -113,7 +118,7 @@ namespace ObjectLifetimeTests
         //+------------------------------------------------------------------
 
         [MethodImplAttribute(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-        public void MakeNull<T>(ref T o)
+        private static void MakeNull<T>(ref T o)
             where T : class
         {
             // This call to KeepAlive wouldn't seem to be necessary, because the
@@ -283,8 +288,6 @@ namespace ObjectLifetimeTests
                 }
             }).Run();
         }
-
-        private sealed class TypedStyleControl : Control;
 
         [TestMethod]
         public void TestInitializeWithWindow()
