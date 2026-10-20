@@ -18,16 +18,18 @@ internal partial class TypeSignatureDiscovery<TResult>
     /// </summary>
     /// <param name="type">The signature whose type contexts should be considered.</param>
     /// <param name="depth">The original traversal depth.</param>
-    private void EnqueuePrimaryGenericTypes(TypeSignature? type, int depth)
+    /// <param name="scanContext">The ordinary member scan exposing the signature, if any.</param>
+    private void EnqueuePrimaryGenericTypes(TypeSignature? type, int depth, MemberScanContext? scanContext)
     {
         foreach (GenericInstanceTypeSignature genericType in type?.AcceptVisitor(AllGenericTypesVisitor.Instance) ?? [])
         {
+            // Open substitutions cannot supply a concrete context for member expansion
             if (!genericType.AcceptVisitor(IsConstructedGenericTypeVisitor.Instance))
             {
                 continue;
             }
 
-            // The first visit keeps its place; a shallower sighting is only kept for supplemental replay
+            // Keep the first visit's place and save shallower sightings for supplemental replay
             if (_visitedTypes.TryGetValue(genericType, out int priorDepth))
             {
                 if (depth < priorDepth && (!_shallowerTypes.TryGetValue(genericType, out int recordedDepth) || depth < recordedDepth))
@@ -38,8 +40,11 @@ internal partial class TypeSignatureDiscovery<TResult>
                 continue;
             }
 
+            TypeDefinition? resolvedType = null;
+
+            // Only transitive contexts with eligible members are charged (explicit roots keep their one-hop scan)
             if (depth > 0 &&
-                (!genericType.TryResolve(_module.RuntimeContext, out TypeDefinition? resolvedType) ||
+                (!genericType.TryResolve(_module.RuntimeContext, out resolvedType) ||
                  !GetMethodsToScan(genericType, resolvedType).Any()))
             {
                 _visitedTypes.Add(genericType, depth);
@@ -47,15 +52,18 @@ internal partial class TypeSignatureDiscovery<TResult>
                 continue;
             }
 
-            if (!TryReserveTransitiveInstantiation(depth: depth))
+            // Reusing a closed substitution within its lexical family needs no additional reservation
+            if (!CanShareMemberReservation(scanContext, resolvedType, genericType.TypeArguments, isConstructed: true) &&
+                !TryReserveTransitiveInstantiation(depth: depth))
             {
                 continue;
             }
 
+            // Record admission only after reserving so rejected types remain eligible for a later sighting
             _visitedTypes.Add(genericType, depth);
 
             // 'Node<T>' -> 'Node<Node<T>>' never repeats an exact signature, so deduplication cannot stop it
-            // Keep reporting discovered types beyond the depth limit, but do not expand their members.
+            // Keep reporting discovered types beyond the depth limit, but do not expand their members
             if (depth <= MaxDiscoveryDepth)
             {
                 _pendingMembers.Enqueue(new PendingMember(
@@ -78,15 +86,16 @@ internal partial class TypeSignatureDiscovery<TResult>
     /// </summary>
     /// <param name="type">The signature whose generic contexts should be considered.</param>
     /// <param name="depth">The expansion depth, or zero for an explicit root.</param>
-    private void EnqueueGenericTypes(TypeSignature? type, int depth)
+    /// <param name="scanContext">The ordinary member scan exposing the signature, if any.</param>
+    private void EnqueueGenericTypes(TypeSignature? type, int depth, MemberScanContext? scanContext = null)
     {
         if (_isSupplemental)
         {
-            EnqueueSupplementalGenericTypes(type, depth);
+            EnqueueSupplementalGenericTypes(type, depth, scanContext);
         }
         else
         {
-            EnqueuePrimaryGenericTypes(type, depth);
+            EnqueuePrimaryGenericTypes(type, depth, scanContext);
         }
     }
 
@@ -95,7 +104,8 @@ internal partial class TypeSignatureDiscovery<TResult>
     /// </summary>
     /// <param name="type">The signature whose generic contexts should be considered.</param>
     /// <param name="depth">The supplemental traversal depth.</param>
-    private void EnqueueSupplementalGenericTypes(TypeSignature? type, int depth)
+    /// <param name="scanContext">The ordinary member scan exposing the signature, if any.</param>
+    private void EnqueueSupplementalGenericTypes(TypeSignature? type, int depth, MemberScanContext? scanContext)
     {
         // Array discovery also needs generic contexts to find arrays exposed only by instantiated members
         foreach (GenericInstanceTypeSignature genericType in type?.AcceptVisitor(AllGenericTypesVisitor.Instance) ?? [])
@@ -113,9 +123,11 @@ internal partial class TypeSignatureDiscovery<TResult>
                 continue;
             }
 
+            TypeDefinition? resolvedType = null;
+
             // Types with no eligible members need no worklist entry but are still reported by the result visitor
             if (depth > 0 &&
-                (!genericType.TryResolve(_module.RuntimeContext, out TypeDefinition? resolvedType) ||
+                (!genericType.TryResolve(_module.RuntimeContext, out resolvedType) ||
                  !GetMethodsToScan(genericType, resolvedType).Any()))
             {
                 _visitedTypes[genericType] = depth;
@@ -123,7 +135,7 @@ internal partial class TypeSignatureDiscovery<TResult>
                 continue;
             }
 
-            // Expanding contexts can remain unique forever; report the type without expanding beyond the limit
+            // Expanding contexts can stay unique forever, so report the type without expanding beyond the limit
             if (depth > MaxDiscoveryDepth)
             {
                 if (!_recursionLimitReported)
@@ -136,8 +148,11 @@ internal partial class TypeSignatureDiscovery<TResult>
                 continue;
             }
 
-            // A shallower requeue reuses this enumeration's earlier reservation
-            if (!visited && !TryReserveTransitiveInstantiation(depth: depth))
+            // A shallower requeue reuses this enumeration's earlier reservation.
+            // New same-family contexts can instead share the active scan's closed substitution.
+            if (!visited &&
+                !CanShareMemberReservation(scanContext, resolvedType, genericType.TypeArguments, isConstructed: true) &&
+                !TryReserveTransitiveInstantiation(depth: depth))
             {
                 continue;
             }
@@ -160,12 +175,14 @@ internal partial class TypeSignatureDiscovery<TResult>
     /// <param name="methodArguments">The substituted method arguments, if this is a 'MethodSpec'.</param>
     /// <param name="genericContext">The composed context to use when scanning the body.</param>
     /// <param name="depth">The expansion depth, or zero for an explicit 'MethodSpec' root.</param>
+    /// <param name="scanContext">The ordinary member scan exposing the operand, if any.</param>
     private void EnqueueMethodBody(
         IMethodDefOrRef method,
         TypeSignature? declaringType,
         GenericInstanceMethodSignature? methodArguments,
         GenericContext genericContext,
-        int depth)
+        int depth,
+        MemberScanContext? scanContext = null)
     {
         // Ordinary methods are covered by the type worklist, so only explicit 'MethodSpec' roots retain a one-hop scan
         if (methodArguments is null ||
@@ -180,7 +197,7 @@ internal partial class TypeSignatureDiscovery<TResult>
             .. (declaringType as GenericInstanceTypeSignature)?.TypeArguments ?? [],
             .. methodArguments.TypeArguments];
 
-        // Partially open contexts can still reveal closed types; skip only wholly unbound argument lists
+        // Skip only wholly unbound argument lists because partially open contexts can still reveal closed types
         if (depth > 0 && arguments.All(static argument => argument is GenericParameterSignature))
         {
             return;
@@ -188,8 +205,8 @@ internal partial class TypeSignatureDiscovery<TResult>
 
         Dictionary<IList<TypeSignature>, int> contexts = GetMethodContexts(_visitedMethods, definition);
         bool reserved = _isSupplemental
-            ? TryReserveSupplementalMethodContext(definition, arguments, contexts, depth)
-            : TryReservePrimaryMethodContext(definition, arguments, genericContext, contexts, depth);
+            ? TryReserveSupplementalMethodContext(definition, arguments, contexts, depth, scanContext)
+            : TryReservePrimaryMethodContext(definition, arguments, genericContext, contexts, depth, scanContext);
 
         if (!reserved)
         {
@@ -214,13 +231,15 @@ internal partial class TypeSignatureDiscovery<TResult>
     /// <param name="context">The context retained for a possible shorter-path replay.</param>
     /// <param name="contexts">The method's visited contexts.</param>
     /// <param name="depth">The primary traversal depth.</param>
+    /// <param name="scanContext">The ordinary member scan exposing the operand, if any.</param>
     /// <returns>Whether to enqueue the method body.</returns>
     private bool TryReservePrimaryMethodContext(
         MethodDefinition method,
         IList<TypeSignature> arguments,
         GenericContext context,
         Dictionary<IList<TypeSignature>, int> contexts,
-        int depth)
+        int depth,
+        MemberScanContext? scanContext)
     {
         if (contexts.TryGetValue(arguments, out int priorDepth))
         {
@@ -229,11 +248,13 @@ internal partial class TypeSignatureDiscovery<TResult>
             return false;
         }
 
-        // Reserving before checking limits preserves ordinary discovery's first-visit/FIFO behavior
+        // Reserving before checking limits preserves ordinary discovery's first-visit/FIFO behavior.
         // Defer shorter sightings to supplemental replay rather than changing primary scheduling.
         contexts.Add(arguments, depth);
 
-        return TryReserveTransitiveInstantiation(depth: depth) && IsMethodWithinDepthLimit(method, depth);
+        return
+            (CanShareMemberReservation(scanContext, method.DeclaringType, arguments) || TryReserveTransitiveInstantiation(depth: depth)) &&
+            IsMethodWithinDepthLimit(method, depth);
     }
 
     /// <summary>
@@ -243,21 +264,49 @@ internal partial class TypeSignatureDiscovery<TResult>
     /// <param name="arguments">The combined type and method argument key.</param>
     /// <param name="contexts">The method's visited contexts.</param>
     /// <param name="depth">The supplemental traversal depth.</param>
+    /// <param name="scanContext">The ordinary member scan exposing the operand, if any.</param>
     /// <returns>Whether to enqueue the method body.</returns>
     private bool TryReserveSupplementalMethodContext(
         MethodDefinition method,
         IList<TypeSignature> arguments,
         Dictionary<IList<TypeSignature>, int> contexts,
-        int depth)
+        int depth,
+        MemberScanContext? scanContext)
     {
         bool visited = contexts.TryGetValue(arguments, out int priorDepth);
 
-        // Exclude covered work before diagnostics or budget charges; a shorter replay reuses its reservation
-        return
-            (!visited || priorDepth > depth) &&
-            _primary?.IsMethodCovered(method, arguments, depth) is not true &&
-            IsMethodWithinDepthLimit(method, depth) &&
-            (visited || TryReserveTransitiveInstantiation(depth: depth));
+        // Only a shorter path can improve on work already admitted by this traversal
+        if (visited && priorDepth <= depth)
+        {
+            return false;
+        }
+
+        // Primary coverage needs no supplemental replay, diagnostics, or reservation
+        if (_primary?.IsMethodCovered(method, arguments, depth) is true)
+        {
+            return false;
+        }
+
+        // Check depth before charging, even when a previous or shared reservation is available
+        if (!IsMethodWithinDepthLimit(method, depth))
+        {
+            return false;
+        }
+
+        // A shorter replay reuses this traversal's existing reservation
+        if (visited)
+        {
+            return true;
+        }
+
+        // An unchanged closed substitution can borrow the active lexical family's reservation
+        if (CanShareMemberReservation(scanContext, method.DeclaringType, arguments))
+        {
+            return true;
+        }
+
+        // Only genuinely new expansion spends the remaining supplemental allowance
+        return TryReserveTransitiveInstantiation(depth: depth);
     }
 
     /// <summary>
@@ -290,7 +339,7 @@ internal partial class TypeSignatureDiscovery<TResult>
     /// <returns>Whether expansion may proceed, or no reservation is needed.</returns>
     private bool TryReserveTransitiveInstantiation(int depth)
     {
-        // Roots are unbounded; contexts beyond the depth limit will not be queued at all
+        // Roots need no reservation, and contexts beyond the depth limit will not be queued
         if (depth is 0 or > MaxDiscoveryDepth)
         {
             return true;
@@ -424,7 +473,7 @@ internal partial class TypeSignatureDiscovery<TResult>
         /// <summary>The method body to scan, or <see langword="null"/> for a type context.</summary>
         public MethodDefinition? Method { get; } = method;
 
-        /// <summary>The substituted method context; type contexts are composed when dequeued.</summary>
+        /// <summary>The substituted method context (type contexts are composed when dequeued).</summary>
         public GenericContext Context { get; } = context;
 
         /// <summary>The expansion depth, with zero reserved for explicit metadata roots.</summary>
