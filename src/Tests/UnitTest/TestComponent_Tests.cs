@@ -12,14 +12,12 @@ using Windows.Storage;
 using Windows.Storage.Streams;
 using WindowsRuntime;
 using WindowsRuntime.InteropServices;
+using static UnitTest.TestWinRTAssertions;
 
 namespace UnitTest
 {
-    [TestClass]
-    public class TestWinRT
+    internal static class TestWinRTAssertions
     {
-        public ITests Tests { get; private set; } = TestRunner.MakeTests();
-
         public static bool AllEqual<T>(T x, params T[] list) =>
             list.All(y => x.Equals(y));
 
@@ -28,6 +26,12 @@ namespace UnitTest
 
         public static bool SequencesEqual<T>(IEnumerable<T> x, params IEnumerable<T>[] list) =>
             list.All(y => x.SequenceEqual(y));
+    }
+
+    [TestClass]
+    public class TestWinRT
+    {
+        public ITests Tests { get; private set; } = TestRunner.MakeTests();
 
         [TestMethod]
         public void Params_Bool()

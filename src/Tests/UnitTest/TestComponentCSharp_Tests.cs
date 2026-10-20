@@ -549,7 +549,7 @@ namespace UnitTest
             var buffer = arr.AsBuffer();
 
             Assert.IsTrue(WindowsRuntimeBufferMarshal.TryGetArray(buffer, out ArraySegment<byte> array));
-            Assert.AreEqual(arr, array.Array);
+            Assert.AreSame(arr, array.Array);
         }
 
         [TestMethod]
@@ -559,7 +559,7 @@ namespace UnitTest
             var buffer = arr.AsBuffer(1, 2);
 
             Assert.IsTrue(WindowsRuntimeBufferMarshal.TryGetArray(buffer, out ArraySegment<byte> array));
-            Assert.AreEqual(arr, array.Array);
+            Assert.AreSame(arr, array.Array);
             Assert.AreEqual(1, array.Offset);
             Assert.AreEqual(2, array.Count);
         }
@@ -647,7 +647,6 @@ namespace UnitTest
         [DataRow(typeof(TestComponentCSharp.EnumValue?), "Windows.Foundation.IReference`1<TestComponentCSharp.EnumValue>", "Metadata")]
         [DataRow(typeof(TestComponentCSharp.BlittableStruct?), "Windows.Foundation.IReference`1<TestComponentCSharp.BlittableStruct>", "Metadata")]
         [DataRow(typeof(IList<Int32?>), "Windows.Foundation.Collections.IVector`1<Windows.Foundation.IReference`1<Int32>>", "Metadata")]
-        [DataRow(typeof(Int32?[]), "Windows.Foundation.IReferenceArray`1<Windows.Foundation.IReference`1<Int32>>", "Metadata")]
         // Generic Types
         [DataRow(typeof(IList<long>), "Windows.Foundation.Collections.IVector`1<Int64>", "Metadata")]
         [DataRow(typeof(IList<TestComponentCSharp.EventWithGuid>), "Windows.Foundation.Collections.IVector`1<TestComponentCSharp.EventWithGuid>", "Metadata")] // Using the fully qualified asssembly name
@@ -678,29 +677,30 @@ namespace UnitTest
         [DataRow(typeof(ICollection<object>), "System.Collections.Generic.ICollection`1[[System.Object, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e", "Custom")]
         [DataRow(typeof(KeyValuePair<Object, Object>?), "System.Nullable`1[[System.Collections.Generic.KeyValuePair`2[[System.Object, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Object, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e", "Custom")]
         [DataRow(typeof(KeyValuePair<Object, Object[]>), "System.Collections.Generic.KeyValuePair`2[[System.Object, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Object[], System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e", "Custom")]
-        [DataRow(typeof(long[][]), "System.Int64[][], System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e", "Custom")]
-        // Arrays
-        [DataRow(typeof(Object[]), "Windows.Foundation.IReferenceArray`1<Object>", "Metadata")]
-        [DataRow(typeof(long[]), "Windows.Foundation.IReferenceArray`1<Int64>", "Metadata")]
-        [DataRow(typeof(TestComponentCSharp.Class[]), "Windows.Foundation.IReferenceArray`1<TestComponentCSharp.Class>", "Metadata")]
-        [DataRow(typeof(TestComponentCSharp.ComposedBlittableStruct[]), "Windows.Foundation.IReferenceArray`1<TestComponentCSharp.ComposedBlittableStruct>", "Metadata")]
-        [DataRow(typeof(TestComponentCSharp.IArtist[]), "Windows.Foundation.IReferenceArray`1<TestComponentCSharp.IArtist>", "Metadata")]
-        [DataRow(typeof(TestComponentCSharp.EnumValue[]), "Windows.Foundation.IReferenceArray`1<TestComponentCSharp.EnumValue>", "Metadata")]
-        [DataRow(typeof(TestComponentCSharp.EventHandler0[]), "Windows.Foundation.IReferenceArray`1<TestComponentCSharp.EventHandler0>", "Metadata")]
-        [DataRow(typeof(Point[]), "Windows.Foundation.IReferenceArray`1<Windows.Foundation.Point>", "Metadata")]
-        [DataRow(typeof(IList<long>[]), "Windows.Foundation.IReferenceArray`1<Windows.Foundation.Collections.IVector`1<Int64>>", "Metadata")]
-        [DataRow(typeof(IList<long?>[]), "Windows.Foundation.IReferenceArray`1<Windows.Foundation.Collections.IVector`1<Windows.Foundation.IReference`1<Int64>>>", "Metadata")]
-        [DataRow(typeof(KeyValuePair<Object, Object>[]), "Windows.Foundation.IReferenceArray`1<Windows.Foundation.Collections.IKeyValuePair`2<Object, Object>>", "Metadata")]
+        [DynamicData(nameof(GetArrayTypePropertyData))]
         public void TestTypePropertyConvertToUnmanaged(Type type, string name, string kind)
         {
             TestObject.TypeProperty = type;
             Assert.AreEqual(name, TestObject.GetTypePropertyAbiName());
             Assert.AreEqual(kind, TestObject.GetTypePropertyKind());
         }
-        
-        [MethodImpl(MethodImplOptions.NoInlining)]
-        static void KeepType([DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] Type type)
+
+        // MSTest cannot generate attribute metadata for array Type arguments in DataRow.
+        public static IEnumerable<object[]> GetArrayTypePropertyData()
         {
+            yield return [typeof(Int32?[]), "Windows.Foundation.IReferenceArray`1<Windows.Foundation.IReference`1<Int32>>", "Metadata"];
+            yield return [typeof(long[][]), "System.Int64[][], System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e", "Custom"];
+            yield return [typeof(Object[]), "Windows.Foundation.IReferenceArray`1<Object>", "Metadata"];
+            yield return [typeof(long[]), "Windows.Foundation.IReferenceArray`1<Int64>", "Metadata"];
+            yield return [typeof(TestComponentCSharp.Class[]), "Windows.Foundation.IReferenceArray`1<TestComponentCSharp.Class>", "Metadata"];
+            yield return [typeof(TestComponentCSharp.ComposedBlittableStruct[]), "Windows.Foundation.IReferenceArray`1<TestComponentCSharp.ComposedBlittableStruct>", "Metadata"];
+            yield return [typeof(TestComponentCSharp.IArtist[]), "Windows.Foundation.IReferenceArray`1<TestComponentCSharp.IArtist>", "Metadata"];
+            yield return [typeof(TestComponentCSharp.EnumValue[]), "Windows.Foundation.IReferenceArray`1<TestComponentCSharp.EnumValue>", "Metadata"];
+            yield return [typeof(TestComponentCSharp.EventHandler0[]), "Windows.Foundation.IReferenceArray`1<TestComponentCSharp.EventHandler0>", "Metadata"];
+            yield return [typeof(Point[]), "Windows.Foundation.IReferenceArray`1<Windows.Foundation.Point>", "Metadata"];
+            yield return [typeof(IList<long>[]), "Windows.Foundation.IReferenceArray`1<Windows.Foundation.Collections.IVector`1<Int64>>", "Metadata"];
+            yield return [typeof(IList<long?>[]), "Windows.Foundation.IReferenceArray`1<Windows.Foundation.Collections.IVector`1<Windows.Foundation.IReference`1<Int64>>>", "Metadata"];
+            yield return [typeof(KeyValuePair<Object, Object>[]), "Windows.Foundation.IReferenceArray`1<Windows.Foundation.Collections.IKeyValuePair`2<Object, Object>>", "Metadata"];
         }
         
         // Some types will fail due to trimming when testing in AOT so it is necessary to
@@ -711,6 +711,11 @@ namespace UnitTest
         {
             KeepType(typeof(INotifyCollectionChanged));
             KeepType(typeof(INotifyPropertyChanged));
+
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            static void KeepType([DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] Type type)
+            {
+            }
         }
 
         class CustomDictionary : Dictionary<string, string> { }
@@ -1661,7 +1666,7 @@ namespace UnitTest
             Assert.AreEqual(map.Count, valueSet.Count);
             foreach (var item in map)
             {
-                Assert.AreEqual(valueSet[item.Key], item.Value);
+                Assert.AreSame(valueSet[item.Key], item.Value);
             }
         }
 
@@ -2684,7 +2689,7 @@ namespace UnitTest
             var expected = new int[] { 0, 1, 2 };
 
             TestObject.BindableIterableProperty = expected;
-            Assert.AreEqual(expected, TestObject.BindableIterableProperty);
+            Assert.AreSame(expected, TestObject.BindableIterableProperty);
             TestObject.CallForBindableIterable(() => expected);
             TestObject.BindableIterablePropertyChanged +=
                 (object sender, IEnumerable value) => CollectionAssert.AreEqual(expected, value.Cast<int>().ToArray());
@@ -2731,7 +2736,7 @@ namespace UnitTest
             // Values must be sequential from 0 because the native bindable setter validates them
             IReadOnlyList<int> bindable = [0, 1, 2];
             TestObject.BindableIterableProperty = bindable;
-            Assert.AreEqual(bindable, TestObject.BindableIterableProperty);
+            Assert.AreSame(bindable, TestObject.BindableIterableProperty);
 
             int SumViaIterator(IEnumerable<int> values)
             {
@@ -4957,11 +4962,9 @@ namespace UnitTest
         //    }
         //}
 
-        // 'TestPnpPropertiesInLoop' is a manual stress helper kept 'private' so MSTest doesn't auto-run it
-        // (PnP enumeration is environment-dependent). The '[TestMethod]' is retained for easy ad-hoc runs, so
-        // suppress MSTEST0003 ("test method signature is invalid") for this intentionally-private method.
-#pragma warning disable MSTEST0003
-        [TestMethod]
+        // Manual stress test: PnP enumeration depends on the devices available on the machine.
+        // To run it with MSTest, uncomment [TestMethod] and make the method public.
+        // [TestMethod]
         private async Task TestPnpPropertiesInLoop()
         {
             for (int i = 0; i < 10; i++)
@@ -4969,7 +4972,6 @@ namespace UnitTest
                 await TestPnpPropertiesAsync();
             }
         }
-#pragma warning restore MSTEST0003
 
         private async Task TestPnpPropertiesAsync()
         {
