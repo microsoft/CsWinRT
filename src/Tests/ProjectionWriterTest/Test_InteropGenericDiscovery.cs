@@ -635,6 +635,30 @@ public partial class Test_InteropGenericDiscovery
         }
     }
 
+    private static IEnumerable<(string[] References, int Parallelism)> EnumerateDiscoveryInputs(string[] references, bool fullMatrix = true)
+    {
+        string[] shuffled = [.. references];
+        new Random(42).Shuffle(shuffled);
+        string[][] orders = fullMatrix ? [references, [.. references.Reverse()], shuffled] : [references, shuffled];
+        int[] degreesOfParallelism = fullMatrix ? [1, 2, 4, 16, -1] : [1, 4, -1];
+
+        foreach (string[] inputs in orders)
+        {
+            foreach (int parallelism in degreesOfParallelism)
+            {
+                yield return (inputs, parallelism);
+            }
+        }
+    }
+
+    private static string[] GetDiscoveryWarnings(string log)
+    {
+        return [.. log.Split('\n')
+            .Select(static line => line.Trim())
+            .Where(static line => line.StartsWith("warning CSWINRTINTEROPGEN", StringComparison.Ordinal))
+            .Order(StringComparer.Ordinal)];
+    }
+
     private static (int ExitCode, string Log) RunGenerator(
         string directory,
         string app,

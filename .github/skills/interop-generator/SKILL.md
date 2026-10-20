@@ -324,7 +324,7 @@ The generator processes two categories of assemblies:
 
 ## Discovery phase
 
-The discovery phase (`InteropGenerator.Discover.cs` + `Discovery/InteropTypeDiscovery.cs`) scans all input assemblies to find every type requiring marshalling code. It uses `Parallel.ForEach` over all input modules for performance.
+The discovery phase (`InteropGenerator.Discover.cs` + `Discovery/InteropTypeDiscovery.cs`) scans all input assemblies to find every type requiring marshalling code. After loading modules, it builds a stable sorted array to define `MethodDispatchIndex` ordinals. Module processing uses `Parallel.ForEach` with a non-buffering enumerable partitioner over that same array: workers claim one module at a time rather than holding chunks that can delay expensive modules. This changes only work distribution, not the ordinal source, per-module admission order, marshalling policy, or discovery limits. Serial processing retains the array order; no cost-based reordering is applied.
 
 ### Discovery state (`InteropGeneratorDiscoveryState`)
 
