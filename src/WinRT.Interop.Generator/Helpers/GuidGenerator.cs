@@ -6,6 +6,7 @@ using System.Buffers;
 using System.Diagnostics;
 using System.Security.Cryptography;
 using System.Text;
+using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 using WindowsRuntime.InteropGenerator.References;
 
@@ -58,7 +59,16 @@ internal static class GuidGenerator
     {
         iid = default;
 
-        if (!type.IsWindowsRuntimeIidType(interopReferences))
+        if (!type.IsWindowsRuntimeType(interopReferences) ||
+            interopReferences.SignatureComparer.Equals(type, interopReferences.EventHandler))
+        {
+            return false;
+        }
+
+        TypeDefinition definition = type.Resolve(interopReferences.RuntimeContext);
+
+        // Static runtime classes have metadata names, but no native interface.
+        if (definition.IsAbstract && definition.IsSealed)
         {
             return false;
         }
