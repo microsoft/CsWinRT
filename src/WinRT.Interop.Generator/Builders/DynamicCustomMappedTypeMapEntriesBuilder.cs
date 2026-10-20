@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System;
-using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using AsmResolver;
 using AsmResolver.DotNet;
@@ -23,27 +22,6 @@ namespace WindowsRuntime.InteropGenerator.Builders;
 internal static partial class DynamicCustomMappedTypeMapEntriesBuilder
 {
     /// <summary>
-    /// Enumerates the public types whose metadata mappings depend on the XAML projection mode.
-    /// </summary>
-    /// <param name="interopReferences">The references for this invocation.</param>
-    /// <returns>The shared inputs for metadata discovery and dynamic map emission.</returns>
-    public static IEnumerable<TypeSignature> EnumerateMappedTypes(InteropReferences interopReferences)
-    {
-        return [
-            interopReferences.IEnumerable.ToReferenceTypeSignature(),
-            interopReferences.IEnumerator.ToReferenceTypeSignature(),
-            interopReferences.IList.ToReferenceTypeSignature(),
-            interopReferences.ICommand.ToReferenceTypeSignature(),
-            interopReferences.INotifyCollectionChanged.ToReferenceTypeSignature(),
-            interopReferences.INotifyPropertyChanged.ToReferenceTypeSignature(),
-            interopReferences.NotifyCollectionChangedEventArgs.ToReferenceTypeSignature(),
-            interopReferences.PropertyChangedEventArgs.ToReferenceTypeSignature(),
-            interopReferences.NotifyCollectionChangedEventHandler.ToReferenceTypeSignature(),
-            interopReferences.PropertyChangedEventHandler.ToReferenceTypeSignature(),
-            interopReferences.NotifyCollectionChangedAction.ToValueTypeSignature()];
-    }
-
-    /// <summary>
     /// Defines all assembly attributes for dynamic custom-mapped type map entries.
     /// </summary>
     /// <param name="args">The arguments for this invocation.</param>
@@ -56,51 +34,98 @@ internal static partial class DynamicCustomMappedTypeMapEntriesBuilder
         InteropReferences interopReferences,
         ModuleDefinition module)
     {
-        foreach (TypeSignature type in EnumerateMappedTypes(interopReferences))
-        {
-            if (interopReferences.SignatureComparer.Equals(type, interopReferences.ICommand))
-            {
-                ICommandInterfaceType(interopDefinitions, interopReferences, module, args.UseWindowsUIXamlProjections);
-            }
-            else if (interopReferences.SignatureComparer.Equals(type, interopReferences.INotifyCollectionChanged))
-            {
-                INotifyCollectionChangedInterfaceType(interopDefinitions, interopReferences, module, args.UseWindowsUIXamlProjections);
-            }
-            else if (interopReferences.SignatureComparer.Equals(type, interopReferences.INotifyPropertyChanged))
-            {
-                INotifyPropertyChangedInterfaceType(interopDefinitions, interopReferences, module, args.UseWindowsUIXamlProjections);
-            }
-            else
-            {
-                TypeDefinition definition = type.Resolve(interopReferences.RuntimeContext);
+        InterfaceType(
+            windowsUIXamlMetadata: "Windows.Foundation.UniversalApiContract",
+            microsoftUIXamlMetadata: "Microsoft.UI.Xaml.WinUIContract",
+            trimTarget: interopReferences.IEnumerable.ToReferenceTypeSignature(),
+            interopDefinitions: interopDefinitions,
+            interopReferences: interopReferences,
+            module: module,
+            useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
+            useComWrappersMarshallerAttribute: true);
 
-                if (definition.IsInterface)
-                {
-                    InterfaceType(
-                        "Windows.Foundation.UniversalApiContract", "Microsoft.UI.Xaml.WinUIContract", type,
-                        interopDefinitions, interopReferences, module, args.UseWindowsUIXamlProjections,
-                        useComWrappersMarshallerAttribute: true);
-                }
-                else if (definition.IsDelegate)
-                {
-                    DelegateType(
-                        "Windows.Foundation.UniversalApiContract", "Microsoft.UI.Xaml.WinUIContract", type,
-                        interopDefinitions, interopReferences, module, args.UseWindowsUIXamlProjections);
-                }
-                else if (definition.IsValueType)
-                {
-                    ValueType(
-                        "Windows.Foundation.UniversalApiContract", "Microsoft.UI.Xaml.WinUIContract", type,
-                        interopDefinitions, interopReferences, module, args.UseWindowsUIXamlProjections);
-                }
-                else
-                {
-                    ClassType(
-                        "Windows.Foundation.UniversalApiContract", "Microsoft.UI.Xaml.WinUIContract", type,
-                        interopDefinitions, interopReferences, module, args.UseWindowsUIXamlProjections);
-                }
-            }
-        }
+        InterfaceType(
+            windowsUIXamlMetadata: "Windows.Foundation.UniversalApiContract",
+            microsoftUIXamlMetadata: "Microsoft.UI.Xaml.WinUIContract",
+            trimTarget: interopReferences.IEnumerator.ToReferenceTypeSignature(),
+            interopDefinitions: interopDefinitions,
+            interopReferences: interopReferences,
+            module: module,
+            useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
+            useComWrappersMarshallerAttribute: true);
+
+        InterfaceType(
+            windowsUIXamlMetadata: "Windows.Foundation.UniversalApiContract",
+            microsoftUIXamlMetadata: "Microsoft.UI.Xaml.WinUIContract",
+            trimTarget: interopReferences.IList.ToReferenceTypeSignature(),
+            interopDefinitions: interopDefinitions,
+            interopReferences: interopReferences,
+            module: module,
+            useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
+            useComWrappersMarshallerAttribute: true);
+
+        ICommandInterfaceType(
+            interopDefinitions: interopDefinitions,
+            interopReferences: interopReferences,
+            module: module,
+            useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections);
+
+        INotifyCollectionChangedInterfaceType(
+            interopDefinitions: interopDefinitions,
+            interopReferences: interopReferences,
+            module: module,
+            useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections);
+
+        INotifyPropertyChangedInterfaceType(
+            interopDefinitions: interopDefinitions,
+            interopReferences: interopReferences,
+            module: module,
+            useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections);
+
+        ClassType(
+            windowsUIXamlMetadata: "Windows.Foundation.UniversalApiContract",
+            microsoftUIXamlMetadata: "Microsoft.UI.Xaml.WinUIContract",
+            trimTarget: interopReferences.NotifyCollectionChangedEventArgs.ToReferenceTypeSignature(),
+            interopDefinitions: interopDefinitions,
+            interopReferences: interopReferences,
+            module: module,
+            useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections);
+
+        ClassType(
+            windowsUIXamlMetadata: "Windows.Foundation.UniversalApiContract",
+            microsoftUIXamlMetadata: "Microsoft.UI.Xaml.WinUIContract",
+            trimTarget: interopReferences.PropertyChangedEventArgs.ToReferenceTypeSignature(),
+            interopDefinitions: interopDefinitions,
+            interopReferences: interopReferences,
+            module: module,
+            useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections);
+
+        DelegateType(
+            windowsUIXamlMetadata: "Windows.Foundation.UniversalApiContract",
+            microsoftUIXamlMetadata: "Microsoft.UI.Xaml.WinUIContract",
+            trimTarget: interopReferences.NotifyCollectionChangedEventHandler.ToReferenceTypeSignature(),
+            interopDefinitions: interopDefinitions,
+            interopReferences: interopReferences,
+            module: module,
+            useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections);
+
+        DelegateType(
+            windowsUIXamlMetadata: "Windows.Foundation.UniversalApiContract",
+            microsoftUIXamlMetadata: "Microsoft.UI.Xaml.WinUIContract",
+            trimTarget: interopReferences.PropertyChangedEventHandler.ToReferenceTypeSignature(),
+            interopDefinitions: interopDefinitions,
+            interopReferences: interopReferences,
+            module: module,
+            useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections);
+
+        ValueType(
+            windowsUIXamlMetadata: "Windows.Foundation.UniversalApiContract",
+            microsoftUIXamlMetadata: "Microsoft.UI.Xaml.WinUIContract",
+            trimTarget: interopReferences.NotifyCollectionChangedAction.ToValueTypeSignature(),
+            interopDefinitions: interopDefinitions,
+            interopReferences: interopReferences,
+            module: module,
+            useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections);
 
         IBindableVectorViewType(
             interopDefinitions: interopDefinitions,
