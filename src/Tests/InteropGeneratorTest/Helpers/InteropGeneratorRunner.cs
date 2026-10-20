@@ -442,7 +442,10 @@ internal sealed class InteropGeneratorRunner : IDisposable
                 .Select(name => new XElement(ns + "Target", new XAttribute("Name", name))),
             new XElement(ns + "Target",
                 new XAttribute("Name", "Run"),
-                new XAttribute("DependsOnTargets", "_RunCsWinRTInteropGenerator"))));
+                new XAttribute("DependsOnTargets", "_RunCsWinRTInteropGenerator"),
+                new XElement(ns + "Message",
+                    new XAttribute("Importance", "High"),
+                    new XAttribute("Text", "MSBuild parent DOTNET_gcServer=$([System.Environment]::GetEnvironmentVariable('DOTNET_gcServer'))")))));
 
         project.Save(projectPath);
 
@@ -455,7 +458,11 @@ internal sealed class InteropGeneratorRunner : IDisposable
         string? disabledAssemblyName = null,
         bool? treatWarningsAsErrors = null,
         string? logDirectory = null,
-        string? debugReproDirectory = null)
+        string? debugReproDirectory = null,
+        string? enableServerGC = null,
+        string? gcServerEnvironment = null,
+        int? maxDegreesOfParallelism = null,
+        bool expectFailure = false)
     {
         string directory = Path.GetDirectoryName(projectPath)!;
         string binlog = Path.Combine(directory, $"build-{++msbuildInvocation}.binlog");
@@ -464,8 +471,30 @@ internal sealed class InteropGeneratorRunner : IDisposable
         startInfo.ArgumentList.Add(projectPath);
         startInfo.ArgumentList.Add("-t:Run");
         startInfo.ArgumentList.Add("-nologo");
-        startInfo.ArgumentList.Add("-v:quiet");
+        startInfo.ArgumentList.Add("-v:detailed");
         startInfo.ArgumentList.Add("-bl:" + binlog);
+
+        if (enableServerGC is not null)
+        {
+            startInfo.ArgumentList.Add("-p:CsWinRTEnableInteropGeneratorServerGC=" + enableServerGC);
+        }
+
+        if (maxDegreesOfParallelism is { } parallelism)
+        {
+            startInfo.ArgumentList.Add("-p:CsWinRTGeneratorMaxDegreesOfParallelism=" + parallelism);
+        }
+
+        if (gcServerEnvironment is not null)
+        {
+            if (gcServerEnvironment.Length == 0)
+            {
+                startInfo.Environment.Remove("DOTNET_gcServer");
+            }
+            else
+            {
+                startInfo.Environment["DOTNET_gcServer"] = gcServerEnvironment;
+            }
+        }
 
         if (analyzeNetStandardAssemblies is { } analyze)
         {
@@ -493,8 +522,16 @@ internal sealed class InteropGeneratorRunner : IDisposable
         }
 
         (int exitCode, string log) = await RunProcessAsync(startInfo);
-        Assert.AreEqual(0, exitCode, log);
+        File.WriteAllText(Path.ChangeExtension(binlog, ".log"), log);
         Assert.IsTrue(File.Exists(binlog), "MSBuild must produce its diagnostic log.");
+
+        if (expectFailure)
+        {
+            Assert.AreNotEqual(0, exitCode, log);
+            return log;
+        }
+
+        Assert.AreEqual(0, exitCode, log);
 
         return Path.Combine(directory, "output", "WinRT.Interop.dll");
     }

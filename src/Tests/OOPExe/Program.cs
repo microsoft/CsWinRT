@@ -14,8 +14,10 @@ namespace OOPExe
 
         static unsafe void Main(string[] args)
         {
+            Guid classId = new Guid("15F1005B-E23A-4154-9417-CCD083D452BB");
+            Guid interfaceId = typeof(IAsyncAction).GUID;
             void* obj;
-            int hr = PInvoke.CoCreateInstance(new Guid("15F1005B-E23A-4154-9417-CCD083D452BB"), null, CLSCTX.CLSCTX_LOCAL_SERVER, typeof(IAsyncAction).GUID, out obj);
+            int hr = PInvoke.CoCreateInstance(&classId, null, CLSCTX.CLSCTX_LOCAL_SERVER, &interfaceId, &obj);
             if (hr < 0)
             {
                 Marshal.ThrowExceptionForHR(hr);
