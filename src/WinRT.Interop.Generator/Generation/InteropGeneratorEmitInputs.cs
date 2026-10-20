@@ -9,7 +9,6 @@ using System.Threading;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 using WindowsRuntime.InteropGenerator.Helpers;
-using WindowsRuntime.InteropGenerator.Builders;
 using WindowsRuntime.InteropGenerator.Models;
 using WindowsRuntime.InteropGenerator.References;
 
@@ -279,7 +278,17 @@ internal sealed class InteropGeneratorEmitInputs
             .. _discoveryState.IAsyncOperationWithProgress2Types,
             .. _discoveryState.SzArrayAndVtableTypes.Keys,
             .. runtime.GetRuntimeMetadataTypes(),
-            .. DynamicCustomMappedTypeMapEntriesBuilder.EnumerateMappedTypes(_interopReferences)];
+            _interopReferences.IEnumerable.ToReferenceTypeSignature(),
+            _interopReferences.IEnumerator.ToReferenceTypeSignature(),
+            _interopReferences.IList.ToReferenceTypeSignature(),
+            _interopReferences.ICommand.ToReferenceTypeSignature(),
+            _interopReferences.INotifyCollectionChanged.ToReferenceTypeSignature(),
+            _interopReferences.INotifyPropertyChanged.ToReferenceTypeSignature(),
+            _interopReferences.NotifyCollectionChangedEventArgs.ToReferenceTypeSignature(),
+            _interopReferences.PropertyChangedEventArgs.ToReferenceTypeSignature(),
+            _interopReferences.NotifyCollectionChangedEventHandler.ToReferenceTypeSignature(),
+            _interopReferences.PropertyChangedEventHandler.ToReferenceTypeSignature(),
+            _interopReferences.NotifyCollectionChangedAction.ToValueTypeSignature()];
 
         IEnumerable<ModuleDefinition> projections = new[]
         {
