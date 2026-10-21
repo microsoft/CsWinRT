@@ -1578,7 +1578,7 @@ namespace ObjectLifetimeTests
         }
 
         // Bug 411198 
-        // Not running because it modifies Window.Current
+        // Not running because it replaces the application window's content
         // [Test]
         [MethodImplAttribute(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
         public void ReproTestGroupedCollection()
@@ -1603,7 +1603,7 @@ namespace ObjectLifetimeTests
                 .CallFromUIThread(() =>
                 {
                     rootFrame = new Frame();
-                    Window.Current.Content = rootFrame;
+                    ((ObjectLifetimeTests.Lifted.App)Application.Current).m_window.Content = rootFrame;
                 })
                 .CallFromUIThread(() => a())
                 .CallFromUIThread(() => a())
@@ -1611,7 +1611,7 @@ namespace ObjectLifetimeTests
         }
 
         // Bug 411198 
-        // Not running because it modifies Window.Current
+        // Not running because it replaces the application window's content
         // [Test]
         [MethodImplAttribute(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
         public void ReproTestGroupedCollection2()
@@ -1628,7 +1628,7 @@ namespace ObjectLifetimeTests
                 .CallFromUIThread(() =>
                 {
                     rootFrame = new Frame();
-                    Window.Current.Content = rootFrame;
+                    ((ObjectLifetimeTests.Lifted.App)Application.Current).m_window.Content = rootFrame;
 
                     CustomViewModel.Current.LoadData();
                 })
