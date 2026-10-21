@@ -40,8 +40,9 @@ namespace ObjectLifetimeTests.Lifted
             LogStartup("App.InitializeComponent completed");
         }
 
-        // DISABLE_XAML_GENERATED_MAIN drops the XAML-generated Main (it calls the 2.x
-        // WinRT.ComWrappersSupport.InitializeComWrappers(), which is gone in 3.0). Provide our own.
+        // Use our own Main and dispatcher setup instead of the XAML-generated entry point.
+        // The project also disables legacy CsWinRT 2.x codegen to avoid ComWrappersSupport
+        // initialization and CastExtensions.As<T>() calls, both removed in 3.0.
         [global::System.STAThread]
         static void Main(string[] args)
         {
