@@ -12,6 +12,9 @@
     <PackageReference Include="Microsoft.WindowsAppSDK.WinUI" GeneratePathProperty="true">
       <ExcludeAssets>build; buildtransitive; compile; runtime</ExcludeAssets>
     </PackageReference>
+    <PackageReference Include="Microsoft.WindowsAppSDK.InteractiveExperiences">
+      <ExcludeAssets>build; buildtransitive; compile; runtime</ExcludeAssets>
+    </PackageReference>
   </ItemGroup>
 
   <PropertyGroup>
