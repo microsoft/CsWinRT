@@ -24,7 +24,7 @@ internal sealed partial class TypeSignatureDiscovery<TResult>
     /// <summary>The maximum signature element count for a transitive signature or method context.</summary>
     private const int MaxSignatureComplexity = 256;
 
-    /// <summary>The shared budget for transitive type and method instantiations.</summary>
+    /// <summary>The shared reservation budget, excluding ordinary same-family transitions at an unchanged closed substitution.</summary>
     private const int MaxTransitiveTypes = 1024;
 
     /// <summary>The root module, also used for resolution and diagnostics.</summary>
@@ -253,7 +253,7 @@ internal sealed partial class TypeSignatureDiscovery<TResult>
         DispatchContextRegistry dispatchContexts,
         bool completeCrossModuleJoins)
     {
-        // Keep construction inside this iterator: repeated or interleaved enumerations must not share state
+        // Keep construction inside this iterator: repeated or interleaved enumerations must not share state.
         // A join pass only reads the completed registry, so it publishes nothing and uses supplemental admission.
         TypeSignatureDiscovery<TResult> discovery = new(
             module: module,
@@ -280,7 +280,7 @@ internal sealed partial class TypeSignatureDiscovery<TResult>
 
         if (completeCrossModuleJoins)
         {
-            // Only actual sightings in the join traversal enter this queue; imported receivers do not
+            // Only actual sightings in the join traversal enter this queue (not imported receivers)
             foreach (TResult result in discovery.EnumerateDefaultInterfaceMembers())
             {
                 yield return result;
@@ -385,7 +385,7 @@ internal sealed partial class TypeSignatureDiscovery<TResult>
             }
         }
 
-        // 'MethodSpec' rows carry no opcode; actual dispatch sites do not get the root's one-hop exemption
+        // 'MethodSpec' rows carry no opcode, so actual dispatch sites do not get the root's one-hop exemption
         foreach (MethodDefinition method in _module.EnumerateTableMembers<MethodDefinition>(TableIndex.Method))
         {
             foreach (MethodOperand operand in method.EnumerateMethodOperands())

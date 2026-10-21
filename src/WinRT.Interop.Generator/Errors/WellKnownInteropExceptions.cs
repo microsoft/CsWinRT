@@ -944,7 +944,7 @@ internal sealed class WellKnownInteropExceptions : IGeneratorErrorFactory
     public static WellKnownInteropWarning GenericTypeDiscoveryTransitiveTypeLimitExceededWarning(ModuleDefinition module, int limit)
     {
         return Warning(106,
-            $"Generic member discovery reached the maximum of {limit} transitive type or method instantiations eligible for member analysis while processing module '{module}': " +
+            $"Generic member discovery reached the maximum of {limit} reservations for transitive type or method instantiations eligible for member analysis while processing module '{module}': " +
             "additional instantiations will not have their members analyzed. Marshalling support for types only reachable through those members may be incomplete.");
     }
 
@@ -954,7 +954,7 @@ internal sealed class WellKnownInteropExceptions : IGeneratorErrorFactory
     public static WellKnownInteropWarning SupplementalGenericDiscoveryLimitExceededWarning(ModuleDefinition module, int limit)
     {
         return Warning(106,
-            $"Supplemental generic discovery reached the maximum of {limit} transitive type or method instantiations while processing module '{module}': " +
+            $"Supplemental generic discovery reached the maximum of {limit} reservations for transitive type or method instantiations while processing module '{module}': " +
             "additional dispatch-derived or shorter-depth contexts will not have their members analyzed. " +
             "Primary discovery results are preserved, but supplemental marshalling support may be incomplete.");
     }
