@@ -69,6 +69,10 @@
     <EmbeddedResource Include="Resources\ArrayPropertySetterTests.cs" />
     <Compile Remove="Resources\GenericMarshallerTests.cs" />
     <EmbeddedResource Include="Resources\GenericMarshallerTests.cs" />
+    <Compile Remove="Resources\NonGenericEnumerableTests.cs" />
+    <EmbeddedResource Include="Resources\NonGenericEnumerableTests.cs" />
+    <Compile Remove="Resources\NonGenericEnumerableNativeObjects.cs" />
+    <EmbeddedResource Include="Resources\NonGenericEnumerableNativeObjects.cs" />
   </ItemGroup>
 
   <!-- Pass the built tool and the pinned WinUI metadata paths to the tests via assembly metadata. -->

@@ -218,10 +218,12 @@ internal static class ProjectionWriterRunner
         string assemblyPath,
         bool referenceProjection = false,
         OutputKind outputKind = OutputKind.DynamicallyLinkedLibrary,
+        string[]? preprocessorSymbols = null,
         params string[] additionalReferences)
     {
         CSharpParseOptions parseOptions = new(LanguageVersion.CSharp14,
-            preprocessorSymbols: referenceProjection ? ["CSWINRT_REFERENCE_PROJECTION"] : []);
+            preprocessorSymbols: [.. referenceProjection ? new[] { "CSWINRT_REFERENCE_PROJECTION" } : [],
+                .. preprocessorSymbols ?? []]);
         CSharpCompilation compilation = CSharpCompilation.Create(
             Path.GetFileNameWithoutExtension(assemblyPath),
             sources.Select((source, index) => CSharpSyntaxTree.ParseText(source, parseOptions, path: $"Source{index}.cs")),

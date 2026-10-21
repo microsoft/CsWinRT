@@ -73,6 +73,28 @@ internal sealed class InteropGeneratorRunner : IDisposable
         }}
         """;
 
+    private const string EnumerableProviderSource = """
+        using System.Collections.Generic;
+        using Windows.Foundation.Collections;
+
+        public static class EnumerableProviderRoots
+        {
+            public static IList<int> List;
+            public static IReadOnlyList<int> ReadOnlyList;
+            public static IList<KeyValuePair<int, string>> Pairs;
+            public static IDictionary<int, string> Dictionary;
+            public static IReadOnlyDictionary<int, string> ReadOnlyDictionary;
+            public static ICollection<KeyValuePair<int, string>> PairCollection;
+            public static IReadOnlyCollection<KeyValuePair<int, string>> ReadOnlyPairCollection;
+            public static IObservableVector<int> ObservableVector;
+            public static IObservableMap<int, string> ObservableMap;
+            internal static IList<InternalElement> InternalList;
+        }
+
+        [WindowsRuntime.WindowsRuntimeType]
+        internal enum InternalElement { Zero }
+        """;
+
     private readonly string[] referencePaths;
     private readonly string[] implementationPaths;
     private readonly string applicationPath;
@@ -84,7 +106,8 @@ internal sealed class InteropGeneratorRunner : IDisposable
         bool overlappingFrameworkReferences = false,
         bool forwardedEnumerableAliases = false,
         bool ccwGroupingCases = false,
-        bool iidNameCollisionCases = false)
+        bool iidNameCollisionCases = false,
+        bool enumerableProviders = false)
     {
         Root = Directory.CreateTempSubdirectory("InteropGeneratorTest_").FullName;
         string referencesDirectory = Directory.CreateDirectory(Path.Combine(Root, "references")).FullName;
@@ -145,6 +168,13 @@ internal sealed class InteropGeneratorRunner : IDisposable
             """, references: [.. Net100.References.All, MetadataReference.CreateFromFile(runtimePath)]);
 
         string[] enumerableAliases = [];
+        string[] enumerableRoots = [];
+
+        if (enumerableProviders)
+        {
+            enumerableRoots = [Compile("EnumerableProviderRoots", EnumerableProviderSource,
+                references: [.. Net100.References.All, MetadataReference.CreateFromFile(runtimePath)])];
+        }
 
         if (forwardedEnumerableAliases)
         {
@@ -233,6 +263,7 @@ internal sealed class InteropGeneratorRunner : IDisposable
             .. enumerableAliases,
             .. groupingTypes,
             .. iidNameCollisions,
+            .. enumerableRoots,
             .. useFrameworkImplementations ? new[] { implementation } : []
         ];
     }
