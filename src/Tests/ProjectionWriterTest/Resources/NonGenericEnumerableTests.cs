@@ -52,7 +52,7 @@ internal static unsafe class Program
                 {
                     "list", "read-only-list", "strings", "pairs", "dictionary", "read-only-dictionary",
                     "observable-vector", "observable-map", "required-vector", "required-map", "bindable",
-                    "first-failure", "concurrent", "negative-cache", "mixed-elements",
+                    "first-failure", "missing-required-iterable", "null-iterator", "concurrent", "negative-cache", "mixed-elements",
                     "generic-adapter", "object-adapter", "bindable-adapter"
                 })
                 {
@@ -118,6 +118,12 @@ internal static unsafe class Program
             case "first-failure":
                 VerifyFirstFailure();
                 break;
+            case "missing-required-iterable":
+                VerifyMissingRequiredIterable();
+                break;
+            case "null-iterator":
+                VerifyNullIterator();
+                break;
             case "concurrent":
                 VerifyConcurrentEnumeration();
                 break;
@@ -173,6 +179,30 @@ internal static unsafe class Program
         }
         Check(native.FirstCalls == 1 && native.IterableQueries == 1 && native.TrapCalls == 0,
             "a failed First must not try another provider");
+
+        native.FirstFailure = 0;
+        VerifyEnumeration(source, ElementKind.Int32);
+        Check(native.FirstCalls == 2 && native.IterableQueries == 1 && native.TrapCalls == 0,
+            "a First error must leave the selected provider cached and usable");
+    }
+
+    private static void VerifyMissingRequiredIterable()
+    {
+        // Deliberately violate the required-interface contract to exercise the nullable provider result
+        using NativeCollection native = new() { RejectTypedIterable = true };
+        CollectionSource value = native.Source;
+        IEnumerable source = value.Items;
+        CheckMarshalledCollection(native, source);
+
+        CheckEnumerationFails(source);
+        CheckEnumerationFails(source);
+        Check(native.FirstCalls == 0 && native.IterableQueries == 1, "a failed typed cast must be cached without calling First");
+
+        IReadOnlyList<int> readOnly = value.ReadOnlyItems;
+        Check(ReferenceEquals(source, readOnly), "the later collection cast must use the same RCW");
+        Parallel.For(0, 32, _ => CheckEnumerationFails(source));
+        Check(native.FirstCalls == 0 && native.IterableQueries == 1 && native.TrapCalls == 0,
+            "a null result must not replace the selected provider or retry another collection");
     }
 
     private static void VerifyConcurrentEnumeration()
@@ -182,6 +212,21 @@ internal static unsafe class Program
         CheckMarshalledCollection(native, source);
         Parallel.For(0, 32, _ => VerifyEnumeration(source, ElementKind.Int32));
         Check(native.FirstCalls == 32 && native.TrapCalls == 0, "concurrent native calls");
+    }
+
+    private static void VerifyNullIterator()
+    {
+        using NativeCollection native = new() { ReturnNullIterator = true };
+        IEnumerable source = native.Source.Items;
+        CheckMarshalledCollection(native, source);
+        CheckEnumerationFails(source);
+        CheckEnumerationFails(source);
+        Check(native.FirstCalls == 2 && native.IterableQueries == 1, "a null native iterator must not trigger another provider");
+
+        native.ReturnNullIterator = false;
+        VerifyEnumeration(source, ElementKind.Int32);
+        Check(native.FirstCalls == 3 && native.IterableQueries == 1 && native.TrapCalls == 0,
+            "a null iterator result must not replace the cached provider with a negative decision");
     }
 
     private static void VerifyNegativeCache()
@@ -205,17 +250,17 @@ internal static unsafe class Program
         Parallel.For(0, 32, _ => CheckEnumerationFails(source));
         Check(native.FirstCalls == 1 && native.IterableQueries == 1 && native.TrapCalls == 0,
             "non-generic enumeration must retain its cached failure after successful typed enumeration");
+    }
 
-        static void CheckEnumerationFails(IEnumerable collection)
+    private static void CheckEnumerationFails(IEnumerable collection)
+    {
+        try
         {
-            try
-            {
-                collection.GetEnumerator();
-                throw new InvalidOperationException("Non-generic enumeration unexpectedly succeeded");
-            }
-            catch (ArgumentException)
-            {
-            }
+            collection.GetEnumerator();
+            throw new InvalidOperationException("Non-generic enumeration unexpectedly succeeded");
+        }
+        catch (ArgumentException)
+        {
         }
     }
 

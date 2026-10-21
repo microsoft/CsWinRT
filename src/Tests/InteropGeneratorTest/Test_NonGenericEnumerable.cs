@@ -46,14 +46,14 @@ public sealed class Test_NonGenericEnumerable
             Assert.IsTrue(provider.IsSealed);
             Assert.AreEqual(0, provider.GenericParameters.Count, "Specialized attributes must not be generic types.");
             Assert.AreEqual(0, attribute.Signature!.FixedArguments.Count, "No Type-valued activation metadata is needed.");
-            Assert.AreEqual(3, provider.Methods.Count, "Emit only the constructor and two typed overrides.");
-            MethodDefinition check = provider.Methods.Single(method => method.Name == "IsInterfaceImplemented");
-            Assert.IsTrue(check.CilMethodBody!.Instructions.Any(instruction =>
+            Assert.AreEqual(2, provider.Methods.Count, "Emit only the constructor and one typed override.");
+            MethodDefinition get = provider.Methods.Single(method => method.Name == "TryGetEnumeratorCore");
+            Assert.IsTrue(get.IsFamily);
+            Assert.IsTrue(get.CilMethodBody!.Instructions.Any(instruction =>
                 instruction.OpCode == CilOpCodes.Isinst &&
                 instruction.Operand is TypeSpecification { Signature: GenericInstanceTypeSignature signature } &&
                 signature.FullName == enumerable.FullName));
-            MethodDefinition get = provider.Methods.Single(method => method.Name == "GetEnumeratorCore");
-            Assert.IsTrue(get.IsFamily);
+            Assert.IsFalse(get.CilMethodBody.Instructions.Any(instruction => instruction.OpCode == CilOpCodes.Castclass));
             Assert.IsTrue(get.CilMethodBody!.Instructions.Any(instruction =>
                 instruction.OpCode == CilOpCodes.Callvirt &&
                 instruction.Operand is IMethodDescriptor method &&
@@ -146,13 +146,10 @@ public sealed class Test_NonGenericEnumerable
                 attribute.GetType().BaseType?.FullName == "WindowsRuntime.InteropServices.DynamicInterfaceCastableEnumerableAttribute");
             Assert.IsFalse(marker.GetType().IsGenericType);
             Assert.IsTrue(marker.GetType().IsSealed);
-            foreach (string name in new[] { "IsInterfaceImplemented", "GetEnumeratorCore" })
-            {
-                MethodInfo? method = marker.GetType().GetMethod(name,
-                    BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.DeclaredOnly);
-                Assert.IsNotNull(method);
-                RuntimeHelpers.PrepareMethod(method.MethodHandle);
-            }
+            MethodInfo? method = marker.GetType().GetMethod("TryGetEnumeratorCore",
+                BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.DeclaredOnly);
+            Assert.IsNotNull(method);
+            RuntimeHelpers.PrepareMethod(method.MethodHandle);
         }
         finally
         {

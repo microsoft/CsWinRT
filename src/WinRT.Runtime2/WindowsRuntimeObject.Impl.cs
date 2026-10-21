@@ -405,7 +405,7 @@ public unsafe partial class WindowsRuntimeObject
     /// </summary>
     /// <returns>The resulting enumerator.</returns>
     /// <exception cref="NotSupportedException">Thrown if dynamic interface casting is disabled.</exception>
-    /// <exception cref="ArgumentException">Thrown if the wrapper's cached enumeration decision is a failure.</exception>
+    /// <exception cref="ArgumentException">Thrown if the wrapper's cached enumeration decision is a failure or its provider returns no enumerator.</exception>
     /// <remarks>
     /// Used when the native object does not expose bindable enumeration. An implicit conversion from
     /// <see cref="IList{T}"/> to <see cref="IEnumerable"/> does not query <see cref="IEnumerable{T}"/>,
@@ -430,7 +430,7 @@ public unsafe partial class WindowsRuntimeObject
         {
             if (value is DynamicInterfaceCastableEnumerableAttribute cachedEnumerable)
             {
-                return cachedEnumerable.GetEnumerator(this);
+                return cachedEnumerable.TryGetEnumerator(this) ?? ThrowArgumentException();
             }
 
             return ThrowArgumentException();
@@ -480,16 +480,10 @@ public unsafe partial class WindowsRuntimeObject
                     continue;
                 }
 
-                // A collection cast alone does not cache its inherited 'IEnumerable<T>' interface.
-                // Let the provider query/cache the actual 'IIterable<T>' pointer; an 'IVector<T>' or
-                // 'IMap<K, V>' reference cannot be reused as though it were that interface.
-                if (!enumerable.IsInterfaceImplemented(this))
-                {
-                    continue;
-                }
-
-                // A racing thread may have published another provider or a failure. Honor that winner,
-                // even if we found a usable provider, so the wrapper's enumeration decision stays stable.
+                // A successful collection cast guarantees its required 'IIterable<T>' by the WinRT contract.
+                // Publish without probing; only the winner will query/cache the actual iterable pointer,
+                // rather than reinterpreting the cached vector or map pointer. Another search may already
+                // have published a provider or failure; honor that winner even if our candidate differs.
                 object selected = typeHandleCache.GetOrAdd(
                     key: typeof(IEnumerableInstance).TypeHandle,
                     value: enumerable);
@@ -499,8 +493,9 @@ public unsafe partial class WindowsRuntimeObject
                     return ThrowArgumentException();
                 }
 
-                // Enumeration errors propagate; do not retry another provider after invoking native code
-                return selectedEnumerable.GetEnumerator(this);
+                // Invoke only the published winner, after selection, so races cannot create discarded iterators.
+                // Errors or a missing required iterable do not cause a retry through another provider.
+                return selectedEnumerable.TryGetEnumerator(this) ?? ThrowArgumentException();
             }
         }
 
@@ -513,15 +508,13 @@ public unsafe partial class WindowsRuntimeObject
         // If a racing search published a provider first, use it rather than reporting a conflicting failure
         if (cachedFailure is DynamicInterfaceCastableEnumerableAttribute racingEnumerable)
         {
-            return racingEnumerable.GetEnumerator(this);
+            return racingEnumerable.TryGetEnumerator(this) ?? ThrowArgumentException();
         }
 
         [DoesNotReturn]
         [StackTraceHidden]
         static IEnumerator ThrowArgumentException()
-        {
-            throw new ArgumentException($"The type '{typeof(IEnumerable)}' cannot be used to enumerate the current object.");
-        }
+            => throw new ArgumentException($"The type '{typeof(IEnumerable)}' cannot be used to enumerate the current object.");
 
         return ThrowArgumentException();
     }

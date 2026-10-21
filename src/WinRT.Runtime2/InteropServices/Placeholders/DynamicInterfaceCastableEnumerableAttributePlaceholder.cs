@@ -16,14 +16,8 @@ internal sealed class DynamicInterfaceCastableEnumerableAttributePlaceholder : D
     public static readonly DynamicInterfaceCastableEnumerableAttributePlaceholder Instance = new();
 
     /// <inheritdoc/>
-    public override bool IsInterfaceImplemented(WindowsRuntimeObject thisObject)
+    protected override IEnumerator? TryGetEnumeratorCore(WindowsRuntimeObject thisObject)
     {
-        return false;
-    }
-
-    /// <inheritdoc/>
-    protected override IEnumerator GetEnumeratorCore(WindowsRuntimeObject thisObject)
-    {
-        return null!;
+        return null;
     }
 }

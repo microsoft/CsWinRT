@@ -23,26 +23,21 @@ public abstract class DynamicInterfaceCastableEnumerableAttribute : Attribute
     }
 
     /// <summary>
-    /// Checks and caches the constructed generic enumerable interface on an object.
-    /// </summary>
-    /// <param name="thisObject">The object to query.</param>
-    /// <returns>Whether the constructed generic enumerable is supported.</returns>
-    public abstract bool IsInterfaceImplemented(WindowsRuntimeObject thisObject);
-
-    /// <summary>
-    /// Enumerates an object using the associated constructed generic enumerable.
+    /// Tries to enumerate an object using the associated constructed generic enumerable.
     /// </summary>
     /// <param name="thisObject">The object to enumerate.</param>
-    /// <returns>The typed enumerator, exposed through its non-generic interface.</returns>
-    protected abstract IEnumerator GetEnumeratorCore(WindowsRuntimeObject thisObject);
+    /// <returns>The typed enumerator, or <see langword="null"/> if the generic enumerable is not supported.</returns>
+    protected abstract IEnumerator? TryGetEnumeratorCore(WindowsRuntimeObject thisObject);
 
     /// <summary>
-    /// Enumerates an object and unwraps any managed iterator adapters returned across the ABI.
+    /// Tries to enumerate an object and unwraps any managed iterator adapters returned across the ABI.
     /// </summary>
     /// <param name="thisObject">The object to enumerate.</param>
-    /// <returns>The original managed iterator, or the typed native iterator wrapper.</returns>
-    internal IEnumerator GetEnumerator(WindowsRuntimeObject thisObject)
+    /// <returns>The unwrapped enumerator, or <see langword="null"/> if the provider did not return one.</returns>
+    internal IEnumerator? TryGetEnumerator(WindowsRuntimeObject thisObject)
     {
-        return IEnumeratorAdapter.TryUnwrap(GetEnumeratorCore(thisObject));
+        IEnumerator? enumerator = TryGetEnumeratorCore(thisObject);
+
+        return enumerator is not null ? IEnumeratorAdapter.TryUnwrap(enumerator) : null;
     }
 }

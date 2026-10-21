@@ -50,8 +50,9 @@ public sealed class Test_NonGenericEnumeration
             ClassDeclarationSyntax provider = providers.Single(provider => provider.Identifier.ValueText == name + "EnumerableAttribute");
             Assert.IsTrue(provider.Modifiers.Any(SyntaxKind.SealedKeyword));
             Assert.IsNull(provider.TypeParameterList);
-            StringAssert.Contains(provider.ToString(), "thisObject is global::System.Collections.Generic.IEnumerable<int>");
-            StringAssert.Contains(provider.ToString(), "((global::System.Collections.Generic.IEnumerable<int>)thisObject).GetEnumerator()");
+            Assert.HasCount(1, provider.Members.OfType<MethodDeclarationSyntax>());
+            StringAssert.Contains(provider.ToString(), "IEnumerator TryGetEnumeratorCore");
+            StringAssert.Contains(provider.ToString(), "(thisObject as global::System.Collections.Generic.IEnumerable<int>)?.GetEnumerator()");
         }
         InterfaceDeclarationSyntax requiredMap = interfaces.Single(type => type.Identifier.ValueText == "IRequiredDictionary");
         StringAssert.Contains(requiredMap.AttributeLists.ToString(), "IRequiredDictionaryEnumerableAttribute");
@@ -107,6 +108,8 @@ public sealed class Test_NonGenericEnumeration
     [DataRow("required-map")]
     [DataRow("bindable")]
     [DataRow("first-failure")]
+    [DataRow("missing-required-iterable")]
+    [DataRow("null-iterator")]
     [DataRow("concurrent")]
     [DataRow("negative-cache")]
     [DataRow("mixed-elements")]

@@ -3,6 +3,7 @@
 
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
+using AsmResolver.PE.DotNet.Cil;
 using AsmResolver.PE.DotNet.Metadata.Tables;
 using WindowsRuntime.InteropGenerator.References;
 using static AsmResolver.PE.DotNet.Cil.CilOpCodes;
@@ -50,34 +51,14 @@ internal partial class InteropTypeDefinitionFactory
 
             attributeType.Methods.Add(ctor);
 
-            // Define the 'IsInterfaceImplemented' method as follows:
-            //
-            // public override bool IsInterfaceImplemented(WindowsRuntimeObject thisObject)
-            MethodDefinition isInterfaceImplementedMethod = new(
-                name: "IsInterfaceImplemented"u8,
-                attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Virtual,
-                signature: MethodSignature.CreateInstance(
-                    returnType: interopReferences.Boolean,
-                    parameterTypes: [interopReferences.WindowsRuntimeObject.ToReferenceTypeSignature()]))
-            {
-                CilInstructions =
-                {
-                    // return thisObject is IEnumerable<T>;
-                    { Ldarg_1 },
-                    { Isinst, enumerableType.ToTypeDefOrRef() },
-                    { Ldnull },
-                    { Cgt_Un },
-                    { Ret }
-                }
-            };
+            // Prepare the typed call shared by the null-conditional branch
+            CilInstruction callvirt_getEnumerator = new(Callvirt, interopReferences.IEnumerable1GetEnumerator(elementType));
 
-            attributeType.Methods.Add(isInterfaceImplementedMethod);
-
-            // Define the 'GetEnumeratorCore' method as follows:
+            // Define the 'TryGetEnumeratorCore' method as follows:
             //
-            // protected override IEnumerator GetEnumeratorCore(WindowsRuntimeObject thisObject)
-            MethodDefinition getEnumeratorCoreMethod = new(
-                name: "GetEnumeratorCore"u8,
+            // protected override IEnumerator? TryGetEnumeratorCore(WindowsRuntimeObject thisObject)
+            MethodDefinition tryGetEnumeratorCoreMethod = new(
+                name: "TryGetEnumeratorCore"u8,
                 attributes: MethodAttributes.Family | MethodAttributes.HideBySig | MethodAttributes.Virtual,
                 signature: MethodSignature.CreateInstance(
                     returnType: interopReferences.IEnumerator.ToReferenceTypeSignature(),
@@ -85,15 +66,20 @@ internal partial class InteropTypeDefinitionFactory
             {
                 CilInstructions =
                 {
-                    // return ((IEnumerable<T>)thisObject).GetEnumerator();
+                    // return (thisObject as IEnumerable<T>)?.GetEnumerator();
                     { Ldarg_1 },
-                    { Castclass, enumerableType.ToTypeDefOrRef() },
-                    { Callvirt, interopReferences.IEnumerable1GetEnumerator(elementType) },
+                    { Isinst, enumerableType.ToTypeDefOrRef() },
+                    { Dup },
+                    { Brtrue_S, callvirt_getEnumerator.CreateLabel() },
+                    { Pop },
+                    { Ldnull },
+                    { Ret },
+                    { callvirt_getEnumerator },
                     { Ret }
                 }
             };
 
-            attributeType.Methods.Add(getEnumeratorCoreMethod);
+            attributeType.Methods.Add(tryGetEnumeratorCoreMethod);
         }
     }
 }
