@@ -292,6 +292,7 @@ internal partial class InteropTypeDefinitionBuilder
         /// <param name="readOnlyListMethodsType">The <see cref="TypeDefinition"/> instance returned by <see cref="Methods"/>.</param>
         /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <param name="emitState">The emit state for this invocation.</param>
         /// <param name="module">The module that will contain the type being created.</param>
         /// <param name="useWindowsUIXamlProjections">Whether to use <c>Windows.UI.Xaml</c> projections.</param>
         /// <param name="interfaceImplType">The resulting interface implementation type.</param>
@@ -300,6 +301,7 @@ internal partial class InteropTypeDefinitionBuilder
             TypeDefinition readOnlyListMethodsType,
             InteropDefinitions interopDefinitions,
             InteropReferences interopReferences,
+            InteropGeneratorEmitState emitState,
             ModuleDefinition module,
             bool useWindowsUIXamlProjections,
             out TypeDefinition interfaceImplType)
@@ -318,7 +320,8 @@ internal partial class InteropTypeDefinitionBuilder
                 CustomAttributes =
                 {
                     new CustomAttribute(interopReferences.DynamicInterfaceCastableImplementationAttribute_ctor),
-                    InteropCustomAttributeFactory.Guid(readOnlyListType, interopDefinitions, interopReferences, useWindowsUIXamlProjections)
+                    InteropCustomAttributeFactory.Guid(readOnlyListType, interopDefinitions, interopReferences, useWindowsUIXamlProjections),
+                    InteropCustomAttributeFactory.DynamicInterfaceCastableEnumerable(elementType, emitState)
                 },
                 Interfaces =
                 {
