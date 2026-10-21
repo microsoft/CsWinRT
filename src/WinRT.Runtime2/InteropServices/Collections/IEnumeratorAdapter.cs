@@ -16,7 +16,7 @@ internal interface IEnumeratorAdapter
     /// </summary>
     /// <param name="enumerator">The iterator returned by the native iterable.</param>
     /// <returns>The original managed iterator, or <paramref name="enumerator"/> if it is not an adapter.</returns>
-    internal static IEnumerator TryUnwrap(IEnumerator enumerator)
+    static IEnumerator TryUnwrap(IEnumerator enumerator)
     {
         // It's possible to get back an 'IEnumeratorAdapter<object>' instance here, and we want to unwrap the
         // inner-most instance here. There are basically two scenarios here. If we have originally marshalled

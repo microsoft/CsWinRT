@@ -520,8 +520,7 @@ public unsafe partial class WindowsRuntimeObject
         [StackTraceHidden]
         static IEnumerator ThrowArgumentException()
         {
-            throw new ArgumentException(
-                $"The type '{typeof(IEnumerable)}' cannot be used to enumerate the current object.");
+            throw new ArgumentException($"The type '{typeof(IEnumerable)}' cannot be used to enumerate the current object.");
         }
 
         return ThrowArgumentException();
