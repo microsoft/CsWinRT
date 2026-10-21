@@ -30,7 +30,7 @@ steps:
     inputs:
       targetType: filePath
       filePath: $(Build.SourcesDirectory)\build\scripts\Run-ObjectLifetimeInProcess.ps1
-      arguments: -LayoutDir "$(Build.SourcesDirectory)\src\Tests\ObjectLifetimeTests\bin\$(BuildPlatform)\$(BuildConfiguration)\net10.0-windows10.0.26100.1\win-$(BuildPlatform)" -OutputDir "$(StagingFolder)\ObjectLifetime-MTP" -DiagnoseStartup
+      arguments: -LayoutDir "$(Build.SourcesDirectory)\src\Tests\ObjectLifetimeTests\bin\$(BuildPlatform)\$(BuildConfiguration)\net10.0-windows10.0.26100.1\win-$(BuildPlatform)" -OutputDir "$(StagingFolder)\ObjectLifetime-MTP"
 
   - task: PublishTestResults@2
     displayName: Publish Object Lifetime JIT Results
@@ -237,7 +237,7 @@ steps:
     inputs:
       targetType: filePath
       filePath: $(Build.SourcesDirectory)\build\scripts\Run-ObjectLifetimeInProcess.ps1
-      arguments: -LayoutDir "$(Build.SourcesDirectory)\src\Tests\ObjectLifetimeTests\bin\$(BuildPlatform)\$(BuildConfiguration)\net10.0-windows10.0.26100.1\win-x64" -OutputDir "$(StagingFolder)\ObjectLifetime-AOT" -NativeAot -DiagnoseStartup
+      arguments: -LayoutDir "$(Build.SourcesDirectory)\src\Tests\ObjectLifetimeTests\bin\$(BuildPlatform)\$(BuildConfiguration)\net10.0-windows10.0.26100.1\win-x64" -OutputDir "$(StagingFolder)\ObjectLifetime-AOT" -NativeAot
 
   - task: PublishTestResults@2
     displayName: Publish Object Lifetime Native AOT Results
