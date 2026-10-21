@@ -108,7 +108,7 @@ public sealed class Test_NonGenericEnumeration
     [DataRow("bindable")]
     [DataRow("first-failure")]
     [DataRow("concurrent")]
-    [DataRow("context-recovery")]
+    [DataRow("negative-cache")]
     [DataRow("mixed-elements")]
     [DataRow("generic-adapter")]
     [DataRow("object-adapter")]

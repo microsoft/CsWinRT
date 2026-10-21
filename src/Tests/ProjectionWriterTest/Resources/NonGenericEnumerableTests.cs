@@ -52,7 +52,7 @@ internal static unsafe class Program
                 {
                     "list", "read-only-list", "strings", "pairs", "dictionary", "read-only-dictionary",
                     "observable-vector", "observable-map", "required-vector", "required-map", "bindable",
-                    "first-failure", "concurrent", "context-recovery", "mixed-elements",
+                    "first-failure", "concurrent", "negative-cache", "mixed-elements",
                     "generic-adapter", "object-adapter", "bindable-adapter"
                 })
                 {
@@ -121,8 +121,8 @@ internal static unsafe class Program
             case "concurrent":
                 VerifyConcurrentEnumeration();
                 break;
-            case "context-recovery":
-                VerifyContextRecovery();
+            case "negative-cache":
+                VerifyNegativeCache();
                 break;
             case "mixed-elements":
                 VerifyCollection(source => source.Items, ElementKind.Int32);
@@ -184,26 +184,39 @@ internal static unsafe class Program
         Check(native.FirstCalls == 32 && native.TrapCalls == 0, "concurrent native calls");
     }
 
-    private static void VerifyContextRecovery()
+    private static void VerifyNegativeCache()
     {
         using NativeCollection native = new();
         CollectionSource value = native.Source;
         IEnumerable source = value.AmbiguousItems;
         CheckMarshalledCollection(native, source);
-        try
-        {
-            source.GetEnumerator();
-            throw new InvalidOperationException("Ambiguous generic context unexpectedly enumerated");
-        }
-        catch (ArgumentException)
-        {
-        }
+        CheckEnumerationFails(source);
+        CheckEnumerationFails(source);
         Check(native.FirstCalls == 0 && native.IterableQueries == 0, "failed lookup must not call First or query a typed iterable");
+
         IList<int> items = value.Items;
-        Check(ReferenceEquals(source, items), "recovery must use the same RCW");
-        VerifyEnumeration(items, ElementKind.Int32);
+        Check(ReferenceEquals(source, items), "the later collection cast must use the same RCW");
+        CheckEnumerationFails(items);
+        Check(native.FirstCalls == 0 && native.IterableQueries == 0, "a cached failure must not rescan newly available list context");
+
+        // Typed enumeration still works, but even an exact IEnumerable<int> cast must not undo the cached failure.
+        using IEnumerator<int> iterator = items.GetEnumerator();
+        Check(iterator.MoveNext() && iterator.Current == 10, "the native typed iterable must remain usable");
+        Parallel.For(0, 32, _ => CheckEnumerationFails(source));
         Check(native.FirstCalls == 1 && native.IterableQueries == 1 && native.TrapCalls == 0,
-            "a later generated list cast must repair the missing context");
+            "non-generic enumeration must retain its cached failure after successful typed enumeration");
+
+        static void CheckEnumerationFails(IEnumerable collection)
+        {
+            try
+            {
+                collection.GetEnumerator();
+                throw new InvalidOperationException("Non-generic enumeration unexpectedly succeeded");
+            }
+            catch (ArgumentException)
+            {
+            }
+        }
     }
 
     private static void VerifyAdapterRoundTrip(string scenario)

@@ -1,9 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System;
 using System.Collections.Generic;
-using System.Linq;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 using WindowsRuntime.ProjectionWriter.Generation;
@@ -48,7 +46,7 @@ internal static class AbiInterfaceIDicFactory
         string nameStripped = type.GetStrippedName();
         IndentedTextWriterCallback parent = TypedefNameWriter.WriteTypedefNameWithTypeParams(context, type, TypedefNameType.Projected, true);
         IndentedTextWriterCallback guidAttr = InterfaceFactory.WriteGuidAttribute(type);
-        string? enumerableElement = GetEnumerableElementType(context, type);
+        string? enumerableElement = EnumerableInterfaceHelpers.GetUnambiguousElementType(context, type);
         string enumerableAttributeName = nameStripped + "EnumerableAttribute";
         string? enumerableAttr = enumerableElement is not null ? $"[{enumerableAttributeName}]" : null;
 
@@ -81,95 +79,6 @@ internal static class AbiInterfaceIDicFactory
                         => ((global::System.Collections.Generic.IEnumerable<{{enumerableElement}}>)thisObject).GetEnumerator();
                 }
                 """);
-        }
-    }
-
-    /// <summary>
-    /// Finds the element type when a projected interface requires one unambiguous generic iterable.
-    /// </summary>
-    /// <param name="context">The active emit context.</param>
-    /// <param name="type">The projected interface.</param>
-    /// <returns>The projected element type, or <see langword="null"/> when no provider should be emitted.</returns>
-    private static string? GetEnumerableElementType(ProjectionEmitContext context, TypeDefinition type)
-    {
-        HashSet<string> visited = new(StringComparer.Ordinal);
-        HashSet<string> elements = new(StringComparer.Ordinal);
-        bool isBindable = false;
-        bool isComplete = true;
-
-        Visit(type);
-
-        return isComplete && !isBindable && elements.Count == 1 ? elements.Single() : null;
-
-        void Visit(ITypeDefOrRef interfaceType)
-        {
-            if (!visited.Add(interfaceType.FullName))
-            {
-                return;
-            }
-
-            TypeDefinition? definition = interfaceType.ResolveAsTypeDefinition(context.Cache);
-
-            if (definition is null)
-            {
-                isComplete = false;
-                return;
-            }
-
-            (string ns, string name) = definition.Names();
-            isBindable |= (ns is "Microsoft.UI.Xaml.Interop" or WindowsUIXamlInterop) && name == "IBindableIterable";
-
-            GenericContext? genericContext = null;
-
-            if (interfaceType.TryGetGenericInstance(out GenericInstanceTypeSignature? instance))
-            {
-                genericContext = new GenericContext(instance, null);
-
-                if (ns == WindowsFoundationCollections && name == "IIterable`1")
-                {
-                    if (instance.TypeArguments.Count != 1 || !IsClosed(instance.TypeArguments[0]))
-                    {
-                        isComplete = false;
-                    }
-                    else
-                    {
-                        _ = elements.Add(TypedefNameWriter.WriteTypeName(
-                            context, TypeSemanticsFactory.Get(instance.TypeArguments[0]), TypedefNameType.Projected, true).Format());
-                    }
-                }
-            }
-            else if (definition.GenericParameters.Count != 0)
-            {
-                isComplete = false;
-            }
-
-            foreach (InterfaceImplementation implementation in definition.Interfaces)
-            {
-                if (implementation.Interface is not { } requiredType ||
-                    !implementation.TryResolveTypeDef(context.Cache, out TypeDefinition? requiredDefinition))
-                {
-                    isComplete = false;
-                    continue;
-                }
-
-                if (!InterfaceFactory.ShouldIncludeInterfaceInInheritance(implementation, requiredDefinition.IsExclusiveTo, includeExclusiveInterface: false))
-                {
-                    continue;
-                }
-
-                if (genericContext is { } constructedContext)
-                {
-                    requiredType = requiredType.ToTypeSignature(false).InstantiateGenericTypes(constructedContext).ToTypeDefOrRef();
-                }
-
-                Visit(requiredType);
-            }
-        }
-
-        static bool IsClosed(TypeSignature signature)
-        {
-            return signature is not GenericParameterSignature &&
-                (signature is not GenericInstanceTypeSignature instance || instance.TypeArguments.All(IsClosed));
         }
     }
 
