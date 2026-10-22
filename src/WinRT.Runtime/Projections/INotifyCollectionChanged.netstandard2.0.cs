@@ -77,7 +77,8 @@ namespace ABI.System.Collections.Specialized
                 }
                 catch (global::System.Exception __ex)
                 {
-                    return __ex.HResult;
+                    global::WinRT.ExceptionHelpers.SetErrorInfo(__ex);
+                    return global::WinRT.ExceptionHelpers.GetHRForException(__ex);
                 }
             }
 
@@ -94,7 +95,8 @@ namespace ABI.System.Collections.Specialized
                 }
                 catch (global::System.Exception __ex)
                 {
-                    return __ex.HResult;
+                    global::WinRT.ExceptionHelpers.SetErrorInfo(__ex);
+                    return global::WinRT.ExceptionHelpers.GetHRForException(__ex);
                 }
             }
         }

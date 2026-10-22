@@ -41,6 +41,14 @@
       <!-- CSWINRT_SUPPRESS_CUSTOM_PROPERTY_NOT_SUPPORTED_EXCEPTION switch -->
       <method signature="System.Boolean get_SuppressCustomPropertyNotSupportedException()" body="stub" value="false" feature="CSWINRT_SUPPRESS_CUSTOM_PROPERTY_NOT_SUPPORTED_EXCEPTION" featurevalue="false" />
       <method signature="System.Boolean get_SuppressCustomPropertyNotSupportedException()" body="stub" value="true" feature="CSWINRT_SUPPRESS_CUSTOM_PROPERTY_NOT_SUPPORTED_EXCEPTION" featurevalue="true" />
+
+      <!-- CSWINRT_ENABLE_ABI_EXCEPTION_BREAK switch -->
+      <method signature="System.Boolean get_EnableAbiExceptionBreak()" body="stub" value="false" feature="CSWINRT_ENABLE_ABI_EXCEPTION_BREAK" featurevalue="false" />
+      <method signature="System.Boolean get_EnableAbiExceptionBreak()" body="stub" value="true" feature="CSWINRT_ENABLE_ABI_EXCEPTION_BREAK" featurevalue="true" />
+
+      <!-- CSWINRT_ENABLE_ABI_EXCEPTION_RAISE switch -->
+      <method signature="System.Boolean get_EnableAbiExceptionRaise()" body="stub" value="false" feature="CSWINRT_ENABLE_ABI_EXCEPTION_RAISE" featurevalue="false" />
+      <method signature="System.Boolean get_EnableAbiExceptionRaise()" body="stub" value="true" feature="CSWINRT_ENABLE_ABI_EXCEPTION_RAISE" featurevalue="true" />
     </type>
   </assembly>
 

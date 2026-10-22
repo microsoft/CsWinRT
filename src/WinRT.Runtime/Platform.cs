@@ -54,6 +54,12 @@ namespace WinRT.Interop
 
         [DllImport("kernel32.dll")]
         public static extern unsafe void* LocalFree(void* hMem);
+
+        [DllImport("kernel32.dll", ExactSpelling = true)]
+        public static extern int IsDebuggerPresent();
+
+        [DllImport("kernel32.dll", ExactSpelling = true)]
+        public static extern unsafe void RaiseException(uint exceptionCode, uint exceptionFlags, uint numberOfArguments, nuint* arguments);
     }
 
     // Handcrafted P/Invoke with TFM-specific handling, or thin high-level abstractions (eg. 'TryGetProcAddress'/'GetProcAddress')

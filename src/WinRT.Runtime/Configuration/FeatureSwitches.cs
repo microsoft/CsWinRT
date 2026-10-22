@@ -72,6 +72,16 @@ namespace WinRT
         private const string SuppressCustomPropertyNotSupportedExceptionPropertyName = "CSWINRT_SUPPRESS_CUSTOM_PROPERTY_NOT_SUPPORTED_EXCEPTION";
 
         /// <summary>
+        /// The configuration property name for <see cref="EnableAbiExceptionBreak"/>.
+        /// </summary>
+        private const string EnableAbiExceptionBreakPropertyName = "CSWINRT_ENABLE_ABI_EXCEPTION_BREAK";
+
+        /// <summary>
+        /// The configuration property name for <see cref="EnableAbiExceptionRaise"/>.
+        /// </summary>
+        private const string EnableAbiExceptionRaisePropertyName = "CSWINRT_ENABLE_ABI_EXCEPTION_RAISE";
+
+        /// <summary>
         /// The backing field for <see cref="EnableDynamicObjectsSupport"/>.
         /// </summary>
         private static int _enableDynamicObjectsSupport;
@@ -120,6 +130,16 @@ namespace WinRT
         /// The backing field for <see cref="SuppressCustomPropertyNotSupportedException"/>.
         /// </summary>
         private static int _suppressCustomPropertyNotSupportedException;
+
+        /// <summary>
+        /// The backing field for <see cref="EnableAbiExceptionBreak"/>.
+        /// </summary>
+        private static int _enableAbiExceptionBreak;
+
+        /// <summary>
+        /// The backing field for <see cref="EnableAbiExceptionRaise"/>.
+        /// </summary>
+        private static int _enableAbiExceptionRaise;
 
         /// <summary>
         /// Gets a value indicating whether or not projections support for dynamic objects is enabled (defaults to <see langword="true"/>).
@@ -210,6 +230,24 @@ namespace WinRT
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get => GetConfigurationValue(SuppressCustomPropertyNotSupportedExceptionPropertyName, ref _suppressCustomPropertyNotSupportedException, false);
+        }
+
+        /// <summary>
+        /// Gets whether ABI exception reporting calls <see cref="System.Diagnostics.Debugger.Break"/> (defaults to <see langword="false"/>).
+        /// </summary>
+        public static bool EnableAbiExceptionBreak
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => GetConfigurationValue(EnableAbiExceptionBreakPropertyName, ref _enableAbiExceptionBreak, false);
+        }
+
+        /// <summary>
+        /// Gets whether ABI exception reporting calls native RaiseException (defaults to <see langword="false"/>).
+        /// </summary>
+        public static bool EnableAbiExceptionRaise
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => GetConfigurationValue(EnableAbiExceptionRaisePropertyName, ref _enableAbiExceptionRaise, false);
         }
 
         /// <summary>

@@ -6761,7 +6761,8 @@ return 0;
 }
 catch (Exception __ex)
 {
-return __ex.HResult;
+global::WinRT.ExceptionHelpers.SetErrorInfo(__ex);
+return global::WinRT.ExceptionHelpers.GetHRForException(__ex);
 }
 })",
             !settings.netstandard_compat && !generic_type ? "[UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvStdcall) })]" : "",
@@ -6798,7 +6799,8 @@ return 0;
 }
 catch (Exception __ex)
 {
-return __ex.HResult;
+global::WinRT.ExceptionHelpers.SetErrorInfo(__ex);
+return global::WinRT.ExceptionHelpers.GetHRForException(__ex);
 }
 })",
             !settings.netstandard_compat && !generic_type ? "[UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvStdcall) })]" : "",

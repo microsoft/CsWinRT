@@ -64,6 +64,64 @@ namespace WinRT
 
         private static readonly bool initialized = Initialize();
 
+        [ThreadStatic]
+        private static bool notifyingDebugger;
+
+        [DebuggerHidden]
+#if NET
+        [StackTraceHidden]
+#endif
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        private static void NotifyExceptionForDebugger(Exception exception)
+        {
+            if (!FeatureSwitches.EnableAbiExceptionBreak)
+            {
+                if (!FeatureSwitches.EnableAbiExceptionRaise)
+                {
+                    return;
+                }
+            }
+
+            if (notifyingDebugger)
+            {
+                return;
+            }
+
+            notifyingDebugger = true;
+            try
+            {
+                if (FeatureSwitches.EnableAbiExceptionBreak)
+                {
+                    if (Debugger.IsAttached)
+                    {
+                        Debugger.Break();
+                    }
+                }
+                else if (FeatureSwitches.EnableAbiExceptionRaise)
+                {
+                    if (Platform.IsDebuggerPresent() != 0)
+                    {
+                        // A private, continuable exception, independently configurable in native Exception Settings.
+                        nuint hresult = unchecked((uint)exception.HResult);
+                        try
+                        {
+                            Platform.RaiseException(0xE0435752, 0, 1, &hresult);
+                        }
+                        catch (SEHException)
+                        {
+                            // The debugger passed the notification back to us. It must not replace the original exception.
+                        }
+                    }
+                }
+
+                GC.KeepAlive(exception);
+            }
+            finally
+            {
+                notifyingDebugger = false;
+            }
+        }
+
         private static bool Initialize()
         {
             IntPtr winRTErrorModule = Platform.LoadLibraryExW("api-ms-win-core-winrt-error-l1-1-1.dll", IntPtr.Zero, (uint)DllImportSearchPath.System32);
@@ -542,10 +600,12 @@ See https://aka.ms/cswinrt/interop#windows-sdk",
                     using var iErrorInfo = ComWrappersSupport.CreateCCWForObject(new ManagedExceptionErrorInfo(ex));
                     Platform.SetErrorInfo(0, iErrorInfo.ThisPtr);
                 }
+
+                NotifyExceptionForDebugger(ex);
             }
             catch (Exception e)
             {
-                // If we fail to set the error info, we continue on reporting the original exception.
+                // If error reporting fails, we continue on reporting the original exception.
                 Debug.Assert(false, e.Message, e.StackTrace);
             }
         }
