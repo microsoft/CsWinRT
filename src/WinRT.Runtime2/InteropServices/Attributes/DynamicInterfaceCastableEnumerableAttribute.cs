@@ -5,6 +5,7 @@
 
 using System;
 using System.Collections;
+using System.Diagnostics.CodeAnalysis;
 
 namespace WindowsRuntime.InteropServices;
 
@@ -26,18 +27,7 @@ public abstract class DynamicInterfaceCastableEnumerableAttribute : Attribute
     /// Tries to enumerate an object using the associated constructed generic enumerable.
     /// </summary>
     /// <param name="thisObject">The object to enumerate.</param>
-    /// <returns>The typed enumerator, or <see langword="null"/> if the generic enumerable is not supported.</returns>
-    protected abstract IEnumerator? TryGetEnumeratorCore(WindowsRuntimeObject thisObject);
-
-    /// <summary>
-    /// Tries to enumerate an object and unwraps any managed iterator adapters returned across the ABI.
-    /// </summary>
-    /// <param name="thisObject">The object to enumerate.</param>
-    /// <returns>The unwrapped enumerator, or <see langword="null"/> if the provider did not return one.</returns>
-    internal IEnumerator? TryGetEnumerator(WindowsRuntimeObject thisObject)
-    {
-        IEnumerator? enumerator = TryGetEnumeratorCore(thisObject);
-
-        return enumerator is not null ? IEnumeratorAdapter.TryUnwrap(enumerator) : null;
-    }
+    /// <param name="enumerator">The typed enumerator, if the generic enumerable is supported.</param>
+    /// <returns>Whether the generic enumerable is supported.</returns>
+    public abstract bool TryGetEnumerator(WindowsRuntimeObject thisObject, [NotNullWhen(true)] out IEnumerator? enumerator);
 }

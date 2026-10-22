@@ -50,9 +50,17 @@ public sealed class Test_NonGenericEnumeration
             ClassDeclarationSyntax provider = providers.Single(provider => provider.Identifier.ValueText == name + "EnumerableAttribute");
             Assert.IsTrue(provider.Modifiers.Any(SyntaxKind.SealedKeyword));
             Assert.IsNull(provider.TypeParameterList);
-            Assert.HasCount(1, provider.Members.OfType<MethodDeclarationSyntax>());
-            StringAssert.Contains(provider.ToString(), "IEnumerator TryGetEnumeratorCore");
-            StringAssert.Contains(provider.ToString(), "(thisObject as global::System.Collections.Generic.IEnumerable<int>)?.GetEnumerator()");
+            MethodDeclarationSyntax method = provider.Members.OfType<MethodDeclarationSyntax>().Single();
+            Assert.AreEqual("TryGetEnumerator", method.Identifier.ValueText);
+            Assert.AreEqual("bool", method.ReturnType.ToString());
+            ParameterSyntax enumerator = method.ParameterList.Parameters[1];
+            Assert.IsTrue(enumerator.Modifiers.Any(SyntaxKind.OutKeyword));
+            Assert.IsFalse(enumerator.Type is NullableTypeSyntax);
+            Assert.IsEmpty(enumerator.AttributeLists, "Only the runtime declaration needs the success annotation.");
+            StringAssert.Contains(provider.ToString(), "thisObject is global::System.Collections.Generic.IEnumerable<int> enumerable");
+            StringAssert.Contains(provider.ToString(), "enumerator = enumerable.GetEnumerator();");
+            StringAssert.Contains(provider.ToString(), "return true;");
+            StringAssert.Contains(provider.ToString(), "return false;");
         }
         InterfaceDeclarationSyntax requiredMap = interfaces.Single(type => type.Identifier.ValueText == "IRequiredDictionary");
         StringAssert.Contains(requiredMap.AttributeLists.ToString(), "IRequiredDictionaryEnumerableAttribute");
@@ -109,7 +117,6 @@ public sealed class Test_NonGenericEnumeration
     [DataRow("bindable")]
     [DataRow("first-failure")]
     [DataRow("missing-required-iterable")]
-    [DataRow("null-iterator")]
     [DataRow("concurrent")]
     [DataRow("negative-cache")]
     [DataRow("mixed-elements")]

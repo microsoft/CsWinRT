@@ -72,8 +72,16 @@ internal static class AbiInterfaceIDicFactory
             writer.WriteLine(isMultiline: true, $$"""
                 file sealed class {{enumerableAttributeName}} : global::WindowsRuntime.InteropServices.DynamicInterfaceCastableEnumerableAttribute
                 {
-                    protected override global::System.Collections.IEnumerator TryGetEnumeratorCore(WindowsRuntimeObject thisObject)
-                        => (thisObject as global::System.Collections.Generic.IEnumerable<{{enumerableElement}}>)?.GetEnumerator();
+                    public override bool TryGetEnumerator(WindowsRuntimeObject thisObject, out global::System.Collections.IEnumerator enumerator)
+                    {
+                        if (thisObject is global::System.Collections.Generic.IEnumerable<{{enumerableElement}}> enumerable)
+                        {
+                            enumerator = enumerable.GetEnumerator();
+                            return true;
+                        }
+                        enumerator = null;
+                        return false;
+                    }
                 }
                 """);
         }

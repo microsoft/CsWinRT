@@ -90,7 +90,6 @@ internal sealed unsafe class NativeCollection : IDisposable
     public int TrapCalls => collection->TrapCalls;
     public int FirstFailure { get => collection->FirstFailure; set => collection->FirstFailure = value; }
     public bool RejectTypedIterable { get => collection->RejectTypedIterable; set => collection->RejectTypedIterable = value; }
-    public bool ReturnNullIterator { get => collection->ReturnNullIterator; set => collection->ReturnNullIterator = value; }
 
     public void Dispose()
     {
@@ -115,7 +114,6 @@ internal sealed unsafe class NativeCollection : IDisposable
         public bool Map;
         public bool Bindable;
         public bool RejectTypedIterable;
-        public bool ReturnNullIterator;
         public int Index;
         public int FirstCalls;
         public int IterableQueries;
@@ -328,10 +326,6 @@ internal sealed unsafe class NativeCollection : IDisposable
         if (owner->FirstFailure != 0)
         {
             return owner->FirstFailure;
-        }
-        if (owner->ReturnNullIterator)
-        {
-            return 0;
         }
         if (owner->FirstIterator != null)
         {

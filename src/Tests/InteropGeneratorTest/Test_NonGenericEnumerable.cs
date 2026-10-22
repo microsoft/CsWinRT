@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -13,6 +14,7 @@ using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 using AsmResolver.PE.DotNet.Cil;
 using InteropGeneratorTest.Helpers;
+using ParameterAttributes = AsmResolver.PE.DotNet.Metadata.Tables.ParameterAttributes;
 
 namespace InteropGeneratorTest;
 
@@ -47,13 +49,26 @@ public sealed class Test_NonGenericEnumerable
             Assert.AreEqual(0, provider.GenericParameters.Count, "Specialized attributes must not be generic types.");
             Assert.AreEqual(0, attribute.Signature!.FixedArguments.Count, "No Type-valued activation metadata is needed.");
             Assert.AreEqual(2, provider.Methods.Count, "Emit only the constructor and one typed override.");
-            MethodDefinition get = provider.Methods.Single(method => method.Name == "TryGetEnumeratorCore");
-            Assert.IsTrue(get.IsFamily);
+            MethodDefinition get = provider.Methods.Single(method => method.Name == "TryGetEnumerator");
+            Assert.IsTrue(get.IsPublic);
+            Assert.AreEqual("System.Boolean", get.Signature!.ReturnType.FullName);
+            Assert.HasCount(2, get.Signature.ParameterTypes);
+            Assert.AreEqual("System.Collections.IEnumerator&", get.Signature.ParameterTypes[1].FullName);
+            ParameterDefinition enumerator = get.ParameterDefinitions.Single(parameter => parameter.Sequence == 2);
+            Assert.AreEqual(ParameterAttributes.Out, enumerator.Attributes & ParameterAttributes.Out);
+            Assert.IsEmpty(enumerator.CustomAttributes, "Implementation overrides do not need nullability metadata.");
             Assert.IsTrue(get.CilMethodBody!.Instructions.Any(instruction =>
                 instruction.OpCode == CilOpCodes.Isinst &&
                 instruction.Operand is TypeSpecification { Signature: GenericInstanceTypeSignature signature } &&
                 signature.FullName == enumerable.FullName));
             Assert.IsFalse(get.CilMethodBody.Instructions.Any(instruction => instruction.OpCode == CilOpCodes.Castclass));
+            Assert.IsFalse(get.CilMethodBody.Instructions.Any(instruction => instruction.OpCode == CilOpCodes.Ldind_Ref));
+            Assert.IsFalse(get.CilMethodBody.Instructions.Any(instruction => instruction.OpCode == CilOpCodes.Pop));
+            Assert.IsFalse(get.CilMethodBody.Instructions.Any(instruction => instruction.OpCode == CilOpCodes.Ldnull));
+            Assert.IsFalse(get.CilMethodBody.Instructions.Any(instruction =>
+                instruction.OpCode == CilOpCodes.Brfalse || instruction.OpCode == CilOpCodes.Brfalse_S));
+            Assert.IsTrue(get.CilMethodBody.Instructions.Any(instruction => instruction.OpCode == CilOpCodes.Ldc_I4_0));
+            Assert.IsTrue(get.CilMethodBody.Instructions.Any(instruction => instruction.OpCode == CilOpCodes.Ldc_I4_1));
             Assert.IsTrue(get.CilMethodBody!.Instructions.Any(instruction =>
                 instruction.OpCode == CilOpCodes.Callvirt &&
                 instruction.Operand is IMethodDescriptor method &&
@@ -146,9 +161,16 @@ public sealed class Test_NonGenericEnumerable
                 attribute.GetType().BaseType?.FullName == "WindowsRuntime.InteropServices.DynamicInterfaceCastableEnumerableAttribute");
             Assert.IsFalse(marker.GetType().IsGenericType);
             Assert.IsTrue(marker.GetType().IsSealed);
-            MethodInfo? method = marker.GetType().GetMethod("TryGetEnumeratorCore",
-                BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.DeclaredOnly);
+            MethodInfo? method = marker.GetType().GetMethod("TryGetEnumerator",
+                BindingFlags.Instance | BindingFlags.Public | BindingFlags.DeclaredOnly);
             Assert.IsNotNull(method);
+            Assert.AreEqual(typeof(bool), method.ReturnType);
+            ParameterInfo enumerator = method.GetParameters()[1];
+            Assert.IsTrue(enumerator.IsOut);
+            MethodInfo declaration = marker.GetType().BaseType!.GetMethod("TryGetEnumerator")!;
+            ParameterInfo declaredEnumerator = declaration.GetParameters()[1];
+            Assert.AreEqual(true, declaredEnumerator.GetCustomAttribute<NotNullWhenAttribute>()?.ReturnValue);
+            Assert.AreEqual(NullabilityState.Nullable, new NullabilityInfoContext().Create(declaredEnumerator).WriteState);
             RuntimeHelpers.PrepareMethod(method.MethodHandle);
         }
         finally

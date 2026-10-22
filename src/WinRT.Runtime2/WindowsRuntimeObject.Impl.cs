@@ -405,7 +405,7 @@ public unsafe partial class WindowsRuntimeObject
     /// </summary>
     /// <returns>The resulting enumerator.</returns>
     /// <exception cref="NotSupportedException">Thrown if dynamic interface casting is disabled.</exception>
-    /// <exception cref="ArgumentException">Thrown if the wrapper's cached enumeration decision is a failure or its provider returns no enumerator.</exception>
+    /// <exception cref="ArgumentException">Thrown if the wrapper's cached enumeration decision is a failure or the required generic enumerable is not supported.</exception>
     /// <remarks>
     /// Used when the native object does not expose bindable enumeration. An implicit conversion from
     /// <see cref="IList{T}"/> to <see cref="IEnumerable"/> does not query <see cref="IEnumerable{T}"/>,
@@ -430,7 +430,7 @@ public unsafe partial class WindowsRuntimeObject
         {
             if (value is DynamicInterfaceCastableEnumerableAttribute cachedEnumerable)
             {
-                return cachedEnumerable.TryGetEnumerator(this) ?? ThrowArgumentException();
+                return GetEnumerator(cachedEnumerable, this);
             }
 
             return ThrowArgumentException();
@@ -495,7 +495,7 @@ public unsafe partial class WindowsRuntimeObject
 
                 // Invoke only the published winner, after selection, so races cannot create discarded iterators.
                 // Errors or a missing required iterable do not cause a retry through another provider.
-                return selectedEnumerable.TryGetEnumerator(this) ?? ThrowArgumentException();
+                return GetEnumerator(selectedEnumerable, this);
             }
         }
 
@@ -508,8 +508,14 @@ public unsafe partial class WindowsRuntimeObject
         // If a racing search published a provider first, use it rather than reporting a conflicting failure
         if (cachedFailure is DynamicInterfaceCastableEnumerableAttribute racingEnumerable)
         {
-            return racingEnumerable.TryGetEnumerator(this) ?? ThrowArgumentException();
+            return GetEnumerator(racingEnumerable, this);
         }
+
+        // Keep acquisition and adapter unwrapping consistent across cached and racing winners
+        static IEnumerator GetEnumerator(DynamicInterfaceCastableEnumerableAttribute enumerable, WindowsRuntimeObject thisObject)
+            => enumerable.TryGetEnumerator(thisObject, out IEnumerator? enumerator)
+                ? IEnumeratorAdapter.TryUnwrap(enumerator)
+                : ThrowArgumentException();
 
         [DoesNotReturn]
         [StackTraceHidden]

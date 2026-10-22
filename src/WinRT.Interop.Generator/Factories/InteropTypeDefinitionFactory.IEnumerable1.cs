@@ -51,35 +51,43 @@ internal partial class InteropTypeDefinitionFactory
 
             attributeType.Methods.Add(ctor);
 
-            // Prepare the typed call shared by the null-conditional branch
+            // Prepare the typed call for the successful interface cast
             CilInstruction callvirt_getEnumerator = new(Callvirt, interopReferences.IEnumerable1GetEnumerator(elementType));
 
-            // Define the 'TryGetEnumeratorCore' method as follows:
+            // Define the 'TryGetEnumerator' method as follows:
             //
-            // protected override IEnumerator? TryGetEnumeratorCore(WindowsRuntimeObject thisObject)
-            MethodDefinition tryGetEnumeratorCoreMethod = new(
-                name: "TryGetEnumeratorCore"u8,
-                attributes: MethodAttributes.Family | MethodAttributes.HideBySig | MethodAttributes.Virtual,
+            // public override bool TryGetEnumerator(WindowsRuntimeObject thisObject, out IEnumerator enumerator)
+            MethodDefinition tryGetEnumeratorMethod = new(
+                name: "TryGetEnumerator"u8,
+                attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Virtual,
                 signature: MethodSignature.CreateInstance(
-                    returnType: interopReferences.IEnumerator.ToReferenceTypeSignature(),
-                    parameterTypes: [interopReferences.WindowsRuntimeObject.ToReferenceTypeSignature()]))
+                    returnType: interopReferences.Boolean,
+                    parameterTypes: [
+                        interopReferences.WindowsRuntimeObject.ToReferenceTypeSignature(),
+                        interopReferences.IEnumerator.MakeReferenceTypeByReferenceType()]))
             {
+                CilOutParameterIndices = [2],
                 CilInstructions =
                 {
-                    // return (thisObject as IEnumerable<T>)?.GetEnumerator();
+                    // A failed interface cast stores 'null' and returns 'false'
+                    { Ldarg_2 },
                     { Ldarg_1 },
                     { Isinst, enumerableType.ToTypeDefOrRef() },
                     { Dup },
                     { Brtrue_S, callvirt_getEnumerator.CreateLabel() },
-                    { Pop },
-                    { Ldnull },
+                    { Stind_Ref },
+                    { Ldc_I4_0 },
                     { Ret },
+
+                    // GetEnumerator guarantees a non-null iterator
                     { callvirt_getEnumerator },
+                    { Stind_Ref },
+                    { Ldc_I4_1 },
                     { Ret }
                 }
             };
 
-            attributeType.Methods.Add(tryGetEnumeratorCoreMethod);
+            attributeType.Methods.Add(tryGetEnumeratorMethod);
         }
     }
 }

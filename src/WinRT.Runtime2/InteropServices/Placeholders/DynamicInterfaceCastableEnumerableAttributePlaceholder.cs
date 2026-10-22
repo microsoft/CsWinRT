@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Collections;
+using System.Diagnostics.CodeAnalysis;
 
 namespace WindowsRuntime.InteropServices;
 
@@ -16,8 +17,10 @@ internal sealed class DynamicInterfaceCastableEnumerableAttributePlaceholder : D
     public static readonly DynamicInterfaceCastableEnumerableAttributePlaceholder Instance = new();
 
     /// <inheritdoc/>
-    protected override IEnumerator? TryGetEnumeratorCore(WindowsRuntimeObject thisObject)
+    public override bool TryGetEnumerator(WindowsRuntimeObject thisObject, [NotNullWhen(true)] out IEnumerator? enumerator)
     {
-        return null;
+        enumerator = null;
+
+        return false;
     }
 }

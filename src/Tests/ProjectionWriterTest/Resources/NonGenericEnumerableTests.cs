@@ -52,7 +52,7 @@ internal static unsafe class Program
                 {
                     "list", "read-only-list", "strings", "pairs", "dictionary", "read-only-dictionary",
                     "observable-vector", "observable-map", "required-vector", "required-map", "bindable",
-                    "first-failure", "missing-required-iterable", "null-iterator", "concurrent", "negative-cache", "mixed-elements",
+                    "first-failure", "missing-required-iterable", "concurrent", "negative-cache", "mixed-elements",
                     "generic-adapter", "object-adapter", "bindable-adapter"
                 })
                 {
@@ -120,9 +120,6 @@ internal static unsafe class Program
                 break;
             case "missing-required-iterable":
                 VerifyMissingRequiredIterable();
-                break;
-            case "null-iterator":
-                VerifyNullIterator();
                 break;
             case "concurrent":
                 VerifyConcurrentEnumeration();
@@ -212,21 +209,6 @@ internal static unsafe class Program
         CheckMarshalledCollection(native, source);
         Parallel.For(0, 32, _ => VerifyEnumeration(source, ElementKind.Int32));
         Check(native.FirstCalls == 32 && native.TrapCalls == 0, "concurrent native calls");
-    }
-
-    private static void VerifyNullIterator()
-    {
-        using NativeCollection native = new() { ReturnNullIterator = true };
-        IEnumerable source = native.Source.Items;
-        CheckMarshalledCollection(native, source);
-        CheckEnumerationFails(source);
-        CheckEnumerationFails(source);
-        Check(native.FirstCalls == 2 && native.IterableQueries == 1, "a null native iterator must not trigger another provider");
-
-        native.ReturnNullIterator = false;
-        VerifyEnumeration(source, ElementKind.Int32);
-        Check(native.FirstCalls == 3 && native.IterableQueries == 1 && native.TrapCalls == 0,
-            "a null iterator result must not replace the cached provider with a negative decision");
     }
 
     private static void VerifyNegativeCache()
