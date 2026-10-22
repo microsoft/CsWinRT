@@ -94,7 +94,9 @@ internal sealed class InteropGeneratorRunner : IDisposable
         string? componentProjectionSource = null,
         string? iidLibrarySource = null,
         bool publicSignIidLibrary = false,
-        string? sdkReferenceSource = null)
+        string? sdkReferenceSource = null,
+        string iidLibraryName = "IidLibrary",
+        bool forwardUriToFutureAssembly = false)
     {
         Root = Directory.CreateTempSubdirectory("InteropGeneratorTest_").FullName;
         string referencesDirectory = Directory.CreateDirectory(Path.Combine(Root, "references")).FullName;
@@ -147,7 +149,7 @@ internal sealed class InteropGeneratorRunner : IDisposable
             byte[]? publicKey = publicSignIidLibrary
                 ? AssemblyName.GetAssemblyName(referencePaths.Single(path => Path.GetFileName(path) == "System.Runtime.dll")).GetPublicKey()
                 : null;
-            iidLibraryPath = Compile("IidLibrary", iidLibrarySource,
+            iidLibraryPath = Compile(iidLibraryName, iidLibrarySource,
                 references: [.. runtimeReferences, MetadataReference.CreateFromFile(sdkProjectionPath)], publicKey: publicKey);
         }
 
@@ -254,6 +256,47 @@ internal sealed class InteropGeneratorRunner : IDisposable
             module.Write(stream);
             File.WriteAllBytes(path, stream.ToArray());
             iidNameCollisions = [path];
+        }
+
+        if (forwardUriToFutureAssembly)
+        {
+            string future = Compile("FutureFramework", "namespace System; public sealed class Uri;");
+            string facadePath = referencePaths.Single(path => Path.GetFileName(path) == "System.Runtime.dll");
+            ModuleDefinition facade = ModuleDefinition.FromFile(facadePath);
+            TypeDefinition uri = facade.TopLevelTypes.Single(type => type.FullName == "System.Uri");
+            AssemblyReference futureAssembly = new("FutureFramework", new Version(0, 0, 0, 0));
+            ForwardedFrameworkTypeImporter importer = new(facade, uri, new TypeReference(futureAssembly, "System", "Uri"));
+
+            foreach (TypeDefinition type in facade.GetAllTypes())
+            {
+                foreach (MethodDefinition method in type.Methods)
+                {
+                    method.Signature = importer.ImportMethodSignature(method.Signature!);
+                }
+
+                foreach (PropertyDefinition property in type.Properties)
+                {
+                    property.Signature = importer.ImportPropertySignature(property.Signature!);
+                }
+
+                foreach (FieldDefinition field in type.Fields)
+                {
+                    field.Signature = importer.ImportFieldSignature(field.Signature!);
+                }
+            }
+
+            facade.TopLevelTypes.Remove(uri);
+            facade.ExportedTypes.Add(new ExportedType(
+                implementation: futureAssembly,
+                ns: "System",
+                name: "Uri")
+            {
+                Attributes = AsmResolver.PE.DotNet.Metadata.Tables.TypeAttributes.Forwarder
+            });
+            using MemoryStream stream = new();
+            facade.Write(stream);
+            File.WriteAllBytes(facadePath, stream.ToArray());
+            referencePaths = [.. referencePaths, future];
         }
 
         implementationPaths =
@@ -454,7 +497,7 @@ internal sealed class InteropGeneratorRunner : IDisposable
         }
         if (iidLibraryPath is not null)
         {
-            File.Copy(iidLibraryPath, Path.Combine(directory, "IidLibrary.dll"));
+            File.Copy(iidLibraryPath, Path.Combine(directory, Path.GetFileName(iidLibraryPath)));
         }
         foreach (string path in implementationPaths.Except(referencePaths))
         {
@@ -851,5 +894,16 @@ internal sealed class InteropGeneratorRunner : IDisposable
         using MemoryStream stream = new();
         module.Write(stream);
         File.WriteAllBytes(path, stream.ToArray());
+    }
+}
+
+file sealed class ForwardedFrameworkTypeImporter(ModuleDefinition module, TypeDefinition source, ITypeDefOrRef target)
+    : ReferenceImporter(module)
+{
+    public override TypeSignature ImportTypeSignature(TypeSignature signature)
+    {
+        return signature is TypeDefOrRefSignature type && ReferenceEquals(type.Type, source)
+            ? target.ToTypeSignature(isValueType: false)
+            : base.ImportTypeSignature(signature);
     }
 }

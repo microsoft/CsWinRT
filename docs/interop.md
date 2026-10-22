@@ -31,25 +31,12 @@ Use `GetIid<T>()` to obtain the native interface identifier associated with a pr
 Guid vectorIid = WindowsRuntimeMarshal.GetIid<IList<string>>();
 Guid classIid = WindowsRuntimeMarshal.GetIid<Windows.Foundation.Collections.PropertySet>();
 Guid inspectableIid = WindowsRuntimeMarshal.GetIid<object>();
+Guid referenceIid = WindowsRuntimeMarshal.GetIid<int?>();
 ```
 
-Interfaces and delegates return their own IID; runtime classes return the IID of their default interface, including generic default interfaces. Values and enums return their boxing-interface (`IReference<T>`) IID, so `GetIid<int>()` and `GetIid<int?>()` return the same value. `KeyValuePair<K,V>` instead returns its `IKeyValuePair<K,V>` IID. Single-dimensional arrays return their `IReferenceArray<T>` IID. XAML-specific mappings follow the application's WinUI/UWP XAML configuration.
+Interfaces and delegates return their own IID; runtime classes return the IID of their default interface. For boxed Windows Runtime value types, use the nullable form: `GetIid<int?>()` returns the `IReference<Int32>` IID, while `GetIid<int>()` throws. `KeyValuePair<K,V>` returns its `IKeyValuePair<K,V>` IID, and supported single-dimensional arrays return their `IReferenceArray<T>` IID. Mapped XAML types follow the project's WinUI/UWP XAML configuration.
 
-The accepted inputs follow the Windows Runtime mappings used by `Type` ↔ `TypeName` marshalling. When `T` itself derives from `Exception` or `Type`, the lookup uses the corresponding mapped base type; this normalization does not apply to array elements or generic arguments. Ordinary managed types, non-generic `EventHandler`, jagged arrays, and nullable `KeyValuePair<K,V>` have no supported IID entry and are rejected by the lookup. Unsupported constructed types remain subject to the interop generator's existing marshalling constraints when they appear in analyzed metadata. Static runtime classes and Windows Runtime attributes also throw: they can have metadata names, but have no native interface IID.
-
-IIDs are computed entirely at build time and stored on empty `[Guid]` provider types in a dedicated external type map. Non-generic entries are conditional on their Windows Runtime types being retained, not allocated. Constructed generic and array entries instead depend on a non-generic argument or element type: Native AOT can construct the closed type from shared generic code at runtime without retaining that exact instantiation at compile time. This can retain additional IID metadata when the API is used, but does not retain the associated marshalling code. The runtime looks up a provider and returns its `Type.GUID`; it never computes an IID or reconstructs a Windows Runtime signature.
-
-Keys include the assembly simple name at every nesting level, without versions or public key tokens. For example, `IList<Uri>` uses ``[System.Private.CoreLib]System.Collections.Generic.IList`1[[System.Private.Uri]System.Uri]``. This distinguishes unrelated types with the same full name in different assemblies. Results are cached by managed type.
-
-Generic helpers work when the concrete generic or array type is discoverable from the compiled application or its references. Shared discovery includes generic method arguments and propagates statically discoverable contexts through interface and virtual implementations, default interface bodies, and constrained static interface calls. This also covers implementations that construct types such as `IList<T>` internally. Discovery follows the configured assembly-selection rules and bounded expansion limits; it does not guarantee coverage of types created only at runtime, such as a previously unseen `MakeGenericType` instantiation. A missing precomputed entry causes `NotSupportedException`; there is no runtime-computation fallback.
-
-IID metadata is emitted from the existing discovery state and fixed runtime and projection catalogs, without another application traversal. An assembly excluded with `CsWinRTMarshallingDisabledAssembly` does not contribute its own IID-only usages. A constructed type used there must also be visible in an analyzed assembly; built-in and projected non-generic metadata remains available from the catalogs.
-
-Generator warnings about incomplete generic discovery also indicate possible missing IID entries. They do not prove that a particular lookup will fail: the type may already have been discovered through another usage.
-
-A closed generic or array argument participates in the same marshalling discovery as other method arguments, even when it is used only for IID lookup. The IID map itself is independent of the generated marshalling code and `TypeName` metadata proxies.
-
-The lookup is independent of marshalling tables and does not initialize vtables, activate runtime classes, or require objects to be constructed or boxed. When the API is unused, trimming and Native AOT remove the entire IID map, its metadata providers, and lookup code. IID metadata is generated independently of whether an application calls this API; entries for constructed types depend on the shared build-time discovery state.
+The method throws `NotSupportedException` if the type has no Windows Runtime interface identity or its IID is unavailable. Generic helpers are supported, but constructed types must be discoverable when the application is built; types created only through reflection might not be available.
 
 ### Object identity
 

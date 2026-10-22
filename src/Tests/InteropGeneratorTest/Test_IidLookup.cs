@@ -37,9 +37,9 @@ public sealed class Test_IidLookup
             internal interface IHidden { }
             [WindowsRuntimeType]
             internal class HiddenClass { }
-            [WindowsRuntimeType]
+            [WindowsRuntimeType, WindowsRuntimeClassName("Windows.Foundation.IReference`1<IidProjection.Value>")]
             public struct Value { public int Number; public string Text; }
-            [WindowsRuntimeType]
+            [WindowsRuntimeType, WindowsRuntimeClassName("Windows.Foundation.IReference`1<IidProjection.Choice>")]
             public enum Choice { First, Second }
             [WindowsRuntimeType, Guid("60a8e0c5-7371-4b96-ab04-b2ccfafce870")]
             public delegate void Handler();
@@ -129,6 +129,62 @@ public sealed class Test_IidLookup
         """;
 
     [TestMethod]
+    public async Task ExactTypes_DoNotImplicitlyBoxValues()
+    {
+        using InteropGeneratorRunner runner = new(sdkProjectionSource: ProjectionSource, applicationSource: """
+            using System;
+            using System.Collections.Generic;
+            using IidProjection;
+            using Windows.Foundation;
+            using WindowsRuntime.InteropServices;
+            public static class Program
+            {
+                public static int Main()
+                {
+                    if (WindowsRuntimeMarshal.GetIid<int?>() != new Guid("548cefbd-bc8a-5fa0-8df2-957440fc8bf4") ||
+                        WindowsRuntimeMarshal.GetIid<Value?>() != new Guid("513dbf61-50a0-5a16-bb0e-96ae18a9f125") ||
+                        WindowsRuntimeMarshal.GetIid<IList<int>>() != new Guid("b939af5b-b45d-5489-9149-61442c1905fe"))
+                        return 1;
+                    Reject<int>();
+                    Reject<string>();
+                    Reject<Guid>();
+                    Reject<Point>();
+                    Reject<Value>();
+                    Reject<Choice>();
+                    Reject<Exception>();
+                    Reject<ArgumentException>();
+                    Reject<Type>();
+                    Reject<KeyValuePair<string, int>?>();
+                    Reject<sbyte?>();
+                    Reject<UserValue?>();
+                    return 0;
+                }
+                static void Reject<T>()
+                {
+                    try { WindowsRuntimeMarshal.GetIid<T>(); }
+                    catch (NotSupportedException) { return; }
+                    throw new Exception("Implicit IID mapping for " + typeof(T));
+                }
+            }
+            public struct UserValue { }
+            """);
+        string output = await runner.GenerateAsync("exact-types");
+        (_, ModuleDefinition module) = runner.LoadOutput(output);
+        string[] keys = GetIidKeys(module);
+        Assert.Contains("[#System]System.Nullable`1[[#System]System.Int32]", keys);
+        Assert.Contains("[#System]System.Nullable`1[[WinRT.Sdk.Projection]IidProjection.Value]", keys);
+        foreach (string type in new[] { "Int32", "String", "Guid", "Exception", "Type" })
+        {
+            Assert.DoesNotContain("[#System]System." + type, keys);
+        }
+        Assert.DoesNotContain("[WinRT.Sdk.Projection]IidProjection.Value", keys);
+        Assert.DoesNotContain("[WinRT.Sdk.Projection]IidProjection.Choice", keys);
+        Assert.IsFalse(keys.Any(key => key.StartsWith(
+            "[#System]System.Nullable`1[[#System]System.Collections.Generic.KeyValuePair`2", StringComparison.Ordinal)));
+        await runner.RunApplicationAsync(output);
+    }
+
+    [TestMethod]
     public async Task IidEntries_AreExternalAndConditionalOnReferencedTypes()
     {
         using InteropGeneratorRunner runner = new();
@@ -137,7 +193,8 @@ public sealed class Test_IidLookup
         CustomAttribute[] entries = GetIidEntries(module);
 
         Assert.IsNotEmpty(entries);
-        Assert.Contains("[System.Private.CoreLib]System.Int32", GetIidKeys(module));
+        Assert.Contains("[#System]System.Nullable`1[[#System]System.Int32]", GetIidKeys(module));
+        Assert.DoesNotContain("[#System]System.Int32", GetIidKeys(module));
         Assert.IsFalse(module.TopLevelTypes.Any(type => type.Name == "WindowsRuntimeIidData"));
 
         foreach (CustomAttribute entry in entries)
@@ -168,7 +225,7 @@ public sealed class Test_IidLookup
             """);
         string output = await runner.GenerateAsync("iid-only");
         (_, ModuleDefinition module) = runner.LoadOutput(output);
-        Assert.Contains("[System.Private.CoreLib]System.Collections.Generic.IList`1[[WinRT.Sdk.Projection]IidProjection.Value]", GetIidKeys(module));
+        Assert.Contains("[#System]System.Collections.Generic.IList`1[[WinRT.Sdk.Projection]IidProjection.Value]", GetIidKeys(module));
         Assert.IsTrue(module.TopLevelTypes.Any(type =>
             type.Name!.ToString().Contains("IList'1", StringComparison.Ordinal) &&
             type.Name.ToString().Contains("IidProjection-Value", StringComparison.Ordinal)),
@@ -238,14 +295,16 @@ public sealed class Test_IidLookup
                         WindowsRuntimeMarshal.GetIid<Example>() != example ||
                         WindowsRuntimeMarshal.GetIid<GenericDefault>() != WindowsRuntimeMarshal.GetIid<IDictionary<string, object>>() ||
                         WindowsRuntimeMarshal.GetIid<Handler>() != new Guid("60a8e0c5-7371-4b96-ab04-b2ccfafce870") ||
-                        WindowsRuntimeMarshal.GetIid<Value>() != WindowsRuntimeMarshal.GetIid<Value?>() ||
-                        WindowsRuntimeMarshal.GetIid<Choice>() != WindowsRuntimeMarshal.GetIid<Choice?>() ||
+                        WindowsRuntimeMarshal.GetIid<Value?>() != new Guid("513dbf61-50a0-5a16-bb0e-96ae18a9f125") ||
+                        WindowsRuntimeMarshal.GetIid<Choice?>() == Guid.Empty ||
                         HiddenQueries.InterfaceIid() != new Guid("71f0284e-cc83-4c12-95ea-89749cdfc7f5") ||
                         HiddenQueries.ClassIid() != HiddenQueries.InterfaceIid() ||
                         HiddenQueries.ExclusiveIid() != HiddenQueries.InterfaceIid())
                         return 1;
                     Reject<MetadataAttribute>();
                     Reject<Contract>();
+                    Reject<Value>();
+                    Reject<Choice>();
                     return 0;
                 }
                 static void Reject<T>()
@@ -275,39 +334,35 @@ public sealed class Test_IidLookup
             {
                 public static int Main()
                 {
-                    Check<bool>(WellKnownWindowsInterfaceIIDs.IID_IReferenceOfBool);
-                    Check<byte>(WellKnownWindowsInterfaceIIDs.IID_IReferenceOfByte);
-                    Check<char>(WellKnownWindowsInterfaceIIDs.IID_IReferenceOfChar);
-                    Check<short>(WellKnownWindowsInterfaceIIDs.IID_IReferenceOfShort);
-                    Check<ushort>(WellKnownWindowsInterfaceIIDs.IID_IReferenceOfUShort);
-                    Check<int>(WellKnownWindowsInterfaceIIDs.IID_IReferenceOfInt);
-                    Check<uint>(WellKnownWindowsInterfaceIIDs.IID_IReferenceOfUInt);
-                    Check<long>(WellKnownWindowsInterfaceIIDs.IID_IReferenceOfLong);
-                    Check<ulong>(WellKnownWindowsInterfaceIIDs.IID_IReferenceOfULong);
-                    Check<float>(WellKnownWindowsInterfaceIIDs.IID_IReferenceOfFloat);
-                    Check<double>(WellKnownWindowsInterfaceIIDs.IID_IReferenceOfDouble);
-                    Check<string>(WellKnownWindowsInterfaceIIDs.IID_IReferenceOfString);
-                    Check<Guid>(WellKnownWindowsInterfaceIIDs.IID_IReferenceOfGuid);
-                    Check<DateTimeOffset>(WellKnownWindowsInterfaceIIDs.IID_IReferenceOfDateTimeOffset);
-                    Check<TimeSpan>(WellKnownWindowsInterfaceIIDs.IID_IReferenceOfTimeSpan);
-                    Check<Point>(WellKnownWindowsInterfaceIIDs.IID_IReferenceOfPoint);
-                    Check<Rect>(WellKnownWindowsInterfaceIIDs.IID_IReferenceOfRect);
-                    Check<Size>(WellKnownWindowsInterfaceIIDs.IID_IReferenceOfSize);
-                    Check<Vector3>(WellKnownWindowsInterfaceIIDs.IID_IReferenceOfVector3);
-                    Check<Matrix3x2>(WellKnownWindowsInterfaceIIDs.IID_IReferenceOfMatrix3x2);
-                    Check<Matrix4x4>(WellKnownWindowsInterfaceIIDs.IID_IReferenceOfMatrix4x4);
-                    Check<Plane>(WellKnownWindowsInterfaceIIDs.IID_IReferenceOfPlane);
-                    Check<Quaternion>(WellKnownWindowsInterfaceIIDs.IID_IReferenceOfQuaternion);
-                    Check<Vector2>(WellKnownWindowsInterfaceIIDs.IID_IReferenceOfVector2);
-                    Check<Vector4>(WellKnownWindowsInterfaceIIDs.IID_IReferenceOfVector4);
-                    Check<EventRegistrationToken>(WellKnownWindowsInterfaceIIDs.IID_IReferenceOfEventRegistrationToken);
-                    Check<PropertyType>(WellKnownWindowsInterfaceIIDs.IID_IReferenceOfPropertyType);
-                    Check<AsyncStatus>(WellKnownWindowsInterfaceIIDs.IID_IReferenceOfAsyncStatus);
-                    Check<CollectionChange>(WellKnownWindowsInterfaceIIDs.IID_IReferenceOfCollectionChange);
+                    Check<bool?>(WellKnownWindowsInterfaceIIDs.IID_IReferenceOfBool);
+                    Check<byte?>(WellKnownWindowsInterfaceIIDs.IID_IReferenceOfByte);
+                    Check<char?>(WellKnownWindowsInterfaceIIDs.IID_IReferenceOfChar);
+                    Check<short?>(WellKnownWindowsInterfaceIIDs.IID_IReferenceOfShort);
+                    Check<ushort?>(WellKnownWindowsInterfaceIIDs.IID_IReferenceOfUShort);
+                    Check<int?>(WellKnownWindowsInterfaceIIDs.IID_IReferenceOfInt);
+                    Check<uint?>(WellKnownWindowsInterfaceIIDs.IID_IReferenceOfUInt);
+                    Check<long?>(WellKnownWindowsInterfaceIIDs.IID_IReferenceOfLong);
+                    Check<ulong?>(WellKnownWindowsInterfaceIIDs.IID_IReferenceOfULong);
+                    Check<float?>(WellKnownWindowsInterfaceIIDs.IID_IReferenceOfFloat);
+                    Check<double?>(WellKnownWindowsInterfaceIIDs.IID_IReferenceOfDouble);
+                    Check<Guid?>(WellKnownWindowsInterfaceIIDs.IID_IReferenceOfGuid);
+                    Check<DateTimeOffset?>(WellKnownWindowsInterfaceIIDs.IID_IReferenceOfDateTimeOffset);
+                    Check<TimeSpan?>(WellKnownWindowsInterfaceIIDs.IID_IReferenceOfTimeSpan);
+                    Check<Point?>(WellKnownWindowsInterfaceIIDs.IID_IReferenceOfPoint);
+                    Check<Rect?>(WellKnownWindowsInterfaceIIDs.IID_IReferenceOfRect);
+                    Check<Size?>(WellKnownWindowsInterfaceIIDs.IID_IReferenceOfSize);
+                    Check<Vector3?>(WellKnownWindowsInterfaceIIDs.IID_IReferenceOfVector3);
+                    Check<Matrix3x2?>(WellKnownWindowsInterfaceIIDs.IID_IReferenceOfMatrix3x2);
+                    Check<Matrix4x4?>(WellKnownWindowsInterfaceIIDs.IID_IReferenceOfMatrix4x4);
+                    Check<Plane?>(WellKnownWindowsInterfaceIIDs.IID_IReferenceOfPlane);
+                    Check<Quaternion?>(WellKnownWindowsInterfaceIIDs.IID_IReferenceOfQuaternion);
+                    Check<Vector2?>(WellKnownWindowsInterfaceIIDs.IID_IReferenceOfVector2);
+                    Check<Vector4?>(WellKnownWindowsInterfaceIIDs.IID_IReferenceOfVector4);
+                    Check<EventRegistrationToken?>(WellKnownWindowsInterfaceIIDs.IID_IReferenceOfEventRegistrationToken);
+                    Check<PropertyType?>(WellKnownWindowsInterfaceIIDs.IID_IReferenceOfPropertyType);
+                    Check<AsyncStatus?>(WellKnownWindowsInterfaceIIDs.IID_IReferenceOfAsyncStatus);
+                    Check<CollectionChange?>(WellKnownWindowsInterfaceIIDs.IID_IReferenceOfCollectionChange);
                     Check<object>(WellKnownWindowsInterfaceIIDs.IID_IInspectable);
-                    Check<Type>(WellKnownWindowsInterfaceIIDs.IID_IReferenceOfType);
-                    Check<Exception>(WellKnownWindowsInterfaceIIDs.IID_IReferenceOfException);
-                    Check<ArgumentException>(WellKnownWindowsInterfaceIIDs.IID_IReferenceOfException);
                     Check<IDisposable>(new("30d5a829-7fa4-4026-83bb-d75bae4ea99e"));
                     Check<IStringable>(new("96369f54-8eb6-48f0-abce-c1b211e627c3"));
                     Check<Uri>(new("9e365e57-48b2-4160-956f-c7385120bbfc"));
@@ -351,7 +406,7 @@ public sealed class Test_IidLookup
     [TestMethod]
     public async Task InvalidTypes_ThrowWithoutFailingGeneration()
     {
-        using InteropGeneratorRunner runner = new(applicationSource: """
+        using InteropGeneratorRunner runner = new(applicationSource: ExpandRuntimeIids("""
             using System;
             using System.Collections.Generic;
             using System.Runtime.InteropServices;
@@ -374,6 +429,12 @@ public sealed class Test_IidLookup
                     RejectConstructed(typeof(IList<>).MakeGenericType(typeof(KeyValuePair<string, int>?)));
                     RejectConstructed(typeof(IAsyncOperation<>).MakeGenericType(typeof(KeyValuePair<string, int>?)));
                     Reject<ICollection<KeyValuePair<string, int>>>();
+                    if (WindowsRuntimeMarshal.GetIid<int[]>() != WellKnownWindowsInterfaceIIDs.IID_IReferenceArrayOfInt32)
+                        throw new Exception("Missing supported vector IID");
+                    Reject<int[,]>();
+                    Reject<int[][]>();
+                    RejectConstructed(typeof(int).MakeArrayType(1));
+                    RejectConstructed(typeof(int).MakeArrayType(3));
                     RejectConstructed(typeof(int[]).MakeArrayType());
                     Reject<ApiContractAttribute>();
                     return 0;
@@ -396,7 +457,7 @@ public sealed class Test_IidLookup
             public class UserClass : IStringable { public string ToString() => ""; }
             [Guid("69c58f47-a268-4a55-aad8-97d111a2b01a")]
             public interface UserInterface { }
-            """);
+            """));
         await runner.RunApplicationAsync(await runner.GenerateAsync("invalid"));
     }
 
@@ -408,7 +469,7 @@ public sealed class Test_IidLookup
             {
                 public static void Main()
                 {
-                    WindowsRuntime.InteropServices.WindowsRuntimeMarshal.GetIid<int>();
+                    WindowsRuntime.InteropServices.WindowsRuntimeMarshal.GetIid<int?>();
                     WindowsRuntime.InteropServices.WindowsRuntimeMarshal.GetIid<IidProjection.Example>();
                 }
             }
@@ -460,7 +521,7 @@ public sealed class Test_IidLookup
                 """);
         string output = await runner.GenerateAsync("opted-out", marshallingMode: "Strict", marshallingDisabledAssemblyNames: ["IidLibrary"]);
         (_, ModuleDefinition module) = runner.LoadOutput(output);
-        Assert.Contains("[System.Private.CoreLib]System.Collections.Generic.IList`1[[WinRT.Sdk.Projection]IidProjection.Value]",
+        Assert.Contains("[#System]System.Collections.Generic.IList`1[[WinRT.Sdk.Projection]IidProjection.Value]",
             GetIidKeys(module));
         await runner.RunApplicationAsync(output);
     }
@@ -471,7 +532,7 @@ public sealed class Test_IidLookup
         using InteropGeneratorRunner runner = new(applicationSource: """
             public static class Program
             {
-                public static int Main() => WindowsRuntime.InteropServices.WindowsRuntimeMarshal.GetIid<int>() ==
+                public static int Main() => WindowsRuntime.InteropServices.WindowsRuntimeMarshal.GetIid<int?>() ==
                     new System.Guid("548cefbd-bc8a-5fa0-8df2-957440fc8bf4") ? 0 : 1;
             }
             """);
@@ -499,12 +560,12 @@ public sealed class Test_IidLookup
                     if (WindowsRuntimeMarshal.GetIid<IExample>() != new Guid("69c58f47-a268-4a55-aad8-97d111a2b01a") ||
                         WindowsRuntimeMarshal.GetIid<Example>() != WindowsRuntimeMarshal.GetIid<IExample>() ||
                         WindowsRuntimeMarshal.GetIid<GenericDefault>() != WindowsRuntimeMarshal.GetIid<IDictionary<string, object>>() ||
-                        WindowsRuntimeMarshal.GetIid<Point?>() != WindowsRuntimeMarshal.GetIid<Point>() ||
+                        WindowsRuntimeMarshal.GetIid<Point?>() != new Guid("84f14c22-a00a-5272-8d3d-82112e66df00") ||
                         WindowsRuntimeMarshal.GetIid<IList<Value>>() != new Guid("41e293d8-754c-516b-9a87-53728753adad") ||
                         WindowsRuntimeMarshal.GetIid<IList<Uri>>() != new Guid("0d82bd8d-fe62-5d67-a7b9-7886dd75bc4e") ||
                         WindowsRuntimeMarshal.GetIid<IList<System.ComponentModel.PropertyChangedEventArgs>>() != new Guid("3d1941dd-0165-5e8e-a121-1130d764de6e") ||
-                        WindowsRuntimeMarshal.GetIid<KeyValuePair<string, int>>() == WindowsRuntimeMarshal.GetIid<int>() ||
-                        WindowsRuntimeMarshal.GetIid<Value>() != WindowsRuntimeMarshal.GetIid<Value?>())
+                        WindowsRuntimeMarshal.GetIid<KeyValuePair<string, int>>() == WindowsRuntimeMarshal.GetIid<int?>() ||
+                        WindowsRuntimeMarshal.GetIid<Value?>() != new Guid("513dbf61-50a0-5a16-bb0e-96ae18a9f125"))
                         return 1;
                     return 0;
                 }
@@ -585,6 +646,101 @@ public sealed class Test_IidLookup
     }
 
     [TestMethod]
+    [DataRow("IidLibrary", false, "IidLibrary")]
+    [DataRow("#System", false, "##System")]
+    [DataRow("##System", true, "###System")]
+    public async Task SystemNamedImpostors_DoNotMatchLogicalScope(string assemblyName, bool signed, string expectedScope)
+    {
+        using InteropGeneratorRunner runner = new(
+            iidLibraryName: assemblyName,
+            publicSignIidLibrary: signed,
+            iidLibrarySource: $$"""
+                namespace System
+                {
+                    internal sealed class Uri;
+                    internal interface IServiceProvider;
+                    [WindowsRuntime.WindowsRuntimeType]
+                    internal enum ContractValue { First }
+                }
+                public static class LibraryQueries
+                {
+                    public static bool Reject() =>
+                        Reject<System.Uri>() &&
+                        Reject<System.IServiceProvider>() &&
+                        Reject<System.Collections.Generic.IList<System.Uri>>();
+                    public static bool CheckProjectedType()
+                    {
+                        var map = System.Runtime.InteropServices.TypeMapping.GetOrCreateExternalTypeMapping<
+                            WindowsRuntime.InteropServices.WindowsRuntimeIidTypeMapGroup>();
+                        return map.TryGetValue("[#System]System.Collections.Generic.IList`1[[{{expectedScope}}]System.ContractValue]", out System.Type provider) &&
+                            WindowsRuntime.InteropServices.WindowsRuntimeMarshal.GetIid<System.Collections.Generic.IList<System.ContractValue>>() == provider.GUID;
+                    }
+                    static bool Reject<T>()
+                    {
+                        try { WindowsRuntime.InteropServices.WindowsRuntimeMarshal.GetIid<T>(); }
+                        catch (System.NotSupportedException) { return true; }
+                        return false;
+                    }
+                }
+                """,
+            applicationSource: """
+                public static class Program
+                {
+                    public static int Main() =>
+                        LibraryQueries.Reject() &&
+                        LibraryQueries.CheckProjectedType() &&
+                        WindowsRuntime.InteropServices.WindowsRuntimeMarshal.GetIid<System.Uri>() ==
+                        new System.Guid("9e365e57-48b2-4160-956f-c7385120bbfc") &&
+                        WindowsRuntime.InteropServices.WindowsRuntimeMarshal.GetIid<System.IServiceProvider>() ==
+                        new System.Guid("68b3a2df-8173-539f-b524-c8a2348f5afb") ? 0 : 1;
+                }
+                """);
+        string output = await runner.GenerateAsync("system-impostors");
+        await runner.RunApplicationAsync(output);
+
+        if (assemblyName == "#System" && Environment.Is64BitProcess)
+        {
+            await runner.PublishApplicationAsync(output, nativeAot: true);
+        }
+    }
+
+    [TestMethod]
+    public async Task MovedFrameworkType_UsesLogicalScopeThroughItsFacade()
+    {
+        using InteropGeneratorRunner runner = new(
+            forwardUriToFutureAssembly: true,
+            applicationSource: """
+                public static class Program
+                {
+                    public static int Main() =>
+                        WindowsRuntime.InteropServices.WindowsRuntimeMarshal.GetIid<System.Uri>() ==
+                        new System.Guid("9e365e57-48b2-4160-956f-c7385120bbfc") &&
+                        WindowsRuntime.InteropServices.WindowsRuntimeMarshal.GetIid<System.Collections.Generic.IList<System.Uri>>() ==
+                        new System.Guid("0d82bd8d-fe62-5d67-a7b9-7886dd75bc4e") ? 0 : 1;
+                }
+                """);
+
+        // A direct reference to the moved definition must match the well-known reference through its forwarder
+        runner.RewriteApplicationTypeScope("System", "Uri", "FutureFramework");
+        string output = await runner.GenerateAsync("moved-framework");
+        (_, ModuleDefinition module) = runner.LoadOutput(output);
+        CustomAttribute[] entries = GetIidEntries(module);
+
+        foreach ((string key, string expected) in new[]
+        {
+            ("[#System]System.Uri", "9e365e57-48b2-4160-956f-c7385120bbfc"),
+            ("[#System]System.Collections.Generic.IList`1[[#System]System.Uri]", "0d82bd8d-fe62-5d67-a7b9-7886dd75bc4e")
+        })
+        {
+            CustomAttribute entry = entries.Single(entry => entry.Signature!.FixedArguments[0].Element!.ToString() == key);
+            TypeDefinition provider = ((TypeSignature)entry.Signature!.FixedArguments[1].Element!).Resolve(module.RuntimeContext);
+            Assert.AreEqual(new Guid(expected), Guid.Parse(provider.CustomAttributes.Single().Signature!.FixedArguments[0].Element!.ToString()!));
+        }
+
+        Assert.IsFalse(GetIidKeys(module).Any(key => key.Contains("[FutureFramework]", StringComparison.Ordinal)));
+    }
+
+    [TestMethod]
     [DataRow(false)]
     [DataRow(true)]
     public async Task OverlappingFrameworkReferences_HaveOneIidProviderPerIdentity(bool implementations)
@@ -633,7 +789,7 @@ public sealed class Test_IidLookup
                 public static int Main()
                 {
                     Check<IList<int>>(new List<int>());
-                    Check<int>(42);
+                    Check<int?>(42);
                     Check<int[]>(new[] { 1, 2, 3 });
                     Check<KeyValuePair<string, int>>(new KeyValuePair<string, int>("key", 42));
                     Check<EventHandler<int>>(new EventHandler<int>((sender, value) => { }));
@@ -671,8 +827,8 @@ public sealed class Test_IidLookup
                     public static int Main()
                     {
                         if (WindowsRuntimeMarshal.GetIid<Component.Class>() != WindowsRuntimeMarshal.GetIid<Component.IExample>() ||
-                            WindowsRuntimeMarshal.GetIid<Component.Value>() != WindowsRuntimeMarshal.GetIid<Component.Value?>() ||
-                            WindowsRuntimeMarshal.GetIid<Component.Choice>() != WindowsRuntimeMarshal.GetIid<Component.Choice?>() ||
+                            WindowsRuntimeMarshal.GetIid<Component.Value?>() == Guid.Empty ||
+                            WindowsRuntimeMarshal.GetIid<Component.Choice?>() == Guid.Empty ||
                             WindowsRuntimeMarshal.GetIid<Component.Handler>() != new Guid("60a8e0c5-7371-4b96-ab04-b2ccfafce870"))
                             return 1;
                         try { WindowsRuntimeMarshal.GetIid<Component.Helper>(); }
@@ -724,45 +880,57 @@ public sealed class Test_IidLookup
             [assembly: TypeMapAssemblyTarget<WindowsRuntimeMetadataTypeMapGroup>("WinRT.Interop")]
             [assembly: TypeMapAssemblyTarget<WindowsRuntimeComWrappersTypeMapGroup>("WinRT.Runtime")]
             [assembly: TypeMapAssemblyTarget<WindowsRuntimeComWrappersTypeMapGroup>("WinRT.Interop")]
-            public static class Program
+            public static unsafe class Program
             {
                 public static int Main()
                 {
-                    Check<int>();
-                    Check<int?>();
-                    Check<string>();
-                    Check<Uri>();
-                    Check<Type>();
-                    Check<ArgumentException>();
-                    Check<ArgumentException[]>();
-                    Check<IList<ArgumentException>>();
-                    Check<IExample>();
-                    Check<Example>();
-                    Check<Value>();
-                    Check<Choice>();
-                    Check<Handler>();
-                    Check<IList<int>>();
-                    Check<EventHandler<int>>();
-                    Check<KeyValuePair<string, int>>();
-                    Check<int[]>();
-                    Check<EventHandler>();
-                    Check<KeyValuePair<string, int>?>();
-                    Check<UserClass>();
-                    Check<IList<UserClass>>();
+                    Check<int>(false, "Int32");
+                    Check<int?>(true, "Windows.Foundation.IReference`1<Int32>");
+                    Check<string>(false, "String");
+                    Check<Uri>(true, "Windows.Foundation.Uri");
+                    Check<Type>(false, "Windows.UI.Xaml.Interop.TypeName");
+                    Check<Exception>(false, "Windows.Foundation.HResult");
+                    Check<ArgumentException>(false, "Windows.Foundation.HResult");
+                    Check<ArgumentException[]>(false, expectedMetadata: false);
+                    Check<IList<ArgumentException>>(false, expectedMetadata: false);
+                    Check<IExample>(true);
+                    Check<Example>(true);
+                    Check<Value>(false, "IidProjection.Value");
+                    Check<Value?>(true, "Windows.Foundation.IReference`1<IidProjection.Value>");
+                    Check<Choice>(false, "IidProjection.Choice");
+                    Check<Choice?>(true);
+                    Check<Handler>(true);
+                    Check<IList<int>>(true);
+                    Check<EventHandler<int>>(true);
+                    Check<KeyValuePair<string, int>>(true);
+                    Check<int[]>(true);
+                    Check<EventHandler>(false, expectedMetadata: false);
+                    Check<KeyValuePair<string, int>?>(false, expectedMetadata: false);
+                    Check<sbyte?>(false, expectedMetadata: false);
+                    Check<UserValue?>(false, expectedMetadata: false);
+                    Check<UserClass>(false, expectedMetadata: false);
+                    Check<IList<UserClass>>(false, expectedMetadata: false);
                     return 0;
                 }
-                static void Check<T>()
+                static void Check<T>(bool expectedIid, string expectedName = null, bool expectedMetadata = true)
                 {
                     var name = ABI.System.TypeMarshaller.ConvertToUnmanaged(typeof(T));
-                    bool mapped = name.Kind != TypeKind.Custom;
-                    ABI.System.TypeMarshaller.Dispose(name);
+                    try
+                    {
+                        if ((name.Kind != TypeKind.Custom) != expectedMetadata ||
+                            (expectedIid && name.Kind != TypeKind.Metadata) ||
+                            (expectedName != null && HStringMarshaller.ConvertToManaged(name.Name) != expectedName))
+                            throw new Exception("Unexpected TypeName for " + typeof(T));
+                    }
+                    finally { ABI.System.TypeMarshaller.Dispose(name); }
                     bool hasIid;
                     try { WindowsRuntimeMarshal.GetIid<T>(); hasIid = true; }
                     catch (NotSupportedException) { hasIid = false; }
-                    if (mapped != hasIid) throw new Exception("TypeName/IID mismatch for " + typeof(T) + ": " + mapped + "/" + hasIid);
+                    if (expectedIid != hasIid) throw new Exception("Unexpected IID availability for " + typeof(T));
                 }
             }
             public sealed class UserClass { }
+            public struct UserValue { }
             public static class TypeNameInputs
             {
                 public static EventHandler<int> Handler;
@@ -926,7 +1094,7 @@ public sealed class Test_IidLookup
             """);
         string output = await runner.GenerateAsync("dispatched-" + scenario);
         (_, ModuleDefinition module) = runner.LoadOutput(output);
-        Assert.Contains("[System.Private.CoreLib]System.Collections.Generic.IList`1[[WinRT.Runtime]Windows.Storage.Streams.InputStreamOptions]",
+        Assert.Contains("[#System]System.Collections.Generic.IList`1[[WinRT.Runtime]Windows.Storage.Streams.InputStreamOptions]",
             GetIidKeys(module));
         await runner.RunApplicationAsync(output);
         if (Environment.Is64BitProcess && scenario is "default-interface" or "static-abstract")
@@ -1088,50 +1256,105 @@ public sealed class Test_IidLookup
     [TestMethod]
     [DataRow(false)]
     [DataRow(true)]
-    public async Task StructuralKeys_MatchRuntimeNamesAcrossFrameworkFacades(bool implementations)
+    public async Task StructuralKeys_UseLogicalSystemScopeAcrossFrameworkFacades(bool implementations)
     {
         using InteropGeneratorRunner runner = new(useFrameworkImplementations: implementations, sdkProjectionSource: ProjectionSource,
             applicationSource: """
                 using System;
                 using System.Collections.Generic;
                 using System.ComponentModel;
+                using System.Collections.Specialized;
                 using System.Numerics;
-                using System.Reflection;
                 using System.Runtime.InteropServices;
+                using System.Windows.Input;
                 using IidProjection;
                 using WindowsRuntime.InteropServices;
                 public static class Program
                 {
                     public static int Main()
                     {
-                        Check<int>("[System.Private.CoreLib]System.Int32");
-                        Check<string>("[System.Private.CoreLib]System.String");
-                        Check<object>("[System.Private.CoreLib]System.Object");
-                        Check<Uri>("[System.Private.Uri]System.Uri");
-                        Check<INotifyPropertyChanged>("[System.ObjectModel]System.ComponentModel.INotifyPropertyChanged");
-                        Check<IServiceProvider>("[System.ComponentModel]System.IServiceProvider");
-                        Check<Vector3>("[System.Private.CoreLib]System.Numerics.Vector3");
-                        Check<IList<Uri>>("[System.Private.CoreLib]System.Collections.Generic.IList`1[[System.Private.Uri]System.Uri]");
+                        CheckSystemValue<bool>();
+                        CheckSystemValue<byte>();
+                        CheckSystemValue<char>();
+                        CheckSystemValue<short>();
+                        CheckSystemValue<ushort>();
+                        CheckSystemValue<int>();
+                        CheckSystemValue<uint>();
+                        CheckSystemValue<long>();
+                        CheckSystemValue<ulong>();
+                        CheckSystemValue<float>();
+                        CheckSystemValue<double>();
+                        CheckSystem<object>();
+                        CheckSystemValue<Guid>();
+                        CheckSystem<Uri>();
+                        Check<IList<string>>("[#System]System.Collections.Generic.IList`1[[#System]System.String]");
+                        Check<IList<Exception>>("[#System]System.Collections.Generic.IList`1[[#System]System.Exception]");
+                        Check<IList<Type>>("[#System]System.Collections.Generic.IList`1[[#System]System.Type]");
+                        CheckSystemValue<DateTimeOffset>();
+                        CheckSystemValue<TimeSpan>();
+                        CheckSystem<IDisposable>();
+                        CheckSystem<IServiceProvider>();
+                        CheckSystem<System.Collections.IEnumerable>();
+                        CheckSystem<System.Collections.IEnumerator>();
+                        CheckSystem<System.Collections.IList>();
+                        CheckSystem<ICommand>();
+                        CheckSystem<INotifyPropertyChanged>();
+                        CheckSystem<INotifyDataErrorInfo>();
+                        CheckSystem<INotifyCollectionChanged>();
+                        CheckSystem<PropertyChangedEventArgs>();
+                        CheckSystem<PropertyChangedEventHandler>();
+                        CheckSystem<DataErrorsChangedEventArgs>();
+                        CheckSystemValue<NotifyCollectionChangedAction>();
+                        CheckSystem<NotifyCollectionChangedEventArgs>();
+                        CheckSystem<NotifyCollectionChangedEventHandler>();
+                        CheckSystemValue<Matrix3x2>();
+                        CheckSystemValue<Matrix4x4>();
+                        CheckSystemValue<Plane>();
+                        CheckSystemValue<Quaternion>();
+                        CheckSystemValue<Vector2>();
+                        CheckSystemValue<Vector3>();
+                        CheckSystemValue<Vector4>();
+                        Check<IList<Uri>>("[#System]System.Collections.Generic.IList`1[[#System]System.Uri]");
+                        Check<IReadOnlyList<int>>("[#System]System.Collections.Generic.IReadOnlyList`1[[#System]System.Int32]");
+                        Check<IEnumerable<int>>("[#System]System.Collections.Generic.IEnumerable`1[[#System]System.Int32]");
+                        Check<IEnumerator<int>>("[#System]System.Collections.Generic.IEnumerator`1[[#System]System.Int32]");
+                        Check<IDictionary<string, int>>("[#System]System.Collections.Generic.IDictionary`2[[#System]System.String,[#System]System.Int32]");
+                        Check<IReadOnlyDictionary<string, int>>("[#System]System.Collections.Generic.IReadOnlyDictionary`2[[#System]System.String,[#System]System.Int32]");
+                        Check<EventHandler<int>>("[#System]System.EventHandler`1[[#System]System.Int32]");
+                        Check<EventHandler<object, int>>("[#System]System.EventHandler`2[[#System]System.Object,[#System]System.Int32]");
+                        Check<IList<int?>>("[#System]System.Collections.Generic.IList`1[[#System]System.Nullable`1[[#System]System.Int32]]");
                         Check<KeyValuePair<string, IList<int>>>(
-                            "[System.Private.CoreLib]System.Collections.Generic.KeyValuePair`2[[System.Private.CoreLib]System.String,[System.Private.CoreLib]System.Collections.Generic.IList`1[[System.Private.CoreLib]System.Int32]]");
+                            "[#System]System.Collections.Generic.KeyValuePair`2[[#System]System.String,[#System]System.Collections.Generic.IList`1[[#System]System.Int32]]");
                         Check<IList<IReadOnlyList<Value>>>(
-                            "[System.Private.CoreLib]System.Collections.Generic.IList`1[[System.Private.CoreLib]System.Collections.Generic.IReadOnlyList`1[[WinRT.Sdk.Projection]IidProjection.Value]]");
+                            "[#System]System.Collections.Generic.IList`1[[#System]System.Collections.Generic.IReadOnlyList`1[[WinRT.Sdk.Projection]IidProjection.Value]]");
                         Check<Value[]>("[WinRT.Sdk.Projection]IidProjection.Value[]");
-                        Check<IList<int>[]>("[System.Private.CoreLib]System.Collections.Generic.IList`1[[System.Private.CoreLib]System.Int32][]");
+                        Check<Windows.Foundation.Point?>("[#System]System.Nullable`1[[WinRT.Runtime]Windows.Foundation.Point]");
+                        Check<IList<int>[]>("[#System]System.Collections.Generic.IList`1[[#System]System.Int32][]");
                         return 0;
                     }
+                    static void CheckSystem<T>() => Check<T>("[#System]" + typeof(T).FullName);
+                    static void CheckSystemValue<T>() where T : struct =>
+                        Check<T?>("[#System]System.Nullable`1[[#System]" + typeof(T).FullName + "]");
                     static void Check<T>(string key)
                     {
                         Type type = typeof(T);
                         var map = TypeMapping.GetOrCreateExternalTypeMapping<WindowsRuntimeIidTypeMapGroup>();
                         if (!map.TryGetValue(key, out Type provider)) throw new Exception("Missing structural key: " + key);
-                        MethodInfo method = typeof(WindowsRuntimeMarshal).GetMethod(nameof(WindowsRuntimeMarshal.GetIid));
-                        Guid iid = (Guid)method.MakeGenericMethod(type).Invoke(null, null);
+                        Guid iid = WindowsRuntimeMarshal.GetIid<T>();
                         if (iid != provider.GUID) throw new Exception("Runtime and generated keys disagree for " + type);
                     }
                 }
                 """);
-        await runner.RunApplicationAsync(await runner.GenerateAsync("structural-keys"));
+        string output = await runner.GenerateAsync("structural-keys");
+        (_, ModuleDefinition module) = runner.LoadOutput(output);
+        Assert.IsFalse(GetIidKeys(module).Any(key =>
+            key.Contains("[System.", StringComparison.Ordinal) || key.Contains("[Microsoft.", StringComparison.Ordinal)));
+        await runner.RunApplicationAsync(output);
+
+        if (!implementations && Environment.Is64BitProcess)
+        {
+            await runner.PublishApplicationAsync(output, nativeAot: true);
+        }
     }
 
     [TestMethod]
@@ -1195,7 +1418,7 @@ public sealed class Test_IidLookup
             applicationSource: """
                 public static class Program
                 {
-                    public static int Main() => WindowsRuntime.InteropServices.WindowsRuntimeMarshal.GetIid<int>() ==
+                    public static int Main() => WindowsRuntime.InteropServices.WindowsRuntimeMarshal.GetIid<int?>() ==
                         new System.Guid("548cefbd-bc8a-5fa0-8df2-957440fc8bf4") ? 0 : 1;
                 }
                 """);
@@ -1245,7 +1468,7 @@ public sealed class Test_IidLookup
                 public static int Main()
                 {
                     M0<int>();
-                    return WindowsRuntimeMarshal.GetIid<int>() == new System.Guid("548cefbd-bc8a-5fa0-8df2-957440fc8bf4") ? 0 : 1;
+                    return WindowsRuntimeMarshal.GetIid<int?>() == new System.Guid("548cefbd-bc8a-5fa0-8df2-957440fc8bf4") ? 0 : 1;
                 }
                 {{methods}}
             }
@@ -1298,7 +1521,7 @@ public sealed class Test_IidLookup
                 public static readonly Action UnusedExpansion = Expand<int>;
                 public static IList<double> NormalValues;
                 public static int Main() =>
-                    WindowsRuntimeMarshal.GetIid<int>() == new Guid("548cefbd-bc8a-5fa0-8df2-957440fc8bf4") ? 0 : 1;
+                    WindowsRuntimeMarshal.GetIid<int?>() == new Guid("548cefbd-bc8a-5fa0-8df2-957440fc8bf4") ? 0 : 1;
                 static void Expand<T>() => Expand<KeyValuePair<T, T>>();
             }
             """);
@@ -1319,7 +1542,7 @@ public sealed class Test_IidLookup
             public static class Program
             {
                 public static int Main() =>
-                    WindowsRuntimeMarshal.GetIid<int>() == new Guid("548cefbd-bc8a-5fa0-8df2-957440fc8bf4") &&
+                    WindowsRuntimeMarshal.GetIid<int?>() == new Guid("548cefbd-bc8a-5fa0-8df2-957440fc8bf4") &&
                     WindowsRuntimeMarshal.GetIid<ICommand>() == new Guid("e5af3542-ca67-4081-995b-709dd13792df") ? 0 : 1;
             }
             """);
