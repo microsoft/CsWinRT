@@ -2,11 +2,16 @@
 // Licensed under the MIT License.
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Collections.Specialized;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Windows.Input;
 
 #pragma warning disable IDE0046
 
@@ -82,6 +87,7 @@ internal sealed class WindowsRuntimeIidInfo
         {
             throw new NotSupportedException(
                 $"The type '{_type}' does not have a precomputed Windows Runtime IID. " +
+                "Value metadata names do not imply an interface IID. IReference<T> requires a nullable Windows Runtime value type. " +
                 "Static runtime classes and Windows Runtime attributes have no native interface. " +
                 "Constructed generic and array types must be discoverable when the interop assembly is generated.");
         }
@@ -98,31 +104,6 @@ internal sealed class WindowsRuntimeIidInfo
     /// <returns>The IID information, including a cached negative result for unsupported types.</returns>
     private static WindowsRuntimeIidInfo CreateIidInfo(Type type)
     {
-        if (type.ContainsGenericParameters || type.FullName is null || (type.IsArray && (!type.IsSZArray || type.GetElementType()!.IsArray)))
-        {
-            return new(type);
-        }
-
-        if (type.IsAssignableTo(typeof(Exception)) && type != typeof(Exception))
-        {
-            return new(type, GetInfo(typeof(Exception))._iid);
-        }
-
-        if (type.IsAssignableTo(typeof(Type)) && type != typeof(Type))
-        {
-            return new(type, GetInfo(typeof(Type))._iid);
-        }
-
-        if (Nullable.GetUnderlyingType(type) is Type underlyingType)
-        {
-            if (underlyingType.IsGenericType && underlyingType.GetGenericTypeDefinition() == typeof(KeyValuePair<,>))
-            {
-                return new(type);
-            }
-
-            return new(type, GetInfo(underlyingType)._iid);
-        }
-
         return ExternalTypeMapping.TryGetValue(WindowsRuntimeIidTypeName.GetName(type), out Type? provider)
             ? new(type, provider.GUID)
             : new(type);
@@ -130,7 +111,7 @@ internal sealed class WindowsRuntimeIidInfo
 }
 
 /// <summary>
-/// Formats IID map keys without assembly versions, cultures, or public key tokens.
+/// Formats IID map keys using logical System identities and assembly names for all other types.
 /// </summary>
 file static class WindowsRuntimeIidTypeName
 {
@@ -143,7 +124,7 @@ file static class WindowsRuntimeIidTypeName
     {
         static void Append(ref DefaultInterpolatedStringHandler handler, Type type)
         {
-            if (type.IsArray)
+            if (type.IsSZArray)
             {
                 Append(ref handler, type.GetElementType()!);
                 handler.AppendLiteral("[]");
@@ -151,10 +132,21 @@ file static class WindowsRuntimeIidTypeName
                 return;
             }
 
+            Type definition = type.IsGenericType ? type.GetGenericTypeDefinition() : type;
+            bool isSystemType = IsSystemType(definition);
+            string assemblyName = isSystemType ? "#System" : definition.Assembly.GetName().Name!;
+
             handler.AppendFormatted('[');
-            handler.AppendLiteral(type.Assembly.GetName().Name!);
+
+            // Literal assembly names cannot occupy the reserved logical scope
+            if (!isSystemType && assemblyName.StartsWith('#'))
+            {
+                handler.AppendFormatted('#');
+            }
+
+            handler.AppendLiteral(assemblyName);
             handler.AppendFormatted(']');
-            handler.AppendLiteral((type.IsGenericType ? type.GetGenericTypeDefinition().FullName : type.FullName)!);
+            handler.AppendLiteral(definition.FullName!);
 
             if (type.IsGenericType)
             {
@@ -176,10 +168,75 @@ file static class WindowsRuntimeIidTypeName
             }
         }
 
-        DefaultInterpolatedStringHandler handler = new(0, 0, null, initialBuffer: stackalloc char[256]);
+        DefaultInterpolatedStringHandler handler = new(0, 0, null, stackalloc char[256]);
 
         Append(ref handler, type);
 
         return handler.ToStringAndClear();
+    }
+
+    /// <summary>
+    /// Identifies the fundamental and custom-mapped System definitions independently of their assembly placement.
+    /// </summary>
+    /// <param name="type">The non-generic type or generic type definition.</param>
+    /// <returns>Whether the type uses the reserved logical System scope.</returns>
+    /// <remarks>Keep aligned with the existing mapped-type classifiers used by WindowsRuntimeIidTypeNameFactory.</remarks>
+    private static bool IsSystemType(Type type)
+    {
+        // Keep the 'typeof' references confined to comparisons so Native AOT need not retain their reflection metadata
+        // Storing these 'Type' objects in a static table would root that metadata instead
+        return
+            type == typeof(bool) ||
+            type == typeof(byte) ||
+            type == typeof(char) ||
+            type == typeof(double) ||
+            type == typeof(float) ||
+            type == typeof(short) ||
+            type == typeof(int) ||
+            type == typeof(long) ||
+            type == typeof(ushort) ||
+            type == typeof(uint) ||
+            type == typeof(ulong) ||
+            type == typeof(Guid) ||
+            type == typeof(object) ||
+            type == typeof(string) ||
+            type == typeof(TimeSpan) ||
+            type == typeof(DateTimeOffset) ||
+            type == typeof(Exception) ||
+            type == typeof(Type) ||
+            type == typeof(Uri) ||
+            type == typeof(Matrix3x2) ||
+            type == typeof(Matrix4x4) ||
+            type == typeof(Plane) ||
+            type == typeof(Quaternion) ||
+            type == typeof(Vector2) ||
+            type == typeof(Vector3) ||
+            type == typeof(Vector4) ||
+            type == typeof(DataErrorsChangedEventArgs) ||
+            type == typeof(PropertyChangedEventArgs) ||
+            type == typeof(NotifyCollectionChangedAction) ||
+            type == typeof(NotifyCollectionChangedEventArgs) ||
+            type == typeof(IDisposable) ||
+            type == typeof(IServiceProvider) ||
+            type == typeof(ICommand) ||
+            type == typeof(IEnumerable) ||
+            type == typeof(IEnumerator) ||
+            type == typeof(IList) ||
+            type == typeof(INotifyCollectionChanged) ||
+            type == typeof(INotifyDataErrorInfo) ||
+            type == typeof(INotifyPropertyChanged) ||
+            type == typeof(IEnumerable<>) ||
+            type == typeof(IEnumerator<>) ||
+            type == typeof(IList<>) ||
+            type == typeof(IReadOnlyList<>) ||
+            type == typeof(IDictionary<,>) ||
+            type == typeof(IReadOnlyDictionary<,>) ||
+            type == typeof(EventHandler<>) ||
+            type == typeof(EventHandler<,>) ||
+            type == typeof(NotifyCollectionChangedEventHandler) ||
+            type == typeof(PropertyChangedEventHandler) ||
+            type == typeof(EventHandler) ||
+            type == typeof(Nullable<>) ||
+            type == typeof(KeyValuePair<,>);
     }
 }

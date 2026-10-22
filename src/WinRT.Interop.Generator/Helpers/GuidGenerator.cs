@@ -48,7 +48,7 @@ internal static class GuidGenerator
     /// <param name="interopDefinitions">The projection definitions and cached generated IIDs.</param>
     /// <param name="interopReferences">The references for this invocation.</param>
     /// <param name="useWindowsUIXamlProjections">Whether to use UWP XAML mappings.</param>
-    /// <param name="iid">The interface, default-interface, or boxing IID.</param>
+    /// <param name="iid">The IID of the interface represented by the input type, or a runtime class's default interface.</param>
     /// <returns>Whether the type has a Windows Runtime IID.</returns>
     public static bool TryCreateIID(
         TypeSignature type,
@@ -67,7 +67,7 @@ internal static class GuidGenerator
 
         TypeDefinition definition = type.Resolve(interopReferences.RuntimeContext);
 
-        // Static runtime classes have metadata names, but no native interface.
+        // Static runtime classes have metadata names, but no native interface
         if (definition.IsAbstract && definition.IsSealed)
         {
             return false;
@@ -85,13 +85,22 @@ internal static class GuidGenerator
             interfaceSignature = interfaceSignature["delegate(".Length..^1];
         }
 
-        iid = interfaceSignature.StartsWith("pinterface(")
-            ? interopDefinitions.GetOrCreateIID(interfaceSignature.ToString(), static signature => CreateGuidFromSignature(signature))
-            : interfaceSignature.StartsWith("{")
-                ? Guid.Parse(interfaceSignature)
-                : interfaceSignature.SequenceEqual("cinterface(IInspectable)")
-                    ? WellKnownInterfaceIIDs.IID_IInspectable
-                    : CreateIID(type.MakeBoxedType(), interopDefinitions, interopReferences, useWindowsUIXamlProjections);
+        if (interfaceSignature.StartsWith("pinterface("))
+        {
+            iid = interopDefinitions.GetOrCreateIID(interfaceSignature.ToString(), static signature => CreateGuidFromSignature(signature));
+        }
+        else if (interfaceSignature.StartsWith("{"))
+        {
+            iid = Guid.Parse(interfaceSignature);
+        }
+        else if (interfaceSignature.SequenceEqual("cinterface(IInspectable)"))
+        {
+            iid = WellKnownInterfaceIIDs.IID_IInspectable;
+        }
+        else
+        {
+            return false;
+        }
 
         return true;
     }

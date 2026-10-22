@@ -261,6 +261,15 @@ internal sealed class InteropGeneratorEmitInputs
     {
         ModuleDefinition runtime = _interopReferences.WindowsRuntimeObject.Resolve(_runtimeContext).DeclaringModule!;
 
+        // Runtime proxies identify their public mapped type, while manually projected types use their own identity
+        IEnumerable<TypeSignature> runtimeTypes = runtime.TopLevelTypes
+            .Where(static type => type.IsProjectedWindowsRuntimeType)
+            .Select(static type =>
+                type.TryGetCustomAttribute("WindowsRuntime.InteropServices"u8, "WindowsRuntimeMappedTypeAttribute"u8, out CustomAttribute? attribute) &&
+                attribute.Signature is { FixedArguments: [{ Element: TypeSignature mappedType }] }
+                    ? mappedType
+                    : type.ToTypeSignature());
+
         IEnumerable<TypeSignature> types = [
             .. _discoveryState.GenericDelegateTypes,
             .. _discoveryState.IEnumerator1Types,
@@ -277,7 +286,7 @@ internal sealed class InteropGeneratorEmitInputs
             .. _discoveryState.IAsyncActionWithProgress1Types,
             .. _discoveryState.IAsyncOperationWithProgress2Types,
             .. _discoveryState.SzArrayAndVtableTypes.Keys,
-            .. runtime.GetRuntimeMetadataTypes(),
+            .. runtimeTypes,
             _interopReferences.IEnumerable.ToReferenceTypeSignature(),
             _interopReferences.IEnumerator.ToReferenceTypeSignature(),
             _interopReferences.IList.ToReferenceTypeSignature(),

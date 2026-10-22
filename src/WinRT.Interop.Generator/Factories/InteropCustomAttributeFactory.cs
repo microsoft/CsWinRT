@@ -276,7 +276,7 @@ internal static class InteropCustomAttributeFactory
         TypeSignature trimTarget,
         InteropReferences interopReferences)
     {
-        // [TypeMap<WindowsRuntimeIidTypeMapGroup>(<VALUE>, <TARGET>, <TRIM_TARGET>)]
+        // '[TypeMap<WindowsRuntimeIidTypeMapGroup>(<VALUE>, <TARGET>, <TRIM_TARGET>)]'
         return new(interopReferences.TypeMapAttributeWindowsRuntimeIidTypeMapGroup_ctor_TrimTarget, new CustomAttributeSignature(
             fixedArguments: [
                 new CustomAttributeArgument(interopReferences.String, value),

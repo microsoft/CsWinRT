@@ -237,13 +237,9 @@ internal partial class SignatureGenerator
         InteropReferences interopReferences,
         bool useWindowsUIXamlProjections)
     {
-        string signature = GetSignature(typeSignature.BaseType, interopDefinitions, interopReferences, useWindowsUIXamlProjections);
-
-        // IReference<T> boxes values, strings, and delegates, not runtime classes or interfaces.
-        if (signature.StartsWith("rc(", StringComparison.Ordinal) ||
-            signature.StartsWith("{", StringComparison.Ordinal) ||
-            signature == ObjectSignature ||
-            (signature.StartsWith("pinterface(", StringComparison.Ordinal) && !typeDefinition.IsDelegate))
+        // Boxed type signatures are only used to represent 'IReference<T>' instantiations
+        // for delegate types. Any other underlying type is not valid and can't be handled.
+        if (!typeDefinition.IsClass || !typeDefinition.IsDelegate)
         {
             return null;
         }
@@ -255,7 +251,8 @@ internal partial class SignatureGenerator
             interopReferences: interopReferences,
             guid: out Guid iid);
 
-        return $"pinterface({{{iid}}};{signature})";
+        // Construct the signature for the boxed delegate (the base type will be the possibly constructed delegate)
+        return $"pinterface({{{iid}}};{GetSignature(typeSignature.BaseType, interopDefinitions, interopReferences, useWindowsUIXamlProjections)})";
     }
 
     /// <summary>

@@ -207,6 +207,27 @@ internal static class WindowsRuntimeExtensions
         }
 
         /// <summary>
+        /// Checks whether an <see cref="ITypeDescriptor"/> has a fundamental or custom-mapped Windows Runtime type definition.
+        /// </summary>
+        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <returns>Whether the type's definition is a fundamental or custom-mapped Windows Runtime type.</returns>
+        /// <remarks>This only classifies the type definition, without validating generic arguments.</remarks>
+        public bool IsFundamentalOrCustomMappedWindowsRuntimeType(InteropReferences interopReferences)
+        {
+            ITypeDescriptor definition = type is GenericInstanceTypeSignature generic ? generic.GenericType : type;
+
+            return
+                definition.IsFundamentalWindowsRuntimeType(interopReferences) ||
+                definition.IsCustomMappedWindowsRuntimeNonGenericStructOrClassType(interopReferences) ||
+                definition.IsCustomMappedWindowsRuntimeNonGenericInterfaceType(interopReferences) ||
+                definition.IsCustomMappedWindowsRuntimeNonGenericDelegateType(interopReferences) ||
+                definition.IsCustomMappedWindowsRuntimeGenericInterfaceType(interopReferences) ||
+                definition.IsCustomMappedWindowsRuntimeGenericDelegateType(interopReferences) ||
+                interopReferences.SignatureComparer.Equals(definition, interopReferences.Nullable1) ||
+                interopReferences.SignatureComparer.Equals(definition, interopReferences.KeyValuePair2);
+        }
+
+        /// <summary>
         /// Checks whether an <see cref="ITypeDescriptor"/> represents a custom-mapped Windows Runtime non-generic struct or class type.
         /// </summary>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>

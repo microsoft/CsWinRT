@@ -378,7 +378,7 @@ public partial class Test_InteropGenericDiscovery
                     attribute.Constructor?.DeclaringType?.FullName ==
                         "System.Runtime.InteropServices.TypeMapAttribute`1<WindowsRuntime.InteropServices.WindowsRuntimeIidTypeMapGroup>" &&
                     attribute.Signature?.FixedArguments[0].Element?.ToString() ==
-                        "[System.Private.CoreLib]System.Collections.Generic.IList`1[[System.Private.CoreLib]System.Int32]"));
+                        "[#System]System.Collections.Generic.IList`1[[#System]System.Int32]"));
             }
         }
         finally
