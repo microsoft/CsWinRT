@@ -1277,22 +1277,7 @@ internal static partial class AbiMethodBodyFactory
                 TypeSignature uOut = p.Type.StripByRefAndCustomModifiers();
                 string localName = p.GetParamLocalName(paramNameOverride);
 
-                if (uOut.IsString())
-                {
-                    writer.WriteLine($"HStringMarshaller.Free(__{localName});");
-                }
-                else if (uOut.IsObject() || context.AbiTypeKindResolver.IsRuntimeClassOrInterface(uOut) || uOut.IsGenericInstance())
-                {
-                    writer.WriteLine($"WindowsRuntimeUnknownMarshaller.Free(__{localName});");
-                }
-                else if (uOut.IsSystemType())
-                {
-                    writer.WriteLine($"global::ABI.System.TypeMarshaller.Dispose(__{localName});");
-                }
-                else if (context.AbiTypeKindResolver.IsNonBlittableStruct(uOut))
-                {
-                    writer.WriteLine($"{AbiTypeHelpers.GetMarshallerFullName(writer, context, uOut)}.Dispose(__{localName});");
-                }
+                EmitDisposeAbiValue(writer, context, uOut, $"__{localName}");
             }
 
             // 3. Free ReceiveArray params via UnsafeAccessor.

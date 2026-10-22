@@ -41,6 +41,7 @@ internal static partial class AbiMethodBodyFactory
         bool isArraySetter = isSetter && sig.Parameters[0].Type is SzArrayTypeSignature;
         bool isAddEvent = sig.Method.IsAdder;
         bool isRemoveEvent = sig.Method.IsRemover;
+        bool needsOutputCleanup = RequiresDoAbiOutputCleanup(context, sig);
 
         if (isAddEvent || isRemoveEvent)
         {
@@ -106,7 +107,7 @@ internal static partial class AbiMethodBodyFactory
 
                 TypeSignature uOut = p.Type.StripByRefAndCustomModifiers();
 
-                if (!uOut.IsGenericInstance())
+                if (!uOut.IsGenericInstance() || uOut.IsNullableT())
                 {
                     continue;
                 }
@@ -259,7 +260,7 @@ internal static partial class AbiMethodBodyFactory
 
                 if (isBlittableElem)
                 {
-                    writer.WriteLine($"{(cat == ParameterCategory.PassArray ? "ReadOnlySpan<" : "Span<")}{elementProjected}> __{raw} = new({ptr}, (int)__{raw}Size);");
+                    writer.WriteLine($"scoped {(cat == ParameterCategory.PassArray ? "ReadOnlySpan<" : "Span<")}{elementProjected}> __{raw} = default;");
                 }
                 else
                 {
@@ -268,14 +269,8 @@ internal static partial class AbiMethodBodyFactory
                     writer.WriteLine(isMultiline: true, $$"""
                         Unsafe.SkipInit(out InlineArray16<{{elementProjected}}> __{{raw}}_inlineArray);
                             {{elementProjected}}[] __{{raw}}_arrayFromPool = null;
-                            Span<{{elementProjected}}> __{{raw}} = __{{raw}}Size <= 16
-                                ? __{{raw}}_inlineArray[..(int)__{{raw}}Size]
-                                : (__{{raw}}_arrayFromPool = global::System.Buffers.ArrayPool<{{elementProjected}}>.Shared.Rent((int)__{{raw}}Size)).AsSpan(0, (int)__{{raw}}Size);
+                            scoped Span<{{elementProjected}}> __{{raw}} = default;
                         """);
-                    if (cat == ParameterCategory.FillArray)
-                    {
-                        writer.WriteLine($"__{raw}.Clear();");
-                    }
                 }
             }
             writer.WriteLine(isMultiline: true, """
@@ -283,6 +278,39 @@ internal static partial class AbiMethodBodyFactory
                 {
                 """);
             writer.IncreaseIndent();
+
+            // Rent inside the ABI exception boundary, so later allocation failures still return earlier rentals.
+            foreach (ParameterInfo parameter in sig.Parameters)
+            {
+                ParameterCategory category = ParameterCategoryResolver.Resolve(parameter);
+
+                if (!category.IsArrayInput() || isArraySetter || parameter.Type is not SzArrayTypeSignature array)
+                {
+                    continue;
+                }
+
+                string raw = parameter.GetRawName();
+                string pointer = IdentifierEscaping.EscapeIdentifier(raw);
+
+                if (context.AbiTypeKindResolver.IsBlittableAbiElement(array.BaseType))
+                {
+                    writer.WriteLine($"__{raw} = new({pointer}, (int)__{raw}Size);");
+                }
+                else
+                {
+                    IndentedTextWriterCallback element = TypedefNameWriter.WriteProjectionType(context, TypeSemanticsFactory.Get(array.BaseType));
+                    writer.WriteLine(isMultiline: true, $$"""
+                        __{{raw}} = __{{raw}}Size <= 16
+                            ? __{{raw}}_inlineArray[..(int)__{{raw}}Size]
+                            : (__{{raw}}_arrayFromPool = global::System.Buffers.ArrayPool<{{element}}>.Shared.Rent((int)__{{raw}}Size)).AsSpan(0, (int)__{{raw}}Size);
+                        """);
+
+                    if (category == ParameterCategory.FillArray)
+                    {
+                        writer.WriteLine($"__{raw}.Clear();");
+                    }
+                }
+            }
 
             if (isArraySetter)
             {
@@ -493,6 +521,16 @@ internal static partial class AbiMethodBodyFactory
                 writer.WriteLine(");");
             }
 
+            if (needsOutputCleanup)
+            {
+                EmitInitializeDoAbiFillArrays(writer, context, sig);
+                writer.WriteLine(isMultiline: true, """
+                    try
+                    {
+                    """);
+                writer.IncreaseIndent();
+            }
+
             // After call: write back out params to caller's pointer.
             // NOTE: Ref params (WinRT 'in T') are read-only inputs — never written back.
             foreach ((_, ParameterInfo p) in sig.ParametersByCategory(ParameterCategory.Out))
@@ -521,6 +559,11 @@ internal static partial class AbiMethodBodyFactory
 
                 // Generic instance (e.g. IEnumerable<string>): use the hoisted UnsafeAccessor
                 // 'ConvertToUnmanaged_<name>' declared at the top of the method body.
+                else if (underlying.IsNullableT())
+                {
+                    (_, string innerMarshaller) = AbiTypeHelpers.GetNullableInnerInfo(writer, context, underlying);
+                    rhs = $"{innerMarshaller}.BoxToUnmanaged(__{raw}).DetachThisPtrUnsafe()";
+                }
                 else if (underlying.IsGenericInstance())
                 {
                     rhs = $"ConvertToUnmanaged_{raw}(null, __{raw}).DetachThisPtrUnsafe()";
@@ -606,6 +649,7 @@ internal static partial class AbiMethodBodyFactory
                 writer.DecreaseIndent();
             }
 
+            // Keep return conversion last: its helpers publish only on success, with no later output conversion.
             if (rt is not null)
             {
                 if (returnIsHResultExceptionDoAbi)
@@ -665,6 +709,21 @@ internal static partial class AbiMethodBodyFactory
                 {
                     writer.WriteLine($"*{retParamName} = {retLocalName};");
                 }
+            }
+
+            if (needsOutputCleanup)
+            {
+                writer.DecreaseIndent();
+                writer.WriteLine(isMultiline: true, """
+                    }
+                    catch
+                    {
+                    """);
+                writer.IncreaseIndent();
+                EmitDoAbiOutputCleanup(writer, context, sig);
+                writer.WriteLine("throw;");
+                writer.DecreaseIndent();
+                writer.WriteLine("}");
             }
 
             writer.DecreaseIndent();

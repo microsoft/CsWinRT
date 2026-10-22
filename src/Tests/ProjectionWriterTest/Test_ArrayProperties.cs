@@ -185,6 +185,36 @@ public class Test_ArrayProperties
         RunRuntimeFixture($"array-abi:{elementType}:{length}");
     }
 
+    [TestMethod]
+    [DataRow("type")]
+    [DataRow("array")]
+    [DataRow("return")]
+    [DataRow("managed")]
+    [DataRow("success")]
+    public void NativeOutputs_RollBackScalarAndAllocatedArrayResources(string failure)
+    {
+        RunRuntimeFixture($"output-rollback:{failure}");
+    }
+
+    [TestMethod]
+    [DataRow(0, "return")]
+    [DataRow(2, "copy")]
+    [DataRow(17, "copy")]
+    [DataRow(17, "copy-first")]
+    [DataRow(33, "copy-last")]
+    [DataRow(2, "return")]
+    [DataRow(17, "return")]
+    [DataRow(2, "managed")]
+    [DataRow(17, "managed")]
+    [DataRow(2, "null")]
+    [DataRow(0, "success")]
+    [DataRow(2, "success")]
+    [DataRow(17, "success")]
+    public void NativeFillOutputs_RollBackOnlyOwnedContents(int length, string failure)
+    {
+        RunRuntimeFixture($"fill-rollback:{length}:{failure}");
+    }
+
     private static string GenerateSources(string directory, bool referenceProjection, bool exclusiveTo)
     {
         string metadata = ArrayPropertyMetadata.Create(directory, exclusiveTo);

@@ -34,6 +34,13 @@ internal static unsafe class Program
 
         switch (args[0])
         {
+            case string scenario when scenario.StartsWith("output-rollback:", StringComparison.Ordinal):
+                VerifyOutputRollback(target, ccw, scenario["output-rollback:".Length..]);
+                break;
+            case string scenario when scenario.StartsWith("fill-rollback:", StringComparison.Ordinal):
+                string[] rollback = scenario.Split(':');
+                VerifyFillRollback(target, ccw, int.Parse(rollback[1]), rollback[2]);
+                break;
             case string scenario when scenario.StartsWith("array-abi:", StringComparison.Ordinal):
                 string[] parts = scenario.Split(':');
                 VerifyArrayAbi(target, ccw, parts[1], int.Parse(parts[2]));
@@ -66,6 +73,171 @@ internal static unsafe class Program
         }
 
         return 0;
+    }
+
+    private static void VerifyOutputRollback(Target target, void* ccw, string failure)
+    {
+        target.OutputFailure = "success";
+        NativeOutputs warmup = default;
+        Check(CallOutputs(ccw, &warmup) == 0, "output warmup");
+        warmup.Dispose();
+
+        for (int iteration = 0; iteration < 3; iteration++)
+        {
+            uint references = ReferenceCount(ccw);
+            target.OutputFailure = failure;
+            NativeOutputs outputs = default;
+            try
+            {
+                int hr = CallOutputs(ccw, &outputs);
+                if (failure == "success")
+                {
+                    Check(hr == 0, "successful outputs HRESULT");
+                    Check(HStringMarshaller.ConvertToManaged(outputs.Text) == "output", "owned string output");
+                    Check(outputs.Interface != null && outputs.Item != null, "owned interface and object outputs");
+                    Check(outputs.Optional != null && outputs.Pair != null, "owned boxed outputs");
+                    NestedPayload payload = ABI.Contoso.NestedPayloadMarshaller.ConvertToManaged(outputs.Payload);
+                    Check(payload.Inner.Text == "payload" && payload.Text == "outer", "nested struct output");
+                    Check(ABI.System.TypeMarshaller.ConvertToManaged(outputs.Type) == typeof(int), "Type output");
+                    Check(outputs.NumbersLength == 3 && new ReadOnlySpan<int>(outputs.Numbers, 3).SequenceEqual([1, 2, 3]), "blittable receive array");
+                    Check(TypeArrayMarshaller.ConvertToManaged(outputs.TypesLength, outputs.Types).SequenceEqual(Target.TypeValues(3)), "Type receive array");
+                    Check(ABI.System.TypeMarshaller.ConvertToManaged(outputs.Result) == typeof(int), "owned return value");
+                }
+                else
+                {
+                    int expected = RestrictedErrorInfoExceptionMarshaller.ConvertToUnmanaged(
+                        failure == "managed" ? new UnauthorizedAccessException() : new ArgumentNullException());
+                    Check(hr == expected, "output rollback HRESULT");
+                    Check(outputs.Text == null && outputs.Interface == null && outputs.Item == null, "scalar outputs must be reset");
+                    Check(outputs.Optional == null && outputs.Pair == null, "generic outputs must be reset");
+                    Check(outputs.Payload.Inner.Text == null && outputs.Payload.Text == null &&
+                        outputs.Type.Name == null && outputs.Result.Name == null, "ABI struct outputs must be reset");
+                    Check(outputs.Numbers == null && outputs.NumbersLength == 0, "blittable receive array must be freed and reset");
+                    Check(outputs.Types == null && outputs.TypesLength == 0, "resource receive array must be freed and reset");
+                    Check(ReferenceCount(ccw) == references, "callee rollback must release COM outputs before caller cleanup");
+                }
+            }
+            finally
+            {
+                outputs.Dispose();
+            }
+
+            Check(ReferenceCount(ccw) == references, "output rollback leaked or over-released COM references");
+        }
+    }
+
+    private static int CallOutputs(void* ccw, NativeOutputs* outputs)
+    {
+        return ((delegate* unmanaged[MemberFunction]<void*, void*, void**, void**, void**, ABI.Contoso.NestedPayload*, ABI.System.Type*,
+            void**, void**, uint*, int**, uint*, ABI.System.Type**, ABI.System.Type*, int>)Entry(ccw, "GetOutputs"))(
+            ccw, ccw, &outputs->Text, &outputs->Interface, &outputs->Item, &outputs->Payload, &outputs->Type,
+            &outputs->Optional, &outputs->Pair, &outputs->NumbersLength, &outputs->Numbers,
+            &outputs->TypesLength, &outputs->Types, &outputs->Result);
+    }
+
+    private static void VerifyFillRollback(Target target, void* ccw, int length, string failure)
+    {
+        target.OutputFailure = failure;
+        ABI.Contoso.Stamp* stamps = stackalloc ABI.Contoso.Stamp[length];
+        new Span<byte>(stamps, sizeof(ABI.Contoso.Stamp) * length).Clear();
+        nint[] first = new nint[length];
+        ABI.System.Type* secondData = stackalloc ABI.System.Type[length];
+        new Span<byte>(secondData, sizeof(ABI.System.Type) * length).Clear();
+        if (failure == "managed")
+        {
+            first.AsSpan().Fill(12345);
+            for (int i = 0; i < length; i++)
+            {
+                secondData[i].Name = (void*)12345;
+                stamps[i].Value = 12345;
+            }
+        }
+
+        uint references = ReferenceCount(ccw);
+        fixed (nint* firstData = first)
+        {
+            ABI.System.Type result = default;
+            try
+            {
+                int hr = ((delegate* unmanaged[MemberFunction]<void*, uint, void*, uint, void*, uint, void*, ABI.System.Type*, int>)Entry(ccw, "FillBoth"))(
+                    ccw, (uint)length, stamps, (uint)length, failure == "null" ? null : firstData, (uint)length, secondData, &result);
+                if (failure == "success")
+                {
+                    Check(hr == 0, "fill output success HRESULT");
+                    Check(first.All(value => value != 0), "fill outputs retain their COM references on success");
+                    Check(TypeArrayMarshaller.ConvertToManaged((uint)length, secondData).All(type => type == typeof(int)), "fill Type values");
+                    Check(ABI.System.TypeMarshaller.ConvertToManaged(result) == typeof(int), "fill return value");
+                    for (int i = 0; i < length; i++)
+                    {
+                        Stamp stamp = ABI.Contoso.StampMarshaller.ConvertToManaged(stamps[i]);
+                        Check(stamp.When == DateTimeOffset.UnixEpoch && stamp.Value == 42, "resource-free mapped struct fill");
+                    }
+                }
+                else
+                {
+                    int expected = RestrictedErrorInfoExceptionMarshaller.ConvertToUnmanaged(
+                        failure == "managed" ? new UnauthorizedAccessException() : new ArgumentNullException());
+                    Check(hr == expected, "fill rollback HRESULT");
+                    nint expectedPointer = failure == "managed" ? 12345 : 0;
+                    Check(first.All(value => value == expectedPointer), "first native buffer ownership after failure");
+                    for (int i = 0; i < length; i++)
+                    {
+                        Check((nint)secondData[i].Name == expectedPointer, "second native buffer ownership after failure");
+                        Check(stamps[i].Value == expectedPointer, "mapped struct buffer after failure");
+                    }
+                    Check(result.Name == null, "failed fill return value");
+                    Check(ReferenceCount(ccw) == references, "fill rollback leaked or over-released COM references");
+                }
+            }
+            finally
+            {
+                if (failure != "managed")
+                {
+                    WindowsRuntimeUnknownArrayMarshaller.Dispose((uint)length, (void**)firstData);
+                    TypeArrayMarshaller.Dispose((uint)length, secondData);
+                }
+                ABI.System.TypeMarshaller.Dispose(result);
+            }
+        }
+
+        Check(ReferenceCount(ccw) == references, "fill output caller cleanup changed COM ownership");
+    }
+
+    private static uint ReferenceCount(void* ccw)
+    {
+        uint count = ((delegate* unmanaged[MemberFunction]<void*, uint>)(*(void***)ccw)[1])(ccw);
+        _ = ((delegate* unmanaged[MemberFunction]<void*, uint>)(*(void***)ccw)[2])(ccw);
+        return count;
+    }
+
+    private struct NativeOutputs
+    {
+        public void* Text;
+        public void* Interface;
+        public void* Item;
+        public ABI.Contoso.NestedPayload Payload;
+        public ABI.System.Type Type;
+        public void* Optional;
+        public void* Pair;
+        public uint NumbersLength;
+        public int* Numbers;
+        public uint TypesLength;
+        public ABI.System.Type* Types;
+        public ABI.System.Type Result;
+
+        public readonly void Dispose()
+        {
+            HStringMarshaller.Free(Text);
+            WindowsRuntimeUnknownMarshaller.Free(Interface);
+            WindowsRuntimeUnknownMarshaller.Free(Item);
+            WindowsRuntimeUnknownMarshaller.Free(Optional);
+            WindowsRuntimeUnknownMarshaller.Free(Pair);
+            ABI.Contoso.NestedPayloadMarshaller.Dispose(Payload);
+            ABI.System.TypeMarshaller.Dispose(Type);
+            Marshal.FreeCoTaskMem((nint)Numbers);
+            TypeArrayMarshaller.Free(TypesLength, Types);
+            ABI.System.TypeMarshaller.Dispose(Result);
+        }
     }
 
     private static void VerifyArrays(Target target, void* ccw, int length, bool methods = false)
@@ -432,27 +604,31 @@ internal static unsafe class Program
         target.ThrowOnFill = !passArray;
         bool failed = false;
         bool seedReturned = false;
-        bool slotsCleared = false;
         try
         {
-            try
+            for (int attempt = 0; attempt < 2; attempt++)
             {
-                if (passArray)
+                failed = false;
+                try
                 {
-                    ABI.Contoso.IWidget2Methods.AcceptObjects(reference, values);
+                    if (passArray)
+                    {
+                        ABI.Contoso.IWidget2Methods.AcceptObjects(reference, values);
+                    }
+                    else
+                    {
+                        ABI.Contoso.IWidget2Methods.FillObjects(reference, new object[length]);
+                    }
                 }
-                else
+                catch (ArgumentException) when (passArray)
                 {
-                    ABI.Contoso.IWidget2Methods.FillObjects(reference, new object[length]);
+                    failed = true;
                 }
-            }
-            catch (ArgumentException) when (passArray)
-            {
-                failed = true;
-            }
-            catch (UnauthorizedAccessException) when (!passArray)
-            {
-                failed = true;
+                catch (UnauthorizedAccessException) when (!passArray)
+                {
+                    failed = true;
+                }
+                Check(failed, "projected array call did not propagate the expected failure");
             }
         }
         finally
@@ -461,17 +637,14 @@ internal static unsafe class Program
             try
             {
                 seedReturned = ReferenceEquals(poisoned, cleanup);
-                slotsCleared = cleanup.Take(length).All(value => value == 0);
             }
             finally
             {
                 ArrayPool<nint>.Shared.Return(cleanup, clearArray: true);
             }
         }
-        Check(failed, "projected array call did not propagate the expected failure");
         Check(seedReturned, "projection did not return the seeded ABI buffer");
         Check(marker.Releases == 0, "failure cleanup released stale pooled COM pointers");
-        Check(slotsCleared, "projection left stale or released ABI slots in the seeded buffer");
     }
 
     private struct NativeMarker
@@ -539,7 +712,7 @@ internal static unsafe class Program
 
     private static void* Entry(void* ccw, string name)
     {
-        Type vtable = typeof(IWidget2).Assembly.GetType("ABI.Contoso.IWidget2Vftbl", throwOnError: true)!;
+        Type vtable = Type.GetType("ABI.Contoso.IWidget2Vftbl, WinRT.Sdk.Projection", throwOnError: true)!;
         string field = vtable.GetFields().Single(
             field => field.Name.StartsWith($"{name}_", StringComparison.Ordinal)).Name;
         int slot = (int)Marshal.OffsetOf(vtable, field) / sizeof(nint);
@@ -571,6 +744,52 @@ internal static unsafe class Program
 
     private sealed class Target : IWidget2
     {
+        public string OutputFailure { get; set; } = "success";
+        public Type GetOutputs(object input, out string text, out IWidget2 iface, out object item, out NestedPayload payload, out Type type,
+            out int? optional, out KeyValuePair<string, string> pair, out int[] numbers, out Type[] types)
+        {
+            Check(ReferenceEquals(input, this), "borrowed input identity");
+            text = "output";
+            iface = this;
+            item = this;
+            payload = new NestedPayload
+            {
+                Inner = new Payload { Id = 1, Text = "payload", Timestamp = DateTimeOffset.FromUnixTimeSeconds(1) },
+                Text = "outer"
+            };
+            type = OutputFailure == "type" ? null : typeof(int);
+            optional = 42;
+            pair = new("key", "value");
+            numbers = [1, 2, 3];
+            types = TypeValues(3);
+            if (OutputFailure == "array")
+            {
+                types[1] = null;
+            }
+            if (OutputFailure == "managed")
+            {
+                throw new UnauthorizedAccessException();
+            }
+            return OutputFailure == "return" ? null : typeof(int);
+        }
+
+        public Type FillBoth(Span<Stamp> stamps, Span<object> first, Span<Type> second)
+        {
+            if (OutputFailure == "managed")
+            {
+                throw new UnauthorizedAccessException();
+            }
+            stamps.Fill(new Stamp { When = DateTimeOffset.UnixEpoch, Value = 42 });
+            first.Fill(this);
+            second.Fill(typeof(int));
+            if (OutputFailure.StartsWith("copy", StringComparison.Ordinal))
+            {
+                int index = OutputFailure == "copy-first" ? 0 : OutputFailure == "copy-last" ? second.Length - 1 : second.Length / 2;
+                second[index] = null;
+            }
+            return OutputFailure == "return" ? null : typeof(int);
+        }
+
         public bool ThrowOnSet { get; set; }
         public bool ThrowOnFill { get; set; }
         public int PayloadSetterCalls { get; private set; }

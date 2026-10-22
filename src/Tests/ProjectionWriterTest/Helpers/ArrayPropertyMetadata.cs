@@ -68,6 +68,19 @@ internal static class ArrayPropertyMetadata
         module.TopLevelTypes.Add(dateTime);
         payload.Fields.Add(new FieldDefinition("Timestamp", FieldAttributes.Public, dateTime.ToTypeSignature(true)));
 
+        TypeDefinition stamp = new("Contoso", "Stamp",
+            TypeAttributes.Public | TypeAttributes.Sealed | TypeAttributes.SequentialLayout | TypeAttributes.WindowsRuntime,
+            valueType);
+        stamp.Fields.Add(new FieldDefinition("When", FieldAttributes.Public, dateTime.ToTypeSignature(true)));
+        stamp.Fields.Add(new FieldDefinition("Value", FieldAttributes.Public, module.CorLibTypeFactory.Int32));
+        module.TopLevelTypes.Add(stamp);
+        TypeDefinition nestedPayload = new("Contoso", "NestedPayload",
+            TypeAttributes.Public | TypeAttributes.Sealed | TypeAttributes.SequentialLayout | TypeAttributes.WindowsRuntime,
+            valueType);
+        nestedPayload.Fields.Add(new FieldDefinition("Inner", FieldAttributes.Public, payload.ToTypeSignature(true)));
+        nestedPayload.Fields.Add(new FieldDefinition("Text", FieldAttributes.Public, module.CorLibTypeFactory.String));
+        module.TopLevelTypes.Add(nestedPayload);
+
         TypeDefinition reference = new("Windows.Foundation", "IReference`1",
             TypeAttributes.Public | TypeAttributes.Interface | TypeAttributes.Abstract | TypeAttributes.WindowsRuntime);
         reference.GenericParameters.Add(new GenericParameter("T"));
@@ -164,6 +177,36 @@ internal static class ArrayPropertyMetadata
             _ = AddMethod($"Get{name}", array);
             MethodDefinition receiveArray = AddMethod($"Receive{name}", module.CorLibTypeFactory.Void, new ByReferenceTypeSignature(array));
             receiveArray.ParameterDefinitions[0].Attributes = ParameterAttributes.Out;
+        }
+
+        TypeSignature typeSignature = typeName.ToTypeSignature(true);
+        MethodDefinition outputs = AddMethod("GetOutputs", typeSignature,
+            module.CorLibTypeFactory.Object,
+            new ByReferenceTypeSignature(module.CorLibTypeFactory.String),
+            new ByReferenceTypeSignature(iface.ToTypeSignature()),
+            new ByReferenceTypeSignature(module.CorLibTypeFactory.Object),
+            new ByReferenceTypeSignature(nestedPayload.ToTypeSignature(true)),
+            new ByReferenceTypeSignature(typeSignature),
+            new ByReferenceTypeSignature(new GenericInstanceTypeSignature(reference, false, [module.CorLibTypeFactory.Int32])),
+            new ByReferenceTypeSignature(new GenericInstanceTypeSignature(pair, false, [module.CorLibTypeFactory.String, module.CorLibTypeFactory.String])),
+            new ByReferenceTypeSignature(new SzArrayTypeSignature(module.CorLibTypeFactory.Int32)),
+            new ByReferenceTypeSignature(new SzArrayTypeSignature(typeSignature)));
+        string[] outputNames = ["input", "text", "iface", "item", "payload", "type", "optional", "pair", "numbers", "types"];
+        for (int i = 0; i < outputs.ParameterDefinitions.Count; i++)
+        {
+            outputs.ParameterDefinitions[i].Name = outputNames[i];
+            outputs.ParameterDefinitions[i].Attributes = i == 0 ? ParameterAttributes.In : ParameterAttributes.Out;
+        }
+
+        MethodDefinition fillBoth = AddMethod("FillBoth", typeSignature,
+            new SzArrayTypeSignature(stamp.ToTypeSignature(true)),
+            new SzArrayTypeSignature(module.CorLibTypeFactory.Object), new SzArrayTypeSignature(typeSignature));
+        fillBoth.ParameterDefinitions[0].Name = "stamps";
+        fillBoth.ParameterDefinitions[1].Name = "first";
+        fillBoth.ParameterDefinitions[2].Name = "second";
+        foreach (ParameterDefinition parameter in fillBoth.ParameterDefinitions)
+        {
+            parameter.Attributes = ParameterAttributes.Out;
         }
 
         module.Write(path);

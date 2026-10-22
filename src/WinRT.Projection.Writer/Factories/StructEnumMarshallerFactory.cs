@@ -101,20 +101,18 @@ internal static class StructEnumMarshallerFactory
             writer.WriteLine(isMultiline: true, $$"""
                 public static {{abi}} ConvertToUnmanaged({{projected}} value)
                 {
-                    return new() {
+                    {{abi}} __value = default;
+                    try
+                    {
                 """);
             writer.IncreaseIndent();
             writer.IncreaseIndent();
-            bool first = true;
             foreach (FieldDefinition field in GetInstanceFields(type))
             {
                 string fname = field.Name?.Value ?? "";
                 TypeSignature ft = field.Signature!.FieldType;
 
-                writer.WriteLineIf(!first, ",");
-
-                first = false;
-                writer.Write($"{fname} = ");
+                writer.Write($"__value.{fname} = ");
 
                 if (ft.IsString())
                 {
@@ -147,6 +145,8 @@ internal static class StructEnumMarshallerFactory
                 {
                     writer.Write($"value.{fname}");
                 }
+
+                writer.WriteLine(";");
             }
 
             // - In component mode: emit object initializer with named field assignments
@@ -154,9 +154,16 @@ internal static class StructEnumMarshallerFactory
             // - In non-component mode: emit positional constructor (matches the auto-generated
             //   primary constructor on projected struct types).
             bool useObjectInitializer = context.Settings.Component;
-            writer.WriteLine();
+            writer.WriteLine("return __value;");
             writer.DecreaseIndent();
-            writer.WriteLine("};");
+            writer.WriteLine(isMultiline: true, """
+                }
+                catch
+                {
+                    Dispose(__value);
+                    throw;
+                }
+                """);
             writer.DecreaseIndent();
             writer.WriteLine("}");
             writer.WriteLine(isMultiline: true, $$"""
@@ -166,7 +173,7 @@ internal static class StructEnumMarshallerFactory
                 """);
             writer.IncreaseIndent();
             writer.IncreaseIndent();
-            first = true;
+            bool first = true;
             foreach (FieldDefinition field in GetInstanceFields(type))
             {
                 string fname = field.Name?.Value ?? "";

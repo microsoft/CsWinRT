@@ -96,27 +96,9 @@ public static unsafe class WindowsRuntimeManagedValueTypeArrayMarshaller<T, TAbi
 
         ArgumentNullException.ThrowIfNull(destination);
 
-        int i = 0;
-
-        try
+        for (int i = 0; i < source.Length; i++)
         {
-            // Marshal the items in the input span
-            for (; i < source.Length; i++)
-            {
-                destination[i] = TElementMarshaller.ConvertToUnmanaged(source[i]);
-            }
-        }
-        catch
-        {
-            // Reset released slots so caller cleanup cannot release the same resources twice
-            for (int j = 0; j < i; j++)
-            {
-                TElementMarshaller.Dispose(destination[j]);
-
-                destination[j] = default;
-            }
-
-            throw;
+            destination[i] = TElementMarshaller.ConvertToUnmanaged(source[i]);
         }
     }
 
