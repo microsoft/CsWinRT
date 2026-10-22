@@ -4,6 +4,7 @@
 using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using AsmResolver;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
@@ -34,13 +35,17 @@ internal static class WindowsRuntimeExtensions
         /// Checks whether a <see cref="IHasCustomAttribute"/> (expected to be an <see cref="AssemblyDefinition"/>) represents a Windows Runtime reference assembly.
         /// </summary>
         /// <returns>Whether the module represents a Windows Runtime reference assembly.</returns>
-        public bool IsWindowsRuntimeReferenceAssembly => member.HasCustomAttribute(WellKnownMetadataNames.WindowsRuntimeInteropServices, WellKnownMetadataNames.WindowsRuntimeReferenceAssemblyAttribute);
+        public bool IsWindowsRuntimeReferenceAssembly => member is AssemblyDefinition assembly
+            ? WindowsRuntimeAssemblyInfo.Cache.GetOrAdd(assembly, static assembly => new(assembly)).IsReferenceAssembly.Value
+            : member.HasCustomAttribute(WellKnownMetadataNames.WindowsRuntimeInteropServices, WellKnownMetadataNames.WindowsRuntimeReferenceAssemblyAttribute);
 
         /// <summary>
         /// Checks whether a <see cref="IHasCustomAttribute"/> (expected to be an <see cref="AssemblyDefinition"/>) represents a Windows Runtime component assembly.
         /// </summary>
         /// <returns>Whether the module represents a Windows Runtime component assembly.</returns>
-        public bool IsWindowsRuntimeComponentAssembly => member.HasCustomAttribute(WellKnownMetadataNames.WindowsRuntimeInteropServices, WellKnownMetadataNames.WindowsRuntimeComponentAssemblyAttribute);
+        public bool IsWindowsRuntimeComponentAssembly => member is AssemblyDefinition assembly
+            ? WindowsRuntimeAssemblyInfo.Cache.GetOrAdd(assembly, static assembly => new(assembly)).IsComponentAssembly.Value
+            : member.HasCustomAttribute(WellKnownMetadataNames.WindowsRuntimeInteropServices, WellKnownMetadataNames.WindowsRuntimeComponentAssemblyAttribute);
 
         /// <summary>
         /// Attempts to retrieve the IID from the <see cref="System.Runtime.InteropServices.GuidAttribute"/> applied to the specified metadata member.
@@ -1369,6 +1374,28 @@ internal static class WindowsRuntimeExtensions
             }
         }
     }
+}
+
+/// <summary>
+/// Cached assembly markers. Loaded inputs are stable, and emission never adds either marker to its output.
+/// </summary>
+/// <param name="assembly">The assembly whose attributes to inspect.</param>
+file sealed class WindowsRuntimeAssemblyInfo(AssemblyDefinition assembly)
+{
+    /// <summary>
+    /// The shared cache, keyed by assembly identity without retaining completed invocations.
+    /// </summary>
+    public static readonly ConditionalWeakTable<AssemblyDefinition, WindowsRuntimeAssemblyInfo> Cache = [];
+
+    /// <summary>
+    /// The independently initialized reference-projection marker.
+    /// </summary>
+    public Lazy<bool> IsReferenceAssembly { get; } = new(() => assembly.HasCustomAttribute(WellKnownMetadataNames.WindowsRuntimeInteropServices, WellKnownMetadataNames.WindowsRuntimeReferenceAssemblyAttribute));
+
+    /// <summary>
+    /// The independently initialized component marker.
+    /// </summary>
+    public Lazy<bool> IsComponentAssembly { get; } = new(() => assembly.HasCustomAttribute(WellKnownMetadataNames.WindowsRuntimeInteropServices, WellKnownMetadataNames.WindowsRuntimeComponentAssemblyAttribute));
 }
 
 /// <summary>
