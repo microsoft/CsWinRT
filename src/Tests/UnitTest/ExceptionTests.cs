@@ -44,6 +44,10 @@ namespace UnitTest
             IntPtr vtable = Marshal.ReadIntPtr(thisPtr);
             var add = (delegate* unmanaged[Stdcall]<IntPtr, IntPtr, EventRegistrationToken*, int>)Marshal.ReadIntPtr(vtable, 6 * IntPtr.Size);
 
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+            GC.Collect();
+
             EventRegistrationToken token;
             int hr = add(thisPtr, handlerMarshaler.ThisPtr, &token);
             if (remove)
@@ -56,6 +60,12 @@ namespace UnitTest
             Assert.Equal(unchecked((int)0x8000000B), hr);
             Assert.Same(original, ExceptionHelpers.GetExceptionForHR(hr));
             Assert.Contains(remove ? "remove_CanExecuteChanged" : "add_CanExecuteChanged", original.StackTrace);
+
+            var canExecute = (delegate* unmanaged[Stdcall]<IntPtr, IntPtr, byte*, int>)Marshal.ReadIntPtr(vtable, 8 * IntPtr.Size);
+            byte result;
+            int canExecuteHr = canExecute(thisPtr, IntPtr.Zero, &result);
+            Assert.Equal(0, canExecuteHr);
+            Assert.Equal((byte)1, result);
             GC.KeepAlive(command);
         }
 
