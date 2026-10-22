@@ -41,11 +41,18 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     <!-- Validate runtime compatibility and retain the tool's incremental behavior by default -->
     <CsWinRTGeneratorValidateWinRTRuntimeAssemblyVersion Condition="'$(CsWinRTGeneratorValidateWinRTRuntimeAssemblyVersion)' == ''">true</CsWinRTGeneratorValidateWinRTRuntimeAssemblyVersion>
     <CsWinRTGeneratorValidateWinRTRuntimeDllVersion2References Condition="'$(CsWinRTGeneratorValidateWinRTRuntimeDllVersion2References)' == ''">true</CsWinRTGeneratorValidateWinRTRuntimeDllVersion2References>
+
+    <!-- Reuse interop emission after discovery when its semantic inputs have not changed; set false to force emission -->
     <CsWinRTGeneratorEnableIncrementalGeneration Condition="'$(CsWinRTGeneratorEnableIncrementalGeneration)' == ''">true</CsWinRTGeneratorEnableIncrementalGeneration>
     <CsWinRTGeneratorTreatWarningsAsErrors Condition="'$(CsWinRTGeneratorTreatWarningsAsErrors)' == ''">false</CsWinRTGeneratorTreatWarningsAsErrors>
     <CsWinRTGeneratorMaxDegreesOfParallelism Condition="'$(CsWinRTGeneratorMaxDegreesOfParallelism)' == ''">-1</CsWinRTGeneratorMaxDegreesOfParallelism>
 
-    <!-- Keep tool diagnostics visible in MSBuild while allowing callers to adjust their importance -->
+    <!--
+      CsWinRTEnableInteropGeneratorServerGC stays empty for automatic child-process GC selection.
+      It is a launch-only setting, deliberately excluded from the generated-output cache key.
+
+      Keep tool diagnostics visible in MSBuild while allowing callers to adjust their importance.
+    -->
     <CsWinRTGeneratorStandardOutputImportance Condition="'$(CsWinRTGeneratorStandardOutputImportance)' == ''">High</CsWinRTGeneratorStandardOutputImportance>
     <CsWinRTGeneratorStandardErrorImportance Condition="'$(CsWinRTGeneratorStandardErrorImportance)' == ''">High</CsWinRTGeneratorStandardErrorImportance>
     <CsWinRTGeneratorLogStandardErrorAsError Condition="'$(CsWinRTGeneratorLogStandardErrorAsError)' == ''">true</CsWinRTGeneratorLogStandardErrorAsError>
@@ -240,8 +247,10 @@ Copyright (C) Microsoft Corporation. All rights reserved.
   <Target Name="_CsWinRTResolveGeneratorInputs"
           DependsOnTargets="FindReferenceAssembliesForReferences;CsWinRTRemoveWinMDReferences;CsWinRTResolveWindowsMetadata;_ComputeRunCsWinRTGeneratorCache" />
 
-  <!-- Fail early when required compiled assemblies or component metadata are missing -->
+  <!-- Validate generator options and required assemblies/metadata before incremental checks can skip generation -->
   <Target Name="_CsWinRTValidateGeneratorInputs">
+    <Error Condition="'$(CsWinRTGenerateInteropAssembly2)' == 'true' and '$(CsWinRTEnableInteropGeneratorServerGC)' != '' and '$(CsWinRTEnableInteropGeneratorServerGC)' != 'true' and '$(CsWinRTEnableInteropGeneratorServerGC)' != 'false'"
+           Text="Invalid 'CsWinRTEnableInteropGeneratorServerGC' value '$(CsWinRTEnableInteropGeneratorServerGC)'. It must be empty (automatic), 'true', or 'false'." />
     <Error Condition="'$(CsWinRTGenerateInteropAssembly2)' == 'true' and !Exists('@(IntermediateAssembly)')"
            Text="CsWinRT artifact generation requires an existing compiled assembly. Build the project or invoke CsWinRTGenerateArtifacts first." />
     <Error Condition="'$(CsWinRTGenerateReferenceProjection)' == 'true' and !Exists('$(_CsWinRTRefAssemblyPath)')"
@@ -441,6 +450,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
       EnableIncrementalGeneration="$(CsWinRTGeneratorEnableIncrementalGeneration)"
       TreatWarningsAsErrors="$(CsWinRTGeneratorTreatWarningsAsErrors)"
       MaxDegreesOfParallelism="$(CsWinRTGeneratorMaxDegreesOfParallelism)"
+      EnableServerGC="$(CsWinRTEnableInteropGeneratorServerGC)"
       AdditionalArguments="@(CsWinRTGeneratorAdditionalArgument)"
       StandardOutputImportance="$(CsWinRTGeneratorStandardOutputImportance)"
       StandardErrorImportance="$(CsWinRTGeneratorStandardErrorImportance)"
@@ -472,6 +482,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     <ItemGroup>
       <FileWrites Include="@(CsWinRTGeneratorInteropAssemblyPath)"/>
       <FileWrites Include="$(_CsWinRTGeneratorLogPath)" Condition="'$(_CsWinRTGeneratorLogPath)' != ''" />
+      <FileWrites Include="$([System.IO.Path]::ChangeExtension('$(_CsWinRTGeneratorInteropAssemblyPath)', '.cache'))"/>
     </ItemGroup>
   </Target>
 

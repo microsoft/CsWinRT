@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -106,9 +107,10 @@ internal partial class InteropGenerator
                 token: args.Token,
                 shouldProcessModule: module => ShouldProcessModule(args, discoveryState, module) && !module.ReferencesWindowsRuntimeVersion2Assembly));
 
-            // Every module now observes the same complete, read-only dispatch index
+            // Distribute one module at a time so expensive modules are not held in another worker's chunk.
+            // Keep the array in stable ordinal order for the shared, read-only dispatch index.
             result = Parallel.ForEach(
-                source: modules,
+                source: Partitioner.Create(modules, EnumerablePartitionerOptions.NoBuffering),
                 parallelOptions: new ParallelOptions { CancellationToken = args.Token, MaxDegreeOfParallelism = args.MaxDegreesOfParallelism },
                 body: module => ProcessModule(args, discoveryState, module));
 

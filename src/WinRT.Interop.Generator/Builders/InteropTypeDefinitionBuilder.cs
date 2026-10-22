@@ -74,9 +74,7 @@ internal static partial class InteropTypeDefinitionBuilder
             out get_IidMethod,
             out PropertyDefinition iidProperty);
 
-        interopDefinitions.RvaFields.Fields.Add(iidRvaField);
-        interopDefinitions.InterfaceIIDs.Methods.Add(get_IidMethod);
-        interopDefinitions.InterfaceIIDs.Properties.Add(iidProperty);
+        interopDefinitions.AddInterfaceIID(iidRvaField, get_IidMethod, iidProperty);
     }
 
     /// <summary>

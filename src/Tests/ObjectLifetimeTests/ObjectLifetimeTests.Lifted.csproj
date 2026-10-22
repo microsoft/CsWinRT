@@ -78,6 +78,15 @@
 
     <!-- The following workarounds are temporary until we have a WinUI package that addresses them. -->
 
+    <!-- UsingCSWinRT emits removed 2.x ComWrappersSupport and CastExtensions calls, including
+         in the retained XamlGeneratedMain. Use ordinary casts and our custom startup for 3.0.
+         This test host does not use x:Property-generated property-change events. -->
+    <Target Name="_CsWinRTDisableLegacyXamlInitialization" BeforeTargets="MarkupCompilePass1;MarkupCompilePass2">
+        <ItemGroup>
+            <XamlFeatureControlFlags Remove="UsingCSWinRT" />
+        </ItemGroup>
+    </Target>
+
     <!-- MSTest's WinUI adapter and framework extensions depend on CsWinRT 2.x. Use the ordinary
          assemblies instead; these tests dispatch their own UI work through AsyncQueue. -->
     <Target Name="_CsWinRTUsePlainMSTestAssemblies" BeforeTargets="ResolveAssemblyReferences">

@@ -5,6 +5,9 @@
     <Nullable>enable</Nullable>
     <PublishAot>true</PublishAot>
 
+    <!-- Link both GC modes (the task selects one through the child process's 'DOTNET_gcServer' setting) -->
+    <ServerGarbageCollection>true</ServerGarbageCollection>
+
     <!-- Common metadata properties for publishing -->
     <Description>C#/WinRT Interop Generator v$(VersionString)</Description>
     <AssemblyTitle>C#/WinRT Interop Generator v$(VersionString)</AssemblyTitle>

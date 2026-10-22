@@ -38,6 +38,8 @@ C#/WinRT behavior can be customized with these project properties:
 | CsWinRTPackReferenceProjection | *true \| false | When generating a reference projection, adds its reference assembly to the NuGet package under `ref/<tfm>` (the forwarder in `lib/<tfm>` has no API surface to compile against). Set to `false` to lay out the package manually |
 | CsWinRTPackedWinMD | *(item)* | An item listing the `.winmd` files to add to the NuGet package under `metadata/`, so consumers can pass them back as `CsWinRTInputs` to generate the merged projection. List only the metadata the package owns: `CsWinRTInputs` also contains dependency `.winmd` files that belong to other packages. Requires `CsWinRTPackReferenceProjection` |
 | CsWinRTGenerateInteropAssembly | auto | Generate interop assemblies at build time (defaults to `true` for Exe/WinExe, or Library with `PublishAot=true`) |
+| CsWinRTGeneratorEnableIncrementalGeneration | *true \| false | Reuse `WinRT.Interop.dll` after discovery when its emission fingerprint and output checksum match `WinRT.Interop.cache`. Set to `false` to bypass cache reads and writes. See [incremental interop generation](../docs/usage.md#incremental-interop-generation) |
+| CsWinRTEnableInteropGeneratorServerGC | *"" \| true \| false | Select the interop generator's startup GC mode. Empty selects automatically from processor count and system memory; `true`/`false` force Server/workstation GC. See [GC selection](#interop-generator-gc-selection) |
 | CsWinRTComponent | true \| *false | Enable Windows Runtime component authoring mode |
 | CsWinRTImplementWinMDTypes | true \| *false | Additionally emit, into the projection, the abstract base classes that let its Windows Runtime types be implemented (authored) in C#. See the [documentation on implementing Windows Runtime types defined in an existing .winmd](../docs/implementing-winmd-types.md) |
 | CsWinRTMarshallingMode | all \| *minimal \| strict | Controls which assemblies the interop generator analyzes for marshalling code. `all` analyzes every assembly (including the .NET base class library), `minimal` analyzes every assembly except the .NET base class library (BCL), and `strict` only analyzes assemblies referencing the Windows Runtime assembly |
@@ -45,7 +47,7 @@ C#/WinRT behavior can be customized with these project properties:
 | CsWinRTMarshallingEnabledAssembly | *(item)* | An item listing specific assemblies (by name, `.dll` optional) to analyze for marshalling code regardless of `CsWinRTMarshallingMode`, subject to framework exclusions, `CsWinRTAnalyzeNetStandardAssemblies`, and explicit exclusions. Useful for fine-tuning binary size (e.g. using `strict` and opting in a few assemblies) |
 | CsWinRTMarshallingDisabledAssembly | *(item)* | An item listing assemblies to exclude from automatic discovery in every mode, even if they target Windows or are explicitly enabled. Matches case-insensitive simple names (directory and `.dll` extension ignored); exclusion wins on conflicts. Direct references from analyzed code and required WinRT projection/activation infrastructure still participate. Missing interop required only by excluded code is the application's responsibility. Changes invalidate the generator's property-input cache. See [excluding specific assemblies](../docs/usage.md#excluding-specific-assemblies) |
 | CsWinRTGeneratorDebugReproDirectory | "" | Existing directory for generator debug repro archives. For the interop generator, `interop-debug-repro.zip` is an incremental output: deleting it triggers regeneration on the next build |
-| CsWinRTGeneratorLogDirectory | "" | Existing directory in which the interop generator writes an opt-in `interop-log.json` report. When unset, no log is collected or written. Changing the directory invalidates the generator cache |
+| CsWinRTGeneratorLogDirectory | "" | Existing directory in which the interop generator writes an opt-in `interop-log.json` report. When unset, no log is collected or written. When set, the generator emits normally instead of reusing its DLL cache so the report contains emitted type and IL counts. Changing the directory invalidates the MSBuild generator cache |
 | CsWinRTGenerateCollectionChangedListVtables | *true \| false | Controls whether the interop generator automatically generates the vtables for the optimized list types that `NotifyCollectionChangedEventArgs` stores its changed items in. These types are internal to the framework, so they are registered by name: set this to `false` to opt out of them, should one ever be renamed or removed in a future .NET version (note: marshalling those objects will then fail at runtime) |
 | CsWinRTUseWindowsUIXamlProjections | true \| *false | Use UWP XAML (`Windows.UI.Xaml`) instead of WinUI (`Microsoft.UI.Xaml`) |
 | CsWinRTMergeReferencedActivationFactories | true \| *false | Makes `DllGetActivationFactory` forward activation calls to all referenced WinRT components, allowing them to be merged into a single executable |
@@ -125,6 +127,7 @@ Consumer-side properties:
 | Property | Description |
 |-|-|
 | `CsWinRTDisableNativeComponentInterop` | Set to `true` to disable aggregator generation. |
+| `CsWinRTEnableInteropGeneratorServerGC` | Forwarded to the aggregator's interop generator; empty selects Auto. |
 | `CsWinRTComponentTargetFrameworkOverride` | TFM to use for the aggregator project. Required when referenced components disagree on TFM, or when no referenced component supplies a TFM. |
 | `CsWinRTNativeConsumerWindowsSdkPackageVersion` | `WindowsSdkPackageVersion` to pass to the aggregator. Falls back to a value picked from any component reference, then to the SDK default. |
 | `CsWinRTSkipNativeHostingAssetsOverride` | Set to `true` to opt out of the arch-correct replacement of `WinRT.Host.dll` / `.mui` in the consumer's reference closure. |
@@ -160,6 +163,20 @@ by the consumer to derive the aggregator's target framework.
 The component author runs `dotnet publish -p:PublishAot=true` on the component themselves and distributes
 the resulting native dll. Native consumers load that binary directly through whatever activation mechanism
 they prefer; they do not go through the aggregator.
+
+## Interop generator GC selection
+
+`CsWinRTEnableInteropGeneratorServerGC` controls the build-time interop generator, not your application. Leave it empty/unset (the default) to use Server GC on systems with at least four processors and 16 GiB of memory, and workstation GC otherwise. Set `true` or `false` to force Server or workstation GC; the literal `auto` is not a valid value.
+
+```xml
+<PropertyGroup>
+  <CsWinRTEnableInteropGeneratorServerGC>true</CsWinRTEnableInteropGeneratorServerGC>
+</PropertyGroup>
+```
+
+Server GC can improve build times but increases CPU and peak memory usage. Consider `false` for memory-constrained or highly concurrent build agents.
+
+An explicit property value overrides `DOTNET_gcServer`; automatic selection preserves an existing environment setting. The selected mode is logged at detailed MSBuild verbosity. Changes take effect the next time the generator runs and do not force an up-to-date build to regenerate output.
 
 ## Troubleshooting
 

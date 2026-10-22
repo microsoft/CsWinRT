@@ -25,28 +25,42 @@ namespace WindowsRuntime.InteropGenerator.Generation;
 internal partial class InteropGenerator
 {
     /// <summary>
+    /// Normalizes the discovered references and initializes the output module before fingerprinting and emission.
+    /// </summary>
+    /// <param name="args">The arguments for this invocation.</param>
+    /// <param name="discoveryState">The discovery state for this invocation.</param>
+    /// <returns>The output module and the Windows Runtime implementation module.</returns>
+    private static (ModuleDefinition Module, ModuleDefinition WindowsRuntimeModule) PrepareEmission(
+        InteropGeneratorArgs args,
+        InteropGeneratorDiscoveryState discoveryState)
+    {
+        NormalizeAssemblyReferences(discoveryState);
+
+        ModuleDefinition module = DefineInteropModule(args, discoveryState, out ModuleDefinition runtime, out _);
+
+        return (module, runtime);
+    }
+
+    /// <summary>
     /// Runs the emit logic for the generator.
     /// </summary>
     /// <param name="args">The arguments for this invocation.</param>
     /// <param name="discoveryState">The discovery state for this invocation.</param>
-    private static void Emit(InteropGeneratorArgs args, InteropGeneratorDiscoveryState discoveryState)
+    /// <param name="module">The initialized output module.</param>
+    /// <param name="windowsRuntimeModule">The Windows Runtime implementation module.</param>
+    /// <param name="fingerprint">The emission fingerprint to cache with the output, or an empty span to disable caching.</param>
+    private static void Emit(
+        InteropGeneratorArgs args,
+        InteropGeneratorDiscoveryState discoveryState,
+        ModuleDefinition module,
+        ModuleDefinition windowsRuntimeModule,
+        ReadOnlySpan<byte> fingerprint)
     {
         args.Token.ThrowIfCancellationRequested();
-
-        NormalizeAssemblyReferenceFlags(discoveryState);
 
         // Initialize the emit state, which tracks all state to use during the emit phase specifically.
         // For instance, it enables fast lookups for type definitions referenced in multiple places.
         InteropGeneratorEmitState emitState = new(discoveryState.SignatureComparer);
-
-        // Define the module to emit
-        ModuleDefinition module = DefineInteropModule(
-            args: args,
-            discoveryState: discoveryState,
-            windowsRuntimeModule: out ModuleDefinition windowsRuntimeModule,
-            windowsRuntimeSdkProjectionModule: out _);
-
-        args.Token.ThrowIfCancellationRequested();
 
         // Setup the well known items to use when emitting code
         InteropReferences interopReferences = new(
@@ -204,7 +218,7 @@ internal partial class InteropGenerator
         args.Token.ThrowIfCancellationRequested();
 
         // Emit the interop .dll to disk
-        WriteInteropModuleToDisk(args, module);
+        WriteInteropModuleToDisk(args, module, fingerprint);
 
         args.Token.ThrowIfCancellationRequested();
 
@@ -213,33 +227,126 @@ internal partial class InteropGenerator
     }
 
     /// <summary>
-    /// Removes processor-architecture flags that are not part of .NET assembly binding.
+    /// Normalizes equivalent assembly references in the loaded modules before emission.
     /// </summary>
     /// <param name="discoveryState">The completed discovery state.</param>
-    private static void NormalizeAssemblyReferenceFlags(InteropGeneratorDiscoveryState discoveryState)
+    /// <remarks>
+    /// Only the in-memory metadata is updated, after parallel discovery (and its validation) has completed.
+    /// This runs before computing the incremental generation fingerprint, so both see the same references.
+    /// </remarks>
+    private static void NormalizeAssemblyReferences(InteropGeneratorDiscoveryState discoveryState)
     {
-        // Implicit imports copy these flags from definitions (e.g. '0x70' in 'System.Runtime'), while
-        // ordinary references omit them. Equivalent discovered signatures must serialize identically.
-        // Only the in-memory metadata is updated, after parallel discovery has completed.
-        foreach (ModuleDefinition inputModule in discoveryState.Modules.Values.Concat([
+        ModuleDefinition[] modules = [.. discoveryState.Modules.Values.Concat([
             discoveryState.WindowsRuntimeSdkProjectionModule,
             discoveryState.WindowsRuntimeSdkXamlProjectionModule,
             discoveryState.WindowsRuntimeProjectionModule,
-            discoveryState.WindowsRuntimeComponentModule]).OfType<ModuleDefinition>())
+            discoveryState.WindowsRuntimeComponentModule]).OfType<ModuleDefinition>()];
+
+        Dictionary<AssemblyDescriptor, AssemblyDefinition> assemblies = new(discoveryState.SignatureComparer);
+
+        // Index the loaded assembly definitions, preferring the highest version for equivalent identities. Implicit
+        // imports copy processor-architecture flags from definitions (e.g. '0x70' in 'System.Runtime'), while ordinary
+        // references omit them. These flags are not part of .NET assembly binding, so we can just remove them.
+        foreach (ModuleDefinition module in modules.OrderByDescending(static module => module.Assembly?.Version))
         {
-            if (inputModule.Assembly is { } assembly)
+            if (module.Assembly is { } assembly)
             {
                 assembly.Attributes &= ~AssemblyAttributes.FullMask;
+
+                _ = assemblies.TryAdd(assembly, assembly);
+            }
+        }
+
+        // Normalize all assembly references declared by each loaded module
+        foreach (ModuleDefinition module in modules)
+        {
+            foreach (AssemblyReference reference in module.AssemblyReferences)
+            {
+                Normalize(reference);
             }
 
-            foreach (AssemblyReference reference in inputModule.AssemblyReferences)
+            if (module.CorLibTypeFactory.CorLibScope is AssemblyReference corLib)
             {
-                reference.Attributes &= ~AssemblyAttributes.FullMask;
+                Normalize(corLib);
+            }
+        }
+
+        HashSet<TypeSignature> visited = new(ReferenceEqualityComparer.Instance);
+        IEnumerable<TypeSignature> types = discoveryState.GenericDelegateTypes
+            .Concat(discoveryState.IEnumerator1Types)
+            .Concat(discoveryState.IEnumerable1Types)
+            .Concat(discoveryState.IReadOnlyList1Types)
+            .Concat(discoveryState.IList1Types)
+            .Concat(discoveryState.IReadOnlyDictionary2Types)
+            .Concat(discoveryState.IDictionary2Types)
+            .Concat(discoveryState.KeyValuePairTypes)
+            .Concat(discoveryState.IMapChangedEventArgs1Types)
+            .Concat(discoveryState.IObservableVector1Types)
+            .Concat(discoveryState.IObservableMap2Types)
+            .Concat(discoveryState.IAsyncActionWithProgress1Types)
+            .Concat(discoveryState.IAsyncOperation1Types)
+            .Concat(discoveryState.IAsyncOperationWithProgress2Types)
+            .Cast<TypeSignature>()
+            .Concat(discoveryState.UserDefinedTypes)
+            .Concat(discoveryState.SzArrayAndVtableTypes.Keys)
+            .Concat(discoveryState.UserDefinedVtableTypes.SelectMany(static types => types))
+            .Concat(discoveryState.SzArrayAndVtableTypes.Values.SelectMany(static types => types));
+
+        // Also normalize the scopes of all discovered signatures, which can be created outside of module references
+        foreach (TypeSignature type in types)
+        {
+            NormalizeType(type);
+        }
+
+        // Normalizes the scopes of a signature and of all its nested signatures
+        void NormalizeType(TypeSignature type)
+        {
+            if (!visited.Add(type))
+            {
+                return;
             }
 
-            if (inputModule.CorLibTypeFactory.CorLibScope is AssemblyReference corLib)
+            if (type.Scope?.GetAssembly() is AssemblyReference reference)
             {
-                corLib.Attributes &= ~AssemblyAttributes.FullMask;
+                Normalize(reference);
+            }
+
+            if (type is GenericInstanceTypeSignature generic)
+            {
+                foreach (TypeSignature argument in generic.TypeArguments)
+                {
+                    NormalizeType(argument);
+                }
+            }
+            else if (type is TypeSpecificationSignature specification)
+            {
+                NormalizeType(specification.BaseType);
+            }
+        }
+
+        // Normalizes the version, flags, and public key of an assembly reference
+        void Normalize(AssemblyReference reference)
+        {
+            // Never retarget a CsWinRT 2.x reference to the loaded runtime (only reachable if validation is disabled)
+            if (reference.Name?.AsSpan().SequenceEqual("WinRT.Runtime"u8) is true && reference.Version.Major < 3)
+            {
+                return;
+            }
+
+            // IgnoreVersion deduplication must not let a parallel worker randomly choose an
+            // older BCL reference (e.g. System.Runtime 6 versus 10) for the emitted signature.
+            if (assemblies.TryGetValue(reference, out AssemblyDefinition? definition))
+            {
+                reference.Version = definition.Version;
+            }
+
+            reference.Attributes &= ~AssemblyAttributes.FullMask;
+
+            // Equivalent references can use either the full public key or its token
+            if (reference.HasPublicKey)
+            {
+                reference.PublicKeyOrToken = reference.GetPublicKeyToken();
+                reference.HasPublicKey = false;
             }
         }
     }
@@ -2540,18 +2647,10 @@ internal partial class InteropGenerator
         InteropReferences interopReferences,
         ModuleDefinition module)
     {
-        // Since we're sharing the marshaller attributes across all identical sets of COM interface entries,
-        // we need a temporary map so we can look them up when we need to reference them once we get to
-        // emitting the proxy types for all user-defined types we want to expose to Windows Runtime.
-        Dictionary<TypeSignatureEquatableSet, TypeDefinition> marshallerAttributeMap = [];
-        (TypeSignature Type, TypeSignatureEquatableSet VtableTypes)[] userDefinedTypes =
-            [.. inputs.EnumerateUserDefinedAndVtableTypes()];
+        IReadOnlyList<UserDefinedVtableGroup> groups = inputs.GetUserDefinedVtableGroups();
 
         // Share marshallers across types with the same explicitly implemented interfaces
-        foreach (IGrouping<TypeSignatureEquatableSet, (TypeSignature Type, TypeSignatureEquatableSet VtableTypes)> group in
-            userDefinedTypes
-                .GroupBy(static pair => pair.VtableTypes)
-                .OrderBy(static group => group.Key))
+        foreach (UserDefinedVtableGroup group in groups)
         {
             args.Token.ThrowIfCancellationRequested();
 
@@ -2560,16 +2659,17 @@ internal partial class InteropGenerator
             try
             {
                 // Get the first user-defined with this vtable set as reference
-                typeSignature = group.First().Type;
+                typeSignature = group.Representative;
 
                 InteropTypeDefinitionBuilder.UserDefinedType.InterfaceEntriesImpl(
                     userDefinedType: typeSignature,
-                    vtableTypes: group.Key,
+                    vtableTypes: group.VtableTypes,
                     interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     emitState: emitState,
                     module: module,
                     useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
+                    orderedVtableTypes: group.OrderedTypes.Types,
                     interfaceEntriesType: out TypeDefinition interfaceEntriesType,
                     interfaceEntriesImplType: out TypeDefinition interfaceEntriesImplType);
 
@@ -2582,8 +2682,9 @@ internal partial class InteropGenerator
                     module: module,
                     out TypeDefinition comWrappersMarshallerType);
 
-                // Track the marshaller attribute for later
-                marshallerAttributeMap.Add(group.Key, comWrappersMarshallerType);
+                // Track the marshaller attribute for the later proxy pass, which runs in global type order
+                // rather than group order. Each proxy must reuse its group's single generated attribute type.
+                group.MarshallerAttributeType = comWrappersMarshallerType;
             }
             catch (Exception e)
             {
@@ -2592,16 +2693,16 @@ internal partial class InteropGenerator
         }
 
         // Next, we can emit the actual proxy types for each user-defined type exposed as a CCW
-        foreach ((TypeSignature typeSignature, TypeSignatureEquatableSet vtableTypes) in userDefinedTypes)
+        foreach (UserDefinedTypeInput input in inputs.EnumerateUserDefinedAndVtableTypes())
         {
             args.Token.ThrowIfCancellationRequested();
 
             try
             {
                 InteropTypeDefinitionBuilder.UserDefinedType.Proxy(
-                    userDefinedType: typeSignature,
-                    vtableTypes: vtableTypes,
-                    comWrappersMarshallerAttributeType: marshallerAttributeMap[vtableTypes],
+                    userDefinedType: input.Type,
+                    vtableTypes: input.VtableTypes,
+                    comWrappersMarshallerAttributeType: input.Group.MarshallerAttributeType!,
                     interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     module: module,
@@ -2609,14 +2710,14 @@ internal partial class InteropGenerator
                     proxyType: out TypeDefinition proxyType);
 
                 InteropTypeDefinitionBuilder.UserDefinedType.TypeMapAttributes(
-                    userDefinedType: typeSignature,
+                    userDefinedType: input.Type,
                     proxyType: proxyType,
                     interopReferences: interopReferences,
                     module: module);
             }
             catch (Exception e)
             {
-                WellKnownInteropExceptions.UserDefinedTypeCodeGenerationError(typeSignature.Name, e).ThrowOrAttach(e);
+                WellKnownInteropExceptions.UserDefinedTypeCodeGenerationError(input.Type.Name, e).ThrowOrAttach(e);
             }
         }
     }
@@ -2772,13 +2873,21 @@ internal partial class InteropGenerator
     /// </summary>
     /// <param name="args"><inheritdoc cref="Emit" path="/param[@name='args']/node()"/></param>
     /// <param name="module">The module to write to disk.</param>
-    private static void WriteInteropModuleToDisk(InteropGeneratorArgs args, ModuleDefinition module)
+    /// <param name="fingerprint">The emission fingerprint to cache with the output, or an empty span to disable caching.</param>
+    private static void WriteInteropModuleToDisk(InteropGeneratorArgs args, ModuleDefinition module, ReadOnlySpan<byte> fingerprint)
     {
         string winRTInteropAssemblyPath = Path.Combine(args.GeneratedAssemblyDirectory, InteropNames.WindowsRuntimeInteropDllName);
 
         try
         {
-            module.Write(winRTInteropAssemblyPath);
+            if (fingerprint.IsEmpty)
+            {
+                module.Write(winRTInteropAssemblyPath);
+            }
+            else
+            {
+                InteropGenerationCache.Write(args, module, fingerprint);
+            }
         }
         catch (Exception e)
         {

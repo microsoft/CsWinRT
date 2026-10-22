@@ -944,7 +944,7 @@ internal sealed class WellKnownInteropExceptions : IGeneratorErrorFactory
     public static WellKnownInteropWarning GenericTypeDiscoveryTransitiveTypeLimitExceededWarning(ModuleDefinition module, int limit)
     {
         return Warning(106,
-            $"Generic member discovery reached the maximum of {limit} transitive type or method instantiations eligible for member analysis while processing module '{module}': " +
+            $"Generic member discovery reached the maximum of {limit} reservations for transitive type or method instantiations eligible for member analysis while processing module '{module}': " +
             "additional instantiations will not have their members analyzed. Marshalling support for types only reachable through those members may be incomplete.");
     }
 
@@ -954,7 +954,7 @@ internal sealed class WellKnownInteropExceptions : IGeneratorErrorFactory
     public static WellKnownInteropWarning SupplementalGenericDiscoveryLimitExceededWarning(ModuleDefinition module, int limit)
     {
         return Warning(106,
-            $"Supplemental generic discovery reached the maximum of {limit} transitive type or method instantiations while processing module '{module}': " +
+            $"Supplemental generic discovery reached the maximum of {limit} reservations for transitive type or method instantiations while processing module '{module}': " +
             "additional dispatch-derived or shorter-depth contexts will not have their members analyzed. " +
             "Primary discovery results are preserved, but supplemental marshalling support may be incomplete.");
     }
@@ -1003,6 +1003,22 @@ internal sealed class WellKnownInteropExceptions : IGeneratorErrorFactory
     public static WellKnownInteropException WriteLogError(string path, Exception exception)
     {
         return Exception(110, $"Failed to write the interop generator log to '{path}'.", exception);
+    }
+
+    /// <summary>
+    /// Failed to compute the interop generation fingerprint.
+    /// </summary>
+    public static WellKnownInteropException GenerationFingerprintError(Exception exception)
+    {
+        return Exception(111, "Failed to compute the interop generation fingerprint.", exception);
+    }
+
+    /// <summary>
+    /// More than one interface IID maps to the same generated getter name.
+    /// </summary>
+    public static WellKnownInteropException DuplicateGeneratedInterfaceIID(string name)
+    {
+        return Exception(112, $"The generated IID getter name '{name}' is not unique. Multiple interface IIDs map to the same name; the interop assembly cannot be generated safely.");
     }
 
     /// <summary>

@@ -64,6 +64,15 @@ internal sealed class InteropGeneratorRunner : IDisposable
         }
         """;
 
+    private const string GroupingMemberSource = """
+        public sealed class Shared{0} : {1}
+        {{
+            public void Dispose() {{ }}
+            public IEnumerator<IStringable> GetEnumerator() => ((IEnumerable<IStringable>)Array.Empty<IStringable>()).GetEnumerator();
+            IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+        }}
+        """;
+
     private readonly string[] referencePaths;
     private readonly string[] implementationPaths;
     private readonly string applicationPath;
@@ -73,7 +82,9 @@ internal sealed class InteropGeneratorRunner : IDisposable
     public InteropGeneratorRunner(
         bool useFrameworkImplementations = false,
         bool overlappingFrameworkReferences = false,
-        bool forwardedEnumerableAliases = false)
+        bool forwardedEnumerableAliases = false,
+        bool ccwGroupingCases = false,
+        bool iidNameCollisionCases = false)
     {
         Root = Directory.CreateTempSubdirectory("InteropGeneratorTest_").FullName;
         string referencesDirectory = Directory.CreateDirectory(Path.Combine(Root, "references")).FullName;
@@ -150,16 +161,112 @@ internal sealed class InteropGeneratorRunner : IDisposable
             enumerableAliases = [coreLib, facade];
         }
 
+        string[] groupingTypes = [];
+
+        if (ccwGroupingCases)
+        {
+            string source = """
+                using System;
+                using System.Collections;
+                using System.Collections.Generic;
+                using Windows.Foundation;
+
+                namespace GroupingInput;
+
+                """ + string.Join(Environment.NewLine, Enumerable.Range(0, 32)
+                .Select(index => string.Format(
+                    System.Globalization.CultureInfo.InvariantCulture,
+                    GroupingMemberSource,
+                    index,
+                    index % 2 == 0 ? "IEnumerable<IStringable>, IDisposable" : "IDisposable, IEnumerable<IStringable>")));
+
+            // A separate declaration order still describes the same semantic interface set
+            source += """
+
+                public sealed class DisposableOnly : System.IDisposable
+                {
+                    public void Dispose() { }
+                }
+
+                public sealed class ExplicitStringable : Windows.Foundation.IStringable
+                {
+                    public override string ToString() => "explicit";
+                }
+                """;
+            groupingTypes = [Compile("GroupingTypes", source,
+                references: [.. Net100.References.All, MetadataReference.CreateFromFile(runtimePath)])];
+        }
+
+        string[] iidNameCollisions = [];
+
+        if (iidNameCollisionCases)
+        {
+            string path = Compile("IidNameCollisions", """
+                namespace IidNames.A
+                {
+                    [WindowsRuntime.WindowsRuntimeType]
+                    public enum Value { First }
+                }
+
+                namespace IidNames_B
+                {
+                    [WindowsRuntime.WindowsRuntimeType]
+                    public enum Value { Second }
+                }
+
+                public sealed class FirstList : System.Collections.Generic.List<IidNames.A.Value>;
+                public sealed class SecondList : System.Collections.Generic.List<IidNames_B.Value>;
+                """, references: [.. Net100.References.All, MetadataReference.CreateFromFile(runtimePath)]);
+            ModuleDefinition module = ModuleDefinition.FromFile(path);
+            // Distinct metadata namespaces collide after '.' is replaced with '-' during name mangling.
+            module.TopLevelTypes.Single(type => type.Namespace == "IidNames_B").Namespace = "IidNames-A";
+            using MemoryStream stream = new();
+            module.Write(stream);
+            File.WriteAllBytes(path, stream.ToArray());
+            iidNameCollisions = [path];
+        }
+
         implementationPaths =
         [
             .. useFrameworkImplementations ? GetFrameworkImplementationPaths() : referencePaths,
             runtimePath, sdkReference, current, forwarded, firstDistinct, secondDistinct, standard,
             .. enumerableAliases,
+            .. groupingTypes,
+            .. iidNameCollisions,
             .. useFrameworkImplementations ? new[] { implementation } : []
         ];
     }
 
     public string Root { get; }
+
+    public void SetPrivateAttribute(int value, bool implementPrivateInterface = false)
+    {
+        string attributeAssembly = Compile("PrivateAttributes", """
+            namespace MissingAttributes;
+
+            public enum Mode { Enabled }
+
+            public sealed class MarkerAttribute(Mode mode, System.Type type) : System.Attribute
+            {
+                public int Value { get; set; }
+            }
+
+            public sealed class Argument;
+            public interface IPrivate;
+            """);
+
+        _ = Compile("CurrentTypes", DictionarySource + $$"""
+
+            [MissingAttributes.Marker(MissingAttributes.Mode.Enabled, typeof(MissingAttributes.Argument), Value = {{value}})]
+            public sealed class PrivateAttributeInput : System.IDisposable{{(implementPrivateInterface ? ", MissingAttributes.IPrivate" : "")}}
+            {
+                public void Dispose() { }
+            }
+            """, references: [.. Net100.References.All, MetadataReference.CreateFromFile(attributeAssembly)]);
+
+        // The compiler-only dependency is absent from the consuming application's generator inputs
+        File.Delete(attributeAssembly);
+    }
 
     public async Task<string> GenerateAsync(
         string name,
@@ -179,6 +286,19 @@ internal sealed class InteropGeneratorRunner : IDisposable
         Assert.AreEqual(0, exitCode, log);
         Assert.IsTrue(File.Exists(outputPath), "The generator did not produce an interop assembly.");
         return outputPath;
+    }
+
+    public async Task<string> AssertFailureAsync(string name, string error, bool reverseInputs = false, int parallelism = 1)
+    {
+        (int exitCode, string log, string outputPath) = await RunAsync(
+            name, reverseInputs, parallelism, marshallingMode: "Minimal", optInNetStandard: false,
+            analyzeNetStandardAssemblies: null, debugReproDirectory: null, marshallingDisabledAssemblyNames: null,
+            treatWarningsAsErrors: false, logDirectory: null);
+
+        Assert.AreNotEqual(0, exitCode, log);
+        StringAssert.Contains(log, error);
+        Assert.IsFalse(File.Exists(outputPath), "Invalid generated names must fail before publishing the interop assembly.");
+        return log;
     }
 
     private async Task<(int ExitCode, string Log, string OutputPath)> RunAsync(
@@ -226,8 +346,31 @@ internal sealed class InteropGeneratorRunner : IDisposable
 
     public static Task<(int ExitCode, string Log)> InvokeGeneratorAsync(string inputPath)
     {
-        ProcessStartInfo startInfo = CreateProcessStartInfo();
-        startInfo.ArgumentList.Add(Path.GetFullPath(GetAssemblyMetadata("InteropGeneratorAssemblyPath")));
+        string generatorPath = Path.GetFullPath(
+            Environment.GetEnvironmentVariable("CSWINRT_TEST_INTEROP_GENERATOR") ??
+            GetAssemblyMetadata("InteropGeneratorAssemblyPath"));
+        string extension = Path.GetExtension(generatorPath);
+        ProcessStartInfo startInfo;
+
+        if (extension.Equals(".dll", StringComparison.OrdinalIgnoreCase))
+        {
+            startInfo = CreateProcessStartInfo();
+            startInfo.ArgumentList.Add(generatorPath);
+        }
+        else if (extension.Equals(".exe", StringComparison.OrdinalIgnoreCase))
+        {
+            startInfo = new(generatorPath)
+            {
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                UseShellExecute = false
+            };
+        }
+        else
+        {
+            throw new NotSupportedException($"Expected a .dll or .exe interop generator, but got '{generatorPath}'.");
+        }
+
         startInfo.ArgumentList.Add(Path.GetExtension(inputPath) == ".zip" ? inputPath : "@" + inputPath);
 
         return RunProcessAsync(startInfo);
@@ -299,7 +442,10 @@ internal sealed class InteropGeneratorRunner : IDisposable
                 .Select(name => new XElement(ns + "Target", new XAttribute("Name", name))),
             new XElement(ns + "Target",
                 new XAttribute("Name", "Run"),
-                new XAttribute("DependsOnTargets", "_RunCsWinRTInteropGenerator"))));
+                new XAttribute("DependsOnTargets", "_RunCsWinRTInteropGenerator"),
+                new XElement(ns + "Message",
+                    new XAttribute("Importance", "High"),
+                    new XAttribute("Text", "MSBuild parent DOTNET_gcServer=$([System.Environment]::GetEnvironmentVariable('DOTNET_gcServer'))")))));
 
         project.Save(projectPath);
 
@@ -312,7 +458,11 @@ internal sealed class InteropGeneratorRunner : IDisposable
         string? disabledAssemblyName = null,
         bool? treatWarningsAsErrors = null,
         string? logDirectory = null,
-        string? debugReproDirectory = null)
+        string? debugReproDirectory = null,
+        string? enableServerGC = null,
+        string? gcServerEnvironment = null,
+        int? maxDegreesOfParallelism = null,
+        bool expectFailure = false)
     {
         string directory = Path.GetDirectoryName(projectPath)!;
         string binlog = Path.Combine(directory, $"build-{++msbuildInvocation}.binlog");
@@ -321,8 +471,30 @@ internal sealed class InteropGeneratorRunner : IDisposable
         startInfo.ArgumentList.Add(projectPath);
         startInfo.ArgumentList.Add("-t:Run");
         startInfo.ArgumentList.Add("-nologo");
-        startInfo.ArgumentList.Add("-v:quiet");
+        startInfo.ArgumentList.Add("-v:detailed");
         startInfo.ArgumentList.Add("-bl:" + binlog);
+
+        if (enableServerGC is not null)
+        {
+            startInfo.ArgumentList.Add("-p:CsWinRTEnableInteropGeneratorServerGC=" + enableServerGC);
+        }
+
+        if (maxDegreesOfParallelism is { } parallelism)
+        {
+            startInfo.ArgumentList.Add("-p:CsWinRTGeneratorMaxDegreesOfParallelism=" + parallelism);
+        }
+
+        if (gcServerEnvironment is not null)
+        {
+            if (gcServerEnvironment.Length == 0)
+            {
+                startInfo.Environment.Remove("DOTNET_gcServer");
+            }
+            else
+            {
+                startInfo.Environment["DOTNET_gcServer"] = gcServerEnvironment;
+            }
+        }
 
         if (analyzeNetStandardAssemblies is { } analyze)
         {
@@ -350,8 +522,16 @@ internal sealed class InteropGeneratorRunner : IDisposable
         }
 
         (int exitCode, string log) = await RunProcessAsync(startInfo);
-        Assert.AreEqual(0, exitCode, log);
+        File.WriteAllText(Path.ChangeExtension(binlog, ".log"), log);
         Assert.IsTrue(File.Exists(binlog), "MSBuild must produce its diagnostic log.");
+
+        if (expectFailure)
+        {
+            Assert.AreNotEqual(0, exitCode, log);
+            return log;
+        }
+
+        Assert.AreEqual(0, exitCode, log);
 
         return Path.Combine(directory, "output", "WinRT.Interop.dll");
     }
@@ -451,7 +631,7 @@ internal sealed class InteropGeneratorRunner : IDisposable
         Assert.AreEqual("System.Runtime", typeReference.Scope!.GetAssembly()!.Name!.ToString());
         typeReference.Scope = scope;
 
-        // Model valid inputs from older reference packs and implementation metadata, not patched generator output.
+        // Model valid inputs from older reference packs and implementation metadata, not patched generator output
         using MemoryStream stream = new();
         module.Write(stream);
         File.WriteAllBytes(path, stream.ToArray());

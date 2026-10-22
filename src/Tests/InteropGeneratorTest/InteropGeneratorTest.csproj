@@ -4,6 +4,10 @@
     <Platforms>x64;x86</Platforms>
     <Nullable>enable</Nullable>
     <CsWinRTEnabled>false</CsWinRTEnabled>
+
+    <!-- Match the netstandard task's runtime marshalling for CsWin32's SetLastError handling -->
+    <GenerateDisableRuntimeMarshallingAttribute>false</GenerateDisableRuntimeMarshallingAttribute>
+
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Platform)' == 'x86' or '$(Platform)' == 'x64'">
@@ -15,7 +19,17 @@
     <PackageReference Include="AsmResolver.DotNet" />
     <PackageReference Include="Basic.Reference.Assemblies.Net100" />
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp" />
+    <PackageReference Include="Microsoft.Windows.CsWin32" PrivateAssets="all" />
     <PackageDownload Include="NETStandard.Library" Version="[2.0.3]" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\..\WinRT.Interop.Generator\Models\TypeSignatureEquatableSet.cs" Link="Helpers\TypeSignatureEquatableSet.cs" />
+    <Compile Include="..\..\WinRT.Interop.Generator\Helpers\Comparers\TypeDescriptorComparer.cs" Link="Helpers\TypeDescriptorComparer.cs" />
+    <Compile Include="..\..\WinRT.Interop.Generator\Generation\OrderedVtableTypes.cs" Link="Helpers\OrderedVtableTypes.cs" />
+    <Compile Include="..\..\WinRT.Generator.Tasks\InteropGeneratorGCPolicy.cs" Link="Helpers\InteropGeneratorGCPolicy.cs" />
+    <AdditionalFiles Include="..\..\WinRT.Generator.Tasks\NativeMethods.txt" Link="NativeMethods.txt" />
+    <AdditionalFiles Include="..\..\WinRT.Generator.Tasks\NativeMethods.json" Link="NativeMethods.json" />
   </ItemGroup>
 
   <ItemGroup>
@@ -42,5 +56,6 @@
     <AssemblyMetadata Include="CsWinRTTargetsPath"
                       Value="$(MSBuildThisFileDirectory)..\..\..\nuget\Microsoft.Windows.CsWinRT.CsWinRTGen.targets" />
     <Using Include="Microsoft.VisualStudio.TestTools.UnitTesting" />
+    <Using Include="System" />
   </ItemGroup>
 </Project>
