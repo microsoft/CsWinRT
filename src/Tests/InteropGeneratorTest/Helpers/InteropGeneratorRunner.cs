@@ -103,7 +103,6 @@ internal sealed class InteropGeneratorRunner : IDisposable
     private readonly string? componentProjectionPath;
     private readonly string? iidLibraryPath;
     private int msbuildInvocation;
-    private bool publishFailed;
 
     public InteropGeneratorRunner(
         bool useFrameworkImplementations = false,
@@ -373,34 +372,14 @@ internal sealed class InteropGeneratorRunner : IDisposable
         File.Delete(attributeAssembly);
     }
 
-    public string LastGeneratorLog { get; private set; } = "";
-
-    public void RewriteApplicationTypeScope(string typeNamespace, string typeName, string assemblyName)
+    public void RewriteApplicationTypeScope(
+        string typeNamespace,
+        string typeName,
+        string assemblyName,
+        string originalAssemblyName = "System.Runtime")
     {
-        ModuleDefinition module = ModuleDefinition.FromFile(applicationPath);
-        TypeReference type = module.EnumerateTableMembers<TypeReference>(TableIndex.TypeRef)
-            .Single(type => type.Namespace == typeNamespace && type.Name == typeName);
-        type.Scope = new AssemblyReference(assemblyName, new Version(0, 0, 0, 0));
-        using MemoryStream stream = new();
-        module.Write(stream);
-        File.WriteAllBytes(applicationPath, stream.ToArray());
-    }
-
-    public void RewriteLibraryTypeScope(string typeNamespace, string typeName, string assemblyName)
-    {
-        Assert.IsNotNull(iidLibraryPath);
-        RewriteTypeScope(iidLibraryPath, typeNamespace, typeName, new AssemblyReference(assemblyName, new Version(0, 0, 0, 0)));
-    }
-
-    public void StageSdkTypeForwarder(string outputPath, params string[] typeNames)
-    {
-        string source = string.Join(Environment.NewLine, typeNames.Select(name =>
-            $"[assembly: System.Runtime.CompilerServices.TypeForwardedTo(typeof({name}))]"));
-        string forwarder = Compile("Microsoft.Windows.SDK.NET.Forwarder", source,
-            references: [.. Net100.References.All, MetadataReference.CreateFromFile(sdkProjectionPath)]);
-        ModuleDefinition module = ModuleDefinition.FromFile(forwarder);
-        module.Assembly!.Name = "Microsoft.Windows.SDK.NET";
-        module.Write(Path.Combine(Path.GetDirectoryName(outputPath)!, "Microsoft.Windows.SDK.NET.dll"));
+        RewriteTypeScope(applicationPath, typeNamespace, typeName,
+            new AssemblyReference(assemblyName, new Version(0, 0, 0, 0)), originalAssemblyName);
     }
 
     public async Task<string> GenerateAsync(
@@ -478,7 +457,6 @@ internal sealed class InteropGeneratorRunner : IDisposable
             """);
 
         (int exitCode, string log) = await InvokeGeneratorAsync(responsePath);
-        LastGeneratorLog = log;
 
         return (exitCode, log, Path.Combine(directory, "WinRT.Interop.dll"));
     }
@@ -513,139 +491,6 @@ internal sealed class InteropGeneratorRunner : IDisposable
         startInfo.ArgumentList.Add(Path.GetExtension(inputPath) == ".zip" ? inputPath : "@" + inputPath);
 
         return RunProcessAsync(startInfo);
-    }
-
-    public async Task RunApplicationAsync(string interopPath)
-    {
-        string directory = Path.GetDirectoryName(interopPath)!;
-        string application = Path.Combine(directory, "Application.dll");
-        File.Copy(applicationPath, application);
-        File.Copy(sdkProjectionPath, Path.Combine(directory, "WinRT.Sdk.Projection.dll"));
-        File.Copy(typeof(Windows.Foundation.IStringable).Assembly.Location, Path.Combine(directory, "WinRT.Runtime.dll"));
-        if (componentProjectionPath is not null)
-        {
-            File.Copy(componentProjectionPath, Path.Combine(directory, "WinRT.Component.dll"));
-        }
-        if (iidLibraryPath is not null)
-        {
-            File.Copy(iidLibraryPath, Path.Combine(directory, Path.GetFileName(iidLibraryPath)));
-        }
-        foreach (string path in implementationPaths.Except(referencePaths))
-        {
-            string destination = Path.Combine(directory, Path.GetFileName(path));
-            if (!File.Exists(destination))
-            {
-                File.Copy(path, destination);
-            }
-        }
-        File.WriteAllText(Path.Combine(directory, "Application.runtimeconfig.json"), """
-            {"runtimeOptions":{"tfm":"net10.0","framework":{"name":"Microsoft.NETCore.App","version":"10.0.0"}}}
-            """);
-
-        ProcessStartInfo startInfo = CreateProcessStartInfo();
-        startInfo.ArgumentList.Add(application);
-        (int exitCode, string log) = await RunProcessAsync(startInfo);
-        Assert.AreEqual(0, exitCode, log);
-    }
-
-    public async Task<string> PublishApplicationAsync(
-        string interopPath,
-        bool nativeAot,
-        bool isolateUnsupportedTrimTargets = false,
-        string? expectedPublishFailure = null)
-    {
-        string directory = Path.GetDirectoryName(interopPath)!;
-        string projectDirectory = Directory.CreateDirectory(Path.Combine(directory, "publish-project")).FullName;
-        string projectPath = Path.Combine(projectDirectory, "IidPublished.csproj");
-        string publishedInteropPath = interopPath;
-        if (isolateUnsupportedTrimTargets)
-        {
-            // ILLink 10.0 cannot resolve the existing marshalling group's array trim targets.
-            // Remove only those invalid dependency sources; CoreCLR and Native AOT use the original sidecar.
-            string references = Directory.CreateDirectory(Path.Combine(projectDirectory, "references")).FullName;
-            publishedInteropPath = Path.Combine(references, "WinRT.Interop.dll");
-            ModuleDefinition interop = ModuleDefinition.FromFile(interopPath);
-            int iidEntries = interop.Assembly!.CustomAttributes.Count(attribute =>
-                attribute.Constructor?.DeclaringType?.FullName.Contains("WindowsRuntimeIidTypeMapGroup", StringComparison.Ordinal) is true);
-            foreach (CustomAttribute attribute in interop.Assembly!.CustomAttributes.ToArray())
-            {
-                string name = attribute.Constructor?.DeclaringType?.FullName ?? "";
-                TypeSignature? dependencySource = name.StartsWith("System.Runtime.InteropServices.TypeMapAttribute`1", StringComparison.Ordinal) &&
-                    attribute.Signature?.FixedArguments.Count == 3
-                    ? attribute.Signature.FixedArguments[2].Element as TypeSignature
-                    : name.StartsWith("System.Runtime.InteropServices.TypeMapAssociationAttribute`1", StringComparison.Ordinal) &&
-                        attribute.Signature?.FixedArguments.Count == 2
-                        ? attribute.Signature.FixedArguments[0].Element as TypeSignature
-                        : null;
-                if (dependencySource is not null && dependencySource is not (CorLibTypeSignature or TypeDefOrRefSignature or GenericInstanceTypeSignature))
-                {
-                    Assert.IsFalse(name.Contains("WindowsRuntimeIidTypeMapGroup", StringComparison.Ordinal),
-                        "IID map entries must never require rewriting for the ILLink type-specification bug.");
-                    interop.Assembly.CustomAttributes.Remove(attribute);
-                }
-            }
-            Assert.AreEqual(iidEntries, interop.Assembly.CustomAttributes.Count(attribute =>
-                attribute.Constructor?.DeclaringType?.FullName.Contains("WindowsRuntimeIidTypeMapGroup", StringComparison.Ordinal) is true));
-            interop.Write(publishedInteropPath);
-        }
-        XDocument project = new(new XElement("Project", new XAttribute("Sdk", "Microsoft.NET.Sdk"),
-            new XElement("PropertyGroup",
-                new XElement("OutputType", "Exe"),
-                new XElement("TargetFramework", "net10.0"),
-                new XElement("RuntimeIdentifier", "win-x64"),
-                new XElement("SelfContained", "true"),
-                new XElement("PublishTrimmed", "true"),
-                new XElement("PublishAot", nativeAot.ToString().ToLowerInvariant()),
-                new XElement("TreatWarningsAsErrors", "true"),
-                new XElement("TrimmerSingleWarn", "false"),
-                new XElement("IlcResilient", "false"),
-                new XElement("IlcGenerateMapFile", nativeAot.ToString().ToLowerInvariant()),
-                new XElement("NoWarn", "CA1416")),
-            new XElement("ItemGroup", Directory.GetFiles(directory, "*.dll")
-                .Select(path => new XElement("Reference", new XAttribute("Include", Path.GetFileNameWithoutExtension(path)),
-                    new XElement("HintPath", Path.GetFileName(path) == "WinRT.Interop.dll" ? publishedInteropPath : path))))));
-        project.Save(projectPath);
-        File.WriteAllText(Path.Combine(projectDirectory, "Entry.cs"), """
-            [assembly: System.Runtime.InteropServices.TypeMapAssemblyTarget<WindowsRuntime.InteropServices.WindowsRuntimeIidTypeMapGroup>("WinRT.Interop")]
-            public static class PublishedEntry
-            {
-                public static int Main() => global::Program.Main();
-            }
-            """);
-
-        string publishDirectory = Path.Combine(projectDirectory, "published");
-        ProcessStartInfo startInfo = CreateProcessStartInfo();
-        foreach (string argument in new[] { "publish", projectPath, "-c", "Release", "-o", publishDirectory,
-            expectedPublishFailure is null ? "-v:quiet" : "-v:diagnostic", "-m",
-            "-bl:" + Path.Combine(projectDirectory, "publish-{}.binlog") })
-        {
-            startInfo.ArgumentList.Add(argument);
-        }
-
-        (int exitCode, string log) = await RunProcessAsync(startInfo);
-        if (expectedPublishFailure is not null)
-        {
-            Assert.AreNotEqual(0, exitCode, "ILLink now accepts array type-map dependencies; remove the known-issue test workaround.");
-            Assert.Contains(expectedPublishFailure, log);
-            return projectDirectory;
-        }
-        if (exitCode != 0)
-        {
-            publishFailed = true;
-            System.Console.WriteLine($"Publish failure artifacts: {projectDirectory}");
-        }
-        Assert.AreEqual(0, exitCode, log);
-
-        ProcessStartInfo application = new(Path.Combine(publishDirectory, "IidPublished.exe"))
-        {
-            RedirectStandardOutput = true,
-            RedirectStandardError = true,
-            UseShellExecute = false
-        };
-        (exitCode, log) = await RunProcessAsync(application);
-        Assert.AreEqual(0, exitCode, log);
-
-        return publishDirectory;
     }
 
     private static ProcessStartInfo CreateProcessStartInfo()
@@ -852,10 +697,7 @@ internal sealed class InteropGeneratorRunner : IDisposable
 
     public void Dispose()
     {
-        if (!publishFailed)
-        {
-            Directory.Delete(Root, recursive: true);
-        }
+        Directory.Delete(Root, recursive: true);
     }
 
     private static string GetAssemblyMetadata(string key)
@@ -894,7 +736,6 @@ internal sealed class InteropGeneratorRunner : IDisposable
                 .. outputKind == OutputKind.ConsoleApplication
                     ? new[] { CSharpSyntaxTree.ParseText("""
                         [assembly: System.Runtime.Versioning.TargetFramework(".NETCoreApp,Version=v10.0")]
-                        [assembly: System.Runtime.InteropServices.TypeMapAssemblyTarget<WindowsRuntime.InteropServices.WindowsRuntimeIidTypeMapGroup>("WinRT.Interop")]
                         """) }
                     : []
             ],
@@ -912,13 +753,18 @@ internal sealed class InteropGeneratorRunner : IDisposable
         RewriteTypeScope(path, "System.Collections.ObjectModel", "ReadOnlyDictionary`2", scope);
     }
 
-    private static void RewriteTypeScope(string path, string typeNamespace, string typeName, AssemblyReference scope)
+    private static void RewriteTypeScope(
+        string path,
+        string typeNamespace,
+        string typeName,
+        AssemblyReference scope,
+        string originalAssemblyName = "System.Runtime")
     {
         ModuleDefinition module = ModuleDefinition.FromFile(path);
         TypeReference typeReference = module.EnumerateTableMembers<TypeReference>(TableIndex.TypeRef)
             .Single(type => type.Namespace == typeNamespace && type.Name == typeName);
 
-        Assert.AreEqual("System.Runtime", typeReference.Scope!.GetAssembly()!.Name!.ToString());
+        Assert.AreEqual(originalAssemblyName, typeReference.Scope!.GetAssembly()!.Name!.ToString());
         typeReference.Scope = scope;
 
         // Model valid inputs from older reference packs and implementation metadata, not patched generator output

@@ -41,6 +41,7 @@ using Windows.UI.Notifications;
 using WindowsRuntime;
 using WindowsRuntime.InteropServices;
 using WindowsRuntime.InteropServices.Marshalling;
+using ApiContractAttribute = Windows.Foundation.Metadata.ApiContractAttribute;
 using static UnitTest.UnitTestHelper;
 
 // Test SupportedOSPlatform warnings for APIs targeting 10.0.19041.0:
@@ -65,6 +66,99 @@ namespace UnitTest
         public struct Estruct
         {
             public E value;
+        }
+
+        [TestMethod]
+        public unsafe void TestGetIidQueryInterface()
+        {
+            Check<Class>(TestObject);
+            Check<EventHandler0>(new EventHandler0(() => { }));
+            Check<int?>(42);
+            Check<Point?>(new Point(1, 2));
+            Check<BlittableStruct?>(default(BlittableStruct));
+            Check<EnumValue?>(EnumValue.One);
+            Check<CornerRadius?>(new CornerRadius(1));
+            Check<int[]>(new[] { 1, 2, 3 });
+            Check<IList<int>>(new List<int>());
+            Check<KeyValuePair<string, int>>(new KeyValuePair<string, int>("key", 42));
+            Check<EventHandler<int>>(new EventHandler<int>((sender, value) => { }));
+
+            static void Check<T>(object value)
+            {
+                void* pointer = WindowsRuntimeMarshal.ConvertToUnmanaged(value);
+                try
+                {
+                    Guid iid = WindowsRuntimeMarshal.GetIid<T>();
+                    Marshal.ThrowExceptionForHR(Marshal.QueryInterface((nint)pointer, in iid, out nint result));
+                    WindowsRuntimeMarshal.Free((void*)result);
+                }
+                finally
+                {
+                    WindowsRuntimeMarshal.Free(pointer);
+                }
+            }
+        }
+
+        [TestMethod]
+        public void TestGetIidMappedTypes()
+        {
+            Assert.AreEqual(WellKnownInterfaceIIDs.IID_IInspectable, WindowsRuntimeMarshal.GetIid<object>());
+            Assert.AreEqual(WellKnownInterfaceIIDs.IID_IStringable, WindowsRuntimeMarshal.GetIid<IStringable>());
+            Assert.AreEqual(new Guid("30d5a829-7fa4-4026-83bb-d75bae4ea99e"), WindowsRuntimeMarshal.GetIid<IDisposable>());
+            Assert.AreEqual(new Guid("9e365e57-48b2-4160-956f-c7385120bbfc"), WindowsRuntimeMarshal.GetIid<Uri>());
+            Assert.AreEqual(new Guid("e5af3542-ca67-4081-995b-709dd13792df"), WindowsRuntimeMarshal.GetIid<ICommand>());
+            Assert.AreEqual(new Guid("90b17601-b065-586e-83d9-9adc3a695284"), WindowsRuntimeMarshal.GetIid<INotifyPropertyChanged>());
+        }
+
+        [TestMethod]
+        public void TestGetIidUnsupportedTypes()
+        {
+            Assert.ThrowsExactly<NotSupportedException>(() => WindowsRuntimeMarshal.GetIid<int>());
+            Assert.ThrowsExactly<NotSupportedException>(() => WindowsRuntimeMarshal.GetIid<int>());
+            Assert.ThrowsExactly<NotSupportedException>(() => WindowsRuntimeMarshal.GetIid<string>());
+            Assert.ThrowsExactly<NotSupportedException>(() => WindowsRuntimeMarshal.GetIid<Guid>());
+            Assert.ThrowsExactly<NotSupportedException>(() => WindowsRuntimeMarshal.GetIid<Exception>());
+            Assert.ThrowsExactly<NotSupportedException>(() => WindowsRuntimeMarshal.GetIid<ArgumentException>());
+            Assert.ThrowsExactly<NotSupportedException>(() => WindowsRuntimeMarshal.GetIid<Type>());
+            Assert.ThrowsExactly<NotSupportedException>(() => WindowsRuntimeMarshal.GetIid<BlittableStruct>());
+            Assert.ThrowsExactly<NotSupportedException>(() => WindowsRuntimeMarshal.GetIid<EnumValue>());
+            Assert.ThrowsExactly<NotSupportedException>(() => WindowsRuntimeMarshal.GetIid<KeyValuePair<string, int>?>());
+            Assert.ThrowsExactly<NotSupportedException>(() => WindowsRuntimeMarshal.GetIid<sbyte?>());
+            Assert.ThrowsExactly<NotSupportedException>(() => WindowsRuntimeMarshal.GetIid<nint>());
+            Assert.ThrowsExactly<NotSupportedException>(() => WindowsRuntimeMarshal.GetIid<UnitTestCSharp>());
+            Assert.ThrowsExactly<NotSupportedException>(() => WindowsRuntimeMarshal.GetIid<Estruct?>());
+            Assert.ThrowsExactly<NotSupportedException>(() => WindowsRuntimeMarshal.GetIid<IStringableInterop>());
+            Assert.ThrowsExactly<NotSupportedException>(() => WindowsRuntimeMarshal.GetIid<IList<UnitTestCSharp>>());
+            Assert.ThrowsExactly<NotSupportedException>(() => WindowsRuntimeMarshal.GetIid<EventHandler>());
+            Assert.ThrowsExactly<NotSupportedException>(() => WindowsRuntimeMarshal.GetIid<ICollection<KeyValuePair<string, int>>>());
+            Assert.ThrowsExactly<NotSupportedException>(() => WindowsRuntimeMarshal.GetIid<int[,]>());
+            Assert.ThrowsExactly<NotSupportedException>(() => WindowsRuntimeMarshal.GetIid<int[][]>());
+            Assert.ThrowsExactly<NotSupportedException>(() => WindowsRuntimeMarshal.GetIid<ApiContractAttribute>());
+        }
+
+        [TestMethod]
+        public void TestGetIidGenericContexts()
+        {
+            Assert.AreEqual(new Guid("b939af5b-b45d-5489-9149-61442c1905fe"), ListIid<int>());
+            Assert.AreEqual(new Guid("548cefbd-bc8a-5fa0-8df2-957440fc8bf4"), ReferenceIid<int>());
+
+            IIidQueries queries = new IidQueries();
+            Assert.AreEqual(new Guid("0d82bd8d-fe62-5d67-a7b9-7886dd75bc4e"), queries.List<Uri>());
+            Assert.AreEqual(new Guid("3766c9f9-c6ae-5bd6-aca3-19efd66f89ae"), queries.List<InputStreamOptions>());
+
+            static Guid ListIid<T>() => WindowsRuntimeMarshal.GetIid<IList<T>>();
+            static Guid ReferenceIid<T>() where T : struct => WindowsRuntimeMarshal.GetIid<T?>();
+        }
+
+        private interface IIidQueries
+        {
+            Guid List<T>();
+        }
+
+        private sealed class IidQueries : IIidQueries
+        {
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            public Guid List<T>() => WindowsRuntimeMarshal.GetIid<IList<T>>();
         }
 
         [TestMethod]

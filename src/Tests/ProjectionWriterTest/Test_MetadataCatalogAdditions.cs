@@ -3,8 +3,7 @@
 
 using System;
 using System.IO;
-using AsmResolver.DotNet;
-using AsmResolver.PE.DotNet.Metadata.Tables;
+using ProjectionWriterTest.Helpers;
 using WindowsRuntime.ProjectionWriter;
 
 namespace ProjectionWriterTest;
@@ -24,12 +23,7 @@ public sealed class Test_MetadataCatalogAdditions
         string directory = Directory.CreateTempSubdirectory("MetadataCatalogAdditions_").FullName;
         try
         {
-            ModuleDefinition module = new("Mapped.Xaml.winmd") { RuntimeVersion = "WindowsRuntime 1.4" };
-            _ = new AssemblyDefinition("Mapped.Xaml", new Version(255, 255, 255, 255))
-            {
-                Modules = { module },
-                Attributes = AssemblyAttributes.ContentWindowsRuntime
-            };
+            string input = MetadataCatalogAdditionsMetadata.Create(directory, rootNamespace);
             string[] names =
             [
                 rootNamespace + ".CornerRadius",
@@ -39,17 +33,6 @@ public sealed class Test_MetadataCatalogAdditions
                 rootNamespace + ".Media.Animation.RepeatBehavior",
                 rootNamespace + ".Media.Media3D.Matrix3D"
             ];
-            foreach (string name in names)
-            {
-                int separator = name.LastIndexOf('.');
-                TypeDefinition type = new(name[..separator], name[(separator + 1)..],
-                    TypeAttributes.Public | TypeAttributes.Sealed | TypeAttributes.SequentialLayout | TypeAttributes.WindowsRuntime,
-                    new TypeReference(module, module.CorLibTypeFactory.CorLibScope, "System", "ValueType"));
-                type.Fields.Add(new FieldDefinition("Value", FieldAttributes.Public, module.CorLibTypeFactory.Double));
-                module.TopLevelTypes.Add(type);
-            }
-            string input = Path.Combine(directory, "Mapped.Xaml.winmd");
-            module.Write(input);
             string output = Path.Combine(directory, "sources");
             ProjectionWriter.Run(new ProjectionWriterOptions
             {

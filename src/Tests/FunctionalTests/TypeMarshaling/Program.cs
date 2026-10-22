@@ -270,6 +270,38 @@ if ((failure = RunCases(TestCases)) != 0)
     return failure;
 }
 
+if (WindowsRuntimeMarshal.GetIid<IList<ComposedNonBlittableStruct>>() != new Guid("c8477314-b257-511b-a3a1-9e4eb6385152"))
+{
+    return 1100;
+}
+
+if (WindowsRuntimeMarshal.GetIid<Rect?>() != new Guid("80423f11-054f-5eac-afd3-63b6ce15e77b"))
+{
+    return 1101;
+}
+
+if (WindowsRuntimeMarshal.GetIid<TestComponentCSharp.Class>() == Guid.Empty ||
+    WindowsRuntimeMarshal.GetIid<int[]>() != new Guid("a6d080a5-b087-5bc2-9a9f-5cd687b4d1f7"))
+{
+    return 1102;
+}
+
+IIidQueries iidQueries = new IidQueries();
+if (iidQueries.List<Uri>() != new Guid("0d82bd8d-fe62-5d67-a7b9-7886dd75bc4e") ||
+    iidQueries.NestedList<Uri>() != new Guid("bb509c13-b7a8-5405-b071-c4e9faa2d8d4"))
+{
+    return 1103;
+}
+
+try
+{
+    WindowsRuntimeMarshal.GetIid<int>();
+    return 1104;
+}
+catch (NotSupportedException)
+{
+}
+
 return 100;
 
 static int RunCases(ReadOnlySpan<TypeCase> cases)
@@ -334,3 +366,18 @@ interface ITestCSharp<T>
 }
 
 delegate void DelegateTestCSharp<T>(object sender, T value);
+
+interface IIidQueries
+{
+    Guid List<T>();
+    Guid NestedList<T>();
+}
+
+sealed class IidQueries : IIidQueries
+{
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    public Guid List<T>() => WindowsRuntimeMarshal.GetIid<IList<T>>();
+
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    public Guid NestedList<T>() => WindowsRuntimeMarshal.GetIid<IList<IList<T>>>();
+}
