@@ -1299,6 +1299,11 @@ internal sealed class InteropReferences
     public TypeReference DynamicInterfaceCastableForwarderAttribute => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "DynamicInterfaceCastableForwarderAttribute"u8);
 
     /// <summary>
+    /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.DynamicInterfaceCastableEnumerableAttribute</c>.
+    /// </summary>
+    public TypeReference DynamicInterfaceCastableEnumerableAttribute => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "DynamicInterfaceCastableEnumerableAttribute"u8);
+
+    /// <summary>
     /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.InteropServices.WindowsRuntimeComWrappersMarshallerAttribute</c>.
     /// </summary>
     public TypeReference WindowsRuntimeComWrappersMarshallerAttribute => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "WindowsRuntimeComWrappersMarshallerAttribute"u8);
@@ -4116,6 +4121,12 @@ internal sealed class InteropReferences
                     Type.ToReferenceTypeSignature(),
                     Type.ToReferenceTypeSignature()]);
     }
+
+    /// <summary>
+    /// Gets the constructor for the non-generic enumeration attribute base.
+    /// </summary>
+    public MemberReference DynamicInterfaceCastableEnumerableAttribute_ctor => field ??= DynamicInterfaceCastableEnumerableAttribute
+        .CreateConstructorReference(_corLibTypeFactory);
 
     /// <summary>
     /// Gets the <see cref="MemberReference"/> for the <c>.ctor</c> method of a given delegate type.
