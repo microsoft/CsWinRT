@@ -27,9 +27,11 @@ internal static class WindowsRuntimeIidTypeNameFactory
     {
         void Append(ref DefaultInterpolatedStringHandler handler, TypeSignature type)
         {
+            // SZ arrays append the '[]' suffix to their element type's name
             if (type is SzArrayTypeSignature array)
             {
                 Append(ref handler, array.BaseType);
+
                 handler.AppendLiteral("[]");
 
                 return;
@@ -54,6 +56,7 @@ internal static class WindowsRuntimeIidTypeNameFactory
             handler.AppendFormatted(']');
             handler.AppendLiteral(definition.FullName);
 
+            // Append any type arguments within '[]' brackets
             if (type is GenericInstanceTypeSignature instance)
             {
                 handler.AppendFormatted('[');

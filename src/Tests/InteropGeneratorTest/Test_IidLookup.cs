@@ -40,6 +40,8 @@ public sealed class Test_IidLookup
             public class Example { }
             [WindowsRuntimeType]
             public class GenericDefault { }
+            [WindowsRuntimeType]
+            public class UnmarkedDefault { }
             [WindowsRuntimeType, Guid("71f0284e-cc83-4c12-95ea-89749cdfc7f5")]
             internal interface IHidden { }
             [WindowsRuntimeType]
@@ -62,6 +64,7 @@ public sealed class Test_IidLookup
             [WindowsRuntimeMetadata(typeof(global::IidProjection.IGeneric<>), "Fixture")]
             [WindowsRuntimeMetadata(typeof(global::IidProjection.Example), "Fixture")]
             [WindowsRuntimeMetadata(typeof(global::IidProjection.GenericDefault), "Fixture")]
+            [WindowsRuntimeMetadata(typeof(global::IidProjection.UnmarkedDefault), "Fixture")]
             [WindowsRuntimeMetadata(typeof(global::IidProjection.IHidden), "Fixture")]
             [WindowsRuntimeMetadata(typeof(global::IidProjection.HiddenClass), "Fixture")]
             [WindowsRuntimeMetadata(typeof(global::IidProjection.Value), "Fixture")]
@@ -73,6 +76,7 @@ public sealed class Test_IidLookup
             internal static class WindowsRuntimeMetadataTypes { }
             [WindowsRuntimeDefaultInterface(typeof(global::IidProjection.Example), typeof(global::IidProjection.IExample))]
             [WindowsRuntimeDefaultInterface(typeof(global::IidProjection.GenericDefault), typeof(IDictionary<string, object>))]
+            [WindowsRuntimeDefaultInterface(typeof(global::IidProjection.UnmarkedDefault), typeof(ABI.Impl.IUnmarked))]
             [WindowsRuntimeDefaultInterface(typeof(global::IidProjection.HiddenClass), typeof(global::IidProjection.IHidden))]
             internal static class WindowsRuntimeDefaultInterfaces { }
         }
@@ -80,6 +84,8 @@ public sealed class Test_IidLookup
         {
             [WindowsRuntimeType, Guid("71f0284e-cc83-4c12-95ea-89749cdfc7f5")]
             internal interface IExclusive { }
+            [Guid("59d49473-21e5-4f1a-870c-6c93a1d8206d")]
+            internal interface IUnmarked { }
         }
         namespace ABI.IidProjection
         {
@@ -290,6 +296,8 @@ public sealed class Test_IidLookup
             GetProviderIid(module, "[WinRT.Sdk.Projection]IidProjection.Example"));
         Assert.AreEqual(GetProviderIid(module, "[#System]System.Collections.Generic.IDictionary`2[[#System]System.String,[#System]System.Object]"),
             GetProviderIid(module, "[WinRT.Sdk.Projection]IidProjection.GenericDefault"));
+        Assert.AreEqual(new Guid("59d49473-21e5-4f1a-870c-6c93a1d8206d"),
+            GetProviderIid(module, "[WinRT.Sdk.Projection]IidProjection.UnmarkedDefault"));
         Assert.AreEqual(new Guid("60a8e0c5-7371-4b96-ab04-b2ccfafce870"),
             GetProviderIid(module, "[WinRT.Sdk.Projection]IidProjection.Handler"));
         Assert.AreEqual(new Guid("513dbf61-50a0-5a16-bb0e-96ae18a9f125"),
@@ -304,6 +312,24 @@ public sealed class Test_IidLookup
         {
             Assert.DoesNotContain("[WinRT.Sdk.Projection]" + type, keys);
         }
+    }
+
+    [TestMethod]
+    public async Task MissingInterfaceIid_FailsGeneration()
+    {
+        using InteropGeneratorRunner runner = new(
+            sdkProjectionSource: """
+                [WindowsRuntime.WindowsRuntimeType]
+                public interface IMissingIid { }
+                namespace ABI
+                {
+                    [global::WindowsRuntime.WindowsRuntimeMetadata(typeof(IMissingIid), "Fixture")]
+                    internal static class WindowsRuntimeMetadataTypes { }
+                }
+                """,
+            applicationSource: IidApplicationSource);
+
+        _ = await runner.AssertFailureAsync("missing-iid", "CSWINRTINTEROPGEN0055");
     }
 
     [TestMethod]
@@ -372,7 +398,20 @@ public sealed class Test_IidLookup
     [DataRow(true)]
     public async Task MappedXamlTypes_FollowProjectionMode(bool useWindowsUIXamlProjections)
     {
-        using InteropGeneratorRunner runner = new(applicationSource: IidApplicationSource);
+        using InteropGeneratorRunner runner = new(applicationSource: """
+            using System;
+            using System.Collections.Generic;
+            using System.Collections.Specialized;
+            using System.ComponentModel;
+            public static class Program
+            {
+                public static IList<Uri> Uris;
+                public static IList<PropertyChangedEventArgs> PropertyChanges;
+                public static IList<NotifyCollectionChangedEventArgs> CollectionChanges;
+                public static IList<DataErrorsChangedEventArgs> DataErrors;
+                public static void Main() => WindowsRuntime.InteropServices.WindowsRuntimeMarshal.GetIid<object>();
+            }
+            """);
         (_, ModuleDefinition module) = runner.LoadOutput(await runner.GenerateAsync(
             "xaml", useWindowsUIXamlProjections: useWindowsUIXamlProjections));
 
@@ -380,6 +419,20 @@ public sealed class Test_IidLookup
             GetProviderIid(module, "[#System]System.ComponentModel.INotifyPropertyChanged"));
         Assert.AreEqual(new Guid(useWindowsUIXamlProjections ? "4f33a9a0-5cf4-47a4-b16f-d7faaf17457e" : "63d0c952-396b-54f4-af8c-ba8724a427bf"),
             GetProviderIid(module, "[#System]System.ComponentModel.PropertyChangedEventArgs"));
+        Assert.AreEqual(new Guid("9e365e57-48b2-4160-956f-c7385120bbfc"),
+            GetProviderIid(module, "[#System]System.Uri"));
+        Assert.AreEqual(new Guid(useWindowsUIXamlProjections ? "4cf68d33-e3f2-4964-b85e-945b4f7e2f21" : "da049ff2-d2e0-5fe8-8c7b-f87f26060b6f"),
+            GetProviderIid(module, "[#System]System.Collections.Specialized.NotifyCollectionChangedEventArgs"));
+        Assert.AreEqual(new Guid("d026dd64-5f26-5f15-a86a-0dec8a431796"),
+            GetProviderIid(module, "[#System]System.ComponentModel.DataErrorsChangedEventArgs"));
+        Assert.AreEqual(new Guid("0d82bd8d-fe62-5d67-a7b9-7886dd75bc4e"),
+            GetProviderIid(module, "[#System]System.Collections.Generic.IList`1[[#System]System.Uri]"));
+        Assert.AreEqual(new Guid(useWindowsUIXamlProjections ? "66af7157-76bf-5ddd-8fb5-eae1638b8309" : "3d1941dd-0165-5e8e-a121-1130d764de6e"),
+            GetProviderIid(module, "[#System]System.Collections.Generic.IList`1[[#System]System.ComponentModel.PropertyChangedEventArgs]"));
+        Assert.AreEqual(new Guid(useWindowsUIXamlProjections ? "3e5d933a-1220-5d32-aeee-262e2a7053dd" : "e77c5a02-ed7b-5bd9-b9cc-12c8708c157d"),
+            GetProviderIid(module, "[#System]System.Collections.Generic.IList`1[[#System]System.Collections.Specialized.NotifyCollectionChangedEventArgs]"));
+        Assert.AreEqual(new Guid(useWindowsUIXamlProjections ? "68ab49b0-d5cf-5702-9fb1-f99202ce961f" : "11a29269-041c-5820-a5c5-218828271514"),
+            GetProviderIid(module, "[#System]System.Collections.Generic.IList`1[[#System]System.ComponentModel.DataErrorsChangedEventArgs]"));
     }
 
     [TestMethod]

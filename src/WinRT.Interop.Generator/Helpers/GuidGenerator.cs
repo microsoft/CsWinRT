@@ -3,12 +3,17 @@
 
 using System;
 using System.Buffers;
+using System.Collections.Concurrent;
 using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
 using System.Text;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
+using WindowsRuntime.InteropGenerator.Errors;
 using WindowsRuntime.InteropGenerator.References;
+
+#pragma warning disable IDE0046
 
 namespace WindowsRuntime.InteropGenerator.Helpers;
 
@@ -22,6 +27,11 @@ internal static class GuidGenerator
     /// </summary>
     /// <see href="https://learn.microsoft.com/uwp/winrt-cref/winrt-type-system#guid-generation-for-parameterized-types"/>
     private static readonly Guid WindowsRuntimePIIDNamespace = new(0xD57AF411, 0x737B, 0xC042, 0xAB, 0xAE, 0x87, 0x8B, 0x1E, 0x16, 0xAD, 0xEE);
+
+    /// <summary>
+    /// Parameterized IIDs shared by marshalling and metadata emission for each invocation.
+    /// </summary>
+    private static readonly ConditionalWeakTable<RuntimeContext, ConcurrentDictionary<string, Guid>> IidCaches = [];
 
     /// <summary>
     /// Generates the IID for the specified type by computing its Windows Runtime signature and deriving an IID from that signature.
@@ -38,14 +48,15 @@ internal static class GuidGenerator
         bool useWindowsUIXamlProjections)
     {
         string signature = SignatureGenerator.GetSignature(type, interopDefinitions, interopReferences, useWindowsUIXamlProjections);
-        return interopDefinitions.GetOrCreateIID(signature, static signature => CreateGuidFromSignature(signature));
+
+        return GetOrCreateIID(signature, interopReferences.RuntimeContext);
     }
 
     /// <summary>
-    /// Tries to get the IID represented by a Windows Runtime type using its existing signature.
+    /// Tries to get the IID represented by a Windows Runtime type using the existing metadata and signature helpers.
     /// </summary>
     /// <param name="type">The Windows Runtime type.</param>
-    /// <param name="interopDefinitions">The projection definitions and cached generated IIDs.</param>
+    /// <param name="interopDefinitions">The projection definitions.</param>
     /// <param name="interopReferences">The references for this invocation.</param>
     /// <param name="useWindowsUIXamlProjections">Whether to use UWP XAML mappings.</param>
     /// <param name="iid">The IID of the interface represented by the input type, or a runtime class's default interface.</param>
@@ -57,52 +68,94 @@ internal static class GuidGenerator
         bool useWindowsUIXamlProjections,
         out Guid iid)
     {
-        iid = default;
-
+        // Reject non-WinRT types and the non-generic 'EventHandler', which is a special custom mapping
         if (!type.IsWindowsRuntimeType(interopReferences) ||
             interopReferences.SignatureComparer.Equals(type, interopReferences.EventHandler))
         {
+            iid = default;
+
             return false;
+        }
+
+        // 'object' represents 'IInspectable' rather than a specific runtime class
+        if (interopReferences.SignatureComparer.Equals(type, interopReferences.Object))
+        {
+            iid = WellKnownInterfaceIIDs.IID_IInspectable;
+
+            return true;
+        }
+
+        // Mapped classes carry their default IID in the mapping, while raw values have no interface identity
+        if (type.IsFundamentalWindowsRuntimeType(interopReferences) ||
+            type.IsCustomMappedWindowsRuntimeNonGenericStructOrClassType(interopReferences))
+        {
+            return TypeMapping.TryFindMappedTypeIID(type.FullName, useWindowsUIXamlProjections, out iid);
         }
 
         TypeDefinition definition = type.Resolve(interopReferences.RuntimeContext);
 
-        // Static runtime classes have metadata names, but no native interface
+        // Static runtime classes have metadata names but no native interface identity
         if (definition.IsAbstract && definition.IsSealed)
         {
+            iid = default;
+
             return false;
         }
 
-        string signature = SignatureGenerator.GetSignature(type, interopDefinitions, interopReferences, useWindowsUIXamlProjections);
-        ReadOnlySpan<char> interfaceSignature = signature;
+        // Resolve runtime classes through the same default-interface metadata used for signatures,
+        // without repeating the entry checks (the default interface comes from validated class metadata).
+        if (type is not (GenericInstanceTypeSignature or SzArrayTypeSignature or BoxedTypeSignature) &&
+            !definition.IsValueType &&
+            !definition.IsInterface &&
+            !definition.IsDelegate &&
+            SignatureGenerator.TryGetDefaultInterfaceFromAttribute(definition, interopDefinitions, out TypeSignature? defaultInterface))
+        {
+            type = defaultInterface;
+            definition = type.Resolve(interopReferences.RuntimeContext);
+        }
 
-        if (interfaceSignature.StartsWith("rc("))
+        // Constructed interfaces, arrays, and boxed delegates reuse marshalling's parameterized IID generation
+        if (type is GenericInstanceTypeSignature or SzArrayTypeSignature or BoxedTypeSignature)
         {
-            interfaceSignature = interfaceSignature[(interfaceSignature.IndexOf(';') + 1)..^1];
-        }
-        else if (interfaceSignature.StartsWith("delegate("))
-        {
-            interfaceSignature = interfaceSignature["delegate(".Length..^1];
+            iid = CreateIID(type, interopDefinitions, interopReferences, useWindowsUIXamlProjections);
+
+            return true;
         }
 
-        if (interfaceSignature.StartsWith("pinterface("))
+        // Raw structs and enums need 'Nullable<T>' to represent 'IReference<T>', which uses the parameterized path
+        if (definition.IsValueType)
         {
-            iid = interopDefinitions.GetOrCreateIID(interfaceSignature.ToString(), static signature => CreateGuidFromSignature(signature));
-        }
-        else if (interfaceSignature.StartsWith("{"))
-        {
-            iid = Guid.Parse(interfaceSignature);
-        }
-        else if (interfaceSignature.SequenceEqual("cinterface(IInspectable)"))
-        {
-            iid = WellKnownInterfaceIIDs.IID_IInspectable;
-        }
-        else
-        {
+            iid = default;
+
             return false;
+        }
+
+        // Resolve remaining IIDs from well-known mappings, attributes, or component metadata,
+        // treating missing required IID metadata as a generation error rather than an unsupported type.
+        if (!SignatureGenerator.TryGetIIDFromWellKnownInterfaceIIDsOrAttribute(
+            type: type,
+            useWindowsUIXamlProjections: useWindowsUIXamlProjections,
+            interopDefinitions: interopDefinitions,
+            interopReferences: interopReferences,
+            iid: out iid))
+        {
+            throw WellKnownInteropExceptions.TypeSignatureGenerationError(type);
         }
 
         return true;
+    }
+
+    /// <summary>
+    /// Reuses signature-derived IIDs without retaining caches from completed invocations.
+    /// </summary>
+    /// <param name="signature">The Windows Runtime parameterized signature.</param>
+    /// <param name="runtimeContext">The context for this invocation.</param>
+    /// <returns>The IID associated with the signature.</returns>
+    private static Guid GetOrCreateIID(string signature, RuntimeContext runtimeContext)
+    {
+        return IidCaches
+            .GetOrAdd(runtimeContext, static _ => new ConcurrentDictionary<string, Guid>(StringComparer.Ordinal))
+            .GetOrAdd(signature, CreateGuidFromSignature);
     }
 
     /// <summary>
@@ -145,7 +198,7 @@ internal static class GuidGenerator
     /// </summary>
     /// <param name="signature">The input Windows Runtime type signature.</param>
     /// <returns>The resulting IID for <paramref name="signature"/>.</returns>
-    private static Guid CreateGuidFromSignature(ReadOnlySpan<char> signature)
+    private static Guid CreateGuidFromSignature(string signature)
     {
         // Get the maximum UTF8 byte size and allocate a buffer for the encoding.
         // If the minimum buffer is small enough, we can stack-allocate it.
