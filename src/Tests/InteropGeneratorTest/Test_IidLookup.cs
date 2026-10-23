@@ -34,6 +34,8 @@ public sealed class Test_IidLookup
         {
             [WindowsRuntimeType, Guid("69c58f47-a268-4a55-aad8-97d111a2b01a")]
             public interface IExample { }
+            [WindowsRuntimeType, Guid("a0c20f96-4e7b-4c21-9c6c-7ba480bf0e59")]
+            public interface IGeneric<T> { }
             [WindowsRuntimeType]
             public class Example { }
             [WindowsRuntimeType]
@@ -57,6 +59,7 @@ public sealed class Test_IidLookup
         namespace ABI
         {
             [WindowsRuntimeMetadata(typeof(global::IidProjection.IExample), "Fixture")]
+            [WindowsRuntimeMetadata(typeof(global::IidProjection.IGeneric<>), "Fixture")]
             [WindowsRuntimeMetadata(typeof(global::IidProjection.Example), "Fixture")]
             [WindowsRuntimeMetadata(typeof(global::IidProjection.GenericDefault), "Fixture")]
             [WindowsRuntimeMetadata(typeof(global::IidProjection.IHidden), "Fixture")]
@@ -251,6 +254,7 @@ public sealed class Test_IidLookup
         }
         Assert.DoesNotContain("[WinRT.Sdk.Projection]IidProjection.Value", keys);
         Assert.DoesNotContain("[WinRT.Sdk.Projection]IidProjection.Choice", keys);
+        Assert.DoesNotContain("[WinRT.Sdk.Projection]IidProjection.IGeneric`1", keys);
         Assert.IsFalse(keys.Any(key => key.StartsWith(
             "[#System]System.Nullable`1[[#System]System.Collections.Generic.KeyValuePair`2", StringComparison.Ordinal)));
 
