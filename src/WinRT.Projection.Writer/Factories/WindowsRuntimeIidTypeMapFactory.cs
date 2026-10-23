@@ -36,6 +36,7 @@ internal static class WindowsRuntimeIidTypeMapFactory
     {
         Dictionary<string, (Guid Iid, string TrimTarget)> entries = new(StringComparer.Ordinal);
 
+        // Collect fixed identities from the emitted catalog (constructed types belong to the interop generator)
         foreach ((string projectedTypeName, WindowsRuntimeMetadataTypeEntry metadata) in metadataEntries)
         {
             token.ThrowIfCancellationRequested();
@@ -61,6 +62,7 @@ internal static class WindowsRuntimeIidTypeMapFactory
             (string ns, string name) = type.Names();
             MappedType? mapped = MappedTypes.Get(ns, name);
 
+            // Skip mapped types whose ABI is supplied outside this projection
             if (mapped is { EmitAbi: false })
             {
                 continue;
@@ -81,11 +83,13 @@ internal static class WindowsRuntimeIidTypeMapFactory
                 }
             }
 
+            // Escape literal assembly names that could collide with the reserved '#System' scope
             if (assemblyName.StartsWith('#'))
             {
                 assemblyName = "#" + assemblyName;
             }
 
+            // Lookup keys use raw metadata names, not C#-escaped identifiers
             string typeName = type.FullName;
 
             if (mapped is MappedType mapping)
@@ -113,6 +117,7 @@ internal static class WindowsRuntimeIidTypeMapFactory
                 continue;
             }
 
+            // Nullable keys represent 'IReference<T>', while the raw type remains the trim dependency
             if (isValueType)
             {
                 key = $"[#System]System.Nullable`1[{key}]";
@@ -143,6 +148,7 @@ internal static class WindowsRuntimeIidTypeMapFactory
 
         Dictionary<Guid, int> providers = [];
 
+        // Stable key ordering also makes shared provider numbering deterministic
         foreach ((string key, (Guid iid, string trimTarget)) in entries.OrderBy(static entry => entry.Key, StringComparer.Ordinal))
         {
             token.ThrowIfCancellationRequested();
@@ -165,6 +171,7 @@ internal static class WindowsRuntimeIidTypeMapFactory
         writer.WriteLine();
         writer.WriteLine("namespace ABI;");
 
+        // GUID-only providers avoid rooting marshalling code or initializing vtables for an IID lookup
         foreach ((Guid iid, int provider) in providers)
         {
             token.ThrowIfCancellationRequested();
