@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using AsmResolver;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 using AsmResolver.PE.DotNet.Metadata.Tables;
@@ -12,7 +13,6 @@ using WindowsRuntime.InteropGenerator.Errors;
 using WindowsRuntime.InteropGenerator.Generation;
 using WindowsRuntime.InteropGenerator.References;
 using WindowsRuntime.InteropGenerator.Helpers;
-using WindowsRuntime.InteropGenerator.Visitors;
 
 namespace WindowsRuntime.InteropGenerator.Builders;
 
@@ -41,25 +41,22 @@ internal static class WindowsRuntimeIidTypeMapBuilder
         // Collect eligible types from shared discovery and the fixed metadata catalogs
         foreach (TypeSignature type in inputs.EnumerateIidTypes())
         {
-            // IID generation requires closed signatures and resolvable metadata
-            if (!type.AcceptVisitor(IsConstructedGenericTypeVisitor.Instance) ||
-                !type.IsFullyResolvable(interopReferences.RuntimeContext, out TypeDefinition? definition))
+            // IID generation requires resolvable metadata and supported closed signatures
+            if (!type.IsFullyResolvable(interopReferences.RuntimeContext, out TypeDefinition? definition) ||
+                !type.IsConstructedType(definition))
             {
                 continue;
             }
 
-            // Skip unsupported signature forms and open definitions. 'Nullable<T>' entries are
-            // synthesized below from valid value types, excluding nullable key/value pairs.
-            if (type is not (CorLibTypeSignature or TypeDefOrRefSignature or GenericInstanceTypeSignature or SzArrayTypeSignature) ||
-                (definition.HasGenericParameters && type is not (GenericInstanceTypeSignature or SzArrayTypeSignature)) ||
-                type.IsConstructedNullableValueType(interopReferences))
+            // 'Nullable<T>' entries are synthesized below from valid value types, excluding nullable key/value pairs
+            if (type.IsConstructedNullableValueType(interopReferences))
             {
                 continue;
             }
 
             // ABI value types and metadata proxies are not public projections. Exclusive interfaces are
             // genuine projected types, even when their generated declarations live in an 'ABI' namespace.
-            if ((type.Namespace == "ABI" || type.Namespace?.ToString().StartsWith("ABI.", StringComparison.Ordinal) is true) &&
+            if (definition.Namespace is Utf8String ns && (ns.AsSpan().SequenceEqual("ABI"u8) || ns.AsSpan().StartsWith("ABI."u8)) &&
                 (!definition.IsInterface || !definition.IsProjectedWindowsRuntimeType))
             {
                 continue;

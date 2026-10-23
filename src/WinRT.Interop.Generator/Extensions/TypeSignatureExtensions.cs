@@ -8,6 +8,7 @@ using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 using AsmResolver.PE.DotNet.Metadata.Tables;
 using WindowsRuntime.InteropGenerator.References;
+using WindowsRuntime.InteropGenerator.Visitors;
 
 namespace WindowsRuntime.InteropGenerator;
 
@@ -22,6 +23,21 @@ internal static class TypeSignatureExtensions
         /// Gets whether the current type is a (constructed) generic type.
         /// </summary>
         public bool IsGenericType => signature.ElementType is ElementType.GenericInst;
+
+        /// <summary>
+        /// Checks whether the current signature represents a non-generic type, a closed generic instance, or a closed SZ array.
+        /// </summary>
+        /// <param name="definition">The resolved definition of the input signature.</param>
+        /// <returns>Whether the signature is a supported constructed type rather than an open definition or parameter.</returns>
+        public bool IsConstructedType(TypeDefinition definition)
+        {
+            return signature switch
+            {
+                CorLibTypeSignature or TypeDefOrRefSignature => !definition.HasGenericParameters,
+                GenericInstanceTypeSignature or SzArrayTypeSignature => signature.AcceptVisitor(IsConstructedGenericTypeVisitor.Instance),
+                _ => false
+            };
+        }
 
         /// <summary>
         /// Counts the elements in a type signature, stopping at a specified maximum.
