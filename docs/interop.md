@@ -36,7 +36,7 @@ Guid referenceIid = WindowsRuntimeMarshal.GetIid<int?>();
 
 Interfaces and delegates return their own IID; runtime classes return the IID of their default interface. For boxed Windows Runtime value types, use the nullable form: `GetIid<int?>()` returns the `IReference<Int32>` IID, while `GetIid<int>()` throws. `KeyValuePair<K,V>` returns its `IKeyValuePair<K,V>` IID, and supported single-dimensional arrays return their `IReferenceArray<T>` IID. Mapped XAML types follow the project's WinUI/UWP XAML configuration.
 
-The method throws `NotSupportedException` if the type has no Windows Runtime interface identity or its IID is unavailable. Generic helpers are supported, but constructed types must be discoverable when the application is built; types created only through reflection might not be available.
+The method throws `NotSupportedException` if the type has no Windows Runtime interface identity or its IID is unavailable. IID metadata is generated only when an input assembly references `GetIid<T>`; reflection-only calls and calls from assemblies unavailable at build time are not guaranteed to work. Generic helpers are supported, but constructed types must be discoverable when the application is built.
 
 ### Object identity
 

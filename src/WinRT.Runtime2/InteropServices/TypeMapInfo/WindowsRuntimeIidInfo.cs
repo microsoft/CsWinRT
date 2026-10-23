@@ -89,7 +89,8 @@ internal sealed class WindowsRuntimeIidInfo
                 $"The type '{_type}' does not have a precomputed Windows Runtime IID. " +
                 "Value metadata names do not imply an interface IID. IReference<T> requires a nullable Windows Runtime value type. " +
                 "Static runtime classes and Windows Runtime attributes have no native interface. " +
-                "Constructed generic and array types must be discoverable when the interop assembly is generated.");
+                "Constructed generic and array types must be discoverable when the interop assembly is generated. " +
+                "IID metadata requires a compiled reference to WindowsRuntimeMarshal.GetIid<T> in an input assembly.");
         }
 
         ThrowNotSupportedException();

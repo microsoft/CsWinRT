@@ -17,6 +17,13 @@ namespace InteropGeneratorTest;
 [TestClass]
 public sealed class Test_IidLookup
 {
+    private const string IidApplicationSource = """
+        public static class Program
+        {
+            public static void Main() => WindowsRuntime.InteropServices.WindowsRuntimeMarshal.GetIid<object>();
+        }
+        """;
+
     private const string ProjectionSource = """
         using System;
         using System.Collections.Generic;
@@ -113,9 +120,124 @@ public sealed class Test_IidLookup
         """;
 
     [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    public async Task NoCompiledReference_DoesNotEmitIidMetadata(bool reflectionOnly)
+    {
+        using InteropGeneratorRunner runner = new(
+            sdkProjectionSource: ProjectionSource,
+            applicationSource: reflectionOnly ? """
+                public static class Program
+                {
+                    public static void Main()
+                    {
+                        _ = typeof(WindowsRuntime.InteropServices.WindowsRuntimeMarshal).GetMethod("GetIid");
+                    }
+                }
+                """ : null);
+        (_, ModuleDefinition module) = runner.LoadOutput(await runner.GenerateAsync("unused-iid"));
+
+        Assert.IsEmpty(GetIidEntries(module));
+        Assert.IsFalse(module.TopLevelTypes.Any(type => type.Name?.ToString().EndsWith("IidProvider", StringComparison.Ordinal) is true));
+    }
+
+    [TestMethod]
+    [DataRow("public static void Main() { WindowsRuntime.InteropServices.WindowsRuntimeMarshal.GetIid<object>(); }")]
+    [DataRow("public static System.Guid Lookup<T>() => WindowsRuntime.InteropServices.WindowsRuntimeMarshal.GetIid<T>(); public static void Main() { }")]
+    [DataRow("public static void Main() { System.Func<System.Guid> lookup = WindowsRuntime.InteropServices.WindowsRuntimeMarshal.GetIid<object>; }")]
+    [DataRow("public static void Main() { System.Linq.Expressions.Expression<System.Func<System.Guid>> lookup = () => WindowsRuntime.InteropServices.WindowsRuntimeMarshal.GetIid<object>(); }")]
+    public async Task CompiledReferences_EnableTheCompleteCatalog(string members)
+    {
+        using InteropGeneratorRunner runner = new(
+            sdkProjectionSource: ProjectionSource,
+            applicationSource: "public static class Program { " + members + " }");
+        (_, ModuleDefinition module) = runner.LoadOutput(await runner.GenerateAsync("used-iid"));
+
+        Assert.AreEqual(new Guid("548cefbd-bc8a-5fa0-8df2-957440fc8bf4"),
+            GetProviderIid(module, "[#System]System.Nullable`1[[#System]System.Int32]"));
+        Assert.AreEqual(new Guid("69c58f47-a268-4a55-aad8-97d111a2b01a"),
+            GetProviderIid(module, "[WinRT.Sdk.Projection]IidProjection.Example"));
+    }
+
+    [TestMethod]
+    public async Task ExcludedAssemblyReference_StillEnablesIidMetadata()
+    {
+        using InteropGeneratorRunner runner = new(iidLibrarySource: """
+            public static class Library
+            {
+                public static System.Guid Lookup<T>() => WindowsRuntime.InteropServices.WindowsRuntimeMarshal.GetIid<T>();
+            }
+            """);
+        (_, ModuleDefinition module) = runner.LoadOutput(await runner.GenerateAsync(
+            "excluded-iid", marshallingDisabledAssemblyNames: ["IidLibrary"]));
+
+        Assert.AreEqual(new Guid("548cefbd-bc8a-5fa0-8df2-957440fc8bf4"),
+            GetProviderIid(module, "[#System]System.Nullable`1[[#System]System.Int32]"));
+    }
+
+    [TestMethod]
+    public async Task FirstCompiledReference_InvalidatesTheIncrementalCache()
+    {
+        // Keep the runtime assembly reference unchanged when adding the first IID call
+        using InteropGeneratorRunner unused = new(applicationSource: """
+            public static class Program
+            {
+                public static void Main() => WindowsRuntime.InteropServices.WindowsRuntimeMarshal.NativeReferenceEquals(null, null);
+            }
+            """);
+        using InteropGeneratorRunner used = new(applicationSource: IidApplicationSource);
+        using InteropGeneratorRunner changedBody = new(applicationSource: """
+            public static class Program
+            {
+                public static void Main()
+                {
+                    WindowsRuntime.InteropServices.WindowsRuntimeMarshal.GetIid<object>();
+                    WindowsRuntime.InteropServices.WindowsRuntimeMarshal.GetIid<object>();
+                }
+            }
+            """);
+        string output = await unused.GenerateAsync("cached-iid");
+        string response = Path.Combine(Path.GetDirectoryName(output)!, "interop.rsp");
+        string application = Path.Combine(unused.Root, "Application.dll");
+        byte[] originalApplication = File.ReadAllBytes(application);
+        File.WriteAllText(response, File.ReadAllText(response).Replace(
+            "--enable-incremental-generation False", "--enable-incremental-generation True", StringComparison.Ordinal));
+
+        (int exitCode, string log) = await InteropGeneratorRunner.InvokeGeneratorAsync(response);
+        Assert.AreEqual(0, exitCode, log);
+        Assert.Contains("Generating interop code", log);
+        Assert.IsEmpty(GetIidEntries(unused.LoadOutput(output).Module));
+
+        (exitCode, log) = await InteropGeneratorRunner.InvokeGeneratorAsync(response);
+        Assert.AreEqual(0, exitCode, log);
+        Assert.Contains("Cached interop code ->", log);
+
+        File.Copy(Path.Combine(used.Root, "Application.dll"), application, overwrite: true);
+        (exitCode, log) = await InteropGeneratorRunner.InvokeGeneratorAsync(response);
+        Assert.AreEqual(0, exitCode, log);
+        Assert.Contains("Generating interop code", log);
+        Assert.IsNotEmpty(GetIidEntries(unused.LoadOutput(output).Module));
+
+        (exitCode, log) = await InteropGeneratorRunner.InvokeGeneratorAsync(response);
+        Assert.AreEqual(0, exitCode, log);
+        Assert.Contains("Cached interop code ->", log);
+
+        File.Copy(Path.Combine(changedBody.Root, "Application.dll"), application, overwrite: true);
+        (exitCode, log) = await InteropGeneratorRunner.InvokeGeneratorAsync(response);
+        Assert.AreEqual(0, exitCode, log);
+        Assert.Contains("Cached interop code ->", log);
+
+        File.WriteAllBytes(application, originalApplication);
+        (exitCode, log) = await InteropGeneratorRunner.InvokeGeneratorAsync(response);
+        Assert.AreEqual(0, exitCode, log);
+        Assert.Contains("Generating interop code", log);
+        Assert.IsEmpty(GetIidEntries(unused.LoadOutput(output).Module));
+    }
+
+    [TestMethod]
     public async Task IidEntries_AreExternalAndConditionalOnReferencedTypes()
     {
-        using InteropGeneratorRunner runner = new(sdkProjectionSource: ProjectionSource);
+        using InteropGeneratorRunner runner = new(sdkProjectionSource: ProjectionSource, applicationSource: IidApplicationSource);
         (_, ModuleDefinition module) = runner.LoadOutput(await runner.GenerateAsync("conditional"));
         CustomAttribute[] entries = GetIidEntries(module);
         string[] keys = GetIidKeys(module);
@@ -152,7 +274,7 @@ public sealed class Test_IidLookup
             public static class Program
             {
                 public static System.Collections.Generic.IDictionary<string, object> Values;
-                public static void Main() { }
+                public static void Main() => WindowsRuntime.InteropServices.WindowsRuntimeMarshal.GetIid<object>();
             }
             """);
         (_, ModuleDefinition module) = runner.LoadOutput(await runner.GenerateAsync("projection-catalog"));
@@ -189,7 +311,10 @@ public sealed class Test_IidLookup
                 using System.Runtime.InteropServices;
                 using WindowsRuntime.InteropServices;
                 [assembly: WindowsRuntimeComponentAssembly]
-                public static class Program { public static void Main() { } }
+                public static class Program
+                {
+                    public static void Main() => WindowsRuntimeMarshal.GetIid<object>();
+                }
                 namespace Component
                 {
                     [Guid("69c58f47-a268-4a55-aad8-97d111a2b01a")]
@@ -228,7 +353,7 @@ public sealed class Test_IidLookup
     [TestMethod]
     public async Task RuntimeCatalog_IsAvailableWhenRuntimeMarshallingIsExcluded()
     {
-        using InteropGeneratorRunner runner = new();
+        using InteropGeneratorRunner runner = new(applicationSource: IidApplicationSource);
         (_, ModuleDefinition module) = runner.LoadOutput(await runner.GenerateAsync(
             "excluded-runtime", marshallingDisabledAssemblyNames: ["WinRT.Runtime"], treatWarningsAsErrors: false));
 
@@ -243,7 +368,7 @@ public sealed class Test_IidLookup
     [DataRow(true)]
     public async Task MappedXamlTypes_FollowProjectionMode(bool useWindowsUIXamlProjections)
     {
-        using InteropGeneratorRunner runner = new();
+        using InteropGeneratorRunner runner = new(applicationSource: IidApplicationSource);
         (_, ModuleDefinition module) = runner.LoadOutput(await runner.GenerateAsync(
             "xaml", useWindowsUIXamlProjections: useWindowsUIXamlProjections));
 
@@ -275,7 +400,7 @@ public sealed class Test_IidLookup
                     public static IList<int?> NullableValues;
                     public static Value[] Array;
                     public static IList<int>[] GenericArray;
-                    public static void Main() { }
+                    public static void Main() => WindowsRuntime.InteropServices.WindowsRuntimeMarshal.GetIid<object>();
                 }
                 """);
         (_, ModuleDefinition module) = runner.LoadOutput(await runner.GenerateAsync("framework-keys"));
@@ -344,7 +469,7 @@ public sealed class Test_IidLookup
                 public static class Program
                 {
                     public static System.Collections.Generic.IList<System.Uri> Values;
-                    public static void Main() { }
+                    public static void Main() => WindowsRuntime.InteropServices.WindowsRuntimeMarshal.GetIid<object>();
                 }
                 """);
         runner.RewriteApplicationTypeScope("System", "Uri", "FutureFramework");
@@ -364,6 +489,7 @@ public sealed class Test_IidLookup
     {
         using InteropGeneratorRunner runner = new(
             iidLibraryName: assemblyName,
+            applicationSource: IidApplicationSource,
             publicSignIidLibrary: signed,
             iidLibrarySource: """
                 namespace System
@@ -409,7 +535,7 @@ public sealed class Test_IidLookup
                 public static class Program
                 {
                     public static System.Collections.Generic.IList<IidProjection.Example> Values;
-                    public static void Main() { }
+                    public static void Main() => WindowsRuntime.InteropServices.WindowsRuntimeMarshal.GetIid<object>();
                 }
                 """);
         runner.RewriteApplicationTypeScope("IidProjection", "Example", "Microsoft.Windows.SDK.NET", originalAssemblyName: "WinRT.Sdk.Projection");
@@ -425,7 +551,8 @@ public sealed class Test_IidLookup
     [DataRow(true)]
     public async Task OverlappingFrameworkReferences_HaveOneIidProviderPerIdentity(bool implementations)
     {
-        using InteropGeneratorRunner runner = new(useFrameworkImplementations: implementations, overlappingFrameworkReferences: true);
+        using InteropGeneratorRunner runner = new(useFrameworkImplementations: implementations, overlappingFrameworkReferences: true,
+            applicationSource: IidApplicationSource);
         (_, ModuleDefinition module) = runner.LoadOutput(await runner.GenerateAsync("overlapping-frameworks"));
         string[] keys = GetIidKeys(module);
 
@@ -461,7 +588,7 @@ public sealed class Test_IidLookup
             {
                 public static System.Collections.Generic.IList<int> Values;
                 public static System.Collections.Generic.IDictionary<string, int> Mapping;
-                public static void Main() { }
+                public static void Main() => WindowsRuntime.InteropServices.WindowsRuntimeMarshal.GetIid<object>();
             }
             """);
         (RuntimeContext context, ModuleDefinition module) = runner.LoadOutput(await runner.GenerateAsync("marshaller-iids"));

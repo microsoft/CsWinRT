@@ -1040,6 +1040,14 @@ internal sealed class WellKnownInteropExceptions : IGeneratorErrorFactory
     }
 
     /// <summary>
+    /// Invalid reference metadata prevented determining whether IID lookup metadata is required.
+    /// </summary>
+    public static WellKnownInteropWarning IidReferenceInspectionWarning(ModuleDefinition module, Exception exception)
+    {
+        return Warning(115, $"Could not inspect IID lookup references in module '{module.Name}': {exception.Message}");
+    }
+
+    /// <summary>
     /// Creates a new exception with the specified id and message.
     /// </summary>
     /// <param name="id">The exception id.</param>
