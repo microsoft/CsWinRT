@@ -136,7 +136,9 @@ internal sealed partial class ProjectionGenerator
                 if (MappedTypes.Get(ns2, nm2) is { EmitAbi: true } additionType && _settings.AdditionFilter.IncludesNamespace(ns))
                 {
                     MetadataAttributeFactory.AddWindowsRuntimeMetadataTypeEntry(
-                        context, type, TypedefNameWriter.BuildGlobalQualifiedName(additionType.MappedNamespace, additionType.MappedName));
+                        context: context,
+                        type: type,
+                        projectedTypeName: TypedefNameWriter.BuildGlobalQualifiedName(additionType.MappedNamespace, additionType.MappedName));
                 }
 
                 written = true;

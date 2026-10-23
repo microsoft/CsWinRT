@@ -29,11 +29,6 @@ internal sealed class InteropDefinitions
     private readonly Dictionary<Utf8String, MethodDefinition> _interfaceIIDMethods = [];
 
     /// <summary>
-    /// Parameterized IIDs shared by marshalling builders and metadata map emission.
-    /// </summary>
-    private readonly ConcurrentDictionary<string, Guid> _interfaceIids = new(StringComparer.Ordinal);
-
-    /// <summary>
     /// The map of generated COM interface entries types for user-defined types.
     /// </summary>
     private readonly ConcurrentDictionary<int, TypeDefinition> _userDefinedInterfaceEntries;
@@ -80,17 +75,6 @@ internal sealed class InteropDefinitions
     /// Gets the <see cref="AsmResolver.DotNet.RuntimeContext"/> currently in use.
     /// </summary>
     public RuntimeContext RuntimeContext => _interopReferences.RuntimeContext;
-
-    /// <summary>
-    /// Gets a previously computed IID or computes it using the existing signature algorithm.
-    /// </summary>
-    /// <param name="signature">The Windows Runtime parameterized signature.</param>
-    /// <param name="factory">The shared IID computation callback.</param>
-    /// <returns>The IID associated with the signature.</returns>
-    public Guid GetOrCreateIID(string signature, Func<string, Guid> factory)
-    {
-        return _interfaceIids.GetOrAdd(signature, factory);
-    }
 
     /// <summary>
     /// Gets the <see cref="ModuleDefinition"/> for the Windows Runtime projection assembly for the Windows SDK (i.e. <c>WinRT.Sdk.Projection.dll</c>).

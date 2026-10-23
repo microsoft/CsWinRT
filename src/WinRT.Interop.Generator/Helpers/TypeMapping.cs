@@ -20,10 +20,24 @@ internal static class TypeMapping
     /// <param name="WindowsRuntimeNamespace">The Windows Runtime namespace.</param>
     /// <param name="WindowsRuntimeName">The Windows Runtime type name.</param>
     /// <param name="Signature">The hardcoded Windows Runtime type signature, if available.</param>
+    /// <param name="DefaultInterfaceIid">The default interface IID for a mapped runtime class, if available.</param>
     private readonly record struct MappedType(
          string WindowsRuntimeNamespace,
          string WindowsRuntimeName,
-         string? Signature = null);
+         string? Signature = null,
+         Guid? DefaultInterfaceIid = null)
+    {
+        /// <summary>
+        /// Creates a mapped runtime class with a signature derived from its default interface IID.
+        /// </summary>
+        /// <param name="ns">The Windows Runtime namespace.</param>
+        /// <param name="name">The Windows Runtime class name.</param>
+        /// <param name="defaultInterfaceIid">The default interface IID.</param>
+        public MappedType(string ns, string name, Guid defaultInterfaceIid)
+            : this(ns, name, $"rc({ns}.{name};{{{defaultInterfaceIid}}})", defaultInterfaceIid)
+        {
+        }
+    }
 
     /// <summary>
     /// Mapping of custom-mapped or otherwise special managed types to their corresponding Windows Runtime types.
@@ -40,14 +54,14 @@ internal static class TypeMapping
         new("System.Nullable`1", new("Windows.Foundation", "IReference`1")),
         new("System.TimeSpan", new("Windows.Foundation", "TimeSpan", "struct(Windows.Foundation.TimeSpan;i8)")),
         new("System.EventHandler`2", new("Windows.Foundation", "TypedEventHandler`2")),
-        new("System.Uri", new("Windows.Foundation", "Uri", "rc(Windows.Foundation.Uri;{9e365e57-48b2-4160-956f-c7385120bbfc})")),
+        new("System.Uri", new("Windows.Foundation", "Uri", new Guid("9E365E57-48B2-4160-956F-C7385120BBFC"))),
         new("System.AttributeTargets", new("Windows.Foundation.Metadata", "AttributeTargets")),
         new("System.AttributeUsageAttribute", new("Windows.Foundation.Metadata", "AttributeUsageAttribute")),
         new("System.Type", new("Windows.UI.Xaml.Interop", "TypeName", "struct(Windows.UI.Xaml.Interop.TypeName;string;enum(Windows.UI.Xaml.Interop.TypeKind;i4))")),
-        new("System.ComponentModel.DataErrorsChangedEventArgs", new("Microsoft.UI.Xaml.Data", "DataErrorsChangedEventArgs", "rc(Microsoft.UI.Xaml.Data.DataErrorsChangedEventArgs;{d026dd64-5f26-5f15-a86a-0dec8a431796})")),
+        new("System.ComponentModel.DataErrorsChangedEventArgs", new("Microsoft.UI.Xaml.Data", "DataErrorsChangedEventArgs", new Guid("D026DD64-5F26-5F15-A86A-0DEC8A431796"))),
         new("System.ComponentModel.INotifyDataErrorInfo", new("Microsoft.UI.Xaml.Data", "INotifyDataErrorInfo")),
         new("System.ComponentModel.INotifyPropertyChanged", new("Microsoft.UI.Xaml.Data", "INotifyPropertyChanged")),
-        new("System.ComponentModel.PropertyChangedEventArgs", new("Microsoft.UI.Xaml.Data", "PropertyChangedEventArgs", "rc(Microsoft.UI.Xaml.Data.PropertyChangedEventArgs;{63d0c952-396b-54f4-af8c-ba8724a427bf})")),
+        new("System.ComponentModel.PropertyChangedEventArgs", new("Microsoft.UI.Xaml.Data", "PropertyChangedEventArgs", new Guid("63D0C952-396B-54F4-AF8C-BA8724A427BF"))),
         new("System.ComponentModel.PropertyChangedEventHandler", new("Microsoft.UI.Xaml.Data", "PropertyChangedEventHandler")),
         new("System.Windows.Input.ICommand", new("Microsoft.UI.Xaml.Input", "ICommand")),
         new("System.Collections.IEnumerable", new("Microsoft.UI.Xaml.Interop", "IBindableIterable")),
@@ -55,7 +69,7 @@ internal static class TypeMapping
         new("System.Collections.IList", new("Microsoft.UI.Xaml.Interop", "IBindableVector")),
         new("System.Collections.Specialized.INotifyCollectionChanged", new("Microsoft.UI.Xaml.Interop", "INotifyCollectionChanged")),
         new("System.Collections.Specialized.NotifyCollectionChangedAction", new("Microsoft.UI.Xaml.Interop", "NotifyCollectionChangedAction", "enum(Microsoft.UI.Xaml.Interop.NotifyCollectionChangedAction;i4)")),
-        new("System.Collections.Specialized.NotifyCollectionChangedEventArgs", new("Microsoft.UI.Xaml.Interop", "NotifyCollectionChangedEventArgs", "rc(Microsoft.UI.Xaml.Interop.NotifyCollectionChangedEventArgs;{da049ff2-d2e0-5fe8-8c7b-f87f26060b6f})")),
+        new("System.Collections.Specialized.NotifyCollectionChangedEventArgs", new("Microsoft.UI.Xaml.Interop", "NotifyCollectionChangedEventArgs", new Guid("DA049FF2-D2E0-5FE8-8C7B-F87F26060B6F"))),
         new("System.Collections.Specialized.NotifyCollectionChangedEventHandler", new("Microsoft.UI.Xaml.Interop", "NotifyCollectionChangedEventHandler")),
         new("Microsoft.UI.Xaml.CornerRadius", new("Microsoft.UI.Xaml", "CornerRadius")),
         new("Microsoft.UI.Xaml.Duration", new("Microsoft.UI.Xaml", "Duration")),
@@ -106,11 +120,11 @@ internal static class TypeMapping
     /// Mapping of projected <c>Microsoft.UI.Xaml</c> types to their corresponding <c>Windows.UI.Xaml</c> types.
     /// </summary>
     /// <remarks>
-    /// If an entry has a signature in <see cref="ProjectionTypeMapping"/>, it should also have one here.
+    /// If an entry has a signature or default interface IID in <see cref="ProjectionTypeMapping"/>, it should also have one here.
     /// </remarks>
     private static readonly FrozenDictionary<string, MappedType> WindowsUIXamlTypeMapping = FrozenDictionary.Create<string, MappedType>(comparer: null,
         new("Microsoft.UI.Xaml.Interop.NotifyCollectionChangedEventHandler", new("Windows.UI.Xaml.Interop", "NotifyCollectionChangedEventHandler")),
-        new("Microsoft.UI.Xaml.Interop.NotifyCollectionChangedEventArgs", new("Windows.UI.Xaml.Interop", "NotifyCollectionChangedEventArgs", "rc(Windows.UI.Xaml.Interop.NotifyCollectionChangedEventArgs;{4cf68d33-e3f2-4964-b85e-945b4f7e2f21})")),
+        new("Microsoft.UI.Xaml.Interop.NotifyCollectionChangedEventArgs", new("Windows.UI.Xaml.Interop", "NotifyCollectionChangedEventArgs", new Guid("4CF68D33-E3F2-4964-B85E-945B4F7E2F21"))),
         new("Microsoft.UI.Xaml.Interop.NotifyCollectionChangedAction", new("Windows.UI.Xaml.Interop", "NotifyCollectionChangedAction", "enum(Windows.UI.Xaml.Interop.NotifyCollectionChangedAction;i4)")),
         new("Microsoft.UI.Xaml.Interop.INotifyCollectionChanged", new("Windows.UI.Xaml.Interop", "INotifyCollectionChanged")),
         new("Microsoft.UI.Xaml.Interop.IBindableIterable", new("Windows.UI.Xaml.Interop", "IBindableIterable")),
@@ -118,10 +132,10 @@ internal static class TypeMapping
         new("Microsoft.UI.Xaml.Interop.IBindableVector", new("Windows.UI.Xaml.Interop", "IBindableVector")),
         new("Microsoft.UI.Xaml.Interop.NotifyCollectionChangedEventHandler", new("Windows.UI.Xaml.Interop", "NotifyCollectionChangedEventHandler")),
         new("Microsoft.UI.Xaml.Input.ICommand", new("Windows.UI.Xaml.Input", "ICommand")),
-        new("Microsoft.UI.Xaml.Data.DataErrorsChangedEventArgs", new("Windows.UI.Xaml.Data", "DataErrorsChangedEventArgs", "rc(Windows.UI.Xaml.Data.DataErrorsChangedEventArgs;{d026dd64-5f26-5f15-a86a-0dec8a431796})")),
+        new("Microsoft.UI.Xaml.Data.DataErrorsChangedEventArgs", new("Windows.UI.Xaml.Data", "DataErrorsChangedEventArgs", new Guid("D026DD64-5F26-5F15-A86A-0DEC8A431796"))),
         new("Microsoft.UI.Xaml.Data.INotifyDataErrorInfo", new("Windows.UI.Xaml.Data", "INotifyDataErrorInfo")),
         new("Microsoft.UI.Xaml.Data.INotifyPropertyChanged", new("Windows.UI.Xaml.Data", "INotifyPropertyChanged")),
-        new("Microsoft.UI.Xaml.Data.PropertyChangedEventArgs", new("Windows.UI.Xaml.Data", "PropertyChangedEventArgs", "rc(Windows.UI.Xaml.Data.PropertyChangedEventArgs;{4f33a9a0-5cf4-47a4-b16f-d7faaf17457e})")),
+        new("Microsoft.UI.Xaml.Data.PropertyChangedEventArgs", new("Windows.UI.Xaml.Data", "PropertyChangedEventArgs", new Guid("4F33A9A0-5CF4-47A4-B16F-D7FAAF17457E"))),
         new("Microsoft.UI.Xaml.Data.PropertyChangedEventHandler", new("Windows.UI.Xaml.Data", "PropertyChangedEventHandler")));
 
     /// <summary>
@@ -177,39 +191,73 @@ internal static class TypeMapping
         bool useWindowsUIXamlProjections,
         [NotNullWhen(true)] out string? signature)
     {
-        if (!ProjectionTypeMapping.GetAlternateLookup<ReadOnlySpan<char>>().TryGetValue(fullName, out MappedType result))
+        if (!TryFindMappedType(fullName, useWindowsUIXamlProjections, out MappedType result))
         {
             signature = null;
 
             return false;
         }
 
-        // If the result doesn't have a signature in the lookup table, there's nothing else to do
-        if (result.Signature is null)
+        // A mapping without a registered signature must fall back to ordinary signature generation
+        signature = result.Signature;
+
+        return signature is not null;
+    }
+
+    /// <summary>
+    /// Gets the default interface IID of a custom-mapped runtime class.
+    /// </summary>
+    /// <param name="fullName">The managed type's full name.</param>
+    /// <param name="useWindowsUIXamlProjections">Whether to use UWP XAML mappings.</param>
+    /// <param name="iid">The default interface IID, if found.</param>
+    /// <returns>Whether the mapping represents a runtime class with an IID.</returns>
+    public static bool TryFindMappedTypeIID(ReadOnlySpan<char> fullName, bool useWindowsUIXamlProjections, out Guid iid)
+    {
+        // Only mapped runtime classes carry a stored default-interface IID here (value signatures have no IID,
+        // while interface, delegate, and constructed-type IIDs are resolved by 'GuidGenerator' instead).
+        if (TryFindMappedType(fullName, useWindowsUIXamlProjections, out MappedType result) &&
+            result.DefaultInterfaceIid is Guid defaultInterfaceIid)
         {
-            signature = null;
-
-            return false;
-        }
-
-        DefaultInterpolatedStringHandler handler = $"{result.WindowsRuntimeNamespace}.{result.WindowsRuntimeName}";
-
-        // If we're using Windows UI XAML projections and the type needs special mapping, get its System XAML signature
-        if (useWindowsUIXamlProjections && WindowsUIXamlTypeMapping.GetAlternateLookup<ReadOnlySpan<char>>().TryGetValue(handler.Text, out MappedType mappedType))
-        {
-            handler.Clear();
-
-            // All entries here will always have a signature, if their corresponding entries
-            // in the global table of type mappings also have signatures. If that's not the
-            // case, then it means an entry in the second lookup is just malformed
-            signature = mappedType.Signature!;
+            iid = defaultInterfaceIid;
 
             return true;
         }
 
-        handler.Clear();
+        iid = default;
 
-        signature = result.Signature;
+        return false;
+    }
+
+    /// <summary>
+    /// Looks up custom-mapped metadata with the selected XAML projection mode.
+    /// </summary>
+    /// <param name="fullName">The managed type's full name.</param>
+    /// <param name="useWindowsUIXamlProjections">Whether to use UWP XAML mappings.</param>
+    /// <param name="result">The selected type mapping.</param>
+    /// <returns>Whether a mapping was found.</returns>
+    private static bool TryFindMappedType(ReadOnlySpan<char> fullName, bool useWindowsUIXamlProjections, out MappedType result)
+    {
+        if (!ProjectionTypeMapping.GetAlternateLookup<ReadOnlySpan<char>>().TryGetValue(fullName, out result))
+        {
+            return false;
+        }
+
+        if (!useWindowsUIXamlProjections)
+        {
+            return true;
+        }
+
+        DefaultInterpolatedStringHandler handler = $"{result.WindowsRuntimeNamespace}.{result.WindowsRuntimeName}";
+
+        // If we're using Windows UI XAML projections and the type needs special mapping, get its System XAML metadata
+        if (WindowsUIXamlTypeMapping.GetAlternateLookup<ReadOnlySpan<char>>().TryGetValue(handler.Text, out MappedType mappedType))
+        {
+            // The override must preserve any signature and default-interface IID from the base mapping.
+            // Missing either would indicate a malformed mapping table, not an unmapped type.
+            result = mappedType;
+        }
+
+        handler.Clear();
 
         return true;
     }

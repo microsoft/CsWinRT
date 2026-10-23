@@ -106,7 +106,7 @@ internal static partial class SignatureGenerator
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
     /// <param name="iid">The resulting <see cref="Guid"/> value, if found.</param>
     /// <returns>Whether <paramref name="iid"/> was successfully retrieved.</returns>
-    private static bool TryGetIIDFromWellKnownInterfaceIIDsOrAttribute(
+    public static bool TryGetIIDFromWellKnownInterfaceIIDsOrAttribute(
         ITypeDescriptor type,
         bool useWindowsUIXamlProjections,
         InteropDefinitions interopDefinitions,
@@ -192,7 +192,7 @@ internal static partial class SignatureGenerator
     /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
     /// <param name="defaultInterface">The <see cref="TypeSignature"/> instance for the default interface for <paramref name="type"/>, if found.</param>
     /// <returns>Whether <paramref name="defaultInterface"/> was successfully retrieved.</returns>
-    private static bool TryGetDefaultInterfaceFromAttribute(
+    public static bool TryGetDefaultInterfaceFromAttribute(
         TypeDefinition type,
         InteropDefinitions interopDefinitions,
         [NotNullWhen(true)] out TypeSignature? defaultInterface)
