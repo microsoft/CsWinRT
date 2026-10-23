@@ -181,7 +181,7 @@ internal static class MetadataAttributeFactory
     {
         if (!context.Settings.ReferenceProjection && context.WindowsRuntimeMetadataTypeEntries is { } entries)
         {
-            _ = entries.TryAdd(projectedTypeName, new(type, context.Cache.GetSourceStem(type)));
+            _ = entries.TryAdd(projectedTypeName, new WindowsRuntimeMetadataTypeEntry(type, context.Cache.GetSourceStem(type)));
         }
     }
 
