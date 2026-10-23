@@ -24,10 +24,12 @@ public static unsafe class WindowsRuntimeMarshal
     /// <returns>The interface identifier associated with <typeparamref name="T"/>.</returns>
     /// <remarks>
     /// Interfaces and delegates return their own IID, and runtime classes return their default-interface IID.
-    /// Nullable Windows Runtime value types represent <c>IReference&lt;T&gt;</c>; unboxed values have no IID.
+    /// Nullable Windows Runtime value types represent <c>IReference&lt;T&gt;</c>, while unboxed values have no IID.
     /// Constructed generic types and single-dimensional arrays are supported when discoverable while generating the interop assembly.
     /// <see cref="System.Collections.Generic.KeyValuePair{TKey, TValue}"/> returns its
-    /// <c>IKeyValuePair</c> IID because it projects a Windows Runtime interface; its nullable form is not supported.
+    /// <c>IKeyValuePair</c> IID because it projects a Windows Runtime interface. Its nullable form is not supported.
+    /// IID metadata is generated only when an input assembly references this method. Reflection-only calls and
+    /// calls from assemblies unavailable at build time are not guaranteed to work.
     /// </remarks>
     /// <exception cref="NotSupportedException">
     /// The type has no Windows Runtime interface identifier or has no precomputed IID entry.

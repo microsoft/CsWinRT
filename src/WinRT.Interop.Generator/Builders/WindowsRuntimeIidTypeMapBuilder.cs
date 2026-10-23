@@ -140,7 +140,7 @@ internal static class WindowsRuntimeIidTypeMapBuilder
     /// <returns>The type controlling the entry's retention.</returns>
     private static TypeSignature GetTrimTarget(TypeSignature type, InteropReferences interopReferences)
     {
-        // Array types can be constructed at runtime; use the element's dependency to retain their entries
+        // Array types can be constructed at runtime, so use the element's dependency to retain their entries
         if (type is SzArrayTypeSignature array)
         {
             return GetTrimTarget(array.BaseType, interopReferences);

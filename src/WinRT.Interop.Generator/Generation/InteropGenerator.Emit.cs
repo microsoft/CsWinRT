@@ -208,9 +208,13 @@ internal partial class InteropGenerator
 
         args.Token.ThrowIfCancellationRequested();
 
-        DefineWindowsRuntimeIidTypeMapEntries(args, inputs, interopDefinitions, interopReferences, module);
+        // Emit the IID lookup map only when 'GetIid<T>' is referenced, avoiding unused generation work
+        if (discoveryState.HasIidLookupReferences)
+        {
+            DefineWindowsRuntimeIidTypeMapEntries(args, inputs, interopDefinitions, interopReferences, module);
 
-        args.Token.ThrowIfCancellationRequested();
+            args.Token.ThrowIfCancellationRequested();
+        }
 
         // Add all '[IgnoresAccessChecksTo]' attributes
         DefineIgnoresAccessChecksToAttributes(discoveryState, interopDefinitions, interopReferences, module);
