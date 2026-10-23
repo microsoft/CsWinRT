@@ -16,14 +16,14 @@ namespace WindowsRuntime.ProjectionWriter.Generation;
 /// <param name="cache">The metadata cache for the current generation.</param>
 /// <param name="currentNamespace">The namespace currently being emitted (or <see cref="string.Empty"/> when not in a per-namespace pass).</param>
 /// <param name="staticConstructorAnalyzer">The analyzer over the component's managed implementation assemblies (component mode).</param>
-/// <param name="windowsRuntimeMetadataTypeEntries">The (projected-type-name -> source <c>.winmd</c> stem) map to record into while emitting per-type markers, or <see langword="null"/> outside the per-namespace type-emission pass.</param>
+/// <param name="windowsRuntimeMetadataTypeEntries">The emitted types and their source metadata, or <see langword="null"/> outside the per-namespace type-emission pass.</param>
 /// <param name="activationFactoryExtensions">The classes the component declares to extend its generated activation factories (component mode), or <see langword="null"/> if there are none.</param>
 internal sealed class ProjectionEmitContext(
     Settings settings,
     MetadataCache cache,
     string currentNamespace,
     ComponentStaticConstructorAnalyzer staticConstructorAnalyzer,
-    ConcurrentDictionary<string, string>? windowsRuntimeMetadataTypeEntries = null,
+    ConcurrentDictionary<string, WindowsRuntimeMetadataTypeEntry>? windowsRuntimeMetadataTypeEntries = null,
     ComponentActivationFactoryExtensions? activationFactoryExtensions = null)
 {
     /// <summary>
@@ -42,11 +42,10 @@ internal sealed class ProjectionEmitContext(
     public string CurrentNamespace { get; } = currentNamespace;
 
     /// <summary>
-    /// Gets the (projected-type-name -> source <c>.winmd</c> stem) map that per-type marker emission records into,
-    /// or <see langword="null"/> when not in the per-namespace type-emission pass. Emitted at the end of generation
-    /// as the centralized <c>ABI.WindowsRuntimeMetadataTypes</c> lookup type.
+    /// Gets the emitted types and their source metadata, or <see langword="null"/> outside the per-namespace pass.
+    /// The contract lookup and fixed IID map share this catalog after all namespace work items complete.
     /// </summary>
-    public ConcurrentDictionary<string, string>? WindowsRuntimeMetadataTypeEntries { get; } = windowsRuntimeMetadataTypeEntries;
+    public ConcurrentDictionary<string, WindowsRuntimeMetadataTypeEntry>? WindowsRuntimeMetadataTypeEntries { get; } = windowsRuntimeMetadataTypeEntries;
 
     /// <summary>
     /// Gets a value indicating whether the writer is currently emitting inside an

@@ -10,9 +10,8 @@ using WindowsRuntime.InteropServices;
 using WindowsRuntime.InteropServices.Marshalling;
 using static System.Runtime.InteropServices.ComWrappers;
 
-#pragma warning disable IDE1006, CA1416
+#pragma warning disable IL2026, IDE1006, CA1416
 
-#pragma warning disable IL2026 // Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code
 [assembly: TypeMap<WindowsRuntimeMetadataTypeMapGroup>(
     value: "Boolean",
     target: typeof(ABI.System.Boolean),
@@ -22,11 +21,21 @@ using static System.Runtime.InteropServices.ComWrappers;
     value: "Windows.Foundation.IReference`1<Boolean>",
     target: typeof(ABI.System.Boolean),
     trimTarget: typeof(bool))]
-#pragma warning restore IL2026 // Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code
+
+[assembly: TypeMap<WindowsRuntimeIidTypeMapGroup>(
+    value: "[#System]System.Nullable`1[[#System]System.Boolean]",
+    target: typeof(ABI.System.BooleanIidProvider),
+    trimTarget: typeof(bool))]
 
 [assembly: TypeMapAssociation<WindowsRuntimeComWrappersTypeMapGroup>(typeof(bool), typeof(ABI.System.Boolean))]
 
 namespace ABI.System;
+
+/// <summary>
+/// IID metadata for the nullable projection of <see cref="global::System.Boolean"/>.
+/// </summary>
+[Guid("3C00FD60-2950-5939-A21A-2D12C5A01B8A")]
+file static class BooleanIidProvider;
 
 /// <summary>
 /// ABI type for <see cref="bool"/>.

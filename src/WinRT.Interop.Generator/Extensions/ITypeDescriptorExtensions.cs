@@ -4,7 +4,6 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using System.Linq;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 using WindowsRuntime.InteropGenerator.Helpers;
@@ -105,7 +104,7 @@ internal static class ITypeDescriptorExtensions
         public IEnumerable<T> OrderByFullyQualifiedTypeName<TKey>(Func<T, TKey> keySelector, RuntimeContext? runtimeContext)
             where TKey : class, ITypeDescriptor
         {
-            return descriptors.OrderBy(keySelector, TypeDescriptorComparer.Create<TKey>(runtimeContext));
+            return TypeDescriptorComparer.OrderBy(descriptors, keySelector, runtimeContext);
         }
     }
 
@@ -125,7 +124,7 @@ internal static class ITypeDescriptorExtensions
         /// </remarks>
         public IEnumerable<T> OrderByFullyQualifiedTypeName(RuntimeContext? runtimeContext)
         {
-            return descriptors.Order(TypeDescriptorComparer.Create<T>(runtimeContext));
+            return TypeDescriptorComparer.Order(descriptors, runtimeContext);
         }
     }
 }

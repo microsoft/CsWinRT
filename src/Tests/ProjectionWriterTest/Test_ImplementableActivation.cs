@@ -270,6 +270,7 @@ public class Test_ImplementableActivation
         {
             InputPaths = [ActivationMetadata.Create(directory)],
             OutputFolder = output,
+            OutputAssemblyName = "Projection",
             Include = ["Contoso"],
             ImplementWinMDTypes = true,
             ReferenceProjection = referenceProjection

@@ -108,6 +108,7 @@ internal static partial class ReferenceProjectionGenerator
         {
             InputPaths = [.. inputPaths],
             OutputDirectory = tempDirectory,
+            OutputAssemblyName = args.OutputAssemblyName,
             TargetFramework = args.TargetFramework,
             IncludeNamespaces = args.IncludeNamespaces,
             ExcludeNamespaces = args.ExcludeNamespaces,
@@ -183,6 +184,7 @@ internal static partial class ReferenceProjectionGenerator
         {
             InputPaths = [.. updatedInputNames],
             OutputDirectory = args.OutputDirectory,
+            OutputAssemblyName = args.OutputAssemblyName,
             TargetFramework = args.TargetFramework,
             IncludeNamespaces = args.IncludeNamespaces,
             ExcludeNamespaces = args.ExcludeNamespaces,

@@ -10,16 +10,25 @@ using WindowsRuntime.InteropServices;
 using WindowsRuntime.InteropServices.Marshalling;
 using static System.Runtime.InteropServices.ComWrappers;
 
-#pragma warning disable IDE1006
+#pragma warning disable IL2026, IDE1006
 
-#pragma warning disable IL2026 // Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code
 [assembly: TypeMap<WindowsRuntimeComWrappersTypeMapGroup>(
     value: "Windows.Foundation.IReference`1<Windows.Foundation.EventRegistrationToken>",
     target: typeof(EventRegistrationToken),
     trimTarget: typeof(EventRegistrationToken))]
-#pragma warning restore IL2026 // Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code
+
+[assembly: TypeMap<WindowsRuntimeIidTypeMapGroup>(
+    value: "[#System]System.Nullable`1[[WinRT.Runtime]WindowsRuntime.InteropServices.EventRegistrationToken]",
+    target: typeof(ABI.WindowsRuntime.InteropServices.EventRegistrationTokenIidProvider),
+    trimTarget: typeof(EventRegistrationToken))]
 
 namespace ABI.WindowsRuntime.InteropServices;
+
+/// <summary>
+/// IID metadata for the nullable projection of <see cref="global::WindowsRuntime.InteropServices.EventRegistrationToken"/>.
+/// </summary>
+[Guid("A9B18291-CE2A-5DAE-8A23-B7F7388416DB")]
+file static class EventRegistrationTokenIidProvider;
 
 /// <summary>
 /// Marshaller for <see cref="EventRegistrationToken"/>.

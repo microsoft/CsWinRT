@@ -12,20 +12,29 @@ using WindowsRuntime.InteropServices;
 using WindowsRuntime.InteropServices.Marshalling;
 using static System.Runtime.InteropServices.ComWrappers;
 
-#pragma warning disable CA2256, IDE0008, IDE1006
+#pragma warning disable IL2026, IDE0008, IDE1006, CA2256
 
-#pragma warning disable IL2026 // Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code
 [assembly: TypeMap<WindowsRuntimeMetadataTypeMapGroup>(
     value: "Windows.Storage.Streams.IRandomAccessStream",
     target: typeof(IRandomAccessStream),
     trimTarget: typeof(IRandomAccessStream))]
-#pragma warning restore IL2026 // Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code
+
+[assembly: TypeMap<WindowsRuntimeIidTypeMapGroup>(
+    value: "[WinRT.Runtime]Windows.Storage.Streams.IRandomAccessStream",
+    target: typeof(ABI.Windows.Storage.Streams.IRandomAccessStreamIidProvider),
+    trimTarget: typeof(IRandomAccessStream))]
 
 [assembly: TypeMapAssociation<DynamicInterfaceCastableImplementationTypeMapGroup>(
     source: typeof(IRandomAccessStream),
     proxy: typeof(ABI.Windows.Storage.Streams.IRandomAccessStreamInterfaceImpl))]
 
 namespace ABI.Windows.Storage.Streams;
+
+/// <summary>
+/// IID metadata for <see cref="global::Windows.Storage.Streams.IRandomAccessStream"/>.
+/// </summary>
+[Guid("905A0FE1-BC53-11DF-8C49-001E4FC686DA")]
+file static class IRandomAccessStreamIidProvider;
 
 /// <summary>
 /// Marshaller for <see cref="IRandomAccessStream"/>.

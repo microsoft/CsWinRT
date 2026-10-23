@@ -11,14 +11,17 @@ using WindowsRuntime.InteropServices;
 using WindowsRuntime.InteropServices.Marshalling;
 using static System.Runtime.InteropServices.ComWrappers;
 
-#pragma warning disable IDE0008
+#pragma warning disable IL2026, IDE0008
 
-#pragma warning disable IL2026 // Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code
 [assembly: TypeMap<WindowsRuntimeMetadataTypeMapGroup>(
     value: "Windows.Foundation.IStringable",
     target: typeof(ABI.Windows.Foundation.IStringable),
     trimTarget: typeof(IStringable))]
-#pragma warning restore IL2026 // Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code
+
+[assembly: TypeMap<WindowsRuntimeIidTypeMapGroup>(
+    value: "[WinRT.Runtime]Windows.Foundation.IStringable",
+    target: typeof(ABI.Windows.Foundation.IStringableIidProvider),
+    trimTarget: typeof(IStringable))]
 
 [assembly: TypeMapAssociation<WindowsRuntimeMetadataTypeMapGroup>(
     source: typeof(IStringable),
@@ -29,6 +32,12 @@ using static System.Runtime.InteropServices.ComWrappers;
     proxy: typeof(ABI.Windows.Foundation.IStringableInterfaceImpl))]
 
 namespace ABI.Windows.Foundation;
+
+/// <summary>
+/// IID metadata for <see cref="global::Windows.Foundation.IStringable"/>.
+/// </summary>
+[Guid("96369F54-8EB6-48F0-ABCE-C1B211E627C3")]
+file static class IStringableIidProvider;
 
 /// <summary>
 /// ABI type for <see cref="global::Windows.Foundation.IStringable"/>.

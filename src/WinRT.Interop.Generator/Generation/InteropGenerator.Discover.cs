@@ -8,6 +8,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
+using AsmResolver;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 using AsmResolver.PE;
@@ -310,7 +311,47 @@ internal partial class InteropGenerator
 
         discoveryState.TrackModule(path, module);
 
+        // Check application and library inputs before marshalling policy can exclude their method bodies
+        DiscoverIidLookupReferences(args, discoveryState, module);
+
         args.Token.ThrowIfCancellationRequested();
+    }
+
+    /// <summary>
+    /// Detects references to the IID lookup API independently of marshalling policy.
+    /// </summary>
+    /// <param name="args">The invocation arguments.</param>
+    /// <param name="discoveryState">The mutable discovery state.</param>
+    /// <param name="module">The loaded input module.</param>
+    private static void DiscoverIidLookupReferences(
+        InteropGeneratorArgs args,
+        InteropGeneratorDiscoveryState discoveryState,
+        ModuleDefinition module)
+    {
+        // A single reference enables the full IID map, so further scans would only add overhead
+        // The runtime and reference projections never call 'GetIid<T>', so they can always be skipped
+        if (discoveryState.HasIidLookupReferences ||
+            module.IsWindowsRuntimeModule ||
+            module.Assembly is { IsWindowsRuntimeReferenceAssembly: true })
+        {
+            return;
+        }
+
+        try
+        {
+            if (module.ReferencesMethod(
+                typeNamespace: IidLookupNames.TypeNamespace,
+                typeName: IidLookupNames.TypeName,
+                methodName: IidLookupNames.MethodName,
+                token: args.Token))
+            {
+                discoveryState.MarkIidLookupReferences();
+            }
+        }
+        catch (BadImageFormatException e)
+        {
+            WellKnownInteropExceptions.IidReferenceInspectionWarning(module, e).LogOrThrow(args.TreatWarningsAsErrors);
+        }
     }
 
     /// <summary>
@@ -1010,4 +1051,19 @@ internal partial class InteropGenerator
 
         return [.. assembliesToProcess];
     }
+}
+
+/// <summary>
+/// Cached metadata names used when scanning for IID lookup references.
+/// </summary>
+file static class IidLookupNames
+{
+    /// <summary>The namespace of the IID lookup method's declaring type.</summary>
+    public static readonly Utf8String TypeNamespace = "WindowsRuntime.InteropServices"u8;
+
+    /// <summary>The name of the IID lookup method's declaring type.</summary>
+    public static readonly Utf8String TypeName = "WindowsRuntimeMarshal"u8;
+
+    /// <summary>The name of the IID lookup method.</summary>
+    public static readonly Utf8String MethodName = "GetIid"u8;
 }

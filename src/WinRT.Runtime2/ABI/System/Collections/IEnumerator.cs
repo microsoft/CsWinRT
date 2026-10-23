@@ -11,13 +11,24 @@ using WindowsRuntime.InteropServices;
 using WindowsRuntime.InteropServices.Marshalling;
 using static System.Runtime.InteropServices.ComWrappers;
 
-#pragma warning disable IDE0008, IDE1006
+#pragma warning disable IL2026, IDE0008, IDE1006
 
 [assembly: TypeMapAssociation<DynamicInterfaceCastableImplementationTypeMapGroup>(
     typeof(IEnumerator),
     typeof(ABI.System.Collections.IEnumeratorInterfaceImpl))]
 
+[assembly: TypeMap<WindowsRuntimeIidTypeMapGroup>(
+    value: "[#System]System.Collections.IEnumerator",
+    target: typeof(ABI.System.Collections.IEnumeratorIidProvider),
+    trimTarget: typeof(global::System.Collections.IEnumerator))]
+
 namespace ABI.System.Collections;
+
+/// <summary>
+/// IID metadata for <see cref="global::System.Collections.IEnumerator"/>.
+/// </summary>
+[Guid("6A1D6C07-076D-49F2-8314-F52C9C9A8331")]
+file static class IEnumeratorIidProvider;
 
 /// <summary>
 /// Marshaller for <see cref="IEnumerator"/>.

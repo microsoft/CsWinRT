@@ -87,6 +87,9 @@ internal static class SignatureGenerator
             case TypeSemantics.ObjectType:
                 writer.Write("cinterface(IInspectable)");
                 break;
+            case TypeSemantics.SystemType:
+                writer.Write("struct(Windows.UI.Xaml.Interop.TypeName;string;enum(Windows.UI.Xaml.Interop.TypeKind;i4))");
+                break;
             case TypeSemantics.Fundamental f:
                 writer.Write(GetFundamentalTypeGuidSignature(f.Type));
                 break;
@@ -97,12 +100,11 @@ internal static class SignatureGenerator
                 {
                     // Resolve the reference to a 'TypeDefinition' (cross-module struct field, etc.).
                     (string ns, string name) = r.Type.Names();
-                    TypeDefinition? resolved = r.Type.TryResolve(context.Cache.RuntimeContext) ?? context.Cache.Find(ns, name);
+                    TypeDefinition resolved = r.Type.TryResolve(context.Cache.RuntimeContext) ??
+                        context.Cache.Find(ns, name) ??
+                        throw WellKnownProjectionWriterExceptions.UnsupportedTypeSignature(r.Type.FullName);
 
-                    if (resolved is not null)
-                    {
-                        WriteSignatureForType(writer, context, resolved);
-                    }
+                    WriteSignatureForType(writer, context, resolved);
                 }
                 break;
             case TypeSemantics.GenericInstance gi:
@@ -123,23 +125,24 @@ internal static class SignatureGenerator
                     // appearing as a struct field). Resolve the generic type to a TypeDefinition
                     // so we can extract its [Guid]; recurse on each type argument.
                     (string ns, string name) = gir.GenericType.Names();
-                    TypeDefinition? resolved = gir.GenericType.TryResolve(context.Cache.RuntimeContext) ?? context.Cache.Find(ns, name);
+                    TypeDefinition resolved = gir.GenericType.TryResolve(context.Cache.RuntimeContext) ??
+                        context.Cache.Find(ns, name) ??
+                        throw WellKnownProjectionWriterExceptions.UnsupportedTypeSignature(gir.GenericType.FullName);
 
-                    if (resolved is not null)
+                    writer.Write("pinterface({");
+                    IidExpressionGenerator.WriteGuid(writer, resolved, true);
+                    writer.Write("};");
+                    for (int i = 0; i < gir.GenericArgs.Count; i++)
                     {
-                        writer.Write("pinterface({");
-                        IidExpressionGenerator.WriteGuid(writer, resolved, true);
-                        writer.Write("};");
-                        for (int i = 0; i < gir.GenericArgs.Count; i++)
-                        {
-                            writer.WriteIf(i > 0, ";");
+                        writer.WriteIf(i > 0, ";");
 
-                            WriteSignature(writer, context, gir.GenericArgs[i]);
-                        }
-                        writer.Write(")");
+                        WriteSignature(writer, context, gir.GenericArgs[i]);
                     }
+                    writer.Write(")");
                 }
                 break;
+            default:
+                throw WellKnownProjectionWriterExceptions.UnsupportedTypeSignature(semantics.ToString());
         }
     }
 
@@ -204,13 +207,14 @@ internal static class SignatureGenerator
             case TypeKind.Class:
                 ITypeDefOrRef? defaultIface = type.GetDefaultInterface();
 
-                if (defaultIface is TypeDefinition di)
+                if (defaultIface is not null)
                 {
                     writer.Write("rc(");
                     TypedefNameWriter.WriteTypedefName(writer, context, type, TypedefNameType.NonProjected, true);
                     TypedefNameWriter.WriteTypeParams(writer, type);
                     writer.Write(";");
-                    WriteSignature(writer, context, new TypeSemantics.Definition(di));
+                    // Defaults can cross contract boundaries or be constructed generic interfaces
+                    WriteSignature(writer, context, TypeSemanticsFactory.GetFromTypeDefOrRef(defaultIface));
                     writer.Write(")");
                 }
                 else

@@ -206,6 +206,7 @@ internal partial class ProjectionGenerator
 
         // Append all interop type map entries for each target assembly we discovered
         foreach (string targetTypeMapGroup in (ReadOnlySpan<string>)[
+            "global::WindowsRuntime.InteropServices.WindowsRuntimeIidTypeMapGroup",
             "global::WindowsRuntime.InteropServices.WindowsRuntimeComWrappersTypeMapGroup",
             "global::WindowsRuntime.InteropServices.WindowsRuntimeMetadataTypeMapGroup",
             "global::WindowsRuntime.InteropServices.DynamicInterfaceCastableImplementationTypeMapGroup"])

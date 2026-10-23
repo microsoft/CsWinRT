@@ -208,6 +208,14 @@ internal partial class InteropGenerator
 
         args.Token.ThrowIfCancellationRequested();
 
+        // Emit the IID lookup map only when 'GetIid<T>' is referenced, avoiding unused generation work
+        if (discoveryState.HasIidLookupReferences)
+        {
+            DefineWindowsRuntimeIidTypeMapEntries(args, inputs, interopDefinitions, interopReferences, module);
+
+            args.Token.ThrowIfCancellationRequested();
+        }
+
         // Add all '[IgnoresAccessChecksTo]' attributes
         DefineIgnoresAccessChecksToAttributes(discoveryState, interopDefinitions, interopReferences, module);
 
@@ -2814,6 +2822,36 @@ internal partial class InteropGenerator
         catch (Exception e)
         {
             WellKnownInteropExceptions.DynamicDynamicCustomMappedTypeMapEntriesCodeGenerationError(e).ThrowOrAttach(e);
+        }
+    }
+
+    /// <summary>
+    /// Defines the external type map entries for Windows Runtime IID lookups.
+    /// </summary>
+    /// <param name="args">The arguments for this invocation.</param>
+    /// <param name="inputs">The canonicalized discovery inputs.</param>
+    /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
+    /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+    /// <param name="module">The interop module being built.</param>
+    private static void DefineWindowsRuntimeIidTypeMapEntries(
+        InteropGeneratorArgs args,
+        InteropGeneratorEmitInputs inputs,
+        InteropDefinitions interopDefinitions,
+        InteropReferences interopReferences,
+        ModuleDefinition module)
+    {
+        try
+        {
+            WindowsRuntimeIidTypeMapBuilder.Build(
+                args: args,
+                inputs: inputs,
+                interopDefinitions: interopDefinitions,
+                interopReferences: interopReferences,
+                module: module);
+        }
+        catch (Exception e)
+        {
+            WellKnownInteropExceptions.IidTypeMapEntriesCodeGenerationError(e).ThrowOrAttach(e);
         }
     }
 

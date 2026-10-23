@@ -21,6 +21,10 @@ internal sealed class ReferenceProjectionGeneratorArgs : IGeneratorArgs
     [CommandLineArgumentName("--output-directory")]
     public required string OutputDirectory { get; init; }
 
+    /// <summary>Gets the destination assembly simple name when generating implementation sources.</summary>
+    [CommandLineArgumentName("--assembly-name")]
+    public string? OutputAssemblyName { get; init; }
+
     /// <summary>Gets the target framework being built for (must start with <c>net10.0</c>).</summary>
     [CommandLineArgumentName("--target-framework")]
     public required string TargetFramework { get; init; }
@@ -78,4 +82,3 @@ internal sealed class ReferenceProjectionGeneratorArgs : IGeneratorArgs
     [CommandLineArgumentName("--debug-repro-directory")]
     public string? DebugReproDirectory { get; init; }
 }
-

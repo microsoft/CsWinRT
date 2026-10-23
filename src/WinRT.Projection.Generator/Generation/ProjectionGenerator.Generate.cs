@@ -338,6 +338,7 @@ internal partial class ProjectionGenerator
         {
             InputPaths = winmdInputs,
             OutputFolder = outputFolder,
+            OutputAssemblyName = args.AssemblyName,
             Include = includes,
             IncludeTypes = includeTypes,
             PublicExclusiveToTypes = publicInterfaces,

@@ -90,6 +90,7 @@ internal static partial class ReferenceProjectionGenerator
         {
             InputPaths = inputPaths,
             OutputFolder = args.OutputDirectory,
+            OutputAssemblyName = args.OutputAssemblyName,
             Include = args.IncludeNamespaces,
             Exclude = args.ExcludeNamespaces,
             AdditionExclude = args.AdditionExcludeNamespaces,

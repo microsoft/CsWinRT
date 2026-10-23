@@ -143,9 +143,13 @@ internal sealed partial class ProjectionGenerator
 
             if (state.WindowsRuntimeMetadataTypeEntries.Count > 0 && !_settings.ReferenceProjection)
             {
-                List<KeyValuePair<string, string>> sorted = [.. state.WindowsRuntimeMetadataTypeEntries];
+                List<KeyValuePair<string, WindowsRuntimeMetadataTypeEntry>> sorted = [.. state.WindowsRuntimeMetadataTypeEntries];
                 sorted.Sort((a, b) => StringComparer.Ordinal.Compare(a.Key, b.Key));
                 MetadataAttributeFactory.WriteWindowsRuntimeMetadataTypesClass(_settings, sorted);
+                WindowsRuntimeIidTypeMapFactory.Write(
+                    new ProjectionEmitContext(_settings, _cache, "ABI", _staticConstructorAnalyzer),
+                    sorted,
+                    _token);
             }
 
             if (!state.ExclusiveToInterfaceEntries.IsEmpty && _settings.Component && !_settings.ReferenceProjection)

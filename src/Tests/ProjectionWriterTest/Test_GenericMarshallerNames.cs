@@ -233,20 +233,19 @@ public class Test_GenericMarshallerNames
 
     private sealed class Fixture : IDisposable
     {
-        public string DirectoryPath { get; } = Directory.CreateDirectory(
-            Path.Combine("TestResults", $"GenericMarshallerNames_{Guid.NewGuid():N}")).FullName;
+        public string DirectoryPath { get; } = Directory.CreateTempSubdirectory("GenericMarshallerNames_").FullName;
 
         public void Dispose() => Directory.Delete(DirectoryPath, recursive: true);
     }
 
     private static string CompileProjection(string input, string output, string assembly, bool referenceProjection = false)
     {
-        GenerateProjection(input, output, referenceProjection);
+        GenerateProjection(input, output, referenceProjection, Path.GetFileNameWithoutExtension(assembly));
         return ProjectionWriterRunner.CompileSources(Directory.GetFiles(output, "*.cs").Select(File.ReadAllText),
             assembly, referenceProjection);
     }
 
-    private static void GenerateProjection(string input, string output, bool referenceProjection)
+    private static void GenerateProjection(string input, string output, bool referenceProjection, string outputAssemblyName = "WinRT.Sdk.Projection")
     {
         Directory.CreateDirectory(output);
         string response = Path.Combine(output, "projection.rsp");
@@ -254,6 +253,7 @@ public class Test_GenericMarshallerNames
         [
             $"--input-paths {input}",
             $"--output-directory {output}",
+            $"--assembly-name {outputAssemblyName}",
             "--target-framework net10.0",
             "--include-namespaces Contoso",
             $"--reference-projection {referenceProjection.ToString().ToLowerInvariant()}"
