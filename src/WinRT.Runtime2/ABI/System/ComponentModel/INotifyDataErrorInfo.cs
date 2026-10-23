@@ -14,14 +14,17 @@ using WindowsRuntime.InteropServices;
 using WindowsRuntime.InteropServices.Marshalling;
 using static System.Runtime.InteropServices.ComWrappers;
 
-#pragma warning disable IDE0008, IDE1006
+#pragma warning disable IL2026, IDE0008, IDE1006
 
-#pragma warning disable IL2026 // Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code
 [assembly: TypeMap<WindowsRuntimeMetadataTypeMapGroup>(
     value: "Microsoft.UI.Xaml.Data.INotifyDataErrorInfo",
     target: typeof(ABI.System.ComponentModel.INotifyDataErrorInfo),
     trimTarget: typeof(INotifyDataErrorInfo))]
-#pragma warning restore IL2026 // Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code
+
+[assembly: TypeMap<WindowsRuntimeIidTypeMapGroup>(
+    value: "[#System]System.ComponentModel.INotifyDataErrorInfo",
+    target: typeof(ABI.System.ComponentModel.INotifyDataErrorInfoIidProvider),
+    trimTarget: typeof(INotifyDataErrorInfo))]
 
 [assembly: TypeMapAssociation<WindowsRuntimeMetadataTypeMapGroup>(
     source: typeof(INotifyDataErrorInfo),
@@ -32,6 +35,12 @@ using static System.Runtime.InteropServices.ComWrappers;
     proxy: typeof(ABI.System.ComponentModel.INotifyDataErrorInfoInterfaceImpl))]
 
 namespace ABI.System.ComponentModel;
+
+/// <summary>
+/// IID metadata for <see cref="global::System.ComponentModel.INotifyDataErrorInfo"/>.
+/// </summary>
+[Guid("0EE6C2CC-273E-567D-BC0A-1DD87EE51EBA")]
+file static class INotifyDataErrorInfoIidProvider;
 
 /// <summary>
 /// ABI type for <see cref="global::System.ComponentModel.INotifyDataErrorInfo"/>.

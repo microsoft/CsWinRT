@@ -204,10 +204,9 @@ internal partial class ProjectionGenerator
         _ = builder.AppendLine("#pragma warning disable");
         _ = builder.AppendLine();
 
-        _ = builder.AppendLine("[assembly: global::System.Runtime.InteropServices.TypeMapAssemblyTarget<global::WindowsRuntime.InteropServices.WindowsRuntimeIidTypeMapGroup>(\"WinRT.Interop\")]");
-
         // Append all interop type map entries for each target assembly we discovered
         foreach (string targetTypeMapGroup in (ReadOnlySpan<string>)[
+            "global::WindowsRuntime.InteropServices.WindowsRuntimeIidTypeMapGroup",
             "global::WindowsRuntime.InteropServices.WindowsRuntimeComWrappersTypeMapGroup",
             "global::WindowsRuntime.InteropServices.WindowsRuntimeMetadataTypeMapGroup",
             "global::WindowsRuntime.InteropServices.DynamicInterfaceCastableImplementationTypeMapGroup"])

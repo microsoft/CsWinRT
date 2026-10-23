@@ -127,6 +127,7 @@ public class Test_ArrayProperties
         {
             InputPaths = [metadata],
             OutputFolder = output,
+            OutputAssemblyName = "Projection",
             Include = ["Contoso"],
             PublicExclusiveToTypes = ["Contoso.IWidget2"],
             IdicExclusiveToTypes = ["Contoso.IWidget2"],
@@ -152,6 +153,7 @@ public class Test_ArrayProperties
             {
                 InputPaths = [referenceMetadata],
                 OutputFolder = referenceOutput,
+                OutputAssemblyName = "Projection",
                 // Only the class hierarchy needs a reference projection; the ABI harness targets the implementation.
                 Include = ["Contoso"],
                 ReferenceProjection = true

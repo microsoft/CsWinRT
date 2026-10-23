@@ -37,6 +37,7 @@ public class Test_MultipleComposableFactories
             {
                 InputPaths = [ComposableFactoryMetadata.Create(directory)],
                 OutputFolder = output,
+                OutputAssemblyName = "Projection",
                 Include = ["Contoso"],
                 ReferenceProjection = referenceProjection
             });

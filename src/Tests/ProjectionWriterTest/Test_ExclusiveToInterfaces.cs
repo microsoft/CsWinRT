@@ -38,6 +38,7 @@ public class Test_ExclusiveToInterfaces
             {
                 InputPaths = [metadataPath],
                 OutputFolder = output,
+                OutputAssemblyName = "implementation",
                 IncludeTypes = includeOwner
                     ? ["Contoso.Widget", "Contoso.IWidget", "Contoso.IWidget2", "Contoso.IWidget3", "Contoso.ChangedHandler"]
                     : ["Contoso.IWidget2", "Contoso.IWidget3", "Contoso.ChangedHandler"],
@@ -79,6 +80,7 @@ public class Test_ExclusiveToInterfaces
             {
                 InputPaths = [metadataPath],
                 OutputFolder = output,
+                OutputAssemblyName = "implementation",
                 Include = ["Contoso"]
             });
 
@@ -108,6 +110,7 @@ public class Test_ExclusiveToInterfaces
             {
                 InputPaths = [metadataPath],
                 OutputFolder = output,
+                OutputAssemblyName = "implementation",
                 IncludeTypes = includeOwner
                     ? ["Contoso.Widget", "Contoso.IWidget", "Contoso.ChangedHandler"]
                     : ["Contoso.IWidget", "Contoso.ChangedHandler"],
@@ -138,6 +141,7 @@ public class Test_ExclusiveToInterfaces
             {
                 InputPaths = [metadataPath],
                 OutputFolder = output,
+                OutputAssemblyName = "implementation",
                 IncludeTypes = ["Contoso.IWidget2", "Contoso.ChangedHandler"],
                 PublicExclusiveTo = publicExclusiveTo,
                 IdicExclusiveTo = idicExclusiveTo
@@ -178,6 +182,7 @@ public class Test_ExclusiveToInterfaces
             {
                 InputPaths = [metadataPath],
                 OutputFolder = output,
+                OutputAssemblyName = "implementation",
                 IncludeTypes = ["Contoso.IWidget2", "Contoso.IWidget3", "Contoso.ChangedHandler"],
                 PublicExclusiveTo = true,
                 IdicExclusiveTo = enabled,
@@ -216,6 +221,7 @@ public class Test_ExclusiveToInterfaces
             {
                 InputPaths = [metadataPath],
                 OutputFolder = output,
+                OutputAssemblyName = "implementation",
                 IncludeTypes = ["Contoso.IWidget", "Contoso.IWidget2", "Contoso.ChangedHandler"],
                 PublicExclusiveTo = true,
                 IdicExclusiveTo = enabled,
@@ -239,6 +245,7 @@ public class Test_ExclusiveToInterfaces
             {
                 InputPaths = [metadataPath],
                 OutputFolder = output,
+                OutputAssemblyName = "implementation",
                 Include = ["Contoso"],
                 IdicExclusiveTo = true,
                 IdicExclusiveToExcludes = ["Contoso"]
@@ -290,6 +297,7 @@ public class Test_ExclusiveToInterfaces
                 {
                     InputPaths = [ordinaryMetadata],
                     OutputFolder = output,
+                    OutputAssemblyName = "implementation",
                     IncludeTypes = ["Contoso.IWidget2", "Contoso.IWidget3", "Contoso.ChangedHandler"],
                     PublicExclusiveTo = true,
                     IdicExclusiveTo = true,
@@ -326,6 +334,7 @@ public class Test_ExclusiveToInterfaces
             {
                 InputPaths = [requiredMetadata],
                 OutputFolder = output,
+                OutputAssemblyName = "implementation",
                 IncludeTypes = includeParent
                     ? ["Contoso.IWidget", "Contoso.IWidget2", "Contoso.ChangedHandler"]
                     : ["Contoso.IWidget2", "Contoso.ChangedHandler"],
@@ -370,6 +379,7 @@ public class Test_ExclusiveToInterfaces
                 {
                     InputPaths = [metadataPath],
                     OutputFolder = output,
+                    OutputAssemblyName = "implementation",
                     IncludeTypes = ["Contoso.IWidget3"],
                     PublicExclusiveTo = true,
                     IdicExclusiveTo = enabled
@@ -408,6 +418,7 @@ public class Test_ExclusiveToInterfaces
                 {
                     InputPaths = [metadataPath],
                     OutputFolder = Path.Combine(directory, "implementation"),
+                    OutputAssemblyName = "implementation",
                     Include = ["Contoso"],
                     IdicExclusiveTo = true,
                     IdicExclusiveToIncludes = isExclude ? [] : [filter!],

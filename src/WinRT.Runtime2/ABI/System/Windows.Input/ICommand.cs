@@ -12,9 +12,20 @@ using WindowsRuntime.InteropServices;
 using WindowsRuntime.InteropServices.Marshalling;
 using static System.Runtime.InteropServices.ComWrappers;
 
-#pragma warning disable IDE0008, IDE1006
+#pragma warning disable IL2026, IDE0008, IDE1006
+
+[assembly: TypeMap<WindowsRuntimeIidTypeMapGroup>(
+    value: "[#System]System.Windows.Input.ICommand",
+    target: typeof(ABI.System.Windows.Input.ICommandIidProvider),
+    trimTarget: typeof(global::System.Windows.Input.ICommand))]
 
 namespace ABI.System.Windows.Input;
+
+/// <summary>
+/// IID metadata for <see cref="global::System.Windows.Input.ICommand"/>.
+/// </summary>
+[Guid("E5AF3542-CA67-4081-995B-709DD13792DF")]
+file static class ICommandIidProvider;
 
 /// <summary>
 /// Marshaller for <see cref="ICommand"/>.

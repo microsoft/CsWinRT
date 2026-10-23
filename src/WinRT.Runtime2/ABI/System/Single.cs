@@ -10,9 +10,8 @@ using WindowsRuntime.InteropServices;
 using WindowsRuntime.InteropServices.Marshalling;
 using static System.Runtime.InteropServices.ComWrappers;
 
-#pragma warning disable IDE1006, CA1416
+#pragma warning disable IL2026, IDE1006, CA1416
 
-#pragma warning disable IL2026 // Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code
 [assembly: TypeMap<WindowsRuntimeMetadataTypeMapGroup>(
     value: "Single",
     target: typeof(ABI.System.Single),
@@ -22,11 +21,21 @@ using static System.Runtime.InteropServices.ComWrappers;
     value: "Windows.Foundation.IReference`1<Single>",
     target: typeof(ABI.System.Single),
     trimTarget: typeof(float))]
-#pragma warning restore IL2026 // Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code
+
+[assembly: TypeMap<WindowsRuntimeIidTypeMapGroup>(
+    value: "[#System]System.Nullable`1[[#System]System.Single]",
+    target: typeof(ABI.System.SingleIidProvider),
+    trimTarget: typeof(float))]
 
 [assembly: TypeMapAssociation<WindowsRuntimeComWrappersTypeMapGroup>(typeof(float), typeof(ABI.System.Single))]
 
 namespace ABI.System;
+
+/// <summary>
+/// IID metadata for the nullable projection of <see cref="global::System.Single"/>.
+/// </summary>
+[Guid("719CC2BA-3E76-5DEF-9F1A-38D85A145EA8")]
+file static class SingleIidProvider;
 
 /// <summary>
 /// ABI type for <see cref="float"/>.

@@ -27,6 +27,12 @@ public sealed class ProjectionWriterOptions
     public required string OutputFolder { get; init; }
 
     /// <summary>
+    /// The simple name of the assembly that will compile the generated sources.
+    /// Required for implementation projections, whose IID map keys include this identity.
+    /// </summary>
+    public string? OutputAssemblyName { get; init; }
+
+    /// <summary>
     /// Optional list of namespace or type-name prefixes to include in the projection.
     /// </summary>
     public IReadOnlyList<string> Include { get; init; } = [];

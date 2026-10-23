@@ -11,9 +11,8 @@ using WindowsRuntime.InteropServices;
 using WindowsRuntime.InteropServices.Marshalling;
 using static System.Runtime.InteropServices.ComWrappers;
 
-#pragma warning disable IDE1006
+#pragma warning disable IL2026, IDE1006
 
-#pragma warning disable IL2026 // Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code
 [assembly: TypeMap<WindowsRuntimeMetadataTypeMapGroup>(
     value: "Windows.Foundation.Numerics.Matrix4x4",
     target: typeof(ABI.System.Numerics.Matrix4x4),
@@ -23,11 +22,21 @@ using static System.Runtime.InteropServices.ComWrappers;
     value: "Windows.Foundation.IReference`1<Windows.Foundation.Numerics.Matrix4x4>",
     target: typeof(ABI.System.Numerics.Matrix4x4),
     trimTarget: typeof(Matrix4x4))]
-#pragma warning restore IL2026 // Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code
+
+[assembly: TypeMap<WindowsRuntimeIidTypeMapGroup>(
+    value: "[#System]System.Nullable`1[[#System]System.Numerics.Matrix4x4]",
+    target: typeof(ABI.System.Numerics.Matrix4x4IidProvider),
+    trimTarget: typeof(Matrix4x4))]
 
 [assembly: TypeMapAssociation<WindowsRuntimeComWrappersTypeMapGroup>(typeof(Matrix4x4), typeof(ABI.System.Numerics.Matrix4x4))]
 
 namespace ABI.System.Numerics;
+
+/// <summary>
+/// IID metadata for the nullable projection of <see cref="global::System.Numerics.Matrix4x4"/>.
+/// </summary>
+[Guid("DACBFFDC-68EF-5FD0-B657-782D0AC9807E")]
+file static class Matrix4x4IidProvider;
 
 /// <summary>
 /// ABI type for <see cref="global::System.Numerics.Matrix4x4"/>.

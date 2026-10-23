@@ -10,9 +10,8 @@ using WindowsRuntime.InteropServices;
 using WindowsRuntime.InteropServices.Marshalling;
 using static System.Runtime.InteropServices.ComWrappers;
 
-#pragma warning disable IDE1006, CA1416
+#pragma warning disable IL2026, IDE1006, CA1416
 
-#pragma warning disable IL2026 // Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code
 [assembly: TypeMap<WindowsRuntimeMetadataTypeMapGroup>(
     value: "UInt64",
     target: typeof(ABI.System.UInt64),
@@ -22,11 +21,21 @@ using static System.Runtime.InteropServices.ComWrappers;
     value: "Windows.Foundation.IReference`1<UInt64>",
     target: typeof(ABI.System.UInt64),
     trimTarget: typeof(ulong))]
-#pragma warning restore IL2026 // Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code
+
+[assembly: TypeMap<WindowsRuntimeIidTypeMapGroup>(
+    value: "[#System]System.Nullable`1[[#System]System.UInt64]",
+    target: typeof(ABI.System.UInt64IidProvider),
+    trimTarget: typeof(ulong))]
 
 [assembly: TypeMapAssociation<WindowsRuntimeComWrappersTypeMapGroup>(typeof(ulong), typeof(ABI.System.UInt64))]
 
 namespace ABI.System;
+
+/// <summary>
+/// IID metadata for the nullable projection of <see cref="global::System.UInt64"/>.
+/// </summary>
+[Guid("6755E376-53BB-568B-A11D-17239868309E")]
+file static class UInt64IidProvider;
 
 /// <summary>
 /// ABI type for <see cref="ulong"/>.

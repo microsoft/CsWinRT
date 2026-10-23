@@ -4,7 +4,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using AsmResolver;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 using AsmResolver.PE.DotNet.Metadata.Tables;
@@ -38,7 +37,7 @@ internal static class WindowsRuntimeIidTypeMapBuilder
     {
         HashSet<TypeSignature> types = new(interopReferences.SignatureComparer);
 
-        // Collect eligible types from shared discovery and the fixed metadata catalogs
+        // Fixed projection and runtime IIDs are precompiled in their owning assemblies
         foreach (TypeSignature type in inputs.EnumerateIidTypes())
         {
             // IID generation requires resolvable metadata and supported closed signatures
@@ -50,14 +49,6 @@ internal static class WindowsRuntimeIidTypeMapBuilder
 
             // 'Nullable<T>' entries are synthesized below from valid value types, excluding nullable key/value pairs
             if (type.IsConstructedNullableValueType(interopReferences))
-            {
-                continue;
-            }
-
-            // ABI value types and metadata proxies are not public projections. Exclusive interfaces are
-            // genuine projected types, even when their generated declarations live in an 'ABI' namespace.
-            if (definition.Namespace is Utf8String ns && (ns.AsSpan().SequenceEqual("ABI"u8) || ns.AsSpan().StartsWith("ABI."u8)) &&
-                (!definition.IsInterface || !definition.IsProjectedWindowsRuntimeType))
             {
                 continue;
             }

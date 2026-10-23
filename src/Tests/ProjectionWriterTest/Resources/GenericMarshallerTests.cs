@@ -14,6 +14,10 @@ using WindowsRuntime.InteropServices.Marshalling;
 [assembly: System.Runtime.Versioning.TargetFramework(".NETCoreApp,Version=v10.0")]
 [assembly: System.Runtime.Versioning.SupportedOSPlatform("windows6.3")]
 [assembly: DisableRuntimeMarshalling]
+[assembly: TypeMapAssemblyTarget<WindowsRuntimeIidTypeMapGroup>("WinRT.Interop")]
+[assembly: TypeMapAssemblyTarget<WindowsRuntimeIidTypeMapGroup>("WinRT.Runtime")]
+[assembly: TypeMapAssemblyTarget<WindowsRuntimeIidTypeMapGroup>("WinRT.Projection")]
+[assembly: TypeMapAssemblyTarget<WindowsRuntimeIidTypeMapGroup>("WinRT.Sdk.Projection")]
 [assembly: TypeMapAssemblyTarget<WindowsRuntimeComWrappersTypeMapGroup>("WinRT.Interop")]
 [assembly: TypeMapAssemblyTarget<WindowsRuntimeComWrappersTypeMapGroup>("WinRT.Runtime")]
 [assembly: TypeMapAssemblyTarget<WindowsRuntimeComWrappersTypeMapGroup>("WinRT.Projection")]
@@ -71,6 +75,12 @@ internal static unsafe class Program
 
         try
         {
+            Check(WindowsRuntimeMarshal.GetIid<TileCollection>() == TileIid, "projected runtime-class IID");
+            Check(WindowsRuntimeMarshal.GetIid<ITileCollection>() == TileIid, "projected interface IID");
+            Check(WindowsRuntimeMarshal.GetIid<RegistrationMap>() == MapIid, "generic default-interface IID");
+            Check(WindowsRuntimeMarshal.GetIid<IReadOnlyDictionary<Guid, ITaskRegistration>>() == MapIid, "interop-owned generic IID");
+            Check(WindowsRuntimeMarshal.GetIid<IAsyncOperation<TileCollection>>() == AsyncIid, "projected generic argument IID");
+
             TileCollection value = ABI.Contoso.TileCollectionMarshaller.ConvertToManaged(tiles);
             IAsyncOperation<TileCollection> asyncValue = value.GetTilesAsync();
             Check(ReferenceEquals(value, asyncValue.GetResults()), "async runtime-class result");

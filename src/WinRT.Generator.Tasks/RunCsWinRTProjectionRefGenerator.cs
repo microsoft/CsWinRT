@@ -30,6 +30,12 @@ public sealed class RunCsWinRTProjectionRefGenerator : ToolTask
     public string? OutputDirectory { get; set; }
 
     /// <summary>
+    /// Gets or sets the simple name of the assembly compiling the generated sources.
+    /// Required when generating an implementation projection.
+    /// </summary>
+    public string? OutputAssemblyName { get; set; }
+
+    /// <summary>
     /// Gets or sets the target framework for which the projection is being generated.
     /// CsWinRT 3.0 requires this to be 'net10.0' or later.
     /// </summary>
@@ -164,6 +170,13 @@ public sealed class RunCsWinRTProjectionRefGenerator : ToolTask
             return false;
         }
 
+        if (!ReferenceProjection && string.IsNullOrWhiteSpace(OutputAssemblyName))
+        {
+            Log.LogWarning("'OutputAssemblyName' is required for implementation projections.");
+
+            return false;
+        }
+
         if (CsWinRTToolsDirectory is null || !Directory.Exists(CsWinRTToolsDirectory))
         {
             Log.LogWarning("Tools directory '{0}' is invalid or does not exist.", CsWinRTToolsDirectory);
@@ -229,6 +242,7 @@ public sealed class RunCsWinRTProjectionRefGenerator : ToolTask
         string inputWinMDPathsArg = string.Join(",", inputWinMDPaths);
 
         AppendResponseFileCommand(args, "--input-paths", inputWinMDPathsArg);
+        AppendResponseFileOptionalCommand(args, "--assembly-name", OutputAssemblyName);
         AppendResponseFileCommand(args, "--output-directory", OutputDirectory!);
         AppendResponseFileCommand(args, "--target-framework", TargetFramework!);
 

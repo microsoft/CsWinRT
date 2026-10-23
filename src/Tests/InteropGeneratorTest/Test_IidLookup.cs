@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -131,7 +132,7 @@ public sealed class Test_IidLookup
     [TestMethod]
     [DataRow(false)]
     [DataRow(true)]
-    public async Task NoCompiledReference_DoesNotEmitIidMetadata(bool reflectionOnly)
+    public async Task NoCompiledReference_DoesNotEmitSidecarIidMetadata(bool reflectionOnly)
     {
         using InteropGeneratorRunner runner = new(
             sdkProjectionSource: ProjectionSource,
@@ -164,8 +165,8 @@ public sealed class Test_IidLookup
 
         Assert.AreEqual(new Guid("548cefbd-bc8a-5fa0-8df2-957440fc8bf4"),
             GetProviderIid(module, "[#System]System.Nullable`1[[#System]System.Int32]"));
-        Assert.AreEqual(new Guid("69c58f47-a268-4a55-aad8-97d111a2b01a"),
-            GetProviderIid(module, "[WinRT.Sdk.Projection]IidProjection.Example"));
+        Assert.AreEqual(new Guid("90b17601-b065-586e-83d9-9adc3a695284"),
+            GetProviderIid(module, "[#System]System.ComponentModel.INotifyPropertyChanged"));
     }
 
     [TestMethod]
@@ -182,6 +183,86 @@ public sealed class Test_IidLookup
 
         Assert.AreEqual(new Guid("548cefbd-bc8a-5fa0-8df2-957440fc8bf4"),
             GetProviderIid(module, "[#System]System.Nullable`1[[#System]System.Int32]"));
+        Assert.Contains("[#System]System.ComponentModel.INotifyPropertyChanged",
+            GetIidEntries(module).Select(entry => entry.Signature!.FixedArguments[0].Element!.ToString()!));
+    }
+
+    [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    public async Task RuntimeIidEntries_AreConditionalAndDisjointFromGeneratedEntries(bool useWindowsUIXamlProjections)
+    {
+        using InteropGeneratorRunner runner = new(sdkProjectionSource: ProjectionSource, applicationSource: IidApplicationSource);
+        (RuntimeContext context, ModuleDefinition module) = runner.LoadOutput(await runner.GenerateAsync(
+            "runtime-ownership", useWindowsUIXamlProjections: useWindowsUIXamlProjections));
+        CustomAttribute[] runtimeEntries = GetRuntimeIidEntries(module);
+        string[] runtimeKeys = runtimeEntries.Select(entry => entry.Signature!.FixedArguments[0].Element!.ToString()!).ToArray();
+
+        Assert.HasCount(50, runtimeEntries);
+        Assert.HasCount(runtimeEntries.Length, runtimeKeys.Distinct());
+        Assert.IsEmpty(GetIidEntries(module)
+            .Select(entry => entry.Signature!.FixedArguments[0].Element!.ToString()!)
+            .Intersect(runtimeKeys));
+
+        foreach (CustomAttribute entry in runtimeEntries)
+        {
+            Assert.HasCount(3, entry.Signature!.FixedArguments);
+            TypeDefinition provider = ((TypeSignature)entry.Signature.FixedArguments[1].Element!).Resolve(context);
+            TypeDefinition trimTarget = ((TypeSignature)entry.Signature.FixedArguments[2].Element!).Resolve(context);
+            Assert.IsFalse(trimTarget.HasGenericParameters);
+            Assert.IsTrue(provider.IsAbstract && provider.IsSealed);
+            Assert.HasCount(1, provider.CustomAttributes);
+            Assert.AreEqual("System.Runtime.InteropServices.GuidAttribute", provider.CustomAttributes[0].Constructor!.DeclaringType!.FullName);
+            Assert.IsEmpty(provider.Fields);
+            Assert.IsEmpty(provider.Methods);
+        }
+    }
+
+    [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    public async Task RuntimeIidEntries_MatchTheCompleteRuntimeCatalog(bool useWindowsUIXamlProjections)
+    {
+        using InteropGeneratorRunner runner = new(applicationSource: IidApplicationSource);
+        (RuntimeContext context, ModuleDefinition module) = runner.LoadOutput(await runner.GenerateAsync(
+            "runtime-catalog", useWindowsUIXamlProjections: useWindowsUIXamlProjections));
+        ModuleDefinition runtime = context.LoadAssembly(typeof(WindowsRuntime.WindowsRuntimeObject).Assembly.Location).Modules[0];
+        CustomAttribute[] runtimeEntries = GetIidEntries(runtime);
+        string[] modeDependentTypes = [
+            "System.ComponentModel.INotifyPropertyChanged",
+            "System.ComponentModel.PropertyChangedEventArgs",
+            "System.ComponentModel.PropertyChangedEventHandler",
+            "System.Collections.Specialized.INotifyCollectionChanged",
+            "System.Collections.Specialized.NotifyCollectionChangedEventArgs",
+            "System.Collections.Specialized.NotifyCollectionChangedEventHandler",
+            "System.Collections.Specialized.NotifyCollectionChangedAction"];
+
+        // Runtime-owned registrations must cover every supported, non-generic runtime identity
+        IEnumerable<TypeSignature> types = runtime.TopLevelTypes
+            .Where(type => !type.HasGenericParameters && type.CustomAttributes.Any(attribute =>
+                attribute.Constructor?.DeclaringType?.FullName == "WindowsRuntime.WindowsRuntimeTypeAttribute"))
+            .Select(type => type.CustomAttributes.FirstOrDefault(attribute =>
+                attribute.Constructor?.DeclaringType?.FullName == "WindowsRuntime.InteropServices.WindowsRuntimeMappedTypeAttribute")
+                ?.Signature?.FixedArguments[0].Element is TypeSignature mappedType ? mappedType : type.ToTypeSignature())
+            .Where(type => !modeDependentTypes.Contains(type.FullName));
+        HashSet<string> expected = [];
+        foreach (TypeSignature type in types)
+        {
+            TypeDefinition definition = type.Resolve(context);
+            if (definition.HasGenericParameters || (definition.IsAbstract && definition.IsSealed) ||
+                definition.BaseType?.FullName == "System.Attribute" ||
+                type.FullName is "System.String" or "System.Exception" or "System.Type")
+            {
+                continue;
+            }
+            string scope = definition.DeclaringModule!.Assembly!.Name == "WinRT.Runtime" ? "WinRT.Runtime" : "#System";
+            string key = "[" + scope + "]" + definition.FullName;
+            _ = expected.Add(definition.IsValueType ? "[#System]System.Nullable`1[" + key + "]" : key);
+        }
+        expected.UnionWith(new[] { "IEnumerable", "IEnumerator", "IList" }.Select(name => "[#System]System.Collections." + name));
+        _ = expected.Add("[#System]System.Windows.Input.ICommand");
+        CollectionAssert.AreEquivalent(expected.ToArray(), runtimeEntries.Select(entry =>
+            entry.Signature!.FixedArguments[0].Element!.ToString()!).ToArray());
     }
 
     [TestMethod]
@@ -248,12 +329,12 @@ public sealed class Test_IidLookup
     {
         using InteropGeneratorRunner runner = new(sdkProjectionSource: ProjectionSource, applicationSource: IidApplicationSource);
         (_, ModuleDefinition module) = runner.LoadOutput(await runner.GenerateAsync("conditional"));
-        CustomAttribute[] entries = GetIidEntries(module);
+        CustomAttribute[] entries = GetAllIidEntries(module).ToArray();
         string[] keys = GetIidKeys(module);
 
         Assert.IsNotEmpty(entries);
         Assert.Contains("[#System]System.Nullable`1[[#System]System.Int32]", keys);
-        Assert.Contains("[#System]System.Nullable`1[[WinRT.Sdk.Projection]IidProjection.Value]", keys);
+        Assert.DoesNotContain("[#System]System.Nullable`1[[WinRT.Sdk.Projection]IidProjection.Value]", keys);
         foreach (string type in new[] { "Int32", "String", "Guid", "Exception", "Type" })
         {
             Assert.DoesNotContain("[#System]System." + type, keys);
@@ -278,7 +359,7 @@ public sealed class Test_IidLookup
     }
 
     [TestMethod]
-    public async Task ProjectionCatalog_UsesInterfaceDefaultAndExplicitReferenceIids()
+    public async Task ProjectionCatalog_IsNotReemittedByTheInteropGenerator()
     {
         using InteropGeneratorRunner runner = new(sdkProjectionSource: ProjectionSource, applicationSource: """
             public static class Program
@@ -290,32 +371,13 @@ public sealed class Test_IidLookup
         (_, ModuleDefinition module) = runner.LoadOutput(await runner.GenerateAsync("projection-catalog"));
         string[] keys = GetIidKeys(module);
 
-        Assert.AreEqual(new Guid("69c58f47-a268-4a55-aad8-97d111a2b01a"),
-            GetProviderIid(module, "[WinRT.Sdk.Projection]IidProjection.IExample"));
-        Assert.AreEqual(GetProviderIid(module, "[WinRT.Sdk.Projection]IidProjection.IExample"),
-            GetProviderIid(module, "[WinRT.Sdk.Projection]IidProjection.Example"));
-        Assert.AreEqual(GetProviderIid(module, "[#System]System.Collections.Generic.IDictionary`2[[#System]System.String,[#System]System.Object]"),
-            GetProviderIid(module, "[WinRT.Sdk.Projection]IidProjection.GenericDefault"));
-        Assert.AreEqual(new Guid("59d49473-21e5-4f1a-870c-6c93a1d8206d"),
-            GetProviderIid(module, "[WinRT.Sdk.Projection]IidProjection.UnmarkedDefault"));
-        Assert.AreEqual(new Guid("60a8e0c5-7371-4b96-ab04-b2ccfafce870"),
-            GetProviderIid(module, "[WinRT.Sdk.Projection]IidProjection.Handler"));
-        Assert.AreEqual(new Guid("513dbf61-50a0-5a16-bb0e-96ae18a9f125"),
-            GetProviderIid(module, "[#System]System.Nullable`1[[WinRT.Sdk.Projection]IidProjection.Value]"));
-        Assert.Contains("[#System]System.Nullable`1[[WinRT.Sdk.Projection]IidProjection.Choice]", keys);
-        foreach (string type in new[] { "IidProjection.IHidden", "IidProjection.HiddenClass", "ABI.Impl.IExclusive" })
-        {
-            Assert.AreEqual(new Guid("71f0284e-cc83-4c12-95ea-89749cdfc7f5"),
-                GetProviderIid(module, "[WinRT.Sdk.Projection]" + type));
-        }
-        foreach (string type in new[] { "ABI.IidProjection.Value", "IidProjection.MetadataAttribute", "IidProjection.StaticClass", "IidProjection.Contract" })
-        {
-            Assert.DoesNotContain("[WinRT.Sdk.Projection]" + type, keys);
-        }
+        Assert.Contains("[#System]System.Collections.Generic.IDictionary`2[[#System]System.String,[#System]System.Object]", keys);
+        Assert.IsFalse(keys.Any(key => key.StartsWith("[WinRT.Sdk.Projection]", StringComparison.Ordinal)));
+        Assert.IsFalse(keys.Any(key => key.StartsWith("[#System]System.Nullable`1[[WinRT.Sdk.Projection]", StringComparison.Ordinal)));
     }
 
     [TestMethod]
-    public async Task MissingInterfaceIid_FailsGeneration()
+    public async Task ProjectionCatalogIids_AreNotRecomputed()
     {
         using InteropGeneratorRunner runner = new(
             sdkProjectionSource: """
@@ -329,11 +391,12 @@ public sealed class Test_IidLookup
                 """,
             applicationSource: IidApplicationSource);
 
-        _ = await runner.AssertFailureAsync("missing-iid", "CSWINRTINTEROPGEN0055");
+        (_, ModuleDefinition module) = runner.LoadOutput(await runner.GenerateAsync("projection-owned-iid"));
+        Assert.DoesNotContain("[WinRT.Sdk.Projection]IMissingIid", GetIidKeys(module));
     }
 
     [TestMethod]
-    public async Task AuthoredTypes_UseTheComponentMetadata()
+    public async Task ComponentCatalog_IsNotReemittedByTheInteropGenerator()
     {
         using InteropGeneratorRunner runner = new(
             applicationSource: """
@@ -373,15 +436,11 @@ public sealed class Test_IidLookup
                 """);
         (_, ModuleDefinition module) = runner.LoadOutput(await runner.GenerateAsync("component-catalog"));
 
-        Assert.AreEqual(GetProviderIid(module, "[Application]Component.IExample"), GetProviderIid(module, "[Application]Component.Class"));
-        Assert.Contains("[#System]System.Nullable`1[[Application]Component.Value]", GetIidKeys(module));
-        Assert.Contains("[#System]System.Nullable`1[[Application]Component.Choice]", GetIidKeys(module));
-        Assert.AreEqual(new Guid("60a8e0c5-7371-4b96-ab04-b2ccfafce870"), GetProviderIid(module, "[Application]Component.Handler"));
-        Assert.DoesNotContain("[Application]Component.Helper", GetIidKeys(module));
+        Assert.IsFalse(GetIidKeys(module).Any(key => key.Contains("[Application]Component.", StringComparison.Ordinal)));
     }
 
     [TestMethod]
-    public async Task RuntimeCatalog_IsAvailableWhenRuntimeMarshallingIsExcluded()
+    public async Task RuntimeIids_AreAvailableWhenRuntimeMarshallingIsExcluded()
     {
         using InteropGeneratorRunner runner = new(applicationSource: IidApplicationSource);
         (_, ModuleDefinition module) = runner.LoadOutput(await runner.GenerateAsync(
@@ -419,10 +478,18 @@ public sealed class Test_IidLookup
             GetProviderIid(module, "[#System]System.ComponentModel.INotifyPropertyChanged"));
         Assert.AreEqual(new Guid(useWindowsUIXamlProjections ? "4f33a9a0-5cf4-47a4-b16f-d7faaf17457e" : "63d0c952-396b-54f4-af8c-ba8724a427bf"),
             GetProviderIid(module, "[#System]System.ComponentModel.PropertyChangedEventArgs"));
+        Assert.AreEqual(new Guid(useWindowsUIXamlProjections ? "50f19c16-0a22-4d8e-a089-1ea9951657d2" : "e3de52f6-1e32-5da6-bb2d-b5b6096c962d"),
+            GetProviderIid(module, "[#System]System.ComponentModel.PropertyChangedEventHandler"));
+        Assert.AreEqual(new Guid(useWindowsUIXamlProjections ? "28b167d5-1a31-465b-9b25-d5c3ae686c40" : "530155e1-28a5-5693-87ce-30724d95a06d"),
+            GetProviderIid(module, "[#System]System.Collections.Specialized.INotifyCollectionChanged"));
         Assert.AreEqual(new Guid("9e365e57-48b2-4160-956f-c7385120bbfc"),
             GetProviderIid(module, "[#System]System.Uri"));
         Assert.AreEqual(new Guid(useWindowsUIXamlProjections ? "4cf68d33-e3f2-4964-b85e-945b4f7e2f21" : "da049ff2-d2e0-5fe8-8c7b-f87f26060b6f"),
             GetProviderIid(module, "[#System]System.Collections.Specialized.NotifyCollectionChangedEventArgs"));
+        Assert.AreEqual(new Guid(useWindowsUIXamlProjections ? "ca10b37c-f382-4591-8557-5e24965279b0" : "8b0909dc-2005-5d93-bf8a-725f017baa8d"),
+            GetProviderIid(module, "[#System]System.Collections.Specialized.NotifyCollectionChangedEventHandler"));
+        Assert.AreEqual(new Guid(useWindowsUIXamlProjections ? "0ffb101a-bc7d-50c3-8193-55cdf7448fa2" : "5f754c9d-bc42-56ea-96c0-70113dbd62a4"),
+            GetProviderIid(module, "[#System]System.Nullable`1[[#System]System.Collections.Specialized.NotifyCollectionChangedAction]"));
         Assert.AreEqual(new Guid("d026dd64-5f26-5f15-a86a-0dec8a431796"),
             GetProviderIid(module, "[#System]System.ComponentModel.DataErrorsChangedEventArgs"));
         Assert.AreEqual(new Guid("0d82bd8d-fe62-5d67-a7b9-7886dd75bc4e"),
@@ -510,7 +577,7 @@ public sealed class Test_IidLookup
             ("[#System]System.Nullable`1[[WinRT.Runtime]Windows.Foundation.Point]", "Windows.Foundation.Point")
         })
         {
-            CustomAttribute entry = GetIidEntries(module).Single(entry => entry.Signature!.FixedArguments[0].Element!.ToString() == key);
+            CustomAttribute entry = GetAllIidEntries(module).Single(entry => entry.Signature!.FixedArguments[0].Element!.ToString() == key);
             Assert.AreEqual(target, ((TypeSignature)entry.Signature!.FixedArguments[2].Element!).FullName);
         }
 
@@ -649,7 +716,7 @@ public sealed class Test_IidLookup
             }
             """);
         (RuntimeContext context, ModuleDefinition module) = runner.LoadOutput(await runner.GenerateAsync("marshaller-iids"));
-        var guids = GetIidEntries(module).Select(entry =>
+        var guids = GetAllIidEntries(module).Select(entry =>
         {
             TypeSignature target = (TypeSignature)entry.Signature!.FixedArguments[1].Element!;
             CustomAttribute attribute = target.Resolve(context).CustomAttributes.Single();
@@ -675,13 +742,32 @@ public sealed class Test_IidLookup
 
     private static string[] GetIidKeys(ModuleDefinition module)
     {
-        return GetIidEntries(module).Select(entry => entry.Signature!.FixedArguments[0].Element!.ToString()!).ToArray();
+        return GetAllIidEntries(module).Select(entry => entry.Signature!.FixedArguments[0].Element!.ToString()!).ToArray();
+    }
+
+    private static CustomAttribute[] GetRuntimeIidEntries(ModuleDefinition module)
+    {
+        ModuleDefinition runtime = module.RuntimeContext!.LoadAssembly(typeof(WindowsRuntime.WindowsRuntimeObject).Assembly.Location).Modules[0];
+
+        return GetIidEntries(runtime);
+    }
+
+    private static IEnumerable<CustomAttribute> GetAllIidEntries(ModuleDefinition module)
+    {
+        return GetIidEntries(module).Concat(GetRuntimeIidEntries(module));
     }
 
     private static Guid GetProviderIid(ModuleDefinition module, string key)
     {
-        CustomAttribute entry = GetIidEntries(module).Single(entry => entry.Signature!.FixedArguments[0].Element!.ToString() == key);
-        TypeDefinition provider = ((TypeSignature)entry.Signature!.FixedArguments[1].Element!).Resolve(module.RuntimeContext);
+        CustomAttribute entry = GetAllIidEntries(module).Single(entry => entry.Signature!.FixedArguments[0].Element!.ToString() == key);
+
+        return GetProviderIid(entry, module.RuntimeContext!);
+    }
+
+    private static Guid GetProviderIid(CustomAttribute entry, RuntimeContext context)
+    {
+        TypeDefinition provider = ((TypeSignature)entry.Signature!.FixedArguments[1].Element!).Resolve(context);
+
         return Guid.Parse(provider.CustomAttributes.Single().Signature!.FixedArguments[0].Element!.ToString()!);
     }
 }

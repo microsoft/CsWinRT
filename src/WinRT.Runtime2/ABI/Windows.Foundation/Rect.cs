@@ -10,9 +10,8 @@ using WindowsRuntime.InteropServices;
 using WindowsRuntime.InteropServices.Marshalling;
 using static System.Runtime.InteropServices.ComWrappers;
 
-#pragma warning disable IDE1006, CA1416
+#pragma warning disable IL2026, IDE1006, CA1416
 
-#pragma warning disable IL2026 // Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code
 [assembly: TypeMap<WindowsRuntimeMetadataTypeMapGroup>(
     value: "Windows.Foundation.Rect",
     target: typeof(Rect),
@@ -22,9 +21,19 @@ using static System.Runtime.InteropServices.ComWrappers;
     value: "Windows.Foundation.IReference`1<Windows.Foundation.Rect>",
     target: typeof(Rect),
     trimTarget: typeof(Rect))]
-#pragma warning restore IL2026 // Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code
+
+[assembly: TypeMap<WindowsRuntimeIidTypeMapGroup>(
+    value: "[#System]System.Nullable`1[[WinRT.Runtime]Windows.Foundation.Rect]",
+    target: typeof(ABI.Windows.Foundation.RectIidProvider),
+    trimTarget: typeof(Rect))]
 
 namespace ABI.Windows.Foundation;
+
+/// <summary>
+/// IID metadata for the nullable projection of <see cref="global::Windows.Foundation.Rect"/>.
+/// </summary>
+[Guid("80423F11-054F-5EAC-AFD3-63B6CE15E77B")]
+file static class RectIidProvider;
 
 /// <summary>
 /// Marshaller for <see cref="Rect"/>.

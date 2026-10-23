@@ -10,9 +10,8 @@ using WindowsRuntime.InteropServices;
 using WindowsRuntime.InteropServices.Marshalling;
 using static System.Runtime.InteropServices.ComWrappers;
 
-#pragma warning disable IDE1006, CA1416
+#pragma warning disable IL2026, IDE1006, CA1416
 
-#pragma warning disable IL2026 // Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code
 [assembly: TypeMap<WindowsRuntimeMetadataTypeMapGroup>(
     value: "Windows.Foundation.AsyncStatus",
     target: typeof(AsyncStatus),
@@ -22,9 +21,19 @@ using static System.Runtime.InteropServices.ComWrappers;
     value: "Windows.Foundation.IReference`1<Windows.Foundation.AsyncStatus>",
     target: typeof(AsyncStatus),
     trimTarget: typeof(AsyncStatus))]
-#pragma warning restore IL2026 // Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code
+
+[assembly: TypeMap<WindowsRuntimeIidTypeMapGroup>(
+    value: "[#System]System.Nullable`1[[WinRT.Runtime]Windows.Foundation.AsyncStatus]",
+    target: typeof(ABI.Windows.Foundation.AsyncStatusIidProvider),
+    trimTarget: typeof(AsyncStatus))]
 
 namespace ABI.Windows.Foundation;
+
+/// <summary>
+/// IID metadata for the nullable projection of <see cref="global::Windows.Foundation.AsyncStatus"/>.
+/// </summary>
+[Guid("A4B74936-2947-5FE8-88D5-51CD35050E71")]
+file static class AsyncStatusIidProvider;
 
 /// <summary>
 /// Marshaller for <see cref="AsyncStatus"/>.
