@@ -254,22 +254,11 @@ internal sealed class InteropGeneratorEmitInputs
     }
 
     /// <summary>
-    /// Enumerates the discovered constructed types and fixed Windows Runtime metadata catalogs.
+    /// Enumerates discovered constructed types and mode-dependent custom mappings.
     /// </summary>
     /// <returns>The canonicalized types used to populate the external IID map.</returns>
     public IEnumerable<TypeSignature> EnumerateIidTypes()
     {
-        ModuleDefinition runtime = _interopReferences.WindowsRuntimeObject.Resolve(_runtimeContext).DeclaringModule!;
-
-        // Runtime proxies identify their public mapped type, while manually projected types use their own identity
-        IEnumerable<TypeSignature> runtimeTypes = runtime.TopLevelTypes
-            .Where(static type => type.IsProjectedWindowsRuntimeType)
-            .Select(static type =>
-                type.TryGetCustomAttribute("WindowsRuntime.InteropServices"u8, "WindowsRuntimeMappedTypeAttribute"u8, out CustomAttribute? attribute) &&
-                attribute.Signature is { FixedArguments: [{ Element: TypeSignature mappedType }] }
-                    ? mappedType
-                    : type.ToTypeSignature());
-
         IEnumerable<TypeSignature> types = [
             .. _discoveryState.GenericDelegateTypes,
             .. _discoveryState.IEnumerator1Types,
@@ -286,11 +275,8 @@ internal sealed class InteropGeneratorEmitInputs
             .. _discoveryState.IAsyncActionWithProgress1Types,
             .. _discoveryState.IAsyncOperationWithProgress2Types,
             .. _discoveryState.SzArrayAndVtableTypes.Keys,
-            .. runtimeTypes,
-            _interopReferences.IEnumerable.ToReferenceTypeSignature(),
-            _interopReferences.IEnumerator.ToReferenceTypeSignature(),
-            _interopReferences.IList.ToReferenceTypeSignature(),
-            _interopReferences.ICommand.ToReferenceTypeSignature(),
+
+            // Fixed runtime IIDs are precompiled (only these custom mappings vary by XAML mode)
             _interopReferences.INotifyCollectionChanged.ToReferenceTypeSignature(),
             _interopReferences.INotifyPropertyChanged.ToReferenceTypeSignature(),
             _interopReferences.NotifyCollectionChangedEventArgs.ToReferenceTypeSignature(),
@@ -299,19 +285,7 @@ internal sealed class InteropGeneratorEmitInputs
             _interopReferences.PropertyChangedEventHandler.ToReferenceTypeSignature(),
             _interopReferences.NotifyCollectionChangedAction.ToValueTypeSignature()];
 
-        IEnumerable<ModuleDefinition> projections = new[]
-        {
-            _discoveryState.WindowsRuntimeSdkProjectionModule,
-            _discoveryState.WindowsRuntimeSdkXamlProjectionModule,
-            _discoveryState.WindowsRuntimeProjectionModule,
-            _discoveryState.WindowsRuntimeComponentModule
-        }.OfType<ModuleDefinition>();
-
-        IEnumerable<TypeSignature> projectedTypes = projections
-            .SelectMany(projection => projection.GetWindowsRuntimeMetadataTypesLookup().Values)
-            .Select(static entry => entry.Type);
-
-        return CanonicalizeTypes(types.Concat(projectedTypes));
+        return CanonicalizeTypes(types);
     }
 
     /// <summary>Resolves aliases and orders signatures by fully qualified type name.</summary>

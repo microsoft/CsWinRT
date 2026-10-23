@@ -9,7 +9,20 @@ using WindowsRuntime.InteropServices;
 using WindowsRuntime.InteropServices.Marshalling;
 using static System.Runtime.InteropServices.ComWrappers;
 
+#pragma warning disable IL2026
+
+[assembly: TypeMap<WindowsRuntimeIidTypeMapGroup>(
+    value: "[WinRT.Runtime]WindowsRuntime.InteropServices.IActivationFactory",
+    target: typeof(ABI.WindowsRuntime.InteropServices.IActivationFactoryIidProvider),
+    trimTarget: typeof(global::WindowsRuntime.InteropServices.IActivationFactory))]
+
 namespace ABI.WindowsRuntime.InteropServices;
+
+/// <summary>
+/// IID metadata for <see cref="global::WindowsRuntime.InteropServices.IActivationFactory"/>.
+/// </summary>
+[Guid("00000035-0000-0000-C000-000000000046")]
+file static class IActivationFactoryIidProvider;
 
 /// <summary>
 /// The <c>IActivationFactory</c> implementation for managed types.

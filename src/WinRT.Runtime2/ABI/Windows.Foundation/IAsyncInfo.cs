@@ -10,20 +10,29 @@ using WindowsRuntime.InteropServices;
 using WindowsRuntime.InteropServices.Marshalling;
 using static System.Runtime.InteropServices.ComWrappers;
 
-#pragma warning disable IDE0008, IDE1006
+#pragma warning disable IL2026, IDE0008, IDE1006
 
-#pragma warning disable IL2026 // Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code
 [assembly: TypeMap<WindowsRuntimeMetadataTypeMapGroup>(
     value: "Windows.Foundation.IAsyncInfo",
     target: typeof(IAsyncInfo),
     trimTarget: typeof(IAsyncInfo))]
-#pragma warning restore IL2026 // Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code
+
+[assembly: TypeMap<WindowsRuntimeIidTypeMapGroup>(
+    value: "[WinRT.Runtime]Windows.Foundation.IAsyncInfo",
+    target: typeof(ABI.Windows.Foundation.IAsyncInfoIidProvider),
+    trimTarget: typeof(IAsyncInfo))]
 
 [assembly: TypeMapAssociation<DynamicInterfaceCastableImplementationTypeMapGroup>(
     source: typeof(IAsyncInfo),
     proxy: typeof(ABI.Windows.Foundation.IAsyncInfoInterfaceImpl))]
 
 namespace ABI.Windows.Foundation;
+
+/// <summary>
+/// IID metadata for <see cref="global::Windows.Foundation.IAsyncInfo"/>.
+/// </summary>
+[Guid("00000036-0000-0000-C000-000000000046")]
+file static class IAsyncInfoIidProvider;
 
 /// <summary>
 /// Marshaller for <see cref="IAsyncInfo"/>.

@@ -28,7 +28,7 @@ public static unsafe class WindowsRuntimeMarshal
     /// Constructed generic types and single-dimensional arrays are supported when discoverable while generating the interop assembly.
     /// <see cref="System.Collections.Generic.KeyValuePair{TKey, TValue}"/> returns its
     /// <c>IKeyValuePair</c> IID because it projects a Windows Runtime interface. Its nullable form is not supported.
-    /// IID metadata is generated only when an input assembly references this method. Reflection-only calls and
+    /// IID metadata for constructed types is generated only when an input assembly references this method. Reflection-only calls and
     /// calls from assemblies unavailable at build time are not guaranteed to work.
     /// </remarks>
     /// <exception cref="NotSupportedException">

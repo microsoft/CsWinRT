@@ -497,6 +497,7 @@ public class Test_ImplementableHierarchy
         {
             InputPaths = [ImplementableHierarchyMetadata.Create(directory), ImplementableHierarchyMetadata.FindWindowsFoundationWinmd()],
             OutputFolder = output,
+            OutputAssemblyName = "Projection",
             Include = ["Contoso"],
             ImplementWinMDTypes = true,
             ReferenceProjection = referenceProjection,

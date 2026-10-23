@@ -793,6 +793,7 @@ public partial class Test_InteropGenericDiscovery
                 {
                     InputPaths = [metadata],
                     OutputFolder = output,
+                    OutputAssemblyName = "WinRT.Sdk.Projection",
                     Include = ["Contoso"],
                     ReferenceProjection = referenceProjection
                 });

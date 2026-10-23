@@ -8,18 +8,29 @@ using WindowsRuntime;
 using WindowsRuntime.InteropServices;
 using WindowsRuntime.InteropServices.Marshalling;
 
-#pragma warning disable IL2026 // Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code
+#pragma warning disable IL2026
+
 [assembly: TypeMap<WindowsRuntimeComWrappersTypeMapGroup>(
     value: "Windows.Foundation.Uri",
     target: typeof(ABI.System.Uri),
     trimTarget: typeof(Uri))]
-#pragma warning restore IL2026 // Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code
+
+[assembly: TypeMap<WindowsRuntimeIidTypeMapGroup>(
+    value: "[#System]System.Uri",
+    target: typeof(ABI.System.UriIidProvider),
+    trimTarget: typeof(Uri))]
 
 [assembly: TypeMapAssociation<WindowsRuntimeComWrappersTypeMapGroup>(
     typeof(Uri),
     typeof(ABI.System.Uri))]
 
 namespace ABI.System;
+
+/// <summary>
+/// IID metadata for <see cref="global::System.Uri"/>.
+/// </summary>
+[Guid("9E365E57-48B2-4160-956F-C7385120BBFC")]
+file static class UriIidProvider;
 
 /// <summary>
 /// ABI type for <see cref="global::System.Uri"/>.

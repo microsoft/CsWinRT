@@ -65,6 +65,7 @@ public class Test_MultipleComposableFactories
             {
                 InputPaths = [metadata],
                 OutputFolder = output,
+                OutputAssemblyName = "Projection",
                 Include = ["Contoso"]
             });
             string[] sources = Directory.GetFiles(output, "*.cs").Select(File.ReadAllText).ToArray();
@@ -113,6 +114,7 @@ public class Test_MultipleComposableFactories
             {
                 InputPaths = [ComposableFactoryMetadata.Create(directory)],
                 OutputFolder = output,
+                OutputAssemblyName = "Projection",
                 Include = ["Contoso"],
                 ReferenceProjection = referenceProjection
             });

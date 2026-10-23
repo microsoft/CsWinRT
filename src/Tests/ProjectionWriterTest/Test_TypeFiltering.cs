@@ -25,6 +25,7 @@ public class Test_TypeFiltering
             {
                 InputPaths = [inputPath],
                 OutputFolder = outputFolder,
+                OutputAssemblyName = "Projection",
                 IncludeTypes = ["Contoso.User"],
                 ReferenceProjection = referenceProjection
             });
@@ -42,6 +43,7 @@ public class Test_TypeFiltering
             {
                 InputPaths = [inputPath],
                 OutputFolder = outputFolder,
+                OutputAssemblyName = "Projection",
                 Include = ["Contoso"],
                 Exclude = ["Contoso.User2", "Contoso.IUser2", "Contoso.UserProfile"],
                 ReferenceProjection = true
@@ -60,6 +62,7 @@ public class Test_TypeFiltering
             {
                 InputPaths = [inputPath],
                 OutputFolder = outputFolder,
+                OutputAssemblyName = "Projection",
                 IncludeTypes = ["Contoso.User"]
             });
 
@@ -83,6 +86,7 @@ public class Test_TypeFiltering
             {
                 InputPaths = [inputPath],
                 OutputFolder = outputFolder,
+                OutputAssemblyName = "Projection",
                 Include = ["Contoso"],
                 Exclude = ["Contoso.User2", "Contoso.IUser2", "Contoso.UserProfile"],
                 Component = true
@@ -112,6 +116,7 @@ public class Test_TypeFiltering
             {
                 InputPaths = [inputPath],
                 OutputFolder = outputFolder,
+                OutputAssemblyName = "Projection",
                 IncludeTypes = ["Contoso.User"],
                 Component = true,
                 ReferenceProjection = true
@@ -132,6 +137,7 @@ public class Test_TypeFiltering
             {
                 InputPaths = [inputPath],
                 OutputFolder = outputFolder,
+                OutputAssemblyName = "Projection",
                 Include = ["Contoso"],
                 ExcludeTypes =
                 [

@@ -174,6 +174,7 @@ public class Test_ComponentActivationFactoryExtensions
             {
                 InputPaths = [TypeFilteringMetadata.Create(directory)],
                 OutputFolder = outputFolder,
+                OutputAssemblyName = "WinRT.Component",
                 Include = ["Contoso"],
                 Exclude = ["Contoso.UserProfile"],
                 Component = true,

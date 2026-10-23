@@ -12,20 +12,29 @@ using WindowsRuntime.InteropServices;
 using WindowsRuntime.InteropServices.Marshalling;
 using static System.Runtime.InteropServices.ComWrappers;
 
-#pragma warning disable CA2256, IDE0008, IDE1006
+#pragma warning disable IL2026, IDE0008, IDE1006, CA2256
 
-#pragma warning disable IL2026 // Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code
 [assembly: TypeMap<WindowsRuntimeMetadataTypeMapGroup>(
     value: "Windows.Foundation.IMemoryBufferReference",
     target: typeof(IMemoryBufferReference),
     trimTarget: typeof(IMemoryBufferReference))]
-#pragma warning restore IL2026 // Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code
+
+[assembly: TypeMap<WindowsRuntimeIidTypeMapGroup>(
+    value: "[WinRT.Runtime]Windows.Foundation.IMemoryBufferReference",
+    target: typeof(ABI.Windows.Foundation.IMemoryBufferReferenceIidProvider),
+    trimTarget: typeof(IMemoryBufferReference))]
 
 [assembly: TypeMapAssociation<DynamicInterfaceCastableImplementationTypeMapGroup>(
     source: typeof(IMemoryBufferReference),
     proxy: typeof(ABI.Windows.Foundation.IMemoryBufferReferenceInterfaceImpl))]
 
 namespace ABI.Windows.Foundation;
+
+/// <summary>
+/// IID metadata for <see cref="global::Windows.Foundation.IMemoryBufferReference"/>.
+/// </summary>
+[Guid("FBC4DD29-245B-11E4-AF98-689423260CF8")]
+file static class IMemoryBufferReferenceIidProvider;
 
 /// <summary>
 /// Marshaller for <see cref="IMemoryBufferReference"/>.

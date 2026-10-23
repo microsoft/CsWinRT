@@ -200,6 +200,7 @@ public sealed class Test_NonGenericEnumeration
         {
             InputPaths = [metadata],
             OutputFolder = output,
+            OutputAssemblyName = "WinRT.Projection",
             Include = ["Contoso"]
         });
     }

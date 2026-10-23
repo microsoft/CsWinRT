@@ -192,7 +192,7 @@ internal static partial class SignatureGenerator
     /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
     /// <param name="defaultInterface">The <see cref="TypeSignature"/> instance for the default interface for <paramref name="type"/>, if found.</param>
     /// <returns>Whether <paramref name="defaultInterface"/> was successfully retrieved.</returns>
-    public static bool TryGetDefaultInterfaceFromAttribute(
+    private static bool TryGetDefaultInterfaceFromAttribute(
         TypeDefinition type,
         InteropDefinitions interopDefinitions,
         [NotNullWhen(true)] out TypeSignature? defaultInterface)

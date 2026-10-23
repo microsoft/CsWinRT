@@ -102,18 +102,6 @@ internal static class GuidGenerator
             return false;
         }
 
-        // Resolve runtime classes through the same default-interface metadata used for signatures,
-        // without repeating the entry checks (the default interface comes from validated class metadata).
-        if (type is not (GenericInstanceTypeSignature or SzArrayTypeSignature or BoxedTypeSignature) &&
-            !definition.IsValueType &&
-            !definition.IsInterface &&
-            !definition.IsDelegate &&
-            SignatureGenerator.TryGetDefaultInterfaceFromAttribute(definition, interopDefinitions, out TypeSignature? defaultInterface))
-        {
-            type = defaultInterface;
-            definition = type.Resolve(interopReferences.RuntimeContext);
-        }
-
         // Constructed interfaces, arrays, and boxed delegates reuse marshalling's parameterized IID generation
         if (type is GenericInstanceTypeSignature or SzArrayTypeSignature or BoxedTypeSignature)
         {

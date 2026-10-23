@@ -38,14 +38,17 @@ public sealed class Test_MetadataCatalogAdditions
             {
                 InputPaths = [input],
                 OutputFolder = output,
+                OutputAssemblyName = "WinRT.Projection",
                 Include = [rootNamespace],
                 ReferenceProjection = referenceProjection,
                 AdditionExclude = excludeAdditions ? [rootNamespace] : []
             });
             string path = Path.Combine(output, "WindowsRuntimeMetadataTypes.cs");
+            string iidPath = Path.Combine(output, "WindowsRuntimeIidTypeMap.cs");
             if (referenceProjection || excludeAdditions)
             {
                 Assert.IsFalse(File.Exists(path));
+                Assert.IsFalse(File.Exists(iidPath));
             }
             else
             {
@@ -55,6 +58,12 @@ public sealed class Test_MetadataCatalogAdditions
                     Assert.Contains("typeof(global::" + name + ")", catalog);
                 }
                 Assert.Contains("\"Mapped.Xaml\"", catalog);
+                string iids = File.ReadAllText(iidPath);
+                foreach (string name in names)
+                {
+                    Assert.Contains("[#System]System.Nullable`1[[WinRT.Projection]" + name + "]", iids);
+                    Assert.Contains("trimTarget: typeof(global::" + name + ")", iids);
+                }
             }
         }
         finally

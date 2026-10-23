@@ -10,14 +10,17 @@ using WindowsRuntime.InteropServices;
 using WindowsRuntime.InteropServices.Marshalling;
 using static System.Runtime.InteropServices.ComWrappers;
 
-#pragma warning disable IDE0008
+#pragma warning disable IL2026, IDE0008
 
-#pragma warning disable IL2026 // Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code
 [assembly: TypeMap<WindowsRuntimeMetadataTypeMapGroup>(
     value: "Microsoft.UI.Xaml.IXamlServiceProvider",
     target: typeof(ABI.System.IServiceProvider),
     trimTarget: typeof(IServiceProvider))]
-#pragma warning restore IL2026 // Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code
+
+[assembly: TypeMap<WindowsRuntimeIidTypeMapGroup>(
+    value: "[#System]System.IServiceProvider",
+    target: typeof(ABI.System.IServiceProviderIidProvider),
+    trimTarget: typeof(IServiceProvider))]
 
 [assembly: TypeMapAssociation<WindowsRuntimeMetadataTypeMapGroup>(
     source: typeof(IServiceProvider),
@@ -28,6 +31,12 @@ using static System.Runtime.InteropServices.ComWrappers;
     proxy: typeof(ABI.System.IServiceProviderInterfaceImpl))]
 
 namespace ABI.System;
+
+/// <summary>
+/// IID metadata for <see cref="global::System.IServiceProvider"/>.
+/// </summary>
+[Guid("68B3A2DF-8173-539F-B524-C8A2348F5AFB")]
+file static class IServiceProviderIidProvider;
 
 /// <summary>
 /// ABI type for <see cref="global::System.IServiceProvider"/>.
