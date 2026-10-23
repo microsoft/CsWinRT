@@ -81,7 +81,7 @@ namespace ABI.Microsoft.UI.Xaml.Data
                     *result = MarshalInspectable<object>.FromManaged(__result);
 
                 }
-                catch (Exception __exception__)
+                catch (Exception __exception__) when (global::WinRT.ExceptionHelpers.NotifyExceptionForDebugger(__exception__))
                 {
                     global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
                     return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
@@ -97,7 +97,7 @@ namespace ABI.Microsoft.UI.Xaml.Data
                 {
                     global::WinRT.ComWrappersSupport.FindObject<global::Microsoft.UI.Xaml.Data.ICustomProperty>(thisPtr).SetValue(MarshalInspectable<object>.FromAbi(target), MarshalInspectable<object>.FromAbi(value));
                 }
-                catch (Exception __exception__)
+                catch (Exception __exception__) when (global::WinRT.ExceptionHelpers.NotifyExceptionForDebugger(__exception__))
                 {
                     global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
                     return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
@@ -115,7 +115,7 @@ namespace ABI.Microsoft.UI.Xaml.Data
                     *result = MarshalInspectable<object>.FromManaged(__result);
 
                 }
-                catch (Exception __exception__)
+                catch (Exception __exception__) when (global::WinRT.ExceptionHelpers.NotifyExceptionForDebugger(__exception__))
                 {
                     global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
                     return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
@@ -131,7 +131,7 @@ namespace ABI.Microsoft.UI.Xaml.Data
                 {
                     global::WinRT.ComWrappersSupport.FindObject<global::Microsoft.UI.Xaml.Data.ICustomProperty>(thisPtr).SetIndexedValue(MarshalInspectable<object>.FromAbi(target), MarshalInspectable<object>.FromAbi(value), MarshalInspectable<object>.FromAbi(index));
                 }
-                catch (Exception __exception__)
+                catch (Exception __exception__) when (global::WinRT.ExceptionHelpers.NotifyExceptionForDebugger(__exception__))
                 {
                     global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
                     return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
@@ -148,7 +148,7 @@ namespace ABI.Microsoft.UI.Xaml.Data
                     __value = global::WinRT.ComWrappersSupport.FindObject<global::Microsoft.UI.Xaml.Data.ICustomProperty>(thisPtr).CanRead; *value = (byte)(__value ? 1 : 0);
 
                 }
-                catch (Exception __exception__)
+                catch (Exception __exception__) when (global::WinRT.ExceptionHelpers.NotifyExceptionForDebugger(__exception__))
                 {
                     global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
                     return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
@@ -165,7 +165,7 @@ namespace ABI.Microsoft.UI.Xaml.Data
                     __value = global::WinRT.ComWrappersSupport.FindObject<global::Microsoft.UI.Xaml.Data.ICustomProperty>(thisPtr).CanWrite; *value = (byte)(__value ? 1 : 0);
 
                 }
-                catch (Exception __exception__)
+                catch (Exception __exception__) when (global::WinRT.ExceptionHelpers.NotifyExceptionForDebugger(__exception__))
                 {
                     global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
                     return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
@@ -183,7 +183,7 @@ namespace ABI.Microsoft.UI.Xaml.Data
                     *value = MarshalString.FromManaged(__value);
 
                 }
-                catch (Exception __exception__)
+                catch (Exception __exception__) when (global::WinRT.ExceptionHelpers.NotifyExceptionForDebugger(__exception__))
                 {
                     global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
                     return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
@@ -200,7 +200,7 @@ namespace ABI.Microsoft.UI.Xaml.Data
                     __value = global::WinRT.ComWrappersSupport.FindObject<global::Microsoft.UI.Xaml.Data.ICustomProperty>(thisPtr).Type; 
                     *value = global::ABI.System.Type.FromManaged(__value);
                 }
-                catch (Exception __exception__)
+                catch (Exception __exception__) when (global::WinRT.ExceptionHelpers.NotifyExceptionForDebugger(__exception__))
                 {
                     global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
                     return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
@@ -313,7 +313,7 @@ namespace ABI.Microsoft.UI.Xaml.Data
                 *result = MarshalInterface<global::Microsoft.UI.Xaml.Data.ICustomProperty>.FromManaged(__result);
 
             }
-            catch (Exception __exception__)
+            catch (Exception __exception__) when (global::WinRT.ExceptionHelpers.NotifyExceptionForDebugger(__exception__))
             {
                 global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
                 return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
@@ -344,7 +344,7 @@ namespace ABI.Microsoft.UI.Xaml.Data
 
                 *result = MarshalInterface<global::Microsoft.UI.Xaml.Data.ICustomProperty>.FromManaged(__result);
             }
-            catch (Exception __exception__)
+            catch (Exception __exception__) when (global::WinRT.ExceptionHelpers.NotifyExceptionForDebugger(__exception__))
             {
                 global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
                 return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
@@ -360,7 +360,7 @@ namespace ABI.Microsoft.UI.Xaml.Data
                 __result = global::WinRT.ComWrappersSupport.FindObject<object>(thisPtr).ToString();
                 *result = MarshalString.FromManaged(__result);
             }
-            catch (Exception __exception__)
+            catch (Exception __exception__) when (global::WinRT.ExceptionHelpers.NotifyExceptionForDebugger(__exception__))
             {
                 global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
                 return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
@@ -377,7 +377,7 @@ namespace ABI.Microsoft.UI.Xaml.Data
                 *value = global::ABI.System.Type.FromManaged(__value);
 
             }
-            catch (Exception __exception__)
+            catch (Exception __exception__) when (global::WinRT.ExceptionHelpers.NotifyExceptionForDebugger(__exception__))
             {
                 global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
                 return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);

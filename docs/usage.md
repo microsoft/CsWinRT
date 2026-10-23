@@ -50,10 +50,11 @@ Application developers on .NET 5+ can reference C#/WinRT interop assemblies by a
 
 ## Debugging exceptions crossing the WinRT ABI (experimental)
 
-This opt-in experiment notifies an attached debugger at the end of
-`WinRT.ExceptionHelpers.SetErrorInfo`, after recording the managed exception's error information.
-Generated ABI callbacks and runtime projection callbacks, including event add/remove accessors,
-use this common path before returning the translated HRESULT.
+This opt-in experiment notifies an attached debugger from exception filters on generated
+ABI callbacks, runtime projection callbacks, and managed activation-factory entrypoints.
+The filters call `WinRT.ExceptionHelpers.NotifyExceptionForDebugger` before the throwing
+managed frames are unwound. The catch bodies still set error information and return the
+translated HRESULT afterward.
 Two application project properties select the experiment. Both default to `false`:
 
 ```xml
@@ -70,23 +71,40 @@ disabled. Break mode requires `Debugger.IsAttached`; raise mode requires a Win32
 detected by `IsDebuggerPresent`. The selected mode does not fall back to the other mode
 when its debugger check is false.
 
-The notification runs inside the ABI catch, not an exception filter. The debugger may still
-show the original throwing frames and available locals while the catch is active. Inner
-`finally` blocks in the called user code have already run, so they may have changed locals
-or disposed objects; a `finally` associated with the ABI catch itself runs afterward.
-Optimized or asynchronous code can further limit the available frames and locals.
+The notification runs during exception-handler search, before stack unwinding and before
+inner `finally` blocks run. This lets the debugger inspect the throwing method's active
+frames, parameters, and available locals instead of relying on frames that have already
+been unwound. Optimized code can still discard locals, and an async throw site that was
+unwound before the exception reached this ABI call cannot be recovered.
+Reflection-based custom property access can wrap an exception before it reaches the ABI
+filter, so the original getter/setter frames may already be unwound on that fallback path.
+The reflection-based component hosting shim is left unchanged for compatibility with
+older component runtimes; its reflection invocation can likewise wrap exceptions.
 
-Continuing returns the translated HRESULT and leaves normal error propagation in place.
-Expected exceptions that cross the ABI also produce notifications; this does not predict
-whether XAML will eventually handle the error. Other callers of `SetErrorInfo`, such as
-activation-factory entrypoints and `ReportUnhandledError`, use the same notification path.
+The generated pattern is:
+
+```csharp
+catch (Exception ex) when (ExceptionHelpers.NotifyExceptionForDebugger(ex))
+{
+    ExceptionHelpers.SetErrorInfo(ex);
+    return ExceptionHelpers.GetHRForException(ex);
+}
+```
+
+The filter helper always returns `true`, including when notifications are disabled or an
+unexpected notification failure is caught, so the original ABI catch remains selected.
+Continuing allows user `finally` blocks to run, then the catch records error information
+and returns the translated HRESULT. Expected exceptions that cross the ABI also produce
+notifications; this does not predict whether XAML will eventually handle the error.
+`SetErrorInfo` itself no longer emits the experiment's notification, so direct calls to it
+or to `ReportUnhandledError` do not add a late, post-unwind stop.
 
 In raise mode, the notification is a continuable, experiment-specific
 Win32 exception, **`0xE0435752`**, with the original managed HRESULT as its first parameter.
 In Visual Studio, enable native debugging, then add this code under **Debug > Windows >
 Exception Settings > Win32 Exceptions**, naming it **C#/WinRT ABI exception**. Enable
 **Break When Thrown** to stop; clear it to continue without stopping. Inspect the original
-exception in `SetErrorInfo`'s `ex` parameter and select its throwing frame in Call Stack.
+exception in the ABI filter's exception variable and select its throwing frame in Call Stack.
 The notification is handled even when the debugger passes it to the application.
 The notification helper is marked `DebuggerHidden` and, on .NET 6+, `StackTraceHidden`
 to keep it out of stepping and formatted managed stack traces. Raw/native stack walks
@@ -105,7 +123,7 @@ so break mode does not notify there.
 
 The properties map to `CSWINRT_ENABLE_ABI_EXCEPTION_BREAK` and
 `CSWINRT_ENABLE_ABI_EXCEPTION_RAISE` AppContext switches, respectively. In untrimmed
-applications, they can also be set at startup, before the first call to `SetErrorInfo`:
+applications, they can also be set at startup, before the first instrumented ABI exception:
 
 ```csharp
 AppContext.SetSwitch("CSWINRT_ENABLE_ABI_EXCEPTION_BREAK", true);
@@ -115,9 +133,15 @@ AppContext.SetSwitch("CSWINRT_ENABLE_ABI_EXCEPTION_RAISE", false);
 Switch values are cached on first use, following the other CsWinRT feature switches.
 Use the project properties when trimming or publishing Native AOT, so the selected
 paths are retained. Without an attached debugger, no notification is raised.
-Existing projection binaries that call `SetErrorInfo` pick up the runtime change without
-regeneration. Regenerate projections to update event accessors that previously returned
-the raw exception HRESULT without setting error information.
+Use the matching updated runtime and regenerate/rebuild projections with the updated
+`cswinrt.exe`. Rebuild applications/components with the updated source generator for
+generated generic callbacks and activation exports. Existing projection binaries do not
+acquire exception filters just by replacing `WinRT.Runtime.dll`; only the runtime's own
+rebuilt callbacks pick up their filters that way.
+Newly generated filters require a matching or newer runtime containing
+`NotifyExceptionForDebugger`. Combining them with an older runtime can cause
+`MissingMethodException` before the ABI catch runs and terminate the process at a native
+callback boundary.
 Event accessor failures now use the same HRESULT normalization as other ABI methods;
 for example, `ArgumentOutOfRangeException` becomes `E_BOUNDS` rather than `0x80131502`.
 Raise mode additionally requires enabling **Break When Thrown** for the custom code

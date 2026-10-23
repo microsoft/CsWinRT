@@ -959,7 +959,7 @@ namespace ABI.System.Collections.Generic
                 ____return_value__ = IDictionary<K, V>.FindAdapter(new IntPtr(thisPtr)).Lookup(Marshaler<K>.FromAbi(key));
                 *__return_value__ = (VAbi)Marshaler<V>.FromManaged(____return_value__);
             }
-            catch (global::System.Exception __exception__)
+            catch (global::System.Exception __exception__) when (global::WinRT.ExceptionHelpers.NotifyExceptionForDebugger(__exception__))
             {
                 global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
                 return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
@@ -981,7 +981,7 @@ namespace ABI.System.Collections.Generic
                 ____return_value__ = IDictionary<K, V>.FindAdapter(new IntPtr(thisPtr)).HasKey(Marshaler<K>.FromAbi(key));
                 *__return_value__ = (byte)(____return_value__ ? 1 : 0);
             }
-            catch (global::System.Exception __exception__)
+            catch (global::System.Exception __exception__) when (global::WinRT.ExceptionHelpers.NotifyExceptionForDebugger(__exception__))
             {
                 global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
                 return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
@@ -1001,7 +1001,7 @@ namespace ABI.System.Collections.Generic
                 *__return_value__ = MarshalInterface<global::System.Collections.Generic.IReadOnlyDictionary<K, V>>.FromManaged(____return_value__);
 
             }
-            catch (global::System.Exception __exception__)
+            catch (global::System.Exception __exception__) when (global::WinRT.ExceptionHelpers.NotifyExceptionForDebugger(__exception__))
             {
                 global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
                 return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
@@ -1023,7 +1023,7 @@ namespace ABI.System.Collections.Generic
                 ____return_value__ = IDictionary<K, V>.FindAdapter(new IntPtr(thisPtr)).Insert(Marshaler<K>.FromAbi(key), Marshaler<V>.FromAbi(value));
                 *__return_value__ = (byte)(____return_value__ ? 1 : 0);
             }
-            catch (global::System.Exception __exception__)
+            catch (global::System.Exception __exception__) when (global::WinRT.ExceptionHelpers.NotifyExceptionForDebugger(__exception__))
             {
                 global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
                 return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
@@ -1040,7 +1040,7 @@ namespace ABI.System.Collections.Generic
             {
                 IDictionary<K, V>.FindAdapter(new IntPtr(thisPtr))._Remove(Marshaler<K>.FromAbi(key));
             }
-            catch (global::System.Exception __exception__)
+            catch (global::System.Exception __exception__) when (global::WinRT.ExceptionHelpers.NotifyExceptionForDebugger(__exception__))
             {
                 global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
                 return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
@@ -1054,7 +1054,7 @@ namespace ABI.System.Collections.Generic
             {
                 IDictionary<K, V>.FindAdapter(thisPtr).Clear();
             }
-            catch (global::System.Exception __exception__)
+            catch (global::System.Exception __exception__) when (global::WinRT.ExceptionHelpers.NotifyExceptionForDebugger(__exception__))
             {
                 global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
                 return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
@@ -1074,7 +1074,7 @@ namespace ABI.System.Collections.Generic
                 *__return_value__ = ____return_value__;
 
             }
-            catch (global::System.Exception __exception__)
+            catch (global::System.Exception __exception__) when (global::WinRT.ExceptionHelpers.NotifyExceptionForDebugger(__exception__))
             {
                 global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
                 return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);

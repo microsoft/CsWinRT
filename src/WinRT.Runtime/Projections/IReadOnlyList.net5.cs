@@ -438,7 +438,7 @@ namespace ABI.System.Collections.Generic
                 *__return_value__ = (TAbi)Marshaler<T>.FromManaged(____return_value__);
 
             }
-            catch (Exception __exception__)
+            catch (Exception __exception__) when (global::WinRT.ExceptionHelpers.NotifyExceptionForDebugger(__exception__))
             {
                 global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
                 return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
@@ -464,7 +464,7 @@ namespace ABI.System.Collections.Generic
                 *__return_value__ = (byte)(____return_value__ ? 1 : 0);
 
             }
-            catch (Exception __exception__)
+            catch (Exception __exception__) when (global::WinRT.ExceptionHelpers.NotifyExceptionForDebugger(__exception__))
             {
                 global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
                 return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
@@ -489,7 +489,7 @@ namespace ABI.System.Collections.Generic
                 *__return_value__ = ____return_value__;
 
             }
-            catch (Exception __exception__)
+            catch (Exception __exception__) when (global::WinRT.ExceptionHelpers.NotifyExceptionForDebugger(__exception__))
             {
                 global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
                 return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
@@ -509,7 +509,7 @@ namespace ABI.System.Collections.Generic
                 *__return_value__ = ____return_value__;
 
             }
-            catch (Exception __exception__)
+            catch (Exception __exception__) when (global::WinRT.ExceptionHelpers.NotifyExceptionForDebugger(__exception__))
             {
                 global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
                 return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);

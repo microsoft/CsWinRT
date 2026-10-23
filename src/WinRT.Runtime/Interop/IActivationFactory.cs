@@ -167,7 +167,7 @@ namespace ABI.WinRT.Interop
                     __result = global::WinRT.ComWrappersSupport.FindObject<global::WinRT.Interop.IActivationFactory>(thisPtr).ActivateInstance();
                     *result = __result;
                 }
-                catch (Exception __exception__)
+                catch (Exception __exception__) when (global::WinRT.ExceptionHelpers.NotifyExceptionForDebugger(__exception__))
                 {
                     global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
                     return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);

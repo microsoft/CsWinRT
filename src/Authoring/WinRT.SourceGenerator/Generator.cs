@@ -361,7 +361,7 @@ namespace Generator
 
                                 return S_OK;
                             }
-                            catch (Exception e)
+                            catch (Exception e) when (global::WinRT.ExceptionHelpers.NotifyExceptionForDebugger(e))
                             {
                                 ExceptionHelpers.SetErrorInfo(e);
 

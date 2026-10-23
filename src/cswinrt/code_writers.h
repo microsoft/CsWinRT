@@ -6481,7 +6481,7 @@ try
 %
 %%
 }
-catch (Exception __exception__)
+catch (Exception __exception__) when (global::WinRT.ExceptionHelpers.NotifyExceptionForDebugger(__exception__))
 {
 global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
 return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
@@ -6759,7 +6759,7 @@ var __handler = %.FromAbi(%);
 __this.% += __handler;
 return 0;
 }
-catch (Exception __ex)
+catch (Exception __ex) when (global::WinRT.ExceptionHelpers.NotifyExceptionForDebugger(__ex))
 {
 global::WinRT.ExceptionHelpers.SetErrorInfo(__ex);
 return global::WinRT.ExceptionHelpers.GetHRForException(__ex);
@@ -6797,7 +6797,7 @@ __this.% -= __handler;
 }
 return 0;
 }
-catch (Exception __ex)
+catch (Exception __ex) when (global::WinRT.ExceptionHelpers.NotifyExceptionForDebugger(__ex))
 {
 global::WinRT.ExceptionHelpers.SetErrorInfo(__ex);
 return global::WinRT.ExceptionHelpers.GetHRForException(__ex);

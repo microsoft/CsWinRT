@@ -75,7 +75,7 @@ namespace ABI.System.ComponentModel
                     __this.PropertyChanged += __handler;
                     return 0;
                 }
-                catch (global::System.Exception __ex)
+                catch (global::System.Exception __ex) when (global::WinRT.ExceptionHelpers.NotifyExceptionForDebugger(__ex))
                 {
                     global::WinRT.ExceptionHelpers.SetErrorInfo(__ex);
                     return global::WinRT.ExceptionHelpers.GetHRForException(__ex);
@@ -93,7 +93,7 @@ namespace ABI.System.ComponentModel
                     }
                     return 0;
                 }
-                catch (global::System.Exception __ex)
+                catch (global::System.Exception __ex) when (global::WinRT.ExceptionHelpers.NotifyExceptionForDebugger(__ex))
                 {
                     global::WinRT.ExceptionHelpers.SetErrorInfo(__ex);
                     return global::WinRT.ExceptionHelpers.GetHRForException(__ex);

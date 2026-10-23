@@ -67,59 +67,74 @@ namespace WinRT
         [ThreadStatic]
         private static bool notifyingDebugger;
 
+        /// <summary>
+        /// Notifies an attached debugger from an ABI exception filter before stack unwinding.
+        /// Always returns true so the exception is translated by the associated catch.
+        /// </summary>
+        [System.ComponentModel.EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never)]
         [DebuggerHidden]
 #if NET
         [StackTraceHidden]
 #endif
         [MethodImpl(MethodImplOptions.NoInlining)]
-        private static void NotifyExceptionForDebugger(Exception exception)
+        public static bool NotifyExceptionForDebugger(Exception exception)
         {
-            if (!FeatureSwitches.EnableAbiExceptionBreak)
-            {
-                if (!FeatureSwitches.EnableAbiExceptionRaise)
-                {
-                    return;
-                }
-            }
-
-            if (notifyingDebugger)
-            {
-                return;
-            }
-
-            notifyingDebugger = true;
             try
             {
-                if (FeatureSwitches.EnableAbiExceptionBreak)
+                if (!FeatureSwitches.EnableAbiExceptionBreak)
                 {
-                    if (Debugger.IsAttached)
+                    if (!FeatureSwitches.EnableAbiExceptionRaise)
                     {
-                        Debugger.Break();
-                    }
-                }
-                else if (FeatureSwitches.EnableAbiExceptionRaise)
-                {
-                    if (Platform.IsDebuggerPresent() != 0)
-                    {
-                        // A private, continuable exception, independently configurable in native Exception Settings.
-                        nuint hresult = unchecked((uint)exception.HResult);
-                        try
-                        {
-                            Platform.RaiseException(0xE0435752, 0, 1, &hresult);
-                        }
-                        catch (SEHException)
-                        {
-                            // The debugger passed the notification back to us. It must not replace the original exception.
-                        }
+                        return true;
                     }
                 }
 
-                GC.KeepAlive(exception);
+                if (notifyingDebugger)
+                {
+                    return true;
+                }
+
+                notifyingDebugger = true;
+                try
+                {
+                    if (FeatureSwitches.EnableAbiExceptionBreak)
+                    {
+                        if (Debugger.IsAttached)
+                        {
+                            Debugger.Break();
+                        }
+                    }
+                    else if (FeatureSwitches.EnableAbiExceptionRaise)
+                    {
+                        if (Platform.IsDebuggerPresent() != 0)
+                        {
+                            // A private, continuable exception, independently configurable in native Exception Settings.
+                            nuint hresult = unchecked((uint)exception.HResult);
+                            try
+                            {
+                                Platform.RaiseException(0xE0435752, 0, 1, &hresult);
+                            }
+                            catch (SEHException)
+                            {
+                                // The debugger passed the notification back to us. It must not replace the original exception.
+                            }
+                        }
+                    }
+
+                    GC.KeepAlive(exception);
+                }
+                finally
+                {
+                    notifyingDebugger = false;
+                }
             }
-            finally
+            catch (Exception e)
             {
-                notifyingDebugger = false;
+                // A throwing filter is treated as false, which would skip the ABI catch.
+                Debug.Assert(false, e.Message, e.StackTrace);
             }
+
+            return true;
         }
 
         private static bool Initialize()
@@ -600,8 +615,6 @@ See https://aka.ms/cswinrt/interop#windows-sdk",
                     using var iErrorInfo = ComWrappersSupport.CreateCCWForObject(new ManagedExceptionErrorInfo(ex));
                     Platform.SetErrorInfo(0, iErrorInfo.ThisPtr);
                 }
-
-                NotifyExceptionForDebugger(ex);
             }
             catch (Exception e)
             {

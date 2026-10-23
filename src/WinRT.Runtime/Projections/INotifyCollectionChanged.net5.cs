@@ -98,7 +98,7 @@ namespace ABI.System.Collections.Specialized
                     __this.CollectionChanged += __handler;
                     return 0;
                 }
-                catch (global::System.Exception __ex)
+                catch (global::System.Exception __ex) when (global::WinRT.ExceptionHelpers.NotifyExceptionForDebugger(__ex))
                 {
                     global::WinRT.ExceptionHelpers.SetErrorInfo(__ex);
                     return global::WinRT.ExceptionHelpers.GetHRForException(__ex);
@@ -117,7 +117,7 @@ namespace ABI.System.Collections.Specialized
                     }
                     return 0;
                 }
-                catch (global::System.Exception __ex)
+                catch (global::System.Exception __ex) when (global::WinRT.ExceptionHelpers.NotifyExceptionForDebugger(__ex))
                 {
                     global::WinRT.ExceptionHelpers.SetErrorInfo(__ex);
                     return global::WinRT.ExceptionHelpers.GetHRForException(__ex);

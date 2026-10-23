@@ -109,7 +109,7 @@ namespace ABI.WinRT.Interop
                 {
                     *guid = ComWrappersSupport.FindObject<global::WinRT.Interop.IErrorInfo>(thisPtr).GetGuid();
                 }
-                catch (Exception ex)
+                catch (Exception ex) when (global::WinRT.ExceptionHelpers.NotifyExceptionForDebugger(ex))
                 {
                     ExceptionHelpers.SetErrorInfo(ex);
                     return ExceptionHelpers.GetHRForException(ex);
@@ -126,7 +126,7 @@ namespace ABI.WinRT.Interop
                     _source = ComWrappersSupport.FindObject<global::WinRT.Interop.IErrorInfo>(thisPtr).GetSource();
                     *source = Marshal.StringToBSTR(_source);
                 }
-                catch (Exception ex)
+                catch (Exception ex) when (global::WinRT.ExceptionHelpers.NotifyExceptionForDebugger(ex))
                 {
                     Marshal.FreeBSTR(*source);
                     ExceptionHelpers.SetErrorInfo(ex);
@@ -144,7 +144,7 @@ namespace ABI.WinRT.Interop
                     _description = ComWrappersSupport.FindObject<global::WinRT.Interop.IErrorInfo>(thisPtr).GetDescription();
                     *description = Marshal.StringToBSTR(_description);
                 }
-                catch (Exception ex)
+                catch (Exception ex) when (global::WinRT.ExceptionHelpers.NotifyExceptionForDebugger(ex))
                 {
                     Marshal.FreeBSTR(*description);
                     ExceptionHelpers.SetErrorInfo(ex);
@@ -162,7 +162,7 @@ namespace ABI.WinRT.Interop
                     _helpFile = ComWrappersSupport.FindObject<global::WinRT.Interop.IErrorInfo>(thisPtr).GetHelpFile();
                     *helpFile = Marshal.StringToBSTR(_helpFile);
                 }
-                catch (Exception ex)
+                catch (Exception ex) when (global::WinRT.ExceptionHelpers.NotifyExceptionForDebugger(ex))
                 {
                     Marshal.FreeBSTR(*helpFile);
                     ExceptionHelpers.SetErrorInfo(ex);
@@ -180,7 +180,7 @@ namespace ABI.WinRT.Interop
                     _helpFileContent = ComWrappersSupport.FindObject<global::WinRT.Interop.IErrorInfo>(thisPtr).GetHelpFileContent();
                     *helpFileContent = Marshal.StringToBSTR(_helpFileContent);
                 }
-                catch (Exception ex)
+                catch (Exception ex) when (global::WinRT.ExceptionHelpers.NotifyExceptionForDebugger(ex))
                 {
                     Marshal.FreeBSTR(*helpFileContent);
                     ExceptionHelpers.SetErrorInfo(ex);
@@ -303,7 +303,7 @@ namespace ABI.WinRT.Interop
                 {
                     return global::WinRT.ComWrappersSupport.FindObject<global::WinRT.Interop.ISupportErrorInfo>(thisPtr).InterfaceSupportsErrorInfo(*guid) ? 0 : 1;
                 }
-                catch (Exception ex)
+                catch (Exception ex) when (global::WinRT.ExceptionHelpers.NotifyExceptionForDebugger(ex))
                 {
                     ExceptionHelpers.SetErrorInfo(ex);
                     return ExceptionHelpers.GetHRForException(ex);

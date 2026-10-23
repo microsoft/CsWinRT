@@ -277,7 +277,7 @@ namespace ABI.System.Collections.Generic
                 ____return_value__ = KeyValuePair<K, V>.FindAdapter(thisPtr).Key;
                 *__return_value__ = (KAbi)Marshaler<K>.FromManaged(____return_value__);
             }
-            catch (Exception __exception__)
+            catch (Exception __exception__) when (global::WinRT.ExceptionHelpers.NotifyExceptionForDebugger(__exception__))
             {
                 global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
                 return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
@@ -297,7 +297,7 @@ namespace ABI.System.Collections.Generic
                 ____return_value__ = KeyValuePair<K,V>.FindAdapter(thisPtr).Value;
                 *__return_value__ = (VAbi)Marshaler<V>.FromManaged(____return_value__);
             }
-            catch (Exception __exception__)
+            catch (Exception __exception__) when (global::WinRT.ExceptionHelpers.NotifyExceptionForDebugger(__exception__))
             {
                 global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
                 return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);

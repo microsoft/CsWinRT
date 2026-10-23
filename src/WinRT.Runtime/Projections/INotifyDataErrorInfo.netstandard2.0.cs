@@ -80,7 +80,7 @@ namespace ABI.System.ComponentModel
                     *result = global::ABI.System.Collections.Generic.IEnumerable<object>.FromManaged(__result);
 
                 }
-                catch (global::System.Exception __exception__)
+                catch (global::System.Exception __exception__) when (global::WinRT.ExceptionHelpers.NotifyExceptionForDebugger(__exception__))
                 {
                     global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
                     return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
@@ -103,7 +103,7 @@ namespace ABI.System.ComponentModel
                     *value = (byte)(__value ? 1 : 0);
 
                 }
-                catch (global::System.Exception __exception__)
+                catch (global::System.Exception __exception__) when (global::WinRT.ExceptionHelpers.NotifyExceptionForDebugger(__exception__))
                 {
                     global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
                     return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
@@ -132,7 +132,7 @@ namespace ABI.System.ComponentModel
                     __this.ErrorsChanged += __handler;
                     return 0;
                 }
-                catch (global::System.Exception __ex)
+                catch (global::System.Exception __ex) when (global::WinRT.ExceptionHelpers.NotifyExceptionForDebugger(__ex))
                 {
                     global::WinRT.ExceptionHelpers.SetErrorInfo(__ex);
                     return global::WinRT.ExceptionHelpers.GetHRForException(__ex);
@@ -153,7 +153,7 @@ namespace ABI.System.ComponentModel
                     }
                     return 0;
                 }
-                catch (global::System.Exception __ex)
+                catch (global::System.Exception __ex) when (global::WinRT.ExceptionHelpers.NotifyExceptionForDebugger(__ex))
                 {
                     global::WinRT.ExceptionHelpers.SetErrorInfo(__ex);
                     return global::WinRT.ExceptionHelpers.GetHRForException(__ex);

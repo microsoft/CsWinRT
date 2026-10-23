@@ -67,7 +67,7 @@ namespace ABI.System.Windows.Input
                     __result = global::WinRT.ComWrappersSupport.FindObject<global::System.Windows.Input.ICommand>(thisPtr).CanExecute(MarshalInspectable<object>.FromAbi(parameter)); *result = (byte)(__result ? 1 : 0);
 
                 }
-                catch (global::System.Exception __exception__)
+                catch (global::System.Exception __exception__) when (global::WinRT.ExceptionHelpers.NotifyExceptionForDebugger(__exception__))
                 {
                     global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
                     return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
@@ -82,7 +82,7 @@ namespace ABI.System.Windows.Input
                 {
                     global::WinRT.ComWrappersSupport.FindObject<global::System.Windows.Input.ICommand>(thisPtr).Execute(MarshalInspectable<object>.FromAbi(parameter));
                 }
-                catch (global::System.Exception __exception__)
+                catch (global::System.Exception __exception__) when (global::WinRT.ExceptionHelpers.NotifyExceptionForDebugger(__exception__))
                 {
                     global::WinRT.ExceptionHelpers.SetErrorInfo(__exception__);
                     return global::WinRT.ExceptionHelpers.GetHRForException(__exception__);
@@ -110,7 +110,7 @@ namespace ABI.System.Windows.Input
                     __this.CanExecuteChanged += __handler;
                     return 0;
                 }
-                catch (global::System.Exception __ex)
+                catch (global::System.Exception __ex) when (global::WinRT.ExceptionHelpers.NotifyExceptionForDebugger(__ex))
                 {
                     global::WinRT.ExceptionHelpers.SetErrorInfo(__ex);
                     return global::WinRT.ExceptionHelpers.GetHRForException(__ex);
@@ -129,7 +129,7 @@ namespace ABI.System.Windows.Input
                     }
                     return 0;
                 }
-                catch (global::System.Exception __ex)
+                catch (global::System.Exception __ex) when (global::WinRT.ExceptionHelpers.NotifyExceptionForDebugger(__ex))
                 {
                     global::WinRT.ExceptionHelpers.SetErrorInfo(__ex);
                     return global::WinRT.ExceptionHelpers.GetHRForException(__ex);
