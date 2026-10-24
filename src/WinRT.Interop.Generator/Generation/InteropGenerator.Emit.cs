@@ -92,12 +92,14 @@ internal partial class InteropGenerator
 
         args.Token.ThrowIfCancellationRequested();
 
-        OrderGeneratedMetadata(module, interopDefinitions);
+        CustomAttributePayloadCache payloads = new(module);
+
+        OrderGeneratedMetadata(module, interopDefinitions, payloads);
 
         args.Token.ThrowIfCancellationRequested();
 
         // Emit the interop .dll to disk
-        WriteInteropModuleToDisk(args, module, fingerprint);
+        WriteInteropModuleToDisk(args, module, fingerprint, payloads);
 
         args.Token.ThrowIfCancellationRequested();
 
@@ -2802,7 +2804,12 @@ internal partial class InteropGenerator
     /// <param name="args"><inheritdoc cref="Emit" path="/param[@name='args']/node()"/></param>
     /// <param name="module">The module to write to disk.</param>
     /// <param name="fingerprint">The emission fingerprint to cache with the output, or an empty span to disable caching.</param>
-    private static void WriteInteropModuleToDisk(InteropGeneratorArgs args, ModuleDefinition module, ReadOnlySpan<byte> fingerprint)
+    /// <param name="payloads">The assembly attribute payloads serialized by the final ordering pass.</param>
+    private static void WriteInteropModuleToDisk(
+        InteropGeneratorArgs args,
+        ModuleDefinition module,
+        ReadOnlySpan<byte> fingerprint,
+        CustomAttributePayloadCache payloads)
     {
         string winRTInteropAssemblyPath = Path.Combine(args.GeneratedAssemblyDirectory, InteropNames.WindowsRuntimeInteropDllName);
 
@@ -2810,11 +2817,11 @@ internal partial class InteropGenerator
         {
             if (fingerprint.IsEmpty)
             {
-                InteropModuleWriter.Write(module, winRTInteropAssemblyPath);
+                InteropModuleWriter.Write(module, winRTInteropAssemblyPath, payloads);
             }
             else
             {
-                InteropGenerationCache.Write(args, module, fingerprint);
+                InteropGenerationCache.Write(args, module, fingerprint, payloads);
             }
         }
         catch (Exception e)

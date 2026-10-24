@@ -10,7 +10,7 @@ using AsmResolver.PE.Builder;
 namespace WindowsRuntime.InteropGenerator.Writers;
 
 /// <summary>
-/// Writes interop modules with the default AsmResolver configuration, reusing work that is repeated in method bodies.
+/// Writes interop modules with the default AsmResolver configuration, reusing work that would otherwise be repeated.
 /// </summary>
 internal static class InteropModuleWriter
 {
@@ -19,11 +19,16 @@ internal static class InteropModuleWriter
     /// </summary>
     /// <param name="module">The module to write.</param>
     /// <param name="path">The path of the file to create or overwrite.</param>
-    public static void Write(ModuleDefinition module, string path)
+    /// <param name="payloads">The serialized custom attribute payloads to reuse, which are consumed by this write.</param>
+    public static void Write(ModuleDefinition module, string path, CustomAttributePayloadCache? payloads = null)
     {
-        using FileStream stream = File.Create(path);
+        // Take the payloads before creating the file, so they are consumed (and validated) even if that fails
+        using (payloads?.SubstituteSignatures(module))
+        {
+            using FileStream stream = File.Create(path);
 
-        Write(module, stream);
+            WriteCore(module, stream);
+        }
     }
 
     /// <summary>
@@ -31,7 +36,22 @@ internal static class InteropModuleWriter
     /// </summary>
     /// <param name="module">The module to write.</param>
     /// <param name="stream">The stream to write to.</param>
-    public static void Write(ModuleDefinition module, Stream stream)
+    /// <param name="payloads">The serialized custom attribute payloads to reuse, which are consumed by this write.</param>
+    public static void Write(ModuleDefinition module, Stream stream, CustomAttributePayloadCache? payloads = null)
+    {
+        // Original signatures are restored (and the payloads discarded) even if the write fails
+        using (payloads?.SubstituteSignatures(module))
+        {
+            WriteCore(module, stream);
+        }
+    }
+
+    /// <summary>
+    /// Writes a module to a stream, with any payload substitution already in place.
+    /// </summary>
+    /// <param name="module">The module to write.</param>
+    /// <param name="stream">The stream to write to.</param>
+    private static void WriteCore(ModuleDefinition module, Stream stream)
     {
         // Same as the defaults of 'ModuleDefinition.Write', except for the wrapped method body serializer.
         // All state is created for this write only, so nothing can be observed by a different write.

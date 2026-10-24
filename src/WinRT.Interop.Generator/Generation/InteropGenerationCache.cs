@@ -130,7 +130,12 @@ internal static class InteropGenerationCache
     /// <param name="args">The invocation arguments.</param>
     /// <param name="module">The generated module.</param>
     /// <param name="fingerprint">The emission fingerprint associated with this output.</param>
-    public static void Write(InteropGeneratorArgs args, ModuleDefinition module, ReadOnlySpan<byte> fingerprint)
+    /// <param name="payloads">Optional assembly attribute payloads serialized by the final ordering pass.</param>
+    public static void Write(
+        InteropGeneratorArgs args,
+        ModuleDefinition module,
+        ReadOnlySpan<byte> fingerprint,
+        CustomAttributePayloadCache? payloads = null)
     {
         string assemblyPath = Path.Combine(args.GeneratedAssemblyDirectory, InteropNames.WindowsRuntimeInteropDllName);
         string cachePath = Path.Combine(args.GeneratedAssemblyDirectory, CacheFileName);
@@ -138,6 +143,7 @@ internal static class InteropGenerationCache
 
         try
         {
+            using IDisposable? substitution = payloads?.SubstituteSignatures(module);
             using FileStream assembly = new(assemblyPath, FileMode.Create, FileAccess.ReadWrite, FileShare.None);
 
             InteropModuleWriter.Write(module, assembly);
