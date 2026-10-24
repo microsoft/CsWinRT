@@ -18,6 +18,7 @@ using WindowsRuntime.InteropGenerator.Fixups;
 using WindowsRuntime.InteropGenerator.Models;
 using WindowsRuntime.InteropGenerator.References;
 using WindowsRuntime.InteropGenerator.Rewriters;
+using WindowsRuntime.InteropGenerator.Writers;
 
 namespace WindowsRuntime.InteropGenerator.Generation;
 
@@ -2809,7 +2810,7 @@ internal partial class InteropGenerator
         {
             if (fingerprint.IsEmpty)
             {
-                module.Write(winRTInteropAssemblyPath);
+                InteropModuleWriter.Write(module, winRTInteropAssemblyPath);
             }
             else
             {

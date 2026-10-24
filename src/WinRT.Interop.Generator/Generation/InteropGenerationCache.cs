@@ -11,6 +11,7 @@ using System.Reflection.PortableExecutable;
 using System.Security.Cryptography;
 using System.Threading;
 using WindowsRuntime.InteropGenerator.References;
+using WindowsRuntime.InteropGenerator.Writers;
 using ModuleDefinition = AsmResolver.DotNet.ModuleDefinition;
 
 namespace WindowsRuntime.InteropGenerator.Generation;
@@ -139,7 +140,7 @@ internal static class InteropGenerationCache
         {
             using FileStream assembly = new(assemblyPath, FileMode.Create, FileAccess.ReadWrite, FileShare.None);
 
-            module.Write(assembly);
+            InteropModuleWriter.Write(module, assembly);
             args.Token.ThrowIfCancellationRequested();
 
             Span<byte> record = stackalloc byte[RecordSize];
