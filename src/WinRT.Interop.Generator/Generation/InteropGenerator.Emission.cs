@@ -116,36 +116,4 @@ internal static partial class InteropGenerator
         // Fixups enumerate generated types, so all emit workers must have finished.
         FixupMethodDefinitions(args, module);
     }
-
-    /// <summary>
-    /// The independent emit families and their completion barriers.
-    /// </summary>
-    private enum EmissionStep
-    {
-        TypeHierarchy,
-        Delegates,
-        Enumerators,
-        Enumerables,
-        ReadOnlyLists,
-        Lists,
-        ReadOnlyDictionaries,
-        Dictionaries,
-        KeyValuePairs,
-        MapChangedArguments,
-        ObservableVectors,
-        ObservableMaps,
-        AsyncActions,
-        AsyncOperations,
-        AsyncProgressOperations,
-        ReadOnlyCollections,
-        Collections,
-        Arrays,
-        MethodRewrites,
-        UserDefinedTypes,
-        DynamicDefinitions,
-        CustomTypeMaps,
-        IidTypeMaps,
-        AccessCheckAttributes,
-        MetadataAttributes
-    }
 }
