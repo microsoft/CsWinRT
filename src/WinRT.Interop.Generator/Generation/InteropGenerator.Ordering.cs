@@ -64,7 +64,7 @@ internal static partial class InteropGenerator
 
         if (workerCount == 1 || orderings.All(static ordering => ordering.Count < MinimumOrderingBatchSize))
         {
-            PrepareAttributeKeys(0, attributes.Length);
+            PrepareAttributeKeys(0, attributes.Length, args.Token);
 
             foreach (MetadataCollectionOrdering ordering in orderings)
             {
@@ -76,20 +76,21 @@ internal static partial class InteropGenerator
         {
             int batchCount = GetAttributeKeyBatchCount(attributes.Length, workerCount);
             int[] batches = [.. Enumerable.Range(orderings.Length, batchCount)];
-            InteropGenerationWorkQueue<int> queue = new(
+            InteropGenerationWorkQueue<int, CancellationToken> queue = new(
             [
-                .. orderings.Select((ordering, index) => new InteropGenerationWorkQueue<int>.WorkItem(
+                .. orderings.Select((ordering, index) => new InteropGenerationWorkQueue<int, CancellationToken>.WorkItem(
                     Key: index,
-                    Body: ordering.Compute,
+                    Body: _ => ordering.Compute(),
                     Prerequisites: ReferenceEquals(ordering, attributeOrdering) ? batches : [])),
-                .. batches.Select((key, batchIndex) => new InteropGenerationWorkQueue<int>.WorkItem(
+                .. batches.Select((key, batchIndex) => new InteropGenerationWorkQueue<int, CancellationToken>.WorkItem(
                     Key: key,
-                    Body: () => PrepareAttributeKeys(
+                    Body: token => PrepareAttributeKeys(
                         start: (int)((long)attributes.Length * batchIndex / batchCount),
-                        end: (int)((long)attributes.Length * (batchIndex + 1) / batchCount))))
+                        end: (int)((long)attributes.Length * (batchIndex + 1) / batchCount),
+                        token: token)))
             ]);
 
-            queue.Run(args.MaxDegreesOfParallelism, args.Token);
+            queue.Run(args.Token, args.MaxDegreesOfParallelism, args.Token);
         }
 
         args.Token.ThrowIfCancellationRequested();
@@ -101,11 +102,11 @@ internal static partial class InteropGenerator
             ordering.Apply();
         }
 
-        void PrepareAttributeKeys(int start, int end)
+        void PrepareAttributeKeys(int start, int end, CancellationToken token)
         {
             for (int index = start; index < end; index++)
             {
-                args.Token.ThrowIfCancellationRequested();
+                token.ThrowIfCancellationRequested();
 
                 CustomAttribute attribute = attributes[index];
 

@@ -3,7 +3,6 @@
 
 using AsmResolver.DotNet;
 using WindowsRuntime.InteropGenerator.Builders;
-using WindowsRuntime.InteropGenerator.References;
 
 namespace WindowsRuntime.InteropGenerator.Generation;
 
@@ -13,22 +12,13 @@ internal static partial class InteropGenerator
     /// <summary>
     /// Runs whole emit families as soon as their prerequisites complete.
     /// </summary>
-    /// <param name="args">The invocation arguments.</param>
-    /// <param name="discoveryState">The frozen discovery state.</param>
-    /// <param name="inputs">The canonicalized discovery inputs.</param>
-    /// <param name="emitState">The shared definition lookup state.</param>
-    /// <param name="definitions">The shared default definitions.</param>
-    /// <param name="references">The shared references.</param>
-    /// <param name="module">The output module.</param>
-    private static void RunEmission(
-        InteropGeneratorArgs args,
-        InteropGeneratorDiscoveryState discoveryState,
-        InteropGeneratorEmitInputs inputs,
-        InteropGeneratorEmitState emitState,
-        InteropDefinitions definitions,
-        InteropReferences references,
-        ModuleDefinition module)
+    /// <param name="context">The shared emission context.</param>
+    private static void RunEmission(InteropGeneratorEmissionContext context)
     {
+        InteropGeneratorArgs args = context.Args;
+        InteropGeneratorEmitInputs inputs = context.Inputs;
+        ModuleDefinition module = context.Module;
+
         inputs.PrepareForConcurrentEmission();
 
         EmissionStep[] genericFamilies =
@@ -51,63 +41,78 @@ internal static partial class InteropGenerator
             EmissionStep.Collections
         ];
 
-        InteropGenerationWorkQueue<EmissionStep> queue = new(
+        InteropGenerationWorkQueue<EmissionStep, InteropGeneratorEmissionContext> queue = new(
         [
             new(EmissionStep.TypeHierarchy,
-                () => WindowsRuntimeTypeHierarchyBuilder.Lookup(discoveryState.TypeHierarchyEntries, definitions, references, module, args.Token, out _)),
+                DefineTypeHierarchyLookup),
             new(EmissionStep.Delegates,
-                () => DefineGenericDelegateTypes(args, inputs, emitState, definitions, references, module)),
+                DefineGenericDelegateTypes),
             new(EmissionStep.Enumerators,
-                () => DefineIEnumeratorTypes(args, inputs, emitState, definitions, references, module)),
+                DefineIEnumeratorTypes),
             new(EmissionStep.Enumerables,
-                () => DefineIEnumerableTypes(args, inputs, emitState, definitions, references, module), EmissionStep.Enumerators),
+                DefineIEnumerableTypes, EmissionStep.Enumerators),
             new(EmissionStep.ReadOnlyLists,
-                () => DefineIReadOnlyListTypes(args, inputs, emitState, definitions, references, module), EmissionStep.Enumerables),
+                DefineIReadOnlyListTypes, EmissionStep.Enumerables),
             new(EmissionStep.Lists,
-                () => DefineIListTypes(args, inputs, emitState, definitions, references, module), EmissionStep.Enumerables),
+                DefineIListTypes, EmissionStep.Enumerables),
             new(EmissionStep.ReadOnlyDictionaries,
-                () => DefineIReadOnlyDictionaryTypes(args, inputs, emitState, definitions, references, module), EmissionStep.Enumerables),
+                DefineIReadOnlyDictionaryTypes, EmissionStep.Enumerables),
             new(EmissionStep.Dictionaries,
-                () => DefineIDictionaryTypes(args, inputs, emitState, definitions, references, module), EmissionStep.Enumerables),
+                DefineIDictionaryTypes, EmissionStep.Enumerables),
             new(EmissionStep.KeyValuePairs,
-                () => DefineKeyValuePairTypes(args, inputs, emitState, definitions, references, module)),
+                DefineKeyValuePairTypes),
             new(EmissionStep.MapChangedArguments,
-                () => DefineIMapChangedEventArgsTypes(args, inputs, emitState, definitions, references, module)),
+                DefineIMapChangedEventArgsTypes),
             new(EmissionStep.ObservableVectors,
-                () => DefineIObservableVectorTypes(args, inputs, emitState, definitions, references, module), EmissionStep.Delegates, EmissionStep.Lists),
+                DefineIObservableVectorTypes, EmissionStep.Delegates, EmissionStep.Lists),
             new(EmissionStep.ObservableMaps,
-                () => DefineIObservableMapTypes(args, inputs, emitState, definitions, references, module), EmissionStep.Delegates, EmissionStep.Dictionaries),
+                DefineIObservableMapTypes, EmissionStep.Delegates, EmissionStep.Dictionaries),
             new(EmissionStep.AsyncActions,
-                () => DefineIAsyncActionWithProgressTypes(args, inputs, emitState, definitions, references, module), EmissionStep.Delegates),
+                DefineIAsyncActionWithProgressTypes, EmissionStep.Delegates),
             new(EmissionStep.AsyncOperations,
-                () => DefineIAsyncOperationTypes(args, inputs, emitState, definitions, references, module), EmissionStep.Delegates),
+                DefineIAsyncOperationTypes, EmissionStep.Delegates),
             new(EmissionStep.AsyncProgressOperations,
-                () => DefineIAsyncOperationWithProgressTypes(args, inputs, emitState, definitions, references, module), EmissionStep.Delegates),
+                DefineIAsyncOperationWithProgressTypes, EmissionStep.Delegates),
             new(EmissionStep.ReadOnlyCollections,
-                () => DefineIReadOnlyCollectionKeyValuePair2Types(args, inputs, emitState, definitions, references, module), EmissionStep.ReadOnlyLists, EmissionStep.ReadOnlyDictionaries),
+                DefineIReadOnlyCollectionKeyValuePair2Types, EmissionStep.ReadOnlyLists, EmissionStep.ReadOnlyDictionaries),
             new(EmissionStep.Collections,
-                () => DefineICollectionKeyValuePair2Types(args, inputs, emitState, definitions, references, module), EmissionStep.Lists, EmissionStep.Dictionaries),
+                DefineICollectionKeyValuePair2Types, EmissionStep.Lists, EmissionStep.Dictionaries),
             new(EmissionStep.Arrays,
-                () => DefineSzArrayTypes(args, inputs, emitState, definitions, references, module), genericFamilies),
+                DefineSzArrayTypes, genericFamilies),
             new(EmissionStep.MethodRewrites,
-                () => RewriteMethodDefinitions(args, emitState, references), EmissionStep.Arrays),
+                RewriteMethodDefinitions, EmissionStep.Arrays),
             new(EmissionStep.UserDefinedTypes,
-                () => DefineUserDefinedTypes(args, inputs, emitState, definitions, references, module), genericFamilies),
+                DefineUserDefinedTypes, genericFamilies),
             new(EmissionStep.DynamicDefinitions,
-                () => DefineDynamicImplementationDetailTypes(definitions, module), EmissionStep.UserDefinedTypes, EmissionStep.Arrays),
+                DefineDynamicImplementationDetailTypes, EmissionStep.UserDefinedTypes, EmissionStep.Arrays),
             new(EmissionStep.CustomTypeMaps,
-                () => DefineDynamicCustomMappedTypeMapEntries(args, definitions, references, module)),
+                DefineDynamicCustomMappedTypeMapEntries),
             new(EmissionStep.IidTypeMaps,
-                () => DefineWindowsRuntimeIidTypeMapEntries(args, discoveryState, inputs, definitions, references, module)),
+                DefineWindowsRuntimeIidTypeMapEntries),
             new(EmissionStep.AccessCheckAttributes,
-                () => DefineIgnoresAccessChecksToAttributes(discoveryState, definitions, references, module)),
+                DefineIgnoresAccessChecksToAttributes),
             new(EmissionStep.MetadataAttributes,
-                () => EmitMetadataAssemblyAttributes(references, module))
+                EmitMetadataAssemblyAttributes)
         ]);
 
-        queue.Run(args.MaxDegreesOfParallelism, args.Token);
+        queue.Run(context, args.MaxDegreesOfParallelism, args.Token);
 
         // Fixups enumerate generated types, so all emit workers must have finished.
         FixupMethodDefinitions(args, module);
+    }
+
+    /// <summary>
+    /// Defines the Windows Runtime type hierarchy lookup.
+    /// </summary>
+    /// <param name="context">The shared emission context.</param>
+    private static void DefineTypeHierarchyLookup(InteropGeneratorEmissionContext context)
+    {
+        WindowsRuntimeTypeHierarchyBuilder.Lookup(
+            context.DiscoveryState.TypeHierarchyEntries,
+            context.Definitions,
+            context.References,
+            context.Module,
+            context.Args.Token,
+            out _);
     }
 }

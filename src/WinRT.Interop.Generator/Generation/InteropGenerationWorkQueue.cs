@@ -15,16 +15,18 @@ namespace WindowsRuntime.InteropGenerator.Generation;
 /// Runs a dependency graph of coarse operations with bounded, non-buffering workers.
 /// </summary>
 /// <typeparam name="TKey">The work item identifier type.</typeparam>
+/// <typeparam name="TContext">The shared context passed to each operation.</typeparam>
 /// <param name="items">The operations and their prerequisites, in preferred scheduling order.</param>
-internal sealed class InteropGenerationWorkQueue<TKey>(params InteropGenerationWorkQueue<TKey>.WorkItem[] items)
+internal sealed class InteropGenerationWorkQueue<TKey, TContext>(params InteropGenerationWorkQueue<TKey, TContext>.WorkItem[] items)
     where TKey : notnull
 {
     /// <summary>
     /// Runs all operations, returning only after every worker has finished.
     /// </summary>
+    /// <param name="context">The context to pass to each operation in this run.</param>
     /// <param name="maxDegreesOfParallelism">The worker limit, or -1 for the processor count.</param>
     /// <param name="token">The invocation's cancellation token.</param>
-    public void Run(int maxDegreesOfParallelism, CancellationToken token)
+    public void Run(TContext context, int maxDegreesOfParallelism, CancellationToken token)
     {
         ArgumentOutOfRangeException.ThrowIfLessThan(maxDegreesOfParallelism, -1);
         ArgumentOutOfRangeException.ThrowIfZero(maxDegreesOfParallelism);
@@ -56,7 +58,7 @@ internal sealed class InteropGenerationWorkQueue<TKey>(params InteropGenerationW
             while (ready.TryTake(out Node? node))
             {
                 token.ThrowIfCancellationRequested();
-                node.Body();
+                node.Body(context);
 
                 foreach (Node dependent in node.Dependents)
                 {
@@ -86,7 +88,7 @@ internal sealed class InteropGenerationWorkQueue<TKey>(params InteropGenerationW
                     try
                     {
                         cancellation.Token.ThrowIfCancellationRequested();
-                        node.Body();
+                        node.Body(context);
 
                         foreach (Node dependent in node.Dependents)
                         {
@@ -190,17 +192,17 @@ internal sealed class InteropGenerationWorkQueue<TKey>(params InteropGenerationW
     /// <param name="Key">The operation's unique identifier.</param>
     /// <param name="Body">The operation to run.</param>
     /// <param name="Prerequisites">The prerequisite operation identifiers.</param>
-    public sealed record WorkItem(TKey Key, Action Body, params TKey[] Prerequisites);
+    public sealed record WorkItem(TKey Key, Action<TContext> Body, params TKey[] Prerequisites);
 
     /// <summary>
     /// The dependency state owned by one invocation of <see cref="Run"/>.
     /// </summary>
     /// <param name="body">The operation to run.</param>
     /// <param name="remainingPrerequisites">The initial prerequisite count.</param>
-    private sealed class Node(Action body, int remainingPrerequisites)
+    private sealed class Node(Action<TContext> body, int remainingPrerequisites)
     {
         /// <summary>Gets the operation to run.</summary>
-        public Action Body { get; } = body;
+        public Action<TContext> Body { get; } = body;
 
         /// <summary>Gets the operations released by this node.</summary>
         public List<Node> Dependents { get; } = [];

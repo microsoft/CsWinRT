@@ -20,20 +20,19 @@ public sealed class Test_EmissionWorkQueue
     [DataRow(-1)]
     public void ReusedQueue_RespectsDependencyBarriers(int parallelism)
     {
-        ConcurrentQueue<string> completed = new();
-        InteropGenerationWorkQueue<string> queue = new(
-            new("root", () => completed.Enqueue("root")),
-            new("first", () =>
+        InteropGenerationWorkQueue<string, ConcurrentQueue<string>> queue = new(
+            new("root", static completed => completed.Enqueue("root")),
+            new("first", static completed =>
             {
                 Assert.IsTrue(completed.Contains("root"));
                 completed.Enqueue("first");
             }, "root"),
-            new("second", () =>
+            new("second", static completed =>
             {
                 Assert.IsTrue(completed.Contains("root"));
                 completed.Enqueue("second");
             }, "root"),
-            new("join", () =>
+            new("join", static completed =>
             {
                 Assert.IsTrue(completed.Contains("first"));
                 Assert.IsTrue(completed.Contains("second"));
@@ -42,8 +41,8 @@ public sealed class Test_EmissionWorkQueue
 
         for (int run = 0; run < 3; run++)
         {
-            completed.Clear();
-            queue.Run(parallelism, CancellationToken.None);
+            ConcurrentQueue<string> completed = new();
+            queue.Run(completed, parallelism, CancellationToken.None);
             Assert.AreEqual(4, completed.Count);
             Assert.AreEqual("root", completed.ToArray()[0]);
             Assert.AreEqual("join", completed.ToArray()[^1]);
@@ -51,17 +50,42 @@ public sealed class Test_EmissionWorkQueue
     }
 
     [TestMethod]
+    [DataRow(1)]
+    [DataRow(8)]
+    public void AllWorkItems_ReceiveTheCurrentRunContext(int parallelism)
+    {
+        InteropGenerationWorkQueue<int, ConcurrentBag<object>> queue = new(
+            new(0, static context => context.Add(context)),
+            new(1, static context => context.Add(context)),
+            new(2, static context => context.Add(context), 0, 1));
+
+        for (int run = 0; run < 3; run++)
+        {
+            ConcurrentBag<object> context = [];
+
+            queue.Run(context, parallelism, CancellationToken.None);
+
+            Assert.AreEqual(3, context.Count);
+
+            foreach (object actual in context)
+            {
+                Assert.AreSame(context, actual);
+            }
+        }
+    }
+
+    [TestMethod]
     public async Task ThrowingWorkItem_DoesNotStrandConsumers()
     {
         InvalidOperationException expected = new("queue failure");
-        InteropGenerationWorkQueue<int> queue = new(
-            new(0, () => throw expected),
-            new(1, () => Assert.Fail("A failed prerequisite must not release its dependent."), 0));
+        InteropGenerationWorkQueue<int, InvalidOperationException> queue = new(
+            new(0, static exception => throw exception),
+            new(1, static _ => Assert.Fail("A failed prerequisite must not release its dependent."), 0));
 
         Task execution = Task.Run(() =>
         {
             InvalidOperationException actual = Assert.ThrowsExactly<InvalidOperationException>(
-                () => queue.Run(8, CancellationToken.None));
+                () => queue.Run(expected, 8, CancellationToken.None));
             Assert.AreSame(expected, actual);
         });
 
@@ -74,24 +98,24 @@ public sealed class Test_EmissionWorkQueue
         using CancellationTokenSource cancellation = new();
         using ManualResetEventSlim started = new();
         int finished = 0;
-        InteropGenerationWorkQueue<int> queue = new(new(0, () =>
+        InteropGenerationWorkQueue<int, CancellationToken> queue = new(new(0, token =>
         {
             started.Set();
             try
             {
-                cancellation.Token.WaitHandle.WaitOne();
-                cancellation.Token.ThrowIfCancellationRequested();
+                token.WaitHandle.WaitOne();
+                token.ThrowIfCancellationRequested();
             }
             finally
             {
                 Interlocked.Increment(ref finished);
             }
-        }), new(1, () => Assert.Fail("A canceled prerequisite must not release its dependent."), 0));
+        }), new(1, static _ => Assert.Fail("A canceled prerequisite must not release its dependent."), 0));
 
         Task execution = Task.Run(() =>
         {
             OperationCanceledException exception = Assert.ThrowsExactly<OperationCanceledException>(
-                () => queue.Run(4, cancellation.Token));
+                () => queue.Run(cancellation.Token, 4, cancellation.Token));
             Assert.AreEqual(cancellation.Token, exception.CancellationToken);
         });
         bool began = started.Wait(TimeSpan.FromSeconds(10));
@@ -105,13 +129,14 @@ public sealed class Test_EmissionWorkQueue
     public void InvalidGraphs_AreRejectedBeforeAnyBodyRuns()
     {
         int calls = 0;
-        Action body = () => calls++;
+        Action context = () => calls++;
+        Action<Action> body = static action => action();
         Assert.ThrowsExactly<ArgumentException>(() =>
-            new InteropGenerationWorkQueue<int>(new(0, body), new(0, body)).Run(1, CancellationToken.None));
+            new InteropGenerationWorkQueue<int, Action>(new(0, body), new(0, body)).Run(context, 1, CancellationToken.None));
         Assert.ThrowsExactly<KeyNotFoundException>(() =>
-            new InteropGenerationWorkQueue<int>(new InteropGenerationWorkQueue<int>.WorkItem(0, body, 99)).Run(1, CancellationToken.None));
+            new InteropGenerationWorkQueue<int, Action>(new InteropGenerationWorkQueue<int, Action>.WorkItem(0, body, 99)).Run(context, 1, CancellationToken.None));
         Assert.ThrowsExactly<InvalidOperationException>(() =>
-            new InteropGenerationWorkQueue<int>(new(0, body, 1), new(1, body, 0)).Run(1, CancellationToken.None));
+            new InteropGenerationWorkQueue<int, Action>(new(0, body, 1), new(1, body, 0)).Run(context, 1, CancellationToken.None));
         Assert.AreEqual(0, calls);
     }
 }
