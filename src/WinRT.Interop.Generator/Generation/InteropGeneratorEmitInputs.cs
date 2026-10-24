@@ -262,7 +262,7 @@ internal sealed class InteropGeneratorEmitInputs
             types[index++] = new(type, vtableTypes, identityGroup);
         }
 
-        // Representatives are stable; independent groups need no ordering before parallel emission.
+        // Representatives are stable; independent groups need no ordering before parallel emission
         return new(groups, types);
     }
 

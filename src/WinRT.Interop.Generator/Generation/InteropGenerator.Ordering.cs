@@ -43,7 +43,7 @@ internal static partial class InteropGenerator
             .ThenBy(static entry => entry.Blob, ByteSequenceComparer.Instance)
             .Select(static entry => entry.Attribute));
 
-        // These holders, unlike ordinary generated types, receive members from multiple workers.
+        // These holders, unlike ordinary generated types, receive members from multiple workers
         MetadataCollectionOrdering[] orderings =
         [
             MetadataCollectionOrdering.Create(module.TopLevelTypes, static types => types

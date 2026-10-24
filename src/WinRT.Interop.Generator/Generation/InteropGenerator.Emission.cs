@@ -97,7 +97,7 @@ internal static partial class InteropGenerator
 
         queue.Run(context, args.MaxDegreesOfParallelism, args.Token);
 
-        // Fixups enumerate generated types, so all emit workers must have finished.
+        // Fixups enumerate generated types, so all emit workers must have finished
         FixupMethodDefinitions(args, module);
     }
 

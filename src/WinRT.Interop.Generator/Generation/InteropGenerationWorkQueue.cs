@@ -52,7 +52,7 @@ internal sealed class InteropGenerationWorkQueue<TKey, TContext>(params InteropG
             }
         }
 
-        // A single worker needs neither the parallel loop nor linked cancellation.
+        // A single worker needs neither the parallel loop nor linked cancellation
         if (workerCount == 1)
         {
             while (ready.TryTake(out Node? node))
@@ -105,7 +105,7 @@ internal sealed class InteropGenerationWorkQueue<TKey, TContext>(params InteropG
                     }
                     catch (Exception exception)
                     {
-                        // Publish the initiating failure before cancellation wakes the blocked consumers.
+                        // Publish the initiating failure before cancellation wakes the blocked consumers
                         _ = Interlocked.CompareExchange(ref failure, ExceptionDispatchInfo.Capture(exception), null);
                         cancellation.Cancel();
 

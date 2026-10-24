@@ -2659,7 +2659,7 @@ internal partial class InteropGenerator
         InteropReferences interopReferences = context.References;
         ModuleDefinition module = context.Module;
 
-        // Skip the sidecar IID map when no input references 'GetIid<T>'.
+        // Skip the sidecar IID map when no input references 'GetIid<T>'
         if (!discoveryState.HasIidLookupReferences)
         {
             return;

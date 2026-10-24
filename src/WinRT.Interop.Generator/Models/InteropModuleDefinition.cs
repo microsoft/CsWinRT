@@ -46,7 +46,7 @@ internal sealed class InteropModuleDefinition(DotNetRuntimeInfo runtime)
         {
             ArgumentNullException.ThrowIfNull(assembly);
 
-            // Preserve references already owned by this module, including ones added after importer creation.
+            // Preserve references already owned by this module, including ones added after importer creation
             if (assembly is AssemblyReference reference && reference.IsImportedInModule(TargetModule))
             {
                 _ = _assemblies.TryAdd(reference, new(reference));
@@ -54,7 +54,7 @@ internal sealed class InteropModuleDefinition(DotNetRuntimeInfo runtime)
                 return reference;
             }
 
-            // A dictionary factory can run more than once, but only the published lazy may attach a reference.
+            // A dictionary factory can run more than once, but only the published lazy may attach a reference
             return _assemblies.GetOrAdd(
                 key: assembly,
                 valueFactory: static (descriptor, target) => new(() =>

@@ -91,7 +91,7 @@ internal static class WindowsRuntimeIidTypeMapBuilder
                     throw WellKnownInteropExceptions.ConflictingIidTypeNames(key, previousIid, iid);
                 }
 
-                // Distinct reference/implementation spellings can share a key and IID but have different trim targets.
+                // Distinct reference/implementation spellings can share a key and IID but have different trim targets
                 if (TypeDescriptorComparer.Default.Compare(importedType, previousType) < 0)
                 {
                     entries[key] = (importedType, iid);
