@@ -47,7 +47,7 @@ internal static partial class InteropGenerator
                 Constructor: constructors[attribute.Constructor!],
                 Blob: GetAttributeOrderingKey(attribute, module)))
             .OrderBy(static entry => entry.Constructor, StringComparer.Ordinal)
-            .ThenBy(static entry => entry.Blob, StringComparer.Ordinal)
+            .ThenBy(static entry => entry.Blob, ByteSequenceComparer.Instance)
             .Select(static entry => entry.Attribute));
     }
 
@@ -96,7 +96,7 @@ internal static partial class InteropGenerator
     /// <param name="attribute">The attribute to order.</param>
     /// <param name="module">The output module used to format type-valued arguments.</param>
     /// <returns>A lossless, ordinal ordering key.</returns>
-    private static string GetAttributeOrderingKey(CustomAttribute attribute, ModuleDefinition module)
+    private static ReadOnlyMemory<byte> GetAttributeOrderingKey(CustomAttribute attribute, ModuleDefinition module)
     {
         using MemoryStream stream = new();
         BlobSerializationContext context = new(
@@ -108,7 +108,7 @@ internal static partial class InteropGenerator
 
         attribute.Signature!.Write(context);
 
-        return Convert.ToHexString(stream.GetBuffer().AsSpan(0, (int)stream.Length));
+        return stream.ToArray();
     }
 
     /// <summary>
