@@ -41,7 +41,8 @@ internal static partial class AbiMethodBodyFactory
         bool isArraySetter = isSetter && sig.Parameters[0].Type is SzArrayTypeSignature;
         bool isAddEvent = sig.Method.IsAdder;
         bool isRemoveEvent = sig.Method.IsRemover;
-        bool needsOutputCleanup = RequiresDoAbiOutputCleanup(context, sig);
+        ParameterInfo? finalReceiveArray = GetFinalDoAbiReceiveArray(context, sig, isArraySetter);
+        bool needsOutputCleanup = RequiresDoAbiOutputCleanup(context, sig, finalReceiveArray);
 
         if (isAddEvent || isRemoveEvent)
         {
@@ -268,8 +269,8 @@ internal static partial class AbiMethodBodyFactory
                     writer.WriteLine();
                     writer.WriteLine(isMultiline: true, $$"""
                         Unsafe.SkipInit(out InlineArray16<{{elementProjected}}> __{{raw}}_inlineArray);
-                            {{elementProjected}}[] __{{raw}}_arrayFromPool = null;
-                            scoped Span<{{elementProjected}}> __{{raw}} = default;
+                        {{elementProjected}}[] __{{raw}}_arrayFromPool = null;
+                        scoped Span<{{elementProjected}}> __{{raw}} = default;
                         """);
                 }
             }
@@ -307,6 +308,7 @@ internal static partial class AbiMethodBodyFactory
 
                     if (category == ParameterCategory.FillArray)
                     {
+                        // Copy-back can read unwritten slots after a partial fill.
                         writer.WriteLine($"__{raw}.Clear();");
                     }
                 }
@@ -523,7 +525,7 @@ internal static partial class AbiMethodBodyFactory
 
             if (needsOutputCleanup)
             {
-                EmitInitializeDoAbiFillArrays(writer, context, sig);
+                EmitClearDoAbiFillArrays(writer, context, sig);
                 writer.WriteLine(isMultiline: true, """
                     try
                     {
@@ -720,7 +722,7 @@ internal static partial class AbiMethodBodyFactory
                     {
                     """);
                 writer.IncreaseIndent();
-                EmitDoAbiOutputCleanup(writer, context, sig);
+                EmitDoAbiOutputCleanup(writer, context, sig, finalReceiveArray);
                 writer.WriteLine("throw;");
                 writer.DecreaseIndent();
                 writer.WriteLine("}");
@@ -791,12 +793,18 @@ internal static partial class AbiMethodBodyFactory
 
                     string raw = p.GetRawName();
                     IndentedTextWriterCallback elementProjected = TypedefNameWriter.WriteProjectionType(context, TypeSemanticsFactory.Get(szArr.BaseType));
+                    string clearArray = context.AbiTypeKindResolver.ContainsManagedReferences(szArr.BaseType) switch
+                    {
+                        true => "true",
+                        false => "false",
+                        null => $"RuntimeHelpers.IsReferenceOrContainsReferences<{elementProjected.Format()}>()"
+                    };
                     writer.WriteLine();
                     writer.WriteLine(isMultiline: true, $$"""
                         if (__{{raw}}_arrayFromPool is not null)
                         {
                             global::System.Buffers.ArrayPool<{{elementProjected}}>.Shared.Return(
-                                __{{raw}}_arrayFromPool, clearArray: RuntimeHelpers.IsReferenceOrContainsReferences<{{elementProjected}}>());
+                                __{{raw}}_arrayFromPool, clearArray: {{clearArray}});
                         }
                         """);
                 }

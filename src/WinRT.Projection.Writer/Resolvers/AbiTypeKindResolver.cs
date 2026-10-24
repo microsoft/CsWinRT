@@ -185,6 +185,39 @@ internal sealed class AbiTypeKindResolver(MetadataCache cache)
         => IsBlittablePrimitive(signature) || IsBlittableStruct(signature);
 
     /// <summary>
+    /// Gets whether the managed projection is known to contain GC references, or <see langword="null"/>
+    /// when the runtime intrinsic must determine its reference content.
+    /// </summary>
+    public bool? ContainsManagedReferences(TypeSignature signature)
+    {
+        if (signature.IsObject() || signature.IsString() || signature.IsSystemType())
+        {
+            return true;
+        }
+
+        if (signature is GenericInstanceTypeSignature)
+        {
+            return null;
+        }
+
+        if (signature is TypeDefOrRefSignature type)
+        {
+            (string ns, string name) = type.Type.Names();
+            if (MappedTypes.IsMapped(ns, name))
+            {
+                return null;
+            }
+        }
+
+        return Resolve(signature) switch
+        {
+            AbiTypeKind.BlittablePrimitive or AbiTypeKind.Enum or AbiTypeKind.BlittableStruct => false,
+            AbiTypeKind.RuntimeClassOrInterface or AbiTypeKind.Delegate => true,
+            _ => null
+        };
+    }
+
+    /// <summary>
     /// Returns whether <paramref name="signature"/> is an SZ-array element shape that flows across the
     /// ABI without per-element marshalling — either a blittable element (blittable primitive or
     /// blittable struct, see <see cref="IsBlittableAbiElement"/>) or a mapped value type (e.g.
@@ -221,24 +254,33 @@ internal sealed class AbiTypeKindResolver(MetadataCache cache)
             || IsMappedAbiValueType(signature);
 
     /// <summary>
-    /// Returns whether <paramref name="signature"/> identifies a parameter type that, when received
-    /// via an <c>Out</c> parameter, holds a resource which the caller must release in a <c>finally</c>
-    /// block. This includes:
-    /// <list type="bullet">
-    ///   <item>SZ-array element ref-like types (HSTRING / IInspectable* slots) — see <see cref="TypeSignatureExtensions.IsAbiArrayElementRefLike"/></item>
-    ///   <item><see cref="System.Type"/> (whose ABI form is an HSTRING that must be freed) — see <see cref="TypeSignatureExtensions.IsSystemType"/></item>
-    ///   <item>Complex structs (per-field cleanup via the <c>*Marshaller</c>) — see <see cref="IsNonBlittableStruct"/></item>
-    ///   <item>Generic instances (need <c>WindowsRuntimeObjectReferenceValue</c> dispose) — see <see cref="TypeSignatureExtensions.IsGenericInstance"/></item>
-    /// </list>
-    /// Callers should pass the already-stripped parameter type (via <see cref="Generator.TypeSignatureExtensions.StripByRefAndCustomModifiers"/>).
+    /// Returns whether the ABI representation owns resources that must be disposed.
     /// </summary>
-    /// <param name="signature">The stripped (non-byref) parameter type to classify.</param>
-    /// <returns><see langword="true"/> when the type requires finally-block cleanup on receive; otherwise <see langword="false"/>.</returns>
-    public bool RequiresOutParameterCleanup(TypeSignature signature)
-        => signature.IsAbiArrayElementRefLike(this)
-            || signature.IsSystemType()
-            || IsNonBlittableStruct(signature)
-            || signature.IsGenericInstance();
+    /// <param name="signature">The type signature to classify.</param>
+    /// <returns><see langword="true"/> if the ABI value requires disposal.</returns>
+    public bool RequiresAbiDisposal(TypeSignature signature)
+    {
+        if (signature.IsString() || IsReferenceTypeOrGenericInstance(signature) || signature.IsSystemType())
+        {
+            return true;
+        }
+
+        if (IsNonBlittableStruct(signature) &&
+            signature is TypeDefOrRefSignature structType &&
+            AbiTypeHelpers.TryResolveStructTypeDef(Cache, structType) is { } definition)
+        {
+            foreach (FieldDefinition field in definition.Fields)
+            {
+                if (!field.IsStatic && field.Signature is { } fieldSignature &&
+                    RequiresAbiDisposal(fieldSignature.FieldType))
+                {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
 
     /// <summary>
     /// Returns whether a scalar input parameter (a WinRT by-value <c>in</c> or <c>in T</c> parameter)

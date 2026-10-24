@@ -4,6 +4,9 @@
 using System;
 using System.IO;
 using System.Linq;
+using AsmResolver.DotNet;
+using AsmResolver.DotNet.Signatures;
+using AsmResolver.PE.DotNet.Metadata.Tables;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -73,6 +76,68 @@ public class Test_ArrayProperties
             StringAssert.Contains(namesMethod.ToString(), "Span<string>");
             StringAssert.Contains(namesMethod.ToString(), "CopyToManaged_value");
             StringAssert.Contains(namesMethod.ToString(), "ArrayPool<string>.Shared.Return");
+
+            ClassDeclarationSyntax methods = CSharpSyntaxTree.ParseText(source).GetRoot().DescendantNodes()
+                .OfType<ClassDeclarationSyntax>().Single(type => type.Identifier.ValueText == "IWidget2Methods");
+            MethodDeclarationSyntax passStamps = methods.Members.OfType<MethodDeclarationSyntax>()
+                .Single(method => method.Identifier.ValueText == "AcceptStamps");
+            Assert.IsFalse(passStamps.ToString().Contains("__value_span.Clear()", StringComparison.Ordinal), passStamps.ToString());
+            StringAssert.Contains(passStamps.ToString(), "CopyToUnmanaged_value");
+            MethodDeclarationSyntax fillStamps = methods.Members.OfType<MethodDeclarationSyntax>()
+                .Single(method => method.Identifier.ValueText == "FillBoth");
+            StringAssert.Contains(fillStamps.ToString(), "__stamps_span.Clear()");
+            MethodDeclarationSyntax passObjects = methods.Members.OfType<MethodDeclarationSyntax>()
+                .Single(method => method.Identifier.ValueText == "AcceptObjects");
+            StringAssert.Contains(passObjects.ToString(), "__value_span.Clear()");
+            MethodDeclarationSyntax passStrings = methods.Members.OfType<MethodDeclarationSyntax>()
+                .Single(method => method.Identifier.ValueText == "AcceptNames");
+            StringAssert.Contains(passStrings.ToString(), "__value_pinnedHandleSpan.Clear()");
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    /// <summary>
+    /// Known reference shapes use literal clearing flags; other layouts may use a correct literal or the runtime intrinsic.
+    /// </summary>
+    [TestMethod]
+    [DataRow("AcceptObjects", "true", true)]
+    [DataRow("AcceptNames", "true", true)]
+    [DataRow("AcceptWidgets", "true", true)]
+    [DataRow("AcceptInterfaces", "true", true)]
+    [DataRow("FillTypes", "true", true)]
+    [DataRow("AcceptNullable", null, false)]
+    [DataRow("AcceptPairs", null, true)]
+    [DataRow("AcceptDates", null, false)]
+    [DataRow("AcceptPayloads", null, true)]
+    [DataRow("AcceptStamps", null, false)]
+    public void ManagedPoolReturns_UseKnownReferenceFlagsOrSafeFallbacks(string name, string? expectedLiteral, bool containsReferences)
+    {
+        string directory = Directory.CreateTempSubdirectory("ProjectionArrayPoolFlagsTest_").FullName;
+        try
+        {
+            string output = GenerateSources(directory, referenceProjection: false, exclusiveTo: true);
+            string source = File.ReadAllText(Path.Combine(output, "Contoso.cs"));
+            MethodDeclarationSyntax callback = CSharpSyntaxTree.ParseText(source).GetRoot().DescendantNodes()
+                .OfType<MethodDeclarationSyntax>().Single(method =>
+                    method.Identifier.ValueText.StartsWith($"Do_Abi_{name}_", StringComparison.Ordinal));
+            ArgumentSyntax argument = callback.DescendantNodes().OfType<ArgumentSyntax>().Single(argument =>
+                argument.NameColon?.Name.Identifier.ValueText == "clearArray");
+            if (expectedLiteral is not null)
+            {
+                Assert.AreEqual(expectedLiteral, argument.Expression.ToString(), callback.ToString());
+            }
+            else if (argument.Expression.IsKind(SyntaxKind.TrueLiteralExpression) ||
+                argument.Expression.IsKind(SyntaxKind.FalseLiteralExpression))
+            {
+                Assert.AreEqual(containsReferences, argument.Expression.IsKind(SyntaxKind.TrueLiteralExpression), callback.ToString());
+            }
+            else
+            {
+                StringAssert.StartsWith(argument.Expression.ToString(), "RuntimeHelpers.IsReferenceOrContainsReferences<");
+            }
         }
         finally
         {
@@ -196,6 +261,119 @@ public class Test_ArrayProperties
         RunRuntimeFixture($"output-rollback:{failure}");
     }
 
+    /// <summary>
+    /// The allocating marshaller handles its own failures, so a final receive array needs no duplicate rollback.
+    /// </summary>
+    [TestMethod]
+    [DataRow("Nullable")]
+    [DataRow("Pairs")]
+    [DataRow("Types")]
+    public void FinalReceiveArray_OmitsRedundantRollback(string name)
+    {
+        string directory = Directory.CreateTempSubdirectory("ProjectionFinalArrayTest_").FullName;
+        try
+        {
+            string output = GenerateSources(directory, referenceProjection: false, exclusiveTo: true);
+            string source = File.ReadAllText(Path.Combine(output, "Contoso.cs"));
+            MethodDeclarationSyntax callback = CSharpSyntaxTree.ParseText(source).GetRoot().DescendantNodes()
+                .OfType<MethodDeclarationSyntax>().Single(method =>
+                    method.Identifier.ValueText.StartsWith($"Do_Abi_Receive{name}_", StringComparison.Ordinal));
+            Assert.IsTrue(callback.DescendantNodes().OfType<InvocationExpressionSyntax>().Any(call =>
+                call.Expression is IdentifierNameSyntax { Identifier.ValueText: "ConvertToUnmanaged_value" }), callback.ToString());
+            Assert.IsFalse(callback.ToString().Contains("Free_value", StringComparison.Ordinal), callback.ToString());
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    [TestMethod]
+    [DataRow("void", false)]
+    [DataRow("blittable-return", false)]
+    [DataRow("scalar-after-array", false)]
+    [DataRow("return", true)]
+    [DataRow("blittable-fill", false)]
+    [DataRow("fill", true)]
+    [DataRow("resource-free-fill", true)]
+    public void ReceiveArrayRollback_FollowsOutputConversionOrder(string scenario, bool requiresFinalArrayCleanup)
+    {
+        string directory = Directory.CreateTempSubdirectory("ProjectionArrayCleanupOrderTest_").FullName;
+        try
+        {
+            string metadata = ArrayPropertyMetadata.Create(directory, exclusiveTo: true);
+            ModuleDefinition module = ModuleDefinition.FromFile(metadata);
+            TypeDefinition iface = module.TopLevelTypes.Single(type => type.FullName == "Contoso.IWidget2");
+            MethodDefinition method = iface.Methods.Single(method => method.Name == "GetFinalOutputs");
+            if (scenario == "void")
+            {
+                method.Signature!.ReturnType = module.CorLibTypeFactory.Void;
+            }
+            else if (scenario == "return")
+            {
+                method.Signature!.ReturnType = iface.Methods.Single(method => method.Name == "GetOutputs").Signature!.ReturnType;
+            }
+            else if (scenario is "blittable-fill" or "fill" or "resource-free-fill" or "scalar-after-array")
+            {
+                TypeSignature element = scenario switch
+                {
+                    "fill" or "scalar-after-array" => module.CorLibTypeFactory.Object,
+                    "resource-free-fill" => module.TopLevelTypes.Single(type => type.FullName == "Contoso.Stamp").ToTypeSignature(true),
+                    _ => module.CorLibTypeFactory.Int32
+                };
+                TypeSignature parameterType = scenario == "scalar-after-array"
+                    ? new ByReferenceTypeSignature(element)
+                    : new SzArrayTypeSignature(element);
+                method.Signature!.ParameterTypes.Add(parameterType);
+                method.ParameterDefinitions.Add(new ParameterDefinition(
+                    (ushort)method.Signature.ParameterTypes.Count, "last", ParameterAttributes.Out));
+            }
+            module.Write(metadata);
+            string output = Path.Combine(directory, "generated");
+            ProjectionWriter.Run(new ProjectionWriterOptions
+            {
+                InputPaths = [metadata],
+                OutputFolder = output,
+                Include = ["Contoso"],
+                PublicExclusiveToTypes = ["Contoso.IWidget2"],
+                IdicExclusiveToTypes = ["Contoso.IWidget2"]
+            });
+            _ = ProjectionWriterRunner.CompileSources(
+                Directory.GetFiles(output, "*.cs").Select(File.ReadAllText), Path.Combine(directory, "Projection.dll"));
+            string source = File.ReadAllText(Path.Combine(output, "Contoso.cs"));
+            MethodDeclarationSyntax callback = CSharpSyntaxTree.ParseText(source).GetRoot().DescendantNodes()
+                .OfType<MethodDeclarationSyntax>().Single(method =>
+                    method.Identifier.ValueText.StartsWith("Do_Abi_GetFinalOutputs_", StringComparison.Ordinal));
+            string body = callback.ToString();
+            StringAssert.Contains(body, "Free_numbers");
+            StringAssert.Contains(body, "WindowsRuntimeUnknownMarshaller.Free(*iface)");
+            Assert.AreEqual(requiresFinalArrayCleanup, body.Contains("Free_types", StringComparison.Ordinal), body);
+            if (scenario == "scalar-after-array")
+            {
+                AssignmentExpressionSyntax scalarConversion = callback.DescendantNodes().OfType<AssignmentExpressionSyntax>()
+                    .Single(assignment => assignment.Left.ToString() == "*last" && assignment.Right is InvocationExpressionSyntax);
+                InvocationExpressionSyntax receiveConversion = callback.DescendantNodes().OfType<InvocationExpressionSyntax>()
+                    .Single(call => call.Expression is IdentifierNameSyntax { Identifier.ValueText: "ConvertToUnmanaged_types" });
+                Assert.IsTrue(scalarConversion.SpanStart < receiveConversion.SpanStart,
+                    "A potentially throwing scalar conversion must precede receive arrays even when declared after them.");
+                StringAssert.Contains(body, "WindowsRuntimeUnknownMarshaller.Free(*last)");
+            }
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    [TestMethod]
+    [DataRow("array")]
+    [DataRow("managed")]
+    [DataRow("success")]
+    public void NativeFinalReceiveArray_RollsBackEarlierOutputs(string failure)
+    {
+        RunRuntimeFixture($"final-output-rollback:{failure}");
+    }
+
     [TestMethod]
     [DataRow(0, "return")]
     [DataRow(2, "copy")]
@@ -213,6 +391,22 @@ public class Test_ArrayProperties
     public void NativeFillOutputs_RollBackOnlyOwnedContents(int length, string failure)
     {
         RunRuntimeFixture($"fill-rollback:{length}:{failure}");
+    }
+
+    [TestMethod]
+    [DataRow(2)]
+    [DataRow(17)]
+    public void NativePartialFillOutputs_DoNotMarshalStaleTemporaryElements(int length)
+    {
+        RunRuntimeFixture($"fill-rollback:{length}:partial");
+    }
+
+    [TestMethod]
+    [DataRow(2)]
+    [DataRow(17)]
+    public void RcwResourceFreeStructArrays_DoNotRequireDisposal(int length)
+    {
+        RunRuntimeFixture($"resource-free:{length}");
     }
 
     private static string GenerateSources(string directory, bool referenceProjection, bool exclusiveTo)
@@ -284,6 +478,22 @@ public class Test_ArrayProperties
                 ProjectionWriterRunner.GetRequiredFilePath("InteropGeneratorAssemblyPath"), $"@{responseFile}");
             Assert.AreEqual(0, exitCode, log);
             Assert.IsTrue(File.Exists(Path.Combine(directory, "WinRT.Interop.dll")));
+            ModuleDefinition interopModule = ModuleDefinition.FromFile(Path.Combine(directory, "WinRT.Interop.dll"));
+            foreach (string name in new[] { "ABI.System.<int>ArrayMarshaller", "ABI.Contoso.<<Contoso>Stamp>ArrayMarshaller" })
+            {
+                TypeDefinition marshaller = interopModule.GetAllTypes().Single(type => type.FullName == name);
+                Assert.IsFalse(marshaller.Methods.Any(method => method.Name == "Clear" ||
+                    method.Name == "DisposeAndClear" || method.Name == "Dispose"));
+                Assert.IsTrue(marshaller.Methods.Any(method => method.Name == "Free"));
+            }
+            TypeDefinition objects = interopModule.GetAllTypes().Single(type => type.FullName == "ABI.System.<object>ArrayMarshaller");
+            foreach (string name in new[] { "Clear", "DisposeAndClear", "Dispose" })
+            {
+                Assert.IsTrue(objects.Methods.Any(method => method.Name == name));
+            }
+            TypeDefinition payloads = interopModule.GetAllTypes().Single(type => type.FullName == "ABI.Contoso.<<Contoso>Payload>ArrayMarshaller");
+            Assert.IsTrue(payloads.Methods.Any(method => method.Name == "Dispose"),
+                "An HRESULT field must not hide resource-bearing fields later in the struct.");
             File.Copy(typeof(WindowsRuntimeObject).Assembly.Location, Path.Combine(directory, "WinRT.Runtime.dll"));
             File.WriteAllText(Path.Combine(directory, "ArrayPropertySetterTests.runtimeconfig.json"), """
                 {"runtimeOptions":{"tfm":"net10.0","framework":{"name":"Microsoft.NETCore.App","version":"10.0.0"}}}

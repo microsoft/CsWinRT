@@ -18,7 +18,7 @@ public unsafe class ArrayMarshallingLifetimeTests
     [DataRow(3)]
     public void ManagedValueArray_InjectedConversionFailureDisposesResourcesExactlyOnce(int failureIndex)
     {
-        ResourceMarshaller.Disposals = 0;
+        ResourceMarshaller.DisposalCounts = new int[BufferLength + 1];
         ResourceMarshaller.ConversionsBeforeFailure = failureIndex;
         Resource[] values = Enumerable.Range(1, BufferLength).Select(i => new Resource(i)).ToArray();
         int[] destination = new int[BufferLength];
@@ -30,13 +30,17 @@ public unsafe class ArrayMarshallingLifetimeTests
                 Assert.ThrowsExactly<InvalidOperationException>(() =>
                     WindowsRuntimeManagedValueTypeArrayMarshaller<Resource, int>.CopyToUnmanaged<ResourceMarshaller>(
                         values, BufferLength, buffer));
-                Assert.AreEqual(0, ResourceMarshaller.Disposals, "Copying must leave ownership with its caller.");
+                CollectionAssert.AreEqual(new int[BufferLength + 1], ResourceMarshaller.DisposalCounts,
+                    "Copying must leave ownership with its caller.");
             }
             finally
             {
                 WindowsRuntimeManagedValueTypeArrayMarshaller<Resource, int>.Dispose<ResourceMarshaller>(BufferLength, buffer);
             }
-            Assert.AreEqual(failureIndex, ResourceMarshaller.Disposals, "Caller cleanup must dispose each acquired resource once.");
+            int[] expectedDisposals = Enumerable.Range(0, BufferLength + 1)
+                .Select(value => value > 0 && value <= failureIndex ? 1 : 0).ToArray();
+            CollectionAssert.AreEqual(expectedDisposals, ResourceMarshaller.DisposalCounts,
+                "Caller cleanup must dispose each acquired resource once and leave unacquired resources untouched.");
         }
     }
 
@@ -45,7 +49,7 @@ public unsafe class ArrayMarshallingLifetimeTests
     private readonly struct ResourceMarshaller : IWindowsRuntimeManagedValueTypeArrayElementMarshaller<Resource, int>
     {
         [ThreadStatic]
-        public static int Disposals;
+        public static int[] DisposalCounts;
 
         [ThreadStatic]
         public static int ConversionsBeforeFailure;
@@ -65,7 +69,7 @@ public unsafe class ArrayMarshallingLifetimeTests
         {
             if (value != 0)
             {
-                Disposals++;
+                DisposalCounts[value]++;
             }
         }
     }

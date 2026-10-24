@@ -34,6 +34,9 @@ internal static unsafe class Program
 
         switch (args[0])
         {
+            case string scenario when scenario.StartsWith("final-output-rollback:", StringComparison.Ordinal):
+                VerifyOutputRollback(target, ccw, scenario["final-output-rollback:".Length..], finalReceiveArray: true);
+                break;
             case string scenario when scenario.StartsWith("output-rollback:", StringComparison.Ordinal):
                 VerifyOutputRollback(target, ccw, scenario["output-rollback:".Length..]);
                 break;
@@ -44,6 +47,9 @@ internal static unsafe class Program
             case string scenario when scenario.StartsWith("array-abi:", StringComparison.Ordinal):
                 string[] parts = scenario.Split(':');
                 VerifyArrayAbi(target, ccw, parts[1], int.Parse(parts[2]));
+                break;
+            case string scenario when scenario.StartsWith("resource-free:", StringComparison.Ordinal):
+                VerifyResourceFreeArrays(target, ccw, int.Parse(scenario["resource-free:".Length..]));
                 break;
             case "conversion-failure":
                 VerifyConversionFailure(target, ccw);
@@ -75,11 +81,11 @@ internal static unsafe class Program
         return 0;
     }
 
-    private static void VerifyOutputRollback(Target target, void* ccw, string failure)
+    private static void VerifyOutputRollback(Target target, void* ccw, string failure, bool finalReceiveArray = false)
     {
         target.OutputFailure = "success";
         NativeOutputs warmup = default;
-        Check(CallOutputs(ccw, &warmup) == 0, "output warmup");
+        Check(CallOutputs(ccw, &warmup, finalReceiveArray) == 0, "output warmup");
         warmup.Dispose();
 
         for (int iteration = 0; iteration < 3; iteration++)
@@ -89,7 +95,7 @@ internal static unsafe class Program
             NativeOutputs outputs = default;
             try
             {
-                int hr = CallOutputs(ccw, &outputs);
+                int hr = CallOutputs(ccw, &outputs, finalReceiveArray);
                 if (failure == "success")
                 {
                     Check(hr == 0, "successful outputs HRESULT");
@@ -101,7 +107,10 @@ internal static unsafe class Program
                     Check(ABI.System.TypeMarshaller.ConvertToManaged(outputs.Type) == typeof(int), "Type output");
                     Check(outputs.NumbersLength == 3 && new ReadOnlySpan<int>(outputs.Numbers, 3).SequenceEqual([1, 2, 3]), "blittable receive array");
                     Check(TypeArrayMarshaller.ConvertToManaged(outputs.TypesLength, outputs.Types).SequenceEqual(Target.TypeValues(3)), "Type receive array");
-                    Check(ABI.System.TypeMarshaller.ConvertToManaged(outputs.Result) == typeof(int), "owned return value");
+                    if (!finalReceiveArray)
+                    {
+                        Check(ABI.System.TypeMarshaller.ConvertToManaged(outputs.Result) == typeof(int), "owned return value");
+                    }
                 }
                 else
                 {
@@ -126,8 +135,23 @@ internal static unsafe class Program
         }
     }
 
-    private static int CallOutputs(void* ccw, NativeOutputs* outputs)
+    private static int CallOutputs(void* ccw, NativeOutputs* outputs, bool finalReceiveArray)
     {
+        if (finalReceiveArray)
+        {
+            int result = 0;
+            int hr = ((delegate* unmanaged[MemberFunction]<void*, void*, void**, void**, void**, ABI.Contoso.NestedPayload*, ABI.System.Type*,
+                void**, void**, uint*, int**, uint*, ABI.System.Type**, int*, int>)Entry(ccw, "GetFinalOutputs"))(
+                ccw, ccw, &outputs->Text, &outputs->Interface, &outputs->Item, &outputs->Payload, &outputs->Type,
+                &outputs->Optional, &outputs->Pair, &outputs->NumbersLength, &outputs->Numbers,
+                &outputs->TypesLength, &outputs->Types, &result);
+            if (hr == 0)
+            {
+                Check(result == 42, "blittable return after final receive array");
+            }
+            return hr;
+        }
+
         return ((delegate* unmanaged[MemberFunction]<void*, void*, void**, void**, void**, ABI.Contoso.NestedPayload*, ABI.System.Type*,
             void**, void**, uint*, int**, uint*, ABI.System.Type**, ABI.System.Type*, int>)Entry(ccw, "GetOutputs"))(
             ccw, ccw, &outputs->Text, &outputs->Interface, &outputs->Item, &outputs->Payload, &outputs->Type,
@@ -152,6 +176,15 @@ internal static unsafe class Program
                 stamps[i].Value = 12345;
             }
         }
+        if (failure == "partial")
+        {
+            Stamp[] dirtyStamps = ArrayPool<Stamp>.Shared.Rent(length);
+            dirtyStamps.AsSpan().Fill(new Stamp { When = DateTimeOffset.UnixEpoch, Value = 12345 });
+            ArrayPool<Stamp>.Shared.Return(dirtyStamps);
+            object[] dirtyObjects = ArrayPool<object>.Shared.Rent(length);
+            dirtyObjects.AsSpan().Fill(target);
+            ArrayPool<object>.Shared.Return(dirtyObjects);
+        }
 
         uint references = ReferenceCount(ccw);
         fixed (nint* firstData = first)
@@ -161,16 +194,18 @@ internal static unsafe class Program
             {
                 int hr = ((delegate* unmanaged[MemberFunction]<void*, uint, void*, uint, void*, uint, void*, ABI.System.Type*, int>)Entry(ccw, "FillBoth"))(
                     ccw, (uint)length, stamps, (uint)length, failure == "null" ? null : firstData, (uint)length, secondData, &result);
-                if (failure == "success")
+                if (failure is "success" or "partial")
                 {
                     Check(hr == 0, "fill output success HRESULT");
-                    Check(first.All(value => value != 0), "fill outputs retain their COM references on success");
                     Check(TypeArrayMarshaller.ConvertToManaged((uint)length, secondData).All(type => type == typeof(int)), "fill Type values");
                     Check(ABI.System.TypeMarshaller.ConvertToManaged(result) == typeof(int), "fill return value");
                     for (int i = 0; i < length; i++)
                     {
                         Stamp stamp = ABI.Contoso.StampMarshaller.ConvertToManaged(stamps[i]);
-                        Check(stamp.When == DateTimeOffset.UnixEpoch && stamp.Value == 42, "resource-free mapped struct fill");
+                        bool written = failure != "partial" || i == 0;
+                        Check((first[i] != 0) == written, "fill outputs contain only written COM references");
+                        Check(stamp.When == (written ? DateTimeOffset.UnixEpoch : default) &&
+                            stamp.Value == (written ? 42 : 0), "resource-free mapped struct fill");
                     }
                 }
                 else
@@ -183,7 +218,10 @@ internal static unsafe class Program
                     for (int i = 0; i < length; i++)
                     {
                         Check((nint)secondData[i].Name == expectedPointer, "second native buffer ownership after failure");
-                        Check(stamps[i].Value == expectedPointer, "mapped struct buffer after failure");
+                        if (failure == "managed")
+                        {
+                            Check(stamps[i].Value == 12345, "managed failure modified the resource-free buffer");
+                        }
                     }
                     Check(result.Name == null, "failed fill return value");
                     Check(ReferenceCount(ccw) == references, "fill rollback leaked or over-released COM references");
@@ -586,6 +624,33 @@ internal static unsafe class Program
         }
     }
 
+    private static void VerifyResourceFreeArrays(Target target, void* ccw, int length)
+    {
+        using WindowsRuntimeObjectReference reference =
+            WindowsRuntimeComWrappersMarshal.CreateObjectReferenceUnsafe(ccw, in ABI.Contoso.IWidget2Impl.IID, out _);
+        Stamp[] stamps = Enumerable.Range(0, length).Select(i => new Stamp
+        {
+            When = DateTimeOffset.FromUnixTimeSeconds(i),
+            Value = i + 1
+        }).ToArray();
+        ABI.Contoso.IWidget2Methods.AcceptStamps(reference, stamps);
+        Check(target.SeenStamps.Length == length, "resource-free pass array length");
+        for (int i = 0; i < length; i++)
+        {
+            Check(target.SeenStamps[i].When == stamps[i].When &&
+                target.SeenStamps[i].Value == stamps[i].Value, "resource-free pass array contents");
+        }
+
+        object[] first = new object[length];
+        Type[] second = new Type[length];
+        Type result = ABI.Contoso.IWidget2Methods.FillBoth(reference, stamps, first, second);
+        Check(result == typeof(int), "resource-free fill array return");
+        Check(stamps.All(stamp => stamp.When == DateTimeOffset.UnixEpoch && stamp.Value == 42),
+            "resource-free fill array contents");
+        Check(first.All(value => ReferenceEquals(value, target)) && second.All(type => type == typeof(int)),
+            "resource-owning fill array contents");
+    }
+
     private static void VerifyArrayFailure(Target target, void* ccw, int length, bool passArray)
     {
         using WindowsRuntimeObjectReference reference =
@@ -773,14 +838,23 @@ internal static unsafe class Program
             return OutputFailure == "return" ? null : typeof(int);
         }
 
+        public int GetFinalOutputs(object input, out string text, out IWidget2 iface, out object item, out NestedPayload payload, out Type type,
+            out int? optional, out KeyValuePair<string, string> pair, out int[] numbers, out Type[] types)
+        {
+            _ = GetOutputs(input, out text, out iface, out item, out payload, out type, out optional, out pair, out numbers, out types);
+            return 42;
+        }
+
         public Type FillBoth(Span<Stamp> stamps, Span<object> first, Span<Type> second)
         {
             if (OutputFailure == "managed")
             {
                 throw new UnauthorizedAccessException();
             }
-            stamps.Fill(new Stamp { When = DateTimeOffset.UnixEpoch, Value = 42 });
-            first.Fill(this);
+            int written = OutputFailure == "partial" ? Math.Min(1, stamps.Length) : stamps.Length;
+            stamps[..written].Fill(new Stamp { When = DateTimeOffset.UnixEpoch, Value = 42 });
+            int objectsWritten = OutputFailure == "partial" ? Math.Min(1, first.Length) : first.Length;
+            first[..objectsWritten].Fill(this);
             second.Fill(typeof(int));
             if (OutputFailure.StartsWith("copy", StringComparison.Ordinal))
             {
@@ -847,6 +921,8 @@ internal static unsafe class Program
         public IWidget2[] SeenInterfaces { get; private set; } = [];
         public Payload[] SeenPayloads { get; private set; } = [];
         public DateTimeOffset[] SeenDates { get; private set; } = [];
+        public Stamp[] SeenStamps { get; private set; } = [];
+        public void AcceptStamps(ReadOnlySpan<Stamp> value) => SeenStamps = value.ToArray();
         public void AcceptValues(ReadOnlySpan<int> value) => SeenValues = value.ToArray();
         public void AcceptNames(ReadOnlySpan<string> value) => SeenNames = value.ToArray();
         public void AcceptObjects(ReadOnlySpan<object> value) => SeenObjects = value.ToArray();

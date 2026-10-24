@@ -30,10 +30,12 @@ public static unsafe class WindowsRuntimeBlittableValueTypeArrayMarshaller<T>
             return;
         }
 
-        size = (uint)source.Length;
-        array = (T*)Marshal.AllocCoTaskMem(sizeof(T) * source.Length);
+        T* destination = (T*)Marshal.AllocCoTaskMem(sizeof(T) * source.Length);
 
-        source.CopyTo(new Span<T>(array, source.Length));
+        source.CopyTo(new Span<T>(destination, source.Length));
+
+        size = (uint)source.Length;
+        array = destination;
     }
 
     /// <summary>

@@ -369,6 +369,7 @@ internal static partial class AbiMethodBodyFactory
 
             if (!context.AbiTypeKindResolver.IsMappedAbiValueType(szArr.BaseType)
                 && !szArr.BaseType.IsHResultException()
+                && (cat != ParameterCategory.PassArray || context.AbiTypeKindResolver.RequiresAbiDisposal(szArr.BaseType))
                 && !(szArr.BaseType.IsString() && cat == ParameterCategory.PassArray))
             {
                 // Cleanup can run before conversion, or after a native call only partially fills the buffer.
@@ -1216,7 +1217,7 @@ internal static partial class AbiMethodBodyFactory
                             """);
                     }
                 }
-                else if (!context.AbiTypeKindResolver.IsMappedAbiValueType(szArr.BaseType))
+                else if (context.AbiTypeKindResolver.RequiresAbiDisposal(szArr.BaseType))
                 {
                     // For complex structs, both the Dispose_<name> data param and the fixed()
                     // pointer must be typed as <ABI struct>*; the cast can be omitted. For

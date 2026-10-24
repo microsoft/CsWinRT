@@ -309,6 +309,7 @@ internal static partial class ConstructorFactory
                 """);
 
             if (!context.AbiTypeKindResolver.IsMappedAbiValueType(szArr.BaseType)
+                && (cat != ParameterCategory.PassArray || context.AbiTypeKindResolver.RequiresAbiDisposal(szArr.BaseType))
                 && !szArr.BaseType.IsHResultException() && !szArr.BaseType.IsString())
             {
                 // A preceding parameter's conversion can fail before this buffer is populated.
@@ -724,7 +725,7 @@ internal static partial class ConstructorFactory
                         }
                         """);
                 }
-                else if (!context.AbiTypeKindResolver.IsMappedAbiValueType(szArr.BaseType))
+                else if (context.AbiTypeKindResolver.RequiresAbiDisposal(szArr.BaseType))
                 {
                     // Complex structs use a typed <ABI struct>* (no cast), ref types use 'void**'
                     string disposeDataParamType;

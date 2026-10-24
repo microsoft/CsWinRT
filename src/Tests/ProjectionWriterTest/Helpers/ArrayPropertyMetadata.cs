@@ -61,6 +61,13 @@ internal static class ArrayPropertyMetadata
         payload.Fields.Add(new FieldDefinition("Text", FieldAttributes.Public, module.CorLibTypeFactory.String));
         module.TopLevelTypes.Add(payload);
 
+        TypeDefinition hresult = new("Windows.Foundation", "HResult",
+            TypeAttributes.Public | TypeAttributes.Sealed | TypeAttributes.SequentialLayout | TypeAttributes.WindowsRuntime,
+            valueType);
+        hresult.Fields.Add(new FieldDefinition("Value", FieldAttributes.Public, module.CorLibTypeFactory.Int32));
+        module.TopLevelTypes.Add(hresult);
+        payload.Fields.Insert(0, new FieldDefinition("Error", FieldAttributes.Public, hresult.ToTypeSignature(true)));
+
         TypeDefinition dateTime = new("Windows.Foundation", "DateTime",
             TypeAttributes.Public | TypeAttributes.Sealed | TypeAttributes.SequentialLayout | TypeAttributes.WindowsRuntime,
             valueType);
@@ -207,6 +214,15 @@ internal static class ArrayPropertyMetadata
         foreach (ParameterDefinition parameter in fillBoth.ParameterDefinitions)
         {
             parameter.Attributes = ParameterAttributes.Out;
+        }
+
+        _ = AddMethod("AcceptStamps", module.CorLibTypeFactory.Void, new SzArrayTypeSignature(stamp.ToTypeSignature(true)));
+
+        MethodDefinition finalOutputs = AddMethod("GetFinalOutputs", module.CorLibTypeFactory.Int32, [.. outputs.Signature!.ParameterTypes]);
+        for (int i = 0; i < finalOutputs.ParameterDefinitions.Count; i++)
+        {
+            finalOutputs.ParameterDefinitions[i].Name = outputNames[i];
+            finalOutputs.ParameterDefinitions[i].Attributes = i == 0 ? ParameterAttributes.In : ParameterAttributes.Out;
         }
 
         module.Write(path);
