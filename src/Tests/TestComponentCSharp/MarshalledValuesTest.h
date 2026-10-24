@@ -6,6 +6,18 @@ namespace winrt::TestComponentCSharp::implementation
     struct MarshalledValuesTest : MarshalledValuesTestT<MarshalledValuesTest>
     {
         MarshalledValuesTest() = default;
+        MarshalledValuesTest(winrt::array_view<winrt::Windows::Foundation::IReference<int32_t> const> nullableValues, winrt::array_view<winrt::Windows::Foundation::Collections::IKeyValuePair<winrt::hstring, winrt::hstring> const> pairValues, winrt::array_view<winrt::Windows::UI::Xaml::Interop::TypeName const> typeValues);
+        MarshalledValuesTest(winrt::TestComponentCSharp::IArrayMarshalling const& target);
+
+        winrt::com_array<winrt::Windows::Foundation::IReference<int32_t>> NullableValues();
+        void NullableValues(winrt::array_view<winrt::Windows::Foundation::IReference<int32_t> const> values);
+        winrt::com_array<winrt::Windows::Foundation::Collections::IKeyValuePair<winrt::hstring, winrt::hstring>> PairValues();
+        void PairValues(winrt::array_view<winrt::Windows::Foundation::Collections::IKeyValuePair<winrt::hstring, winrt::hstring> const> values);
+        winrt::com_array<winrt::Windows::UI::Xaml::Interop::TypeName> TypeValues();
+        void TypeValues(winrt::array_view<winrt::Windows::UI::Xaml::Interop::TypeName const> values);
+        void FillNullableValues(winrt::array_view<winrt::Windows::Foundation::IReference<int32_t>> values);
+        void FillPairValues(winrt::array_view<winrt::Windows::Foundation::Collections::IKeyValuePair<winrt::hstring, winrt::hstring>> values);
+        void FillTypeValues(winrt::array_view<winrt::Windows::UI::Xaml::Interop::TypeName> values);
 
         winrt::hresult Result();
         void Result(winrt::hresult const& value);
@@ -26,6 +38,10 @@ namespace winrt::TestComponentCSharp::implementation
         static winrt::hresult InvokeHandleResult(winrt::TestComponentCSharp::HandleResult const& handler, winrt::hresult const& value);
 
     private:
+        std::vector<winrt::Windows::Foundation::IReference<int32_t>> _nullableValues;
+        std::vector<winrt::Windows::Foundation::Collections::IKeyValuePair<winrt::hstring, winrt::hstring>> _pairValues;
+        std::vector<winrt::Windows::UI::Xaml::Interop::TypeName> _typeValues;
+        winrt::TestComponentCSharp::IArrayMarshalling _arrayTarget{ nullptr };
         winrt::hresult _result{};
         winrt::Windows::Foundation::DateTime _dateTime{};
         winrt::Windows::Foundation::TimeSpan _timeSpan{};

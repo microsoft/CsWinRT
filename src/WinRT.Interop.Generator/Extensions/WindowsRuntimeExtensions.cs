@@ -490,7 +490,12 @@ internal static class WindowsRuntimeExtensions
                 // for it is actually an unmanaged value type, which doesn't need disposal.
                 if (!fieldDefinition.Signature!.FieldType.IsValueType)
                 {
-                    return !fieldDefinition.Signature.FieldType.IsTypeOfException(interopReferences);
+                    if (fieldDefinition.Signature.FieldType.IsTypeOfException(interopReferences))
+                    {
+                        continue;
+                    }
+
+                    return true;
                 }
 
                 // If any fields are managed, then the containing type needs disposal too

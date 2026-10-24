@@ -381,6 +381,35 @@ namespace UnitTest
         }
 
         [TestMethod]
+        [DataRow(4, 4)]
+        [DataRow(4, 64)]
+        [DataRow(16, 4)]
+        [DataRow(16, 64)]
+        [DataRow(17, 4)]
+        [DataRow(17, 64)]
+        [DataRow(33, 4)]
+        [DataRow(33, 64)]
+        [DataRow(64, 4)]
+        [DataRow(64, 64)]
+        public void Array_String_Pooled(int count, int length)
+        {
+            string[] values = new string[count];
+            for (int i = 0; i < values.Length; i++)
+            {
+                values[i] = new string((char)('a' + i % 26), length);
+            }
+
+            for (int iteration = 0; iteration < 3; iteration++)
+            {
+                string[] filled = new string[count];
+                string[] returned = Tests.Array12(values, filled, out string[] received);
+                CollectionAssert.AreEqual(values, filled);
+                CollectionAssert.AreEqual(values, received);
+                CollectionAssert.AreEqual(values, returned);
+            }
+        }
+
+        [TestMethod]
         public void Array_NullStringArray()
         {
             string[] a = null;
@@ -450,6 +479,70 @@ namespace UnitTest
             IStringable[] c;
             IStringable[] d = Tests.Array16(a, b, out c);
             Assert.IsTrue(AllEqual(a, b, c, d));
+        }
+
+        [TestMethod]
+        [DataRow(16)]
+        [DataRow(17)]
+        [DataRow(33)]
+        [DataRow(64)]
+        public void Array_NonBlittable_Pooled(int count)
+        {
+            NonBlittable[] values = Enumerable.Range(0, count)
+                .Select(i => new NonBlittable(i % 2 == 0, (char)('a' + i % 26), $"value-{i}", i))
+                .ToArray();
+            AssertArrayRoundTrip(values, Tests.Array14);
+        }
+
+        [TestMethod]
+        [DataRow(16)]
+        [DataRow(17)]
+        [DataRow(33)]
+        [DataRow(64)]
+        public void Array_Nested_Pooled(int count)
+        {
+            Nested[] values = Enumerable.Range(0, count)
+                .Select(i => new Nested(default, new NonBlittable(i % 2 == 0, 'a', $"value-{i}", i)))
+                .ToArray();
+            AssertArrayRoundTrip(values, Tests.Array15);
+        }
+
+        [TestMethod]
+        [DataRow(16)]
+        [DataRow(17)]
+        [DataRow(33)]
+        [DataRow(64)]
+        public void Array_Stringable_Pooled(int count)
+        {
+            IStringable[] values = Enumerable.Range(0, count)
+                .Select(i => (IStringable)Windows.Data.Json.JsonValue.CreateNumberValue(i))
+                .ToArray();
+            AssertArrayRoundTrip(values, Tests.Array16);
+        }
+
+        [TestMethod]
+        [DataRow(16)]
+        [DataRow(17)]
+        [DataRow(33)]
+        [DataRow(64)]
+        public void Array_Blittable_Large(int count)
+        {
+            int[] values = Enumerable.Range(0, count).ToArray();
+            AssertArrayRoundTrip(values, Tests.Array7);
+        }
+
+        private delegate T[] ArrayRoundTrip<T>(ReadOnlySpan<T> values, Span<T> filled, out T[] received);
+
+        private static void AssertArrayRoundTrip<T>(T[] values, ArrayRoundTrip<T> roundTrip)
+        {
+            for (int iteration = 0; iteration < 3; iteration++)
+            {
+                T[] filled = new T[values.Length];
+                T[] returned = roundTrip(values, filled, out T[] received);
+                CollectionAssert.AreEqual(values, filled);
+                CollectionAssert.AreEqual(values, received);
+                CollectionAssert.AreEqual(values, returned);
+            }
         }
 
         [TestMethod]

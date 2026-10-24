@@ -21,9 +21,9 @@ namespace WindowsRuntime.ProjectionWriter.Models;
 /// <param name="ReturnIsReceiveArray">True when the return type is an SZ-array whose element is a known ABI element shape (blittable, ref-like, complex struct, HResult-exception, or mapped value type).</param>
 /// <param name="ReturnIsHResultException">True when the return type is <see cref="System.Exception"/> (mapped from WinRT <c>HResult</c>).</param>
 /// <param name="ReturnIsSystemTypeForCleanup">True when the return type is <see cref="System.Type"/>; its ABI form holds an HSTRING that must be disposed.</param>
-/// <param name="HasOutNeedsCleanup">True when at least one Out parameter's underlying type carries a resource that requires post-call cleanup (ref-like array element, System.Type, complex struct, or generic instance).</param>
+/// <param name="HasOutNeedsCleanup">True when at least one Out parameter's underlying ABI type owns resources requiring post-call disposal.</param>
 /// <param name="HasReceiveArray">True when at least one parameter has <c>ReceiveArray</c> category.</param>
-/// <param name="HasNonBlittablePassArray">True when at least one parameter has Pass/Fill-array category and its element type is neither blittable nor mapped value type.</param>
+/// <param name="HasNonBlittablePassArray">True when at least one parameter has Pass/Fill-array category and its element type requires temporary ABI storage, including mapped value types.</param>
 /// <param name="HasNonBlittableStructInput">True when at least one In/Ref parameter's underlying type is a complex struct (needs marshaller initialisation).</param>
 internal readonly record struct MethodSignatureMarshallingFacts(
     AbiTypeKind ReturnShape,
@@ -74,7 +74,7 @@ internal readonly record struct MethodSignatureMarshallingFacts(
         foreach ((_, ParameterInfo p, ParameterCategory cat) in sig.EnumerateWithCategory())
         {
             if (!hasOutNeedsCleanup && cat == ParameterCategory.Out
-                && resolver.RequiresOutParameterCleanup(p.Type.StripByRefAndCustomModifiers()))
+                && resolver.RequiresAbiDisposal(p.Type.StripByRefAndCustomModifiers()))
             {
                 hasOutNeedsCleanup = true;
             }
@@ -86,7 +86,7 @@ internal readonly record struct MethodSignatureMarshallingFacts(
 
             if (!hasNonBlittablePassArray && cat.IsArrayInput()
                 && p.Type is SzArrayTypeSignature szArr
-                && !resolver.IsDirectPassArrayElement(szArr.BaseType))
+                && !resolver.IsBlittableAbiElement(szArr.BaseType))
             {
                 hasNonBlittablePassArray = true;
             }

@@ -67,7 +67,8 @@ internal static partial class AbiTypeHelpers
     /// Returns the ABI C# type name for a single SZ-array element appearing as the <c>data</c>
     /// parameter in array-marshaller <c>UnsafeAccessor</c> signatures (e.g. <c>ConvertToManaged_X</c>,
     /// <c>Free_X</c>). Dispatched by <see cref="Resolvers.AbiTypeKindResolver.ClassifyArrayElement"/>:
-    /// reference-pointer → <c>void*</c>, HResult → <c>global::ABI.System.Exception</c>, mapped value
+    /// reference-pointer → <c>void*</c>, TypeName → <c>global::ABI.System.Type</c>,
+    /// HResult → <c>global::ABI.System.Exception</c>, mapped value
     /// type → mapped ABI name, complex struct → ABI struct name, blittable struct → blittable ABI
     /// struct, primitive → primitive ABI type.
     /// </summary>
@@ -79,6 +80,7 @@ internal static partial class AbiTypeHelpers
         return context.AbiTypeKindResolver.ClassifyArrayElement(elementType) switch
         {
             AbiArrayElementKind.RefLikeVoidStar => "void*",
+            AbiArrayElementKind.SystemType => WellKnownAbiTypeNames.AbiSystemType,
             AbiArrayElementKind.HResultException => WellKnownAbiTypeNames.AbiSystemException,
             AbiArrayElementKind.MappedValueType => GetMappedAbiTypeName(elementType),
             AbiArrayElementKind.NonBlittableStruct => GetAbiStructTypeName(context, elementType),
@@ -91,7 +93,8 @@ internal static partial class AbiTypeHelpers
     /// Returns the C# type name used for the <c>InlineArray16&lt;T&gt;</c> / <c>ArrayPool&lt;T&gt;</c>
     /// storage <c>T</c> backing a non-blittable PassArray / FillArray parameter. Strings,
     /// runtime classes, and objects all collapse to <c>nint</c> (HSTRING handles / IInspectable
-    /// pointers); HResult uses <c>global::ABI.System.Exception</c>; mapped value types and
+    /// pointers); TypeName uses <c>global::ABI.System.Type</c>; HResult uses
+    /// <c>global::ABI.System.Exception</c>; mapped value types and
     /// complex structs use their ABI struct name.
     /// </summary>
     /// <param name="context">The active emit context.</param>
@@ -101,6 +104,7 @@ internal static partial class AbiTypeHelpers
     {
         return context.AbiTypeKindResolver.ClassifyArrayElement(elementType) switch
         {
+            AbiArrayElementKind.SystemType => WellKnownAbiTypeNames.AbiSystemType,
             AbiArrayElementKind.MappedValueType => GetMappedAbiTypeName(elementType),
             AbiArrayElementKind.NonBlittableStruct => GetAbiStructTypeName(context, elementType),
             AbiArrayElementKind.HResultException => WellKnownAbiTypeNames.AbiSystemException,
