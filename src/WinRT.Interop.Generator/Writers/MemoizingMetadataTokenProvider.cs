@@ -157,12 +157,12 @@ internal sealed class MemoizingMetadataTokenProvider : IMetadataTokenProvider
         }
 
         int errorCount = Diagnostics.Exceptions.Count;
-        bool wasFatal = Diagnostics.IsFatal;
 
         token = getToken(Inner, member, diagnosticSource);
 
-        // Don't remember failures, so that each request reports its own errors like the wrapped provider does
-        if (Diagnostics.Exceptions.Count == errorCount && Diagnostics.IsFatal == wasFatal)
+        // Don't remember failures, so that each request reports its own errors like the wrapped provider does.
+        // Once the build is marked as fatal, failing requests can no longer be told apart, so nothing is added.
+        if (Diagnostics.Exceptions.Count == errorCount && !Diagnostics.IsFatal)
         {
             _ = _tokens.TryAdd(member, token);
         }

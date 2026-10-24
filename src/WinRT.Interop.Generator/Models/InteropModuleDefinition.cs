@@ -37,22 +37,32 @@ internal sealed class InteropModuleDefinition(DotNetRuntimeInfo runtime)
         {
             foreach (AssemblyReference reference in module.AssemblyReferences)
             {
-                _ = _assemblies.TryAdd(reference, new(() => reference));
+                _ = _assemblies.TryAdd(reference, new(reference));
             }
         }
 
         /// <inheritdoc/>
         protected override AssemblyReference ImportAssembly(AssemblyDescriptor assembly)
         {
+            ArgumentNullException.ThrowIfNull(assembly);
+
+            // Preserve references already owned by this module, including ones added after importer creation.
+            if (assembly is AssemblyReference reference && reference.IsImportedInModule(TargetModule))
+            {
+                _ = _assemblies.TryAdd(reference, new(reference));
+
+                return reference;
+            }
+
             // A dictionary factory can run more than once, but only the published lazy may attach a reference.
             return _assemblies.GetOrAdd(
                 key: assembly,
                 valueFactory: static (descriptor, target) => new(() =>
                 {
-                    AssemblyReference reference = new(descriptor);
-                    target.AssemblyReferences.Add(reference);
+                    AssemblyReference imported = new(descriptor);
+                    target.AssemblyReferences.Add(imported);
 
-                    return reference;
+                    return imported;
                 }),
                 factoryArgument: TargetModule).Value;
         }

@@ -94,7 +94,7 @@ internal partial class InteropGenerator
 
         CustomAttributePayloadCache payloads = new(module);
 
-        OrderGeneratedMetadata(module, interopDefinitions, payloads);
+        OrderGeneratedMetadata(args, module, interopDefinitions, payloads);
 
         args.Token.ThrowIfCancellationRequested();
 
