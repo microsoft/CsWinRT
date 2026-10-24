@@ -256,6 +256,14 @@ internal static class ArrayPropertyMetadata
             finalOutputs.ParameterDefinitions[i].Attributes = i == 0 ? ParameterAttributes.In : ParameterAttributes.Out;
         }
 
+        MethodDefinition getName = AddMethod("GetName", module.CorLibTypeFactory.Void,
+            new ByReferenceTypeSignature(module.CorLibTypeFactory.String));
+        getName.ParameterDefinitions[0].Name = "name";
+        getName.ParameterDefinitions[0].Attributes = ParameterAttributes.Out;
+        MethodDefinition getScalarType = AddMethod("GetScalarType", module.CorLibTypeFactory.Void,
+            new ByReferenceTypeSignature(typeSignature));
+        getScalarType.ParameterDefinitions[0].Attributes = ParameterAttributes.Out;
+
         module.Write(path);
         return path;
     }

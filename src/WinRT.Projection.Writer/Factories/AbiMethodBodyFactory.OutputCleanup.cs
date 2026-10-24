@@ -81,22 +81,41 @@ internal static partial class AbiMethodBodyFactory
     /// </summary>
     private static bool RequiresDoAbiOutputCleanup(ProjectionEmitContext context, MethodSignatureInfo signature, ParameterInfo? finalReceiveArray)
     {
+        // Scalar conversions publish only on success; a lone final conversion needs no rollback.
+        // Earlier blittable slots must still be reset if a later conversion throws
+        bool hasScalarOutput = false;
+        bool hasOwnedScalarOutput = false;
+        bool needsScalarCleanup = false;
+        foreach ((_, ParameterInfo parameter) in signature.ParametersByCategory(ParameterCategory.Out))
+        {
+            TypeSignature type = parameter.Type.StripByRefAndCustomModifiers();
+            needsScalarCleanup |= hasScalarOutput && !context.AbiTypeKindResolver.IsBlittableAbiElement(type);
+            hasScalarOutput = true;
+            hasOwnedScalarOutput |= context.AbiTypeKindResolver.RequiresAbiDisposal(type);
+        }
+
+        if (hasOwnedScalarOutput && needsScalarCleanup)
+        {
+            return true;
+        }
+
         foreach (ParameterInfo parameter in signature.Parameters)
         {
             ParameterCategory category = ParameterCategoryResolver.Resolve(parameter);
 
-            if ((category == ParameterCategory.ReceiveArray && parameter != finalReceiveArray) ||
-                (category == ParameterCategory.Out &&
-                    context.AbiTypeKindResolver.RequiresAbiDisposal(parameter.Type.StripByRefAndCustomModifiers())) ||
+            if ((category == ParameterCategory.ReceiveArray &&
+                    (parameter != finalReceiveArray || hasOwnedScalarOutput)) ||
                 (category == ParameterCategory.FillArray &&
                     parameter.Type is SzArrayTypeSignature array &&
-                    context.AbiTypeKindResolver.RequiresAbiDisposal(array.BaseType)))
+                    (context.AbiTypeKindResolver.RequiresAbiDisposal(array.BaseType) ||
+                        (hasOwnedScalarOutput && !context.AbiTypeKindResolver.IsBlittableAbiElement(array.BaseType)))))
             {
                 return true;
             }
         }
 
-        return false;
+        return hasOwnedScalarOutput && signature.ReturnType is { } returnType &&
+            !context.AbiTypeKindResolver.IsBlittableAbiElement(returnType);
     }
 
     /// <summary>

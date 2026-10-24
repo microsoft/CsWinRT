@@ -320,6 +320,99 @@ public class Test_ArrayProperties
         RunRuntimeFixture($"output-rollback:{failure}");
     }
 
+    [TestMethod]
+    [DataRow("single", false)]
+    [DataRow("trailing-blittable", false)]
+    [DataRow("leading-blittable", true)]
+    [DataRow("two-owned", true)]
+    [DataRow("mapped-out", true)]
+    [DataRow("return", true)]
+    [DataRow("receive-array", true)]
+    [DataRow("resource-free-fill", true)]
+    [DataRow("blittable-fill", false)]
+    public void ScalarOutputRollback_FollowsOutputConversionOrder(string scenario, bool needsCleanup)
+    {
+        string directory = Directory.CreateTempSubdirectory("ProjectionScalarCleanupTest_").FullName;
+        try
+        {
+            string metadata = ArrayPropertyMetadata.Create(directory, exclusiveTo: true);
+            ModuleDefinition module = ModuleDefinition.FromFile(metadata);
+            TypeDefinition iface = module.TopLevelTypes.Single(type => type.FullName == "Contoso.IWidget2");
+            MethodDefinition method = iface.Methods.Single(method => method.Name == "GetName");
+            TypeSignature? additional = scenario switch
+            {
+                "trailing-blittable" or "leading-blittable" => new ByReferenceTypeSignature(module.CorLibTypeFactory.Int32),
+                "two-owned" => new ByReferenceTypeSignature(module.CorLibTypeFactory.String),
+                "mapped-out" => new ByReferenceTypeSignature(module.TopLevelTypes.Single(
+                    type => type.FullName == "Windows.Foundation.DateTime").ToTypeSignature(true)),
+                "receive-array" => new ByReferenceTypeSignature(new SzArrayTypeSignature(module.CorLibTypeFactory.Int32)),
+                "resource-free-fill" => new SzArrayTypeSignature(module.TopLevelTypes.Single(
+                    type => type.FullName == "Contoso.Stamp").ToTypeSignature(true)),
+                "blittable-fill" => new SzArrayTypeSignature(module.CorLibTypeFactory.Int32),
+                _ => null
+            };
+            if (additional is not null)
+            {
+                if (scenario == "leading-blittable")
+                {
+                    method.Signature!.ParameterTypes.Insert(0, additional);
+                }
+                else
+                {
+                    method.Signature!.ParameterTypes.Add(additional);
+                }
+            }
+            if (scenario == "return")
+            {
+                method.Signature!.ReturnType = iface.Methods.Single(candidate => candidate.Name == "GetOutputs").Signature!.ReturnType;
+            }
+            method.ParameterDefinitions.Clear();
+            for (int i = 0; i < method.Signature!.ParameterTypes.Count; i++)
+            {
+                method.ParameterDefinitions.Add(new ParameterDefinition((ushort)(i + 1), $"value{i}", ParameterAttributes.Out));
+            }
+            module.Write(metadata);
+            string output = Path.Combine(directory, "generated");
+            ProjectionWriter.Run(new ProjectionWriterOptions
+            {
+                InputPaths = [metadata],
+                OutputFolder = output,
+                Include = ["Contoso"],
+                PublicExclusiveToTypes = ["Contoso.IWidget2"],
+                IdicExclusiveToTypes = ["Contoso.IWidget2"]
+            });
+            _ = ProjectionWriterRunner.CompileSources(
+                Directory.GetFiles(output, "*.cs").Select(File.ReadAllText), Path.Combine(directory, "Projection.dll"));
+            string source = File.ReadAllText(Path.Combine(output, "Contoso.cs"));
+            MethodDeclarationSyntax callback = CSharpSyntaxTree.ParseText(source).GetRoot().DescendantNodes()
+                .OfType<MethodDeclarationSyntax>().Single(candidate =>
+                    candidate.Identifier.ValueText.StartsWith("Do_Abi_GetName_", StringComparison.Ordinal));
+            CatchClauseSyntax[] catches = callback.DescendantNodes().OfType<CatchClauseSyntax>().ToArray();
+            Assert.HasCount(1, catches.Where(clause => clause.Declaration is not null).ToArray());
+            CatchClauseSyntax? cleanup = catches.SingleOrDefault(clause => clause.Declaration is null);
+            Assert.AreEqual(needsCleanup, cleanup is not null, callback.ToString());
+            if (cleanup is not null)
+            {
+                Assert.IsTrue(cleanup.Block.Statements.Last() is ThrowStatementSyntax { Expression: null });
+            }
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    [TestMethod]
+    [DataRow("string", "success")]
+    [DataRow("string", "managed")]
+    [DataRow("type", "success")]
+    [DataRow("type", "managed")]
+    [DataRow("type", "conversion")]
+    public void NativeScalarOutputs_PreserveValuesAndFailureInitialization(string shape, string failure)
+    {
+        RunRuntimeFixture($"scalar-output:{shape}:{failure}");
+    }
+
     /// <summary>
     /// The allocating marshaller handles its own failures, so a final receive array needs no duplicate rollback.
     /// </summary>

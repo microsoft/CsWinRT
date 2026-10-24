@@ -37,6 +37,10 @@ internal static unsafe class Program
 
         switch (args[0])
         {
+            case string scenario when scenario.StartsWith("scalar-output:", StringComparison.Ordinal):
+                string[] scalar = scenario.Split(':');
+                VerifyScalarOutput(target, ccw, scalar[1], scalar[2]);
+                break;
             case "shared-clear":
                 VerifySharedClear();
                 break;
@@ -88,6 +92,60 @@ internal static unsafe class Program
         }
 
         return 0;
+    }
+
+    private static void VerifyScalarOutput(Target target, void* ccw, string shape, string failure)
+    {
+        target.OutputFailure = failure;
+        int expected = failure switch
+        {
+            "managed" => RestrictedErrorInfoExceptionMarshaller.ConvertToUnmanaged(new UnauthorizedAccessException()),
+            "conversion" => RestrictedErrorInfoExceptionMarshaller.ConvertToUnmanaged(new ArgumentNullException()),
+            _ => 0
+        };
+        if (shape == "string")
+        {
+            void* value = (void*)12345;
+            int hr = ((delegate* unmanaged[MemberFunction]<void*, void**, int>)Entry(ccw, "GetName"))(ccw, &value);
+            Check(hr == expected, "scalar string HRESULT");
+            if (hr == 0)
+            {
+                try
+                {
+                    Check(HStringMarshaller.ConvertToManaged(value) == "scalar", "scalar string contents");
+                }
+                finally
+                {
+                    HStringMarshaller.Free(value);
+                }
+            }
+            else
+            {
+                Check(value == null, "failed scalar string output was not initialized");
+            }
+        }
+        else
+        {
+            ABI.System.Type value = default;
+            value.Name = (void*)12345;
+            int hr = ((delegate* unmanaged[MemberFunction]<void*, ABI.System.Type*, int>)Entry(ccw, "GetScalarType"))(ccw, &value);
+            Check(hr == expected, "scalar Type HRESULT");
+            if (hr == 0)
+            {
+                try
+                {
+                    Check(ABI.System.TypeMarshaller.ConvertToManaged(value) == typeof(int), "scalar Type contents");
+                }
+                finally
+                {
+                    ABI.System.TypeMarshaller.Dispose(value);
+                }
+            }
+            else
+            {
+                Check(value.Name == null, "failed scalar Type output was not initialized");
+            }
+        }
     }
 
     private static void VerifyOutputRollback(Target target, void* ccw, string failure, bool finalReceiveArray = false)
@@ -860,6 +918,25 @@ internal static unsafe class Program
     private sealed class Target : IWidget2
     {
         public string OutputFailure { get; set; } = "success";
+
+        public void GetName(out string name)
+        {
+            name = "scalar";
+            if (OutputFailure == "managed")
+            {
+                throw new UnauthorizedAccessException();
+            }
+        }
+
+        public void GetScalarType(out Type value)
+        {
+            value = OutputFailure == "conversion" ? null : typeof(int);
+            if (OutputFailure == "managed")
+            {
+                throw new UnauthorizedAccessException();
+            }
+        }
+
         public Type GetOutputs(object input, out string text, out IWidget2 iface, out object item, out NestedPayload payload, out Type type,
             out int? optional, out KeyValuePair<string, string> pair, out int[] numbers, out Type[] types)
         {
