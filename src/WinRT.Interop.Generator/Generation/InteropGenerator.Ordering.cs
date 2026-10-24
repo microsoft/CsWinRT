@@ -39,14 +39,38 @@ internal static partial class InteropGenerator
         }
 
         IList<CustomAttribute> attributes = module.Assembly!.CustomAttributes;
+        Dictionary<ICustomAttributeType, string> constructors = GetAttributeConstructorOrderingKeys(attributes);
+
         Reorder(attributes, attributes
             .Select(attribute => (
                 Attribute: attribute,
-                Constructor: TypeDescriptorComparer.Default.GetOrderKey(attribute.Constructor!.DeclaringType!) + attribute.Constructor.Signature,
+                Constructor: constructors[attribute.Constructor!],
                 Blob: GetAttributeOrderingKey(attribute, module)))
             .OrderBy(static entry => entry.Constructor, StringComparer.Ordinal)
             .ThenBy(static entry => entry.Blob, StringComparer.Ordinal)
             .Select(static entry => entry.Attribute));
+    }
+
+    /// <summary>
+    /// Formats each constructor descriptor once while the completed metadata graph is stable.
+    /// </summary>
+    /// <param name="attributes">The attributes whose constructors are used as ordering keys.</param>
+    /// <returns>The constructor identity keys, frozen for the remainder of this ordering pass.</returns>
+    private static Dictionary<ICustomAttributeType, string> GetAttributeConstructorOrderingKeys(IEnumerable<CustomAttribute> attributes)
+    {
+        Dictionary<ICustomAttributeType, string> constructors = new(ReferenceEqualityComparer.Instance);
+
+        foreach (CustomAttribute attribute in attributes)
+        {
+            ICustomAttributeType constructor = attribute.Constructor!;
+
+            if (!constructors.ContainsKey(constructor))
+            {
+                constructors.Add(constructor, TypeDescriptorComparer.Default.GetOrderKey(constructor.DeclaringType!) + constructor.Signature);
+            }
+        }
+
+        return constructors;
     }
 
     /// <summary>
