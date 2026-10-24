@@ -27,6 +27,12 @@
     <Compile Include="..\..\WinRT.Interop.Generator\Models\TypeSignatureEquatableSet.cs" Link="Helpers\TypeSignatureEquatableSet.cs" />
     <Compile Include="..\..\WinRT.Interop.Generator\Helpers\Comparers\TypeDescriptorComparer.cs" Link="Helpers\TypeDescriptorComparer.cs" />
     <Compile Include="..\..\WinRT.Interop.Generator\Generation\OrderedVtableTypes.cs" Link="Helpers\OrderedVtableTypes.cs" />
+    <Compile Include="..\..\WinRT.Interop.Generator\Generation\InteropGenerationWorkQueue.cs" Link="Helpers\InteropGenerationWorkQueue.cs" />
+    <Compile Include="..\..\WinRT.Interop.Generator\Helpers\Comparers\ByteSequenceComparer.cs" Link="Helpers\ByteSequenceComparer.cs" />
+    <Compile Include="..\..\WinRT.Interop.Generator\Writers\MemoizingMetadataTokenProvider.cs" Link="Helpers\Writers\MemoizingMetadataTokenProvider.cs" />
+    <Compile Include="..\..\WinRT.Interop.Generator\Writers\MemoizingMethodBodySerializer.cs" Link="Helpers\Writers\MemoizingMethodBodySerializer.cs" />
+    <Compile Include="..\..\WinRT.Interop.Generator\Writers\CustomAttributePayloadCache.cs" Link="Helpers\Writers\CustomAttributePayloadCache.cs" />
+    <Compile Include="..\..\WinRT.Interop.Generator\Writers\InteropModuleWriter.cs" Link="Helpers\Writers\InteropModuleWriter.cs" />
     <Compile Include="..\..\WinRT.Generator.Tasks\InteropGeneratorGCPolicy.cs" Link="Helpers\InteropGeneratorGCPolicy.cs" />
     <AdditionalFiles Include="..\..\WinRT.Generator.Tasks\NativeMethods.txt" Link="NativeMethods.txt" />
     <AdditionalFiles Include="..\..\WinRT.Generator.Tasks\NativeMethods.json" Link="NativeMethods.json" />
