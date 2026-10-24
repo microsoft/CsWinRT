@@ -218,6 +218,15 @@ internal static class ArrayPropertyMetadata
 
         _ = AddMethod("AcceptStamps", module.CorLibTypeFactory.Void, new SzArrayTypeSignature(stamp.ToTypeSignature(true)));
 
+        MethodDefinition fillPayloads = AddMethod("FillPayloadsAndTypes", typeSignature,
+            new SzArrayTypeSignature(payload.ToTypeSignature(true)), new SzArrayTypeSignature(typeSignature));
+        fillPayloads.ParameterDefinitions[0].Name = "first";
+        fillPayloads.ParameterDefinitions[1].Name = "second";
+        foreach (ParameterDefinition parameter in fillPayloads.ParameterDefinitions)
+        {
+            parameter.Attributes = ParameterAttributes.Out;
+        }
+
         MethodDefinition finalOutputs = AddMethod("GetFinalOutputs", module.CorLibTypeFactory.Int32, [.. outputs.Signature!.ParameterTypes]);
         for (int i = 0; i < finalOutputs.ParameterDefinitions.Count; i++)
         {

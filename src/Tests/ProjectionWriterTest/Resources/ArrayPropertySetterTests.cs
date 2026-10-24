@@ -25,6 +25,9 @@ using WindowsRuntime.InteropServices.Marshalling;
 
 internal static unsafe class Program
 {
+    private const int GuardSize = 16;
+    private const byte GuardValue = 0xA5;
+
     public static int Main(string[] args)
     {
         Target target = new();
@@ -34,6 +37,12 @@ internal static unsafe class Program
 
         switch (args[0])
         {
+            case "shared-clear":
+                VerifySharedClear();
+                break;
+            case string scenario when scenario.StartsWith("struct-fill-rollback:", StringComparison.Ordinal):
+                VerifyStructFillRollback(ccw, int.Parse(scenario["struct-fill-rollback:".Length..]));
+                break;
             case string scenario when scenario.StartsWith("final-output-rollback:", StringComparison.Ordinal):
                 VerifyOutputRollback(target, ccw, scenario["final-output-rollback:".Length..], finalReceiveArray: true);
                 break;
@@ -239,6 +248,47 @@ internal static unsafe class Program
         }
 
         Check(ReferenceCount(ccw) == references, "fill output caller cleanup changed COM ownership");
+    }
+
+    private static void VerifySharedClear()
+    {
+        Span<byte> storage = stackalloc byte[2 * GuardSize + 3 * sizeof(ABI.Contoso.Payload)];
+        storage.Fill(GuardValue);
+        WindowsRuntimeBlittableValueTypeArrayMarshaller.Clear(3, null, sizeof(ABI.Contoso.Payload));
+        fixed (byte* data = storage)
+        {
+            WindowsRuntimeBlittableValueTypeArrayMarshaller.Clear(0, data + GuardSize, sizeof(ABI.Contoso.Payload));
+            Check(storage.IndexOfAnyExcept(GuardValue) < 0, "zero-length clear modified storage");
+            WindowsRuntimeBlittableValueTypeArrayMarshaller.Clear(3, data + GuardSize, sizeof(ABI.Contoso.Payload));
+        }
+        CheckClearedStorage(storage);
+    }
+
+    private static void VerifyStructFillRollback(void* ccw, int length)
+    {
+        Span<byte> payloadStorage = stackalloc byte[2 * GuardSize + length * sizeof(ABI.Contoso.Payload)];
+        Span<byte> typeStorage = stackalloc byte[2 * GuardSize + length * sizeof(ABI.System.Type)];
+        payloadStorage.Fill(GuardValue);
+        typeStorage.Fill(GuardValue);
+        fixed (byte* payloadData = payloadStorage)
+        fixed (byte* typeData = typeStorage)
+        {
+            ABI.System.Type result = default;
+            int hr = ((delegate* unmanaged[MemberFunction]<void*, uint, void*, uint, void*, ABI.System.Type*, int>)Entry(ccw, "FillPayloadsAndTypes"))(
+                ccw, (uint)length, payloadData + GuardSize, (uint)length, typeData + GuardSize, &result);
+            Check(hr == RestrictedErrorInfoExceptionMarshaller.ConvertToUnmanaged(new ArgumentNullException()),
+                "struct fill rollback HRESULT");
+            Check(result.Name == null, "failed struct fill return value");
+        }
+        CheckClearedStorage(payloadStorage);
+        CheckClearedStorage(typeStorage);
+    }
+
+    private static void CheckClearedStorage(ReadOnlySpan<byte> storage)
+    {
+        Check(storage[..GuardSize].IndexOfAnyExcept(GuardValue) < 0 &&
+            storage[^GuardSize..].IndexOfAnyExcept(GuardValue) < 0, "clear modified a guard region");
+        Check(storage[GuardSize..^GuardSize].IndexOfAnyExcept((byte)0) < 0, "ABI buffer was not completely cleared");
     }
 
     private static uint ReferenceCount(void* ccw)
@@ -862,6 +912,14 @@ internal static unsafe class Program
                 second[index] = null;
             }
             return OutputFailure == "return" ? null : typeof(int);
+        }
+
+        public Type FillPayloadsAndTypes(Span<Payload> first, Span<Type> second)
+        {
+            first.Fill(new Payload { Id = 42, Text = "owned", Timestamp = DateTimeOffset.UnixEpoch });
+            second.Fill(typeof(int));
+            // Fail return conversion after both native fill buffers have acquired resources
+            return null;
         }
 
         public bool ThrowOnSet { get; set; }

@@ -2,9 +2,7 @@
 // Licensed under the MIT License.
 
 using AsmResolver.DotNet;
-using AsmResolver.DotNet.Code.Cil;
 using AsmResolver.DotNet.Signatures;
-using AsmResolver.PE.DotNet.Cil;
 using AsmResolver.PE.DotNet.Metadata.Tables;
 using WindowsRuntime.InteropGenerator.References;
 using static AsmResolver.PE.DotNet.Cil.CilOpCodes;
@@ -416,73 +414,6 @@ internal partial class InteropTypeDefinitionFactory
 
             if (disposeMethod is not null)
             {
-                // Pointer types cannot be generic arguments, so use 'nint' for their span storage
-                TypeSignature storageType = elementAbiType is PointerTypeSignature ? interopReferences.IntPtr : elementAbiType;
-                GenericInstanceTypeSignature spanType = interopReferences.Span1.MakeGenericValueType([storageType]);
-                CilLocalVariable span = new(spanType);
-                CilInstruction clearReturn = new(Ret);
-
-                // Define the 'Clear' method as follows:
-                //
-                // public static void Clear(uint size, <ABI_ELEMENT_TYPE>* array)
-                MethodDefinition clearMethod = new(
-                    name: "Clear"u8,
-                    attributes: MethodAttributes.Public | MethodAttributes.Static | MethodAttributes.HideBySig,
-                    signature: MethodSignature.CreateStatic(
-                        interopReferences.Void, [interopReferences.UInt32, elementAbiType.MakePointerType()]))
-                {
-                    ImplAttributes = MethodImplAttributes.NoInlining,
-                    CilMethodBody = new CilMethodBody
-                    {
-                        LocalVariables = { span },
-                        Instructions =
-                        {
-                            { Ldarg_1 },
-                            { Brfalse_S, clearReturn.CreateLabel() },
-                            { Ldloca_S, span },
-                            { Ldarg_1 },
-                            { Ldarg_0 },
-                            { Conv_I4 },
-                            { Call, spanType.ToTypeDefOrRef().CreateConstructorReference(
-                                interopReferences.CorLibTypeFactory,
-                                [interopReferences.Void.MakePointerType(), interopReferences.Int32]) },
-                            { Ldloca_S, span },
-                            { Call, spanType.ToTypeDefOrRef().CreateMemberReference(
-                                "Clear"u8, MethodSignature.CreateInstance(interopReferences.Void)) },
-                            { clearReturn }
-                        }
-                    }
-                };
-                marshallerType.Methods.Add(clearMethod);
-
-                CilInstruction disposeAndClearReturn = new(Ret);
-
-                // Define the 'DisposeAndClear' method as follows:
-                //
-                // public static void DisposeAndClear(uint size, <ABI_ELEMENT_TYPE>* array)
-                MethodDefinition disposeAndClearMethod = new(
-                    name: "DisposeAndClear"u8,
-                    attributes: MethodAttributes.Public | MethodAttributes.Static | MethodAttributes.HideBySig,
-                    signature: MethodSignature.CreateStatic(
-                        interopReferences.Void, [interopReferences.UInt32, elementAbiType.MakePointerType()]))
-                {
-                    ImplAttributes = MethodImplAttributes.NoInlining,
-                    CilInstructions =
-                    {
-                        { Ldarg_1 },
-                        { Brfalse_S, disposeAndClearReturn.CreateLabel() },
-                        { Ldarg_0 },
-                        { Ldarg_1 },
-                        { Call, disposeMethod },
-                        { Ldarg_0 },
-                        { Ldarg_1 },
-                        { Call, clearMethod },
-                        { disposeAndClearReturn }
-                    }
-                };
-
-                marshallerType.Methods.Add(disposeAndClearMethod);
-
                 // Define the 'Dispose' method as follows:
                 //
                 // public static void Dispose(uint size, <ABI_ELEMENT_TYPE>* array)

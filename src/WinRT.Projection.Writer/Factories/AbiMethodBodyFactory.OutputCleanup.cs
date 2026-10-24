@@ -115,14 +115,7 @@ internal static partial class AbiMethodBodyFactory
             string raw = parameter.GetRawName();
             string pointer = IdentifierEscaping.EscapeIdentifier(raw);
             string elementAbi = AbiTypeHelpers.GetArrayElementAbiType(context, array.BaseType);
-            UnsafeAccessorFactory.EmitStaticMethod(
-                writer,
-                accessName: "Clear",
-                returnType: "void",
-                functionName: $"Clear_{raw}",
-                interopType: ArrayElementEncoder.GetArrayMarshallerInteropPath(context, array.BaseType),
-                parameterList: $"uint length, {elementAbi}* data");
-            writer.WriteLine($"Clear_{raw}(null, __{raw}Size, ({elementAbi}*){pointer});");
+            writer.WriteLine($"WindowsRuntimeBlittableValueTypeArrayMarshaller.Clear(__{raw}Size, {pointer}, sizeof({elementAbi}));");
         }
     }
 
@@ -178,14 +171,37 @@ internal static partial class AbiMethodBodyFactory
             string raw = parameter.GetRawName();
             string pointer = IdentifierEscaping.EscapeIdentifier(raw);
             string elementAbi = AbiTypeHelpers.GetArrayElementAbiType(context, array.BaseType);
-            UnsafeAccessorFactory.EmitStaticMethod(
-                writer,
-                accessName: "DisposeAndClear",
-                returnType: "void",
-                functionName: $"DisposeAndClear_{raw}",
-                interopType: ArrayElementEncoder.GetArrayMarshallerInteropPath(context, array.BaseType),
-                parameterList: $"uint length, {elementAbi}* data");
-            writer.WriteLine($"DisposeAndClear_{raw}(null, __{raw}Size, ({elementAbi}*){pointer});");
+            string dispose;
+            if (array.BaseType.IsString())
+            {
+                dispose = $"HStringArrayMarshaller.Dispose(__{raw}Size, (void**){pointer});";
+            }
+            else if (context.AbiTypeKindResolver.IsReferenceTypeOrGenericInstance(array.BaseType))
+            {
+                dispose = $"WindowsRuntimeUnknownArrayMarshaller.Dispose(__{raw}Size, (void**){pointer});";
+            }
+            else if (array.BaseType.IsSystemType())
+            {
+                dispose = $"TypeArrayMarshaller.Dispose(__{raw}Size, ({elementAbi}*){pointer});";
+            }
+            else
+            {
+                UnsafeAccessorFactory.EmitStaticMethod(
+                    writer,
+                    accessName: "Dispose",
+                    returnType: "void",
+                    functionName: $"Dispose_{raw}",
+                    interopType: ArrayElementEncoder.GetArrayMarshallerInteropPath(context, array.BaseType),
+                    parameterList: $"uint length, {elementAbi}* data");
+                dispose = $"Dispose_{raw}(null, __{raw}Size, ({elementAbi}*){pointer});";
+            }
+            writer.WriteLine(isMultiline: true, $$"""
+                if ({{pointer}} is not null)
+                {
+                    {{dispose}}
+                    WindowsRuntimeBlittableValueTypeArrayMarshaller.Clear(__{{raw}}Size, {{pointer}}, sizeof({{elementAbi}}));
+                }
+                """);
         }
     }
 }

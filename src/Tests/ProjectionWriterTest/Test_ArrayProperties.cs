@@ -92,6 +92,21 @@ public class Test_ArrayProperties
             MethodDeclarationSyntax passStrings = methods.Members.OfType<MethodDeclarationSyntax>()
                 .Single(method => method.Identifier.ValueText == "AcceptNames");
             StringAssert.Contains(passStrings.ToString(), "__value_pinnedHandleSpan.Clear()");
+
+            MethodDeclarationSyntax fillPayloads = impl.Members.OfType<MethodDeclarationSyntax>()
+                .Single(method => method.Identifier.ValueText.StartsWith("Do_Abi_FillPayloadsAndTypes_", StringComparison.Ordinal));
+            LocalFunctionStatementSyntax disposer = fillPayloads.DescendantNodes().OfType<LocalFunctionStatementSyntax>()
+                .Single(function => function.AttributeLists.SelectMany(list => list.Attributes).Any(attribute =>
+                    attribute.ArgumentList?.Arguments.Any(argument =>
+                        argument.NameEquals?.Name.Identifier.ValueText == "Name" &&
+                        argument.Expression is LiteralExpressionSyntax { Token.ValueText: "Dispose" }) == true));
+            InvocationExpressionSyntax disposeCall = fillPayloads.DescendantNodes().OfType<InvocationExpressionSyntax>()
+                .Single(call => call.Expression is IdentifierNameSyntax name && name.Identifier.ValueText == disposer.Identifier.ValueText);
+            InvocationExpressionSyntax clearCall = disposeCall.Ancestors().OfType<BlockSyntax>().First().Statements
+                .OfType<ExpressionStatementSyntax>().Select(statement => statement.Expression).OfType<InvocationExpressionSyntax>()
+                .Single(call => call.Expression is MemberAccessExpressionSyntax { Name.Identifier.ValueText: "Clear" });
+            Assert.IsTrue(disposeCall.SpanStart < clearCall.SpanStart,
+                "Resource-bearing struct elements must be disposed before their native storage is cleared.");
         }
         finally
         {
@@ -402,6 +417,20 @@ public class Test_ArrayProperties
     }
 
     [TestMethod]
+    public void SharedArrayClear_UsesAbiElementSizeAndPreservesGuards()
+    {
+        RunRuntimeFixture("shared-clear");
+    }
+
+    [TestMethod]
+    [DataRow(2)]
+    [DataRow(17)]
+    public void NativeStructFillRollback_ClearsCompleteAbiBuffers(int length)
+    {
+        RunRuntimeFixture($"struct-fill-rollback:{length}");
+    }
+
+    [TestMethod]
     [DataRow(2)]
     [DataRow(17)]
     public void RcwResourceFreeStructArrays_DoNotRequireDisposal(int length)
@@ -482,15 +511,11 @@ public class Test_ArrayProperties
             foreach (string name in new[] { "ABI.System.<int>ArrayMarshaller", "ABI.Contoso.<<Contoso>Stamp>ArrayMarshaller" })
             {
                 TypeDefinition marshaller = interopModule.GetAllTypes().Single(type => type.FullName == name);
-                Assert.IsFalse(marshaller.Methods.Any(method => method.Name == "Clear" ||
-                    method.Name == "DisposeAndClear" || method.Name == "Dispose"));
+                Assert.IsFalse(marshaller.Methods.Any(method => method.Name == "Dispose"));
                 Assert.IsTrue(marshaller.Methods.Any(method => method.Name == "Free"));
             }
             TypeDefinition objects = interopModule.GetAllTypes().Single(type => type.FullName == "ABI.System.<object>ArrayMarshaller");
-            foreach (string name in new[] { "Clear", "DisposeAndClear", "Dispose" })
-            {
-                Assert.IsTrue(objects.Methods.Any(method => method.Name == name));
-            }
+            Assert.IsTrue(objects.Methods.Any(method => method.Name == "Dispose"));
             TypeDefinition payloads = interopModule.GetAllTypes().Single(type => type.FullName == "ABI.Contoso.<<Contoso>Payload>ArrayMarshaller");
             Assert.IsTrue(payloads.Methods.Any(method => method.Name == "Dispose"),
                 "An HRESULT field must not hide resource-bearing fields later in the struct.");
