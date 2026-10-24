@@ -20,7 +20,7 @@ internal static class StructEnumMarshallerFactory
 {
     /// <summary>
     /// Returns the instance fields of <paramref name="type"/> (skipping static fields and fields
-    /// without a signature). Used by the 4 places in this file that loop over a struct's fields.
+    /// without a signature).
     /// </summary>
     private static IEnumerable<FieldDefinition> GetInstanceFields(TypeDefinition type)
     {
@@ -97,16 +97,32 @@ internal static class StructEnumMarshallerFactory
 
         if (isNonBlittableStruct)
         {
+            // Rollback is only needed when a potentially throwing conversion follows a field
+            // that may already own native resources
+            bool hasOwnedField = false;
+            bool needsCleanup = false;
+            foreach (FieldDefinition field in GetInstanceFields(type))
+            {
+                TypeSignature fieldType = field.Signature!.FieldType;
+                needsCleanup |= hasOwnedField && !context.AbiTypeKindResolver.IsBlittableAbiElement(fieldType);
+                hasOwnedField |= context.AbiTypeKindResolver.RequiresAbiDisposal(fieldType);
+            }
+
             // ConvertToUnmanaged: build ABI struct from projected struct via per-field marshalling.
             writer.WriteLine(isMultiline: true, $$"""
                 public static {{abi}} ConvertToUnmanaged({{projected}} value)
                 {
                     {{abi}} __value = default;
-                    try
-                    {
                 """);
             writer.IncreaseIndent();
-            writer.IncreaseIndent();
+            if (needsCleanup)
+            {
+                writer.WriteLine(isMultiline: true, """
+                    try
+                    {
+                    """);
+                writer.IncreaseIndent();
+            }
             foreach (FieldDefinition field in GetInstanceFields(type))
             {
                 string fname = field.Name?.Value ?? "";
@@ -155,15 +171,18 @@ internal static class StructEnumMarshallerFactory
             //   primary constructor on projected struct types).
             bool useObjectInitializer = context.Settings.Component;
             writer.WriteLine("return __value;");
-            writer.DecreaseIndent();
-            writer.WriteLine(isMultiline: true, """
-                }
-                catch
-                {
-                    Dispose(__value);
-                    throw;
-                }
-                """);
+            if (needsCleanup)
+            {
+                writer.DecreaseIndent();
+                writer.WriteLine(isMultiline: true, """
+                    }
+                    catch
+                    {
+                        Dispose(__value);
+                        throw;
+                    }
+                    """);
+            }
             writer.DecreaseIndent();
             writer.WriteLine("}");
             writer.WriteLine(isMultiline: true, $$"""

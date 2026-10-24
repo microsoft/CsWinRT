@@ -88,6 +88,28 @@ internal static class ArrayPropertyMetadata
         nestedPayload.Fields.Add(new FieldDefinition("Text", FieldAttributes.Public, module.CorLibTypeFactory.String));
         module.TopLevelTypes.Add(nestedPayload);
 
+        TypeDefinition primitiveThenString = new("Contoso", "PrimitiveThenString",
+            TypeAttributes.Public | TypeAttributes.Sealed | TypeAttributes.SequentialLayout | TypeAttributes.WindowsRuntime,
+            valueType);
+        primitiveThenString.Fields.Add(new FieldDefinition("A", FieldAttributes.Public, module.CorLibTypeFactory.Boolean));
+        primitiveThenString.Fields.Add(new FieldDefinition("B", FieldAttributes.Public, module.CorLibTypeFactory.Int32));
+        primitiveThenString.Fields.Add(new FieldDefinition("C", FieldAttributes.Public, module.CorLibTypeFactory.String));
+        module.TopLevelTypes.Add(primitiveThenString);
+
+        TypeDefinition stringThenPrimitive = new("Contoso", "StringThenPrimitive",
+            TypeAttributes.Public | TypeAttributes.Sealed | TypeAttributes.SequentialLayout | TypeAttributes.WindowsRuntime,
+            valueType);
+        stringThenPrimitive.Fields.Add(new FieldDefinition("A", FieldAttributes.Public, module.CorLibTypeFactory.String));
+        stringThenPrimitive.Fields.Add(new FieldDefinition("B", FieldAttributes.Public, module.CorLibTypeFactory.Int32));
+        module.TopLevelTypes.Add(stringThenPrimitive);
+
+        TypeDefinition twoStrings = new("Contoso", "TwoStrings",
+            TypeAttributes.Public | TypeAttributes.Sealed | TypeAttributes.SequentialLayout | TypeAttributes.WindowsRuntime,
+            valueType);
+        twoStrings.Fields.Add(new FieldDefinition("A", FieldAttributes.Public, module.CorLibTypeFactory.String));
+        twoStrings.Fields.Add(new FieldDefinition("B", FieldAttributes.Public, module.CorLibTypeFactory.String));
+        module.TopLevelTypes.Add(twoStrings);
+
         TypeDefinition reference = new("Windows.Foundation", "IReference`1",
             TypeAttributes.Public | TypeAttributes.Interface | TypeAttributes.Abstract | TypeAttributes.WindowsRuntime);
         reference.GenericParameters.Add(new GenericParameter("T"));

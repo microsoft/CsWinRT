@@ -114,6 +114,50 @@ public class Test_ArrayProperties
         }
     }
 
+    [TestMethod]
+    [DataRow("PrimitiveThenString", false)]
+    [DataRow("StringThenPrimitive", false)]
+    [DataRow("TwoStrings", true)]
+    [DataRow("NestedPayload", true)]
+    [DataRow("Payload", true)]
+    public void StructConvertToUnmanaged_OnlyEmitsNecessaryCleanup(string name, bool needsCleanup)
+    {
+        string directory = Directory.CreateTempSubdirectory("ProjectionStructCleanupTest_").FullName;
+        try
+        {
+            string output = GenerateSources(directory, referenceProjection: false, exclusiveTo: true);
+            string source = File.ReadAllText(Path.Combine(output, "Contoso.cs"));
+            _ = ProjectionWriterRunner.CompileSources(
+                Directory.GetFiles(output, "*.cs").Select(File.ReadAllText),
+                Path.Combine(directory, "Projection.dll"));
+            ClassDeclarationSyntax marshaller = CSharpSyntaxTree.ParseText(source).GetRoot().DescendantNodes()
+                .OfType<ClassDeclarationSyntax>().Single(type => type.Identifier.ValueText == $"{name}Marshaller");
+            MethodDeclarationSyntax conversion = marshaller.Members.OfType<MethodDeclarationSyntax>()
+                .Single(method => method.Identifier.ValueText == "ConvertToUnmanaged");
+            BlockSyntax body = conversion.Body!;
+            TryStatementSyntax? cleanup = body.Statements.OfType<TryStatementSyntax>().SingleOrDefault();
+            Assert.AreEqual(needsCleanup, cleanup is not null, conversion.ToString());
+            BlockSyntax assignments = cleanup?.Block ?? body;
+            string[] fields = assignments.Statements.OfType<ExpressionStatementSyntax>()
+                .Select(statement => statement.Expression).OfType<AssignmentExpressionSyntax>()
+                .Select(assignment => assignment.Left).OfType<MemberAccessExpressionSyntax>()
+                .Select(member => member.Name.Identifier.ValueText).ToArray();
+            TypeDefinition definition = ModuleDefinition.FromFile(Path.Combine(directory, "Contoso.winmd"))
+                .TopLevelTypes.Single(type => type.Name == name);
+            CollectionAssert.AreEqual(definition.Fields.Where(field => !field.IsStatic)
+                .Select(field => field.Name!.Value).ToArray(), fields);
+            if (cleanup is not null)
+            {
+                Assert.HasCount(1, cleanup.Catches);
+                Assert.IsTrue(cleanup.Catches[0].Block.Statements.Last() is ThrowStatementSyntax { Expression: null });
+            }
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
     /// <summary>
     /// Known reference shapes use literal clearing flags; other layouts may use a correct literal or the runtime intrinsic.
     /// </summary>
