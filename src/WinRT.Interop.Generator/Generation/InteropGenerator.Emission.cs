@@ -98,13 +98,7 @@ internal static partial class InteropGenerator
             new(EmissionStep.CustomTypeMaps,
                 () => DefineDynamicCustomMappedTypeMapEntries(args, definitions, references, module)),
             new(EmissionStep.IidTypeMaps,
-                () =>
-                {
-                    if (discoveryState.HasIidLookupReferences)
-                    {
-                        DefineWindowsRuntimeIidTypeMapEntries(args, inputs, definitions, references, module);
-                    }
-                }),
+                () => DefineWindowsRuntimeIidTypeMapEntries(args, discoveryState, inputs, definitions, references, module)),
             new(EmissionStep.AccessCheckAttributes,
                 () => DefineIgnoresAccessChecksToAttributes(discoveryState, definitions, references, module)),
             new(EmissionStep.MetadataAttributes,

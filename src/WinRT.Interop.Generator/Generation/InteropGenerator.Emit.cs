@@ -2721,17 +2721,25 @@ internal partial class InteropGenerator
     /// Defines the external type map entries for Windows Runtime IID lookups.
     /// </summary>
     /// <param name="args">The arguments for this invocation.</param>
+    /// <param name="discoveryState">The completed discovery state.</param>
     /// <param name="inputs">The canonicalized discovery inputs.</param>
     /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
     /// <param name="module">The interop module being built.</param>
     private static void DefineWindowsRuntimeIidTypeMapEntries(
         InteropGeneratorArgs args,
+        InteropGeneratorDiscoveryState discoveryState,
         InteropGeneratorEmitInputs inputs,
         InteropDefinitions interopDefinitions,
         InteropReferences interopReferences,
         ModuleDefinition module)
     {
+        // Skip the sidecar IID map when no input references 'GetIid<T>'.
+        if (!discoveryState.HasIidLookupReferences)
+        {
+            return;
+        }
+
         try
         {
             WindowsRuntimeIidTypeMapBuilder.Build(
