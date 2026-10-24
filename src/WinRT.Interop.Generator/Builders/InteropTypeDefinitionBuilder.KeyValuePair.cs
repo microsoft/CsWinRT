@@ -47,6 +47,7 @@ internal partial class InteropTypeDefinitionBuilder
                 baseType: interopReferences.Object.ToTypeDefOrRef());
 
             module.TopLevelTypes.Add(methodsType);
+            interopDefinitions.KeyValuePairMethods = methodsType;
         }
 
         /// <summary>

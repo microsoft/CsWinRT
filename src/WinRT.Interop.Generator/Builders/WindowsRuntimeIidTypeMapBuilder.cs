@@ -67,8 +67,8 @@ internal static class WindowsRuntimeIidTypeMapBuilder
 
         Dictionary<string, (TypeSignature Type, Guid Iid)> entries = new(StringComparer.Ordinal);
 
-        // Compute the IID and structural key for each eligible type in a stable order
-        foreach (TypeSignature type in types.OrderByFullyQualifiedTypeName(interopReferences.RuntimeContext))
+        // Compute the IID and structural key for each eligible type
+        foreach (TypeSignature type in types)
         {
             args.Token.ThrowIfCancellationRequested();
 
@@ -82,16 +82,27 @@ internal static class WindowsRuntimeIidTypeMapBuilder
             string key = WindowsRuntimeIidTypeNameFactory.GetName(importedType, interopDefinitions, interopReferences);
 
             // Conflicting projections must not bind the same key to different IIDs
-            if (!entries.TryAdd(key, (importedType, iid)) && entries[key].Iid != iid)
+            if (!entries.TryAdd(key, (importedType, iid)))
             {
-                throw WellKnownInteropExceptions.ConflictingIidTypeNames(key, entries[key].Iid, iid);
+                (TypeSignature previousType, Guid previousIid) = entries[key];
+
+                if (previousIid != iid)
+                {
+                    throw WellKnownInteropExceptions.ConflictingIidTypeNames(key, previousIid, iid);
+                }
+
+                // Distinct reference/implementation spellings can share a key and IID but have different trim targets.
+                if (TypeDescriptorComparer.Default.Compare(importedType, previousType) < 0)
+                {
+                    entries[key] = (importedType, iid);
+                }
             }
         }
 
         Dictionary<Guid, TypeDefinition> providers = [];
 
-        // Emit conditional entries in key order, sharing one provider per distinct IID
-        foreach (KeyValuePair<string, (TypeSignature Type, Guid Iid)> entry in entries.OrderBy(static entry => entry.Key, StringComparer.Ordinal))
+        // Provider names depend only on their IID, not discovery or emission order
+        foreach (KeyValuePair<string, (TypeSignature Type, Guid Iid)> entry in entries)
         {
             args.Token.ThrowIfCancellationRequested();
 
@@ -100,7 +111,7 @@ internal static class WindowsRuntimeIidTypeMapBuilder
                 // Providers need only a '[Guid]' attribute, with no fields or executable code
                 providerType = new TypeDefinition(
                     ns: "ABI"u8,
-                    name: $"<{providers.Count}>IidProvider",
+                    name: $"<{entry.Value.Iid:N}>IidProvider",
                     attributes: TypeAttributes.Abstract | TypeAttributes.Sealed | TypeAttributes.BeforeFieldInit,
                     baseType: interopReferences.Object.ToTypeDefOrRef())
                 {

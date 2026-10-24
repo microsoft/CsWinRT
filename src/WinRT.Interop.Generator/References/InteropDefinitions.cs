@@ -26,7 +26,7 @@ internal sealed class InteropDefinitions
     /// <summary>
     /// The generated IID getters indexed by their unique names.
     /// </summary>
-    private readonly Dictionary<Utf8String, MethodDefinition> _interfaceIIDMethods = [];
+    private readonly ConcurrentDictionary<Utf8String, MethodDefinition> _interfaceIIDMethods = [];
 
     /// <summary>
     /// The map of generated COM interface entries types for user-defined types.
@@ -112,7 +112,7 @@ internal sealed class InteropDefinitions
     /// <summary>
     /// Gets the <see cref="TypeDefinition"/> for the <c>IIDRvaDataSize=16</c> type.
     /// </summary>
-    public TypeDefinition IIDRvaDataSize_16 => RvaFields.NestedTypes[0];
+    public TypeDefinition IIDRvaDataSize_16 => field ??= RvaFields.NestedTypes[0];
 
     /// <summary>
     /// Gets the <see cref="TypeDefinition"/> for the <c>InterfaceIIDs</c> type.
@@ -122,6 +122,11 @@ internal sealed class InteropDefinitions
     /// keeping the generated members and their lookup index in sync.
     /// </remarks>
     public TypeDefinition InterfaceIIDs => field ??= WellKnownTypeDefinitionFactory.InterfaceIIDs(_interopReferences);
+
+    /// <summary>
+    /// Gets or sets the shared key-value-pair accessor holder, published by its emit work item.
+    /// </summary>
+    public TypeDefinition? KeyValuePairMethods { get; set; }
 
     /// <summary>
     /// Adds an IID's generated members and indexes its getter for subsequent lookup.

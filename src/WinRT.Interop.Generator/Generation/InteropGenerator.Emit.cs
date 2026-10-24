@@ -82,146 +82,16 @@ internal partial class InteropGenerator
 
         args.Token.ThrowIfCancellationRequested();
 
-        // Emit the type hierarchy lookup
-        WindowsRuntimeTypeHierarchyBuilder.Lookup(
-            discoveryState.TypeHierarchyEntries,
-            interopDefinitions,
-            interopReferences,
-            module,
-            args.Token,
-            out _);
-
-        args.Token.ThrowIfCancellationRequested();
-
         // Add all default top level internal types to the interop module
         DefineDefaultImplementationDetailTypes(interopDefinitions, module);
 
         args.Token.ThrowIfCancellationRequested();
 
-        // Emit interop types for generic delegates
-        DefineGenericDelegateTypes(args, inputs, emitState, interopDefinitions, interopReferences, module);
+        RunEmission(args, discoveryState, inputs, emitState, interopDefinitions, interopReferences, module);
 
         args.Token.ThrowIfCancellationRequested();
 
-        // Emit interop types for 'IEnumerator<T>' types
-        DefineIEnumeratorTypes(args, inputs, emitState, interopDefinitions, interopReferences, module);
-
-        args.Token.ThrowIfCancellationRequested();
-
-        // Emit interop types for 'IEnumerable<T>' types
-        DefineIEnumerableTypes(args, inputs, emitState, interopDefinitions, interopReferences, module);
-
-        args.Token.ThrowIfCancellationRequested();
-
-        // Emit interop types for 'IReadOnlyList<T>' types
-        DefineIReadOnlyListTypes(args, inputs, emitState, interopDefinitions, interopReferences, module);
-
-        args.Token.ThrowIfCancellationRequested();
-
-        // Emit interop types for 'IList<T>' types
-        DefineIListTypes(args, inputs, emitState, interopDefinitions, interopReferences, module);
-
-        args.Token.ThrowIfCancellationRequested();
-
-        // Emit interop types for 'IReadOnlyDictionary<TKey, TValue>' types
-        DefineIReadOnlyDictionaryTypes(args, inputs, emitState, interopDefinitions, interopReferences, module);
-
-        args.Token.ThrowIfCancellationRequested();
-
-        // Emit interop types for 'IDictionary<TKey, TValue>' types
-        DefineIDictionaryTypes(args, inputs, emitState, interopDefinitions, interopReferences, module);
-
-        args.Token.ThrowIfCancellationRequested();
-
-        // Emit interop types for 'KeyValuePair<TKey, TValue>' types
-        DefineKeyValuePairTypes(args, inputs, emitState, interopDefinitions, interopReferences, module);
-
-        args.Token.ThrowIfCancellationRequested();
-
-        // Emit interop types for 'IMapChangedEventArgs<K, V>' types
-        DefineIMapChangedEventArgsTypes(args, inputs, emitState, interopDefinitions, interopReferences, module);
-
-        args.Token.ThrowIfCancellationRequested();
-
-        // Emit interop types for 'IObservableVector<T>' types
-        DefineIObservableVectorTypes(args, inputs, emitState, interopDefinitions, interopReferences, module);
-
-        args.Token.ThrowIfCancellationRequested();
-
-        // Emit interop types for 'IObservableMap<K, V>' types
-        DefineIObservableMapTypes(args, inputs, emitState, interopDefinitions, interopReferences, module);
-
-        args.Token.ThrowIfCancellationRequested();
-
-        // Emit interop types for 'IAsyncActionWithProgress<TProgress>' types
-        DefineIAsyncActionWithProgressTypes(args, inputs, emitState, interopDefinitions, interopReferences, module);
-
-        args.Token.ThrowIfCancellationRequested();
-
-        // Emit interop types for 'IAsyncOperation<TResult>' types
-        DefineIAsyncOperationTypes(args, inputs, emitState, interopDefinitions, interopReferences, module);
-
-        args.Token.ThrowIfCancellationRequested();
-
-        // Emit interop types for 'IAsyncOperationWithProgress<TResult, TProgress>' types
-        DefineIAsyncOperationWithProgressTypes(args, inputs, emitState, interopDefinitions, interopReferences, module);
-
-        args.Token.ThrowIfCancellationRequested();
-
-        // Emit interop types for 'IReadOnlyCollection<KeyValuePair<TKey, TValue>>' types
-        DefineIReadOnlyCollectionKeyValuePair2Types(args, inputs, emitState, interopDefinitions, interopReferences, module);
-
-        args.Token.ThrowIfCancellationRequested();
-
-        // Emit interop types for 'ICollection<KeyValuePair<TKey, TValue>>' types
-        DefineICollectionKeyValuePair2Types(args, inputs, emitState, interopDefinitions, interopReferences, module);
-
-        args.Token.ThrowIfCancellationRequested();
-
-        // Emit interop types for SZ array types
-        DefineSzArrayTypes(args, inputs, emitState, interopDefinitions, interopReferences, module);
-
-        args.Token.ThrowIfCancellationRequested();
-
-        // Rewrite the IL methods of marshalling stubs needing two-pass generation
-        RewriteMethodDefinitions(args, emitState, interopReferences);
-
-        args.Token.ThrowIfCancellationRequested();
-
-        // Apply fixups to all generated interop methods
-        FixupMethodDefinitions(args, module);
-
-        args.Token.ThrowIfCancellationRequested();
-
-        // Emit interop types for user-defined array types
-        DefineUserDefinedTypes(args, inputs, emitState, interopDefinitions, interopReferences, module);
-
-        args.Token.ThrowIfCancellationRequested();
-
-        // Add all dynamic top level internal types to the interop module
-        DefineDynamicImplementationDetailTypes(interopDefinitions, module);
-
-        args.Token.ThrowIfCancellationRequested();
-
-        // Add all dynamic type map entries for custom-mapped types
-        DefineDynamicCustomMappedTypeMapEntries(args, interopDefinitions, interopReferences, module);
-
-        args.Token.ThrowIfCancellationRequested();
-
-        // Emit the IID lookup map only when 'GetIid<T>' is referenced, avoiding unused generation work
-        if (discoveryState.HasIidLookupReferences)
-        {
-            DefineWindowsRuntimeIidTypeMapEntries(args, inputs, interopDefinitions, interopReferences, module);
-
-            args.Token.ThrowIfCancellationRequested();
-        }
-
-        // Add all '[IgnoresAccessChecksTo]' attributes
-        DefineIgnoresAccessChecksToAttributes(discoveryState, interopDefinitions, interopReferences, module);
-
-        args.Token.ThrowIfCancellationRequested();
-
-        EmitMetadataAssemblyAttributes(interopReferences, module);
+        OrderGeneratedMetadata(module, interopDefinitions);
 
         args.Token.ThrowIfCancellationRequested();
 
@@ -1563,6 +1433,7 @@ internal partial class InteropGenerator
                 WellKnownInteropExceptions.KeyValuePairTypeCodeGenerationError(typeSignature.Name, e).ThrowOrAttach(e);
             }
         }
+
     }
 
     /// <summary>
@@ -2519,101 +2390,103 @@ internal partial class InteropGenerator
         InteropGeneratorEmitState emitState,
         InteropReferences interopReferences)
     {
-        // We need to sort all items to a temporary list first, as the underlying items
-        // might otherwise change as we rewrite methods. This is because e.g. the target
-        // instructions will get replaced by marshalling code, meaning trying to compare
-        // different objects based on the index of those instructions in the target method
-        // would produce different results. This temporary list avoids that issue.
-        List<MethodRewriteInfo> rewriteInfos = [.. emitState.EnumerateMethodRewriteInfos().Order()];
+        // Rewrites within a method retain their original ordering, including rewrite kind and marker position.
+        // Different methods can be rewritten independently without comparing their expensive metadata names.
+        MethodRewriteInfo[][] rewritesByMethod = [.. emitState.EnumerateMethodRewriteInfos()
+            .GroupBy(static rewrite => rewrite.Method)
+            .Select(static group => group.Order().ToArray())];
 
-        foreach (MethodRewriteInfo rewriteInfo in rewriteInfos)
+        foreach (MethodRewriteInfo[] rewriteInfos in rewritesByMethod)
         {
-            args.Token.ThrowIfCancellationRequested();
-
-            try
+            foreach (MethodRewriteInfo rewriteInfo in rewriteInfos)
             {
-                switch (rewriteInfo)
+                args.Token.ThrowIfCancellationRequested();
+
+                try
                 {
-                    // Rewrite direct calls to 'ConvertToUnmanaged' (or 'BoxToUnmanaged')
-                    case MethodRewriteInfo.RawRetVal rawRetValInfo:
-                        InteropMethodRewriter.RawRetVal.RewriteMethod(
-                            parameterType: rawRetValInfo.Type,
-                            method: rawRetValInfo.Method,
-                            marker: rawRetValInfo.Marker,
-                            interopReferences: interopReferences,
-                            emitState: emitState);
-                        break;
+                    switch (rewriteInfo)
+                    {
+                        // Rewrite direct calls to 'ConvertToUnmanaged' (or 'BoxToUnmanaged')
+                        case MethodRewriteInfo.RawRetVal rawRetValInfo:
+                            InteropMethodRewriter.RawRetVal.RewriteMethod(
+                                parameterType: rawRetValInfo.Type,
+                                method: rawRetValInfo.Method,
+                                marker: rawRetValInfo.Marker,
+                                interopReferences: interopReferences,
+                                emitState: emitState);
+                            break;
 
-                    // Rewrite return values for managed types
-                    case MethodRewriteInfo.ReturnValue returnValueInfo:
-                        InteropMethodRewriter.ReturnValue.RewriteMethod(
-                            returnType: returnValueInfo.Type,
-                            method: returnValueInfo.Method,
-                            marker: returnValueInfo.Marker,
-                            source: returnValueInfo.Source,
-                            interopReferences: interopReferences,
-                            emitState: emitState);
-                        break;
+                        // Rewrite return values for managed types
+                        case MethodRewriteInfo.ReturnValue returnValueInfo:
+                            InteropMethodRewriter.ReturnValue.RewriteMethod(
+                                returnType: returnValueInfo.Type,
+                                method: returnValueInfo.Method,
+                                marker: returnValueInfo.Marker,
+                                source: returnValueInfo.Source,
+                                interopReferences: interopReferences,
+                                emitState: emitState);
+                            break;
 
-                    // Rewrite return values for native types
-                    case MethodRewriteInfo.RetVal retValInfo:
-                        InteropMethodRewriter.RetVal.RewriteMethod(
-                            retValType: retValInfo.Type,
-                            method: retValInfo.Method,
-                            marker: retValInfo.Marker,
-                            interopReferences: interopReferences,
-                            emitState: emitState);
-                        break;
+                        // Rewrite return values for native types
+                        case MethodRewriteInfo.RetVal retValInfo:
+                            InteropMethodRewriter.RetVal.RewriteMethod(
+                                retValType: retValInfo.Type,
+                                method: retValInfo.Method,
+                                marker: retValInfo.Marker,
+                                interopReferences: interopReferences,
+                                emitState: emitState);
+                            break;
 
-                    // Rewrite managed values
-                    case MethodRewriteInfo.ManagedValue managedValueInfo:
-                        InteropMethodRewriter.ManagedValue.RewriteMethod(
-                            parameterType: managedValueInfo.Type,
-                            method: managedValueInfo.Method,
-                            marker: managedValueInfo.Marker,
-                            interopReferences: interopReferences,
-                            emitState: emitState);
-                        break;
+                        // Rewrite managed values
+                        case MethodRewriteInfo.ManagedValue managedValueInfo:
+                            InteropMethodRewriter.ManagedValue.RewriteMethod(
+                                parameterType: managedValueInfo.Type,
+                                method: managedValueInfo.Method,
+                                marker: managedValueInfo.Marker,
+                                interopReferences: interopReferences,
+                                emitState: emitState);
+                            break;
 
-                    // Rewrite managed parameters
-                    case MethodRewriteInfo.ManagedParameter managedParameterInfo:
-                        InteropMethodRewriter.ManagedParameter.RewriteMethod(
-                            parameterType: managedParameterInfo.Type,
-                            method: managedParameterInfo.Method,
-                            marker: managedParameterInfo.Marker,
-                            parameterIndex: managedParameterInfo.ParameterIndex,
-                            interopReferences: interopReferences,
-                            emitState: emitState);
-                        break;
+                        // Rewrite managed parameters
+                        case MethodRewriteInfo.ManagedParameter managedParameterInfo:
+                            InteropMethodRewriter.ManagedParameter.RewriteMethod(
+                                parameterType: managedParameterInfo.Type,
+                                method: managedParameterInfo.Method,
+                                marker: managedParameterInfo.Marker,
+                                parameterIndex: managedParameterInfo.ParameterIndex,
+                                interopReferences: interopReferences,
+                                emitState: emitState);
+                            break;
 
-                    // Rewrite native parameters
-                    case MethodRewriteInfo.NativeParameter nativeParameterInfo:
-                        InteropMethodRewriter.NativeParameter.RewriteMethod(
-                            parameterType: nativeParameterInfo.Type,
-                            method: nativeParameterInfo.Method,
-                            tryMarker: nativeParameterInfo.TryMarker,
-                            loadMarker: nativeParameterInfo.Marker,
-                            finallyMarker: nativeParameterInfo.FinallyMarker,
-                            parameterIndex: nativeParameterInfo.ParameterIndex,
-                            interopReferences: interopReferences,
-                            emitState: emitState);
-                        break;
+                        // Rewrite native parameters
+                        case MethodRewriteInfo.NativeParameter nativeParameterInfo:
+                            InteropMethodRewriter.NativeParameter.RewriteMethod(
+                                parameterType: nativeParameterInfo.Type,
+                                method: nativeParameterInfo.Method,
+                                tryMarker: nativeParameterInfo.TryMarker,
+                                loadMarker: nativeParameterInfo.Marker,
+                                finallyMarker: nativeParameterInfo.FinallyMarker,
+                                parameterIndex: nativeParameterInfo.ParameterIndex,
+                                interopReferences: interopReferences,
+                                emitState: emitState);
+                            break;
 
-                    // Rewrite direct calls to 'Dispose' (or the appropriate 'Free' method)
-                    case MethodRewriteInfo.Dispose disposeInfo:
-                        InteropMethodRewriter.Dispose.RewriteMethod(
-                            parameterType: disposeInfo.Type,
-                            method: disposeInfo.Method,
-                            marker: disposeInfo.Marker,
-                            interopReferences: interopReferences,
-                            emitState: emitState);
-                        break;
-                    default: throw new UnreachableException();
+                        // Rewrite direct calls to 'Dispose' (or the appropriate 'Free' method)
+                        case MethodRewriteInfo.Dispose disposeInfo:
+                            InteropMethodRewriter.Dispose.RewriteMethod(
+                                parameterType: disposeInfo.Type,
+                                method: disposeInfo.Method,
+                                marker: disposeInfo.Marker,
+                                interopReferences: interopReferences,
+                                emitState: emitState);
+                            break;
+                        default: throw new UnreachableException();
+                    }
                 }
-            }
-            catch (Exception e)
-            {
-                WellKnownInteropExceptions.MethodRewriteError(rewriteInfo.Type, rewriteInfo.Method, e).ThrowOrAttach(e);
+                catch (Exception e)
+                {
+                    WellKnownInteropExceptions.MethodRewriteError(rewriteInfo.Type, rewriteInfo.Method, e).ThrowOrAttach(e);
+                }
             }
         }
     }
@@ -2625,7 +2498,7 @@ internal partial class InteropGenerator
     /// <param name="module">The interop module being built.</param>
     private static void FixupMethodDefinitions(InteropGeneratorArgs args, ModuleDefinition module)
     {
-        ReadOnlySpan<InteropMethodFixup> fixups =
+        InteropMethodFixup[] fixups =
         [
             InteropMethodFixup.RemoveLeftoverNopAfterLeave.Instance,
             InteropMethodFixup.RemoveUnnecessaryTryStartNop.Instance
@@ -2758,6 +2631,7 @@ internal partial class InteropGenerator
             // be referenced (and imported) without causing issues. The reason is that adding these
             // earlier on ensures that they're already part of the output module.
             module.TopLevelTypes.Add(interopDefinitions.RvaFields);
+            _ = interopDefinitions.IIDRvaDataSize_16;
             module.TopLevelTypes.Add(interopDefinitions.InterfaceIIDs);
             module.TopLevelTypes.Add(interopDefinitions.IUnknownVftbl);
             module.TopLevelTypes.Add(interopDefinitions.IInspectableVftbl);
@@ -2796,13 +2670,13 @@ internal partial class InteropGenerator
         try
         {
             // Emit all shared COM interface entries types that are programmatically generated for user-defined types
-            foreach (TypeDefinition typeDefinition in interopDefinitions.EnumerateUserDefinedInterfaceEntriesTypes().OrderByFullyQualifiedTypeName(interopDefinitions.RuntimeContext))
+            foreach (TypeDefinition typeDefinition in interopDefinitions.EnumerateUserDefinedInterfaceEntriesTypes())
             {
                 module.TopLevelTypes.Add(typeDefinition);
             }
 
             // Also emit interface entries types for SZ arrays, same as for user-defined types above
-            foreach (TypeDefinition typeDefinition in interopDefinitions.EnumerateSzArrayInterfaceEntriesTypes().OrderByFullyQualifiedTypeName(interopDefinitions.RuntimeContext))
+            foreach (TypeDefinition typeDefinition in interopDefinitions.EnumerateSzArrayInterfaceEntriesTypes())
             {
                 module.TopLevelTypes.Add(typeDefinition);
             }
@@ -2893,7 +2767,7 @@ internal partial class InteropGenerator
                 winRTSdkXamlProjectionModule: discoveryState.WindowsRuntimeSdkXamlProjectionModule,
                 winRTProjectionModule: discoveryState.WindowsRuntimeSdkProjectionModule,
                 winRTComponentModule: discoveryState.WindowsRuntimeComponentModule,
-                referencePathModules: discoveryState.Modules.Values.OrderByFullyQualifiedName(),
+                referencePathModules: discoveryState.Modules.Values,
                 interopDefinitions: interopDefinitions,
                 interopReferences: interopReferences,
                 module: module);
