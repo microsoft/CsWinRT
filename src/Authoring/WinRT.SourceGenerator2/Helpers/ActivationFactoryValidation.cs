@@ -193,12 +193,9 @@ internal static class ActivationFactoryValidation
         }
 
         // The generated activation factory derives from this type from another assembly ('WinRT.Component.dll')
-        for (INamedTypeSymbol? current = type; current is not null; current = current.ContainingType)
+        if (!type.IsPubliclyAccessible)
         {
-            if (current.DeclaredAccessibility is not Accessibility.Public)
-            {
-                return "it or one of its containing types is not public, so the generated activation factory cannot derive from it.";
-            }
+            return "it or one of its containing types is not public, so the generated activation factory cannot derive from it.";
         }
 
         if (type.IsGenericOrNestedInGenericType)
@@ -245,7 +242,7 @@ internal static class ActivationFactoryValidation
             runtimeClassType.DeclaredAccessibility is not Accessibility.Public ||
             runtimeClassType.ContainingType is not null ||
             runtimeClassType.IsGenericType ||
-            IsInAbiNamespace(runtimeClassType) ||
+            runtimeClassType.IsInAbiNamespace ||
             runtimeClassType.HasAttributeWithType(activationFactoryAttributeType) ||
             implementableClasses.GetInstanceBase(runtimeClassType) is not null)
         {
@@ -258,23 +255,6 @@ internal static class ActivationFactoryValidation
         }
 
         return null;
-    }
-
-    /// <summary>
-    /// Checks whether a type is declared in the <c>ABI</c> namespace or in one of its child namespaces.
-    /// </summary>
-    /// <param name="type">The type to check.</param>
-    /// <returns>Whether <paramref name="type"/> is declared in the <c>ABI</c> namespace.</returns>
-    private static bool IsInAbiNamespace(INamedTypeSymbol type)
-    {
-        INamespaceSymbol? rootNamespace = null;
-
-        for (INamespaceSymbol? current = type.ContainingNamespace; current is { IsGlobalNamespace: false }; current = current.ContainingNamespace)
-        {
-            rootNamespace = current;
-        }
-
-        return rootNamespace?.Name == "ABI";
     }
 
     /// <summary>

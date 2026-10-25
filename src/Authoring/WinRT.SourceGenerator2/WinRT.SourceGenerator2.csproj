@@ -58,4 +58,8 @@
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp" VersionOverride="5.0.0-2.final" PrivateAssets="all" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Compile Include="..\..\WinRT.Generator.Core\Helpers\WindowsRuntimeTypeMappings.cs" Link="Helpers\WindowsRuntimeTypeMappings.cs" />
+  </ItemGroup>
+
 </Project>

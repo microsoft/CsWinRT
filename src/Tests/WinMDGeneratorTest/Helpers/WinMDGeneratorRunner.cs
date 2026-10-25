@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -183,13 +184,170 @@ internal static class WinMDGeneratorRunner
     }
 
     /// <summary>
+    /// Gets actual method signatures and implemented interfaces from a generated WinMD without CLR projections.
+    /// </summary>
+    /// <param name="source">The authored component source.</param>
+    /// <param name="useWindowsUIXamlProjections">Whether to select UWP XAML instead of WinUI.</param>
+    /// <returns>Method signatures keyed by declaring type and method name, and interfaces keyed by implementing type.</returns>
+    public static (Dictionary<string, string> Methods, Dictionary<string, string[]> Interfaces) GetGeneratedApiSurface(
+        string source, bool useWindowsUIXamlProjections = false)
+    {
+        return Generate(source, static path =>
+        {
+            using FileStream stream = File.OpenRead(path);
+            using PEReader peReader = new(stream);
+            MetadataReader reader = peReader.GetMetadataReader(MetadataReaderOptions.None);
+            MetadataTypeNameProvider provider = new();
+            Dictionary<string, string> methods = [];
+            Dictionary<string, string[]> interfaces = [];
+
+            foreach (TypeDefinitionHandle handle in reader.TypeDefinitions)
+            {
+                TypeDefinition type = reader.GetTypeDefinition(handle);
+                string owner = Format(reader.GetString(type.Namespace), reader.GetString(type.Name));
+
+                foreach (MethodDefinitionHandle methodHandle in type.GetMethods())
+                {
+                    MethodDefinition method = reader.GetMethodDefinition(methodHandle);
+                    MethodSignature<string> signature = method.DecodeSignature(provider, genericContext: (object?)null);
+                    string name = reader.GetString(method.Name);
+
+                    methods.Add($"{owner}.{name}", $"{signature.ReturnType}({string.Join(", ", signature.ParameterTypes)})");
+                }
+
+                interfaces.Add(owner, [.. type.GetInterfaceImplementations()
+                    .Select(reader.GetInterfaceImplementation)
+                    .Select(implementation => provider.GetTypeName(reader, implementation.Interface))]);
+            }
+
+            return (methods, interfaces);
+        }, useWindowsUIXamlProjections);
+    }
+
+    /// <summary>
+    /// Formats signature types with their metadata assembly scopes for API assertions.
+    /// </summary>
+    private sealed class MetadataTypeNameProvider : ISignatureTypeProvider<string, object?>
+    {
+        /// <summary>
+        /// Formats the metadata type identified by a definition, reference, or specification handle.
+        /// </summary>
+        public string GetTypeName(MetadataReader reader, EntityHandle handle)
+        {
+            return handle.Kind switch
+            {
+                HandleKind.TypeDefinition => GetTypeFromDefinition(reader, (TypeDefinitionHandle)handle, 0),
+                HandleKind.TypeReference => GetTypeFromReference(reader, (TypeReferenceHandle)handle, 0),
+                HandleKind.TypeSpecification => GetTypeFromSpecification(reader, null, (TypeSpecificationHandle)handle, 0),
+                _ => throw new NotSupportedException($"Unexpected metadata type handle: {handle.Kind}.")
+            };
+        }
+
+        /// <inheritdoc/>
+        public string GetTypeFromDefinition(MetadataReader reader, TypeDefinitionHandle handle, byte rawTypeKind)
+        {
+            TypeDefinition type = reader.GetTypeDefinition(handle);
+            string assembly = reader.GetString(reader.GetAssemblyDefinition().Name);
+
+            return $"{assembly}::{Format(reader.GetString(type.Namespace), reader.GetString(type.Name))}";
+        }
+
+        /// <inheritdoc/>
+        public string GetTypeFromReference(MetadataReader reader, TypeReferenceHandle handle, byte rawTypeKind)
+        {
+            TypeReference type = reader.GetTypeReference(handle);
+            string assembly = type.ResolutionScope.Kind switch
+            {
+                HandleKind.AssemblyReference => reader.GetString(reader.GetAssemblyReference((AssemblyReferenceHandle)type.ResolutionScope).Name),
+                HandleKind.ModuleDefinition => reader.GetString(reader.GetAssemblyDefinition().Name),
+                _ => throw new NotSupportedException($"Unexpected type reference scope: {type.ResolutionScope.Kind}.")
+            };
+
+            return $"{assembly}::{Format(reader.GetString(type.Namespace), reader.GetString(type.Name))}";
+        }
+
+        /// <inheritdoc/>
+        public string GetTypeFromSpecification(MetadataReader reader, object? genericContext, TypeSpecificationHandle handle, byte rawTypeKind)
+        {
+            return reader.GetTypeSpecification(handle).DecodeSignature(this, genericContext);
+        }
+
+        /// <inheritdoc/>
+        public string GetGenericInstantiation(string genericType, ImmutableArray<string> typeArguments)
+        {
+            return $"{genericType}<{string.Join(", ", typeArguments)}>";
+        }
+
+        /// <inheritdoc/>
+        public string GetPrimitiveType(PrimitiveTypeCode typeCode)
+        {
+            return typeCode.ToString();
+        }
+
+        /// <inheritdoc/>
+        public string GetSZArrayType(string elementType)
+        {
+            return elementType + "[]";
+        }
+
+        /// <inheritdoc/>
+        public string GetArrayType(string elementType, ArrayShape shape)
+        {
+            return $"{elementType}[{new string(',', shape.Rank - 1)}]";
+        }
+
+        /// <inheritdoc/>
+        public string GetByReferenceType(string elementType)
+        {
+            return elementType + "&";
+        }
+
+        /// <inheritdoc/>
+        public string GetPointerType(string elementType)
+        {
+            return elementType + "*";
+        }
+
+        /// <inheritdoc/>
+        public string GetGenericTypeParameter(object? genericContext, int index)
+        {
+            return $"!{index}";
+        }
+
+        /// <inheritdoc/>
+        public string GetGenericMethodParameter(object? genericContext, int index)
+        {
+            return $"!!{index}";
+        }
+
+        /// <inheritdoc/>
+        public string GetFunctionPointerType(MethodSignature<string> signature)
+        {
+            throw new NotSupportedException("WinMD signatures cannot contain function pointers.");
+        }
+
+        /// <inheritdoc/>
+        public string GetModifiedType(string modifier, string unmodifiedType, bool isRequired)
+        {
+            throw new NotSupportedException("WinMD signatures cannot contain custom modifiers.");
+        }
+
+        /// <inheritdoc/>
+        public string GetPinnedType(string elementType)
+        {
+            throw new NotSupportedException("WinMD signatures cannot contain pinned types.");
+        }
+    }
+
+    /// <summary>
     /// Runs the generator for the given component source and reads the produced <c>.winmd</c>.
     /// </summary>
     /// <typeparam name="T">The type of value read from the produced <c>.winmd</c>.</typeparam>
     /// <param name="source">The C# source defining the authored component types.</param>
     /// <param name="read">Reads the value from the produced <c>.winmd</c>, given its path.</param>
+    /// <param name="useWindowsUIXamlProjections">Whether to select UWP XAML instead of WinUI.</param>
     /// <returns>The value read from the produced <c>.winmd</c>.</returns>
-    private static T Generate<T>(string source, Func<string, T> read)
+    private static T Generate<T>(string source, Func<string, T> read, bool useWindowsUIXamlProjections = false)
     {
         string toolPath = GetGeneratorPath();
         string temporaryDirectory = Directory.CreateTempSubdirectory("WinMDGeneratorTest_").FullName;
@@ -199,13 +357,20 @@ internal static class WinMDGeneratorRunner
             string inputAssemblyPath = CompileComponent(source, temporaryDirectory);
             string outputWinMDPath = Path.Combine(temporaryDirectory, "TestInput.winmd");
             string responseFilePath = Path.Combine(temporaryDirectory, "args.rsp");
+            string referencesDirectory = Directory.CreateDirectory(Path.Combine(temporaryDirectory, "references")).FullName;
+            string[] references = [.. Net100.ReferenceInfos.All.Select(reference =>
+            {
+                string path = Path.Combine(referencesDirectory, reference.FileName);
+                File.WriteAllBytes(path, reference.ImageBytes);
+                return path;
+            })];
 
             File.WriteAllText(responseFilePath, $"""
                 --input-assembly-path {inputAssemblyPath}
-                --reference-assembly-paths {inputAssemblyPath}
+                --reference-assembly-paths {inputAssemblyPath},{string.Join(',', references)}
                 --output-winmd-path {outputWinMDPath}
                 --assembly-version 1.0.0.0
-                --use-windows-ui-xaml-projections false
+                --use-windows-ui-xaml-projections {useWindowsUIXamlProjections}
                 """);
 
             (int exitCode, string output) = RunTool(toolPath, responseFilePath);
