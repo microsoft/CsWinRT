@@ -27,6 +27,7 @@ internal partial class ProjectionGenerator
     {
         string assemblyName = args.AssemblyName;
         CSharpCompilation compilation;
+        List<EmbeddedText> embeddedTexts = [];
 
         // Create the Roslyn compilation from the generated projection sources
         try
@@ -48,9 +49,13 @@ internal partial class ProjectionGenerator
 
                 using Stream stream = File.OpenRead(file);
 
+                string sourcePath = "/_/" + Path.GetFileName(file);
+                SourceText sourceText = SourceText.From(stream, checksumAlgorithm: SourceHashAlgorithm.Sha256, canBeEmbedded: true);
+
+                embeddedTexts.Add(EmbeddedText.FromSource(sourcePath, sourceText));
                 syntaxTrees.Add(CSharpSyntaxTree.ParseText(
-                    text: SourceText.From(stream, checksumAlgorithm: SourceHashAlgorithm.Sha256),
-                    path: "/_/" + Path.GetFileName(file)));
+                    text: sourceText,
+                    path: sourcePath));
             }
 
             // Build the references list
@@ -100,7 +105,7 @@ internal partial class ProjectionGenerator
             // Emit the compilation to a file
             using (FileStream fileStream = new(projectionDllPath, FileMode.Create))
             {
-                result = compilation.Emit(fileStream, options: emitOptions);
+                result = compilation.Emit(fileStream, options: emitOptions, embeddedTexts: embeddedTexts);
             }
 
             if (!result.Success)

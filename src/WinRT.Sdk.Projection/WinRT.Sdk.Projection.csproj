@@ -128,4 +128,8 @@
     </ItemGroup>
   </Target>
 
+  <Target Name="CleanSdkProjectionSources" AfterTargets="Clean">
+    <RemoveDir Directories="$(IntermediateOutputPath)sdkprojection\CsWinRTProjectionSources" />
+  </Target>
+
 </Project>

@@ -20,24 +20,6 @@ namespace WindowsRuntime.ProjectionGenerator.Generation;
 internal partial class ProjectionGenerator
 {
     /// <summary>
-    /// Creates a temporary folder for CsWinRT generation output.
-    /// </summary>
-    /// <returns>The path to the created temporary folder.</returns>
-    /// <remarks>
-    /// The returned folder is guaranteed to already exist when this method returns.
-    /// </remarks>
-    private static string GetTempFolder()
-    {
-        // Create a temporary folder with this structure: '%TEMP%/CsWinRT/<RANDOM_NAME>'
-        string outputDir = Path.Combine(Path.GetTempPath(), "CsWinRT", Path.GetRandomFileName()).TrimEnd('\\');
-
-        // Ensure the folder does exist (code using it might rely on it existing already)
-        _ = Directory.CreateDirectory(outputDir);
-
-        return outputDir;
-    }
-
-    /// <summary>
     /// Runs the processing logic for the generator.
     /// </summary>
     /// <param name="args">The arguments for this invocation.</param>
@@ -104,7 +86,7 @@ internal partial class ProjectionGenerator
     {
         args.Token.ThrowIfCancellationRequested();
 
-        outputFolder = GetTempFolder();
+        outputFolder = Path.Combine(Path.GetFullPath(args.GeneratedAssemblyDirectory), "CsWinRTProjectionSources", Path.GetRandomFileName());
         projectionReferenceAssemblies = [];
         hasTypesToProject = false;
         componentAssemblyNames = [];

@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System;
 using System.IO;
 using System.Threading;
 using ConsoleAppFramework;
@@ -58,28 +59,50 @@ internal static partial class ProjectionGenerator
             return;
         }
 
-        // Invoke the projection writer (in-process) to generate the projection sources
-        if (processingState.HasTypesToProject)
+        try
         {
+            _ = runner.RunPhase(
+                phaseName: "source-directory",
+                body: _ => Directory.CreateDirectory(processingState.SourcesFolder));
+
+            // Invoke the projection writer (in-process) to generate the projection sources
+            if (processingState.HasTypesToProject)
+            {
+                runner.RunPhase(
+                    phaseName: "source-generation",
+                    logMessage: "Generating projection code",
+                    body: _ => GenerateSources(processingState));
+            }
+
+            // In component mode (i.e. producing 'WinRT.Component.dll'), emit the supporting source files
+            // alongside the projection writer's output so the merged '.dll' plays the entry-assembly and
+            // merged-activation roles (interop type map union, 'SetEntryAssembly' module init, merged
+            // 'ABI.WinRT.Component.ManagedExports.GetActivationFactory', and AOT native export).
             runner.RunPhase(
-                phaseName: "source-generation",
-                logMessage: "Generating projection code",
-                body: _ => GenerateSources(processingState));
+                phaseName: "winrt-component-sources",
+                body: args => EmitWinRTComponentSources(args, processingState));
+
+            // Invoke Roslyn to compile the generated sources into 'WinRT.Projection.dll'
+            runner.RunPhase(
+                phaseName: "emit",
+                logMessage: "Compiling projection code",
+                body: args => Emit(args, processingState));
         }
-
-        // In component mode (i.e. producing 'WinRT.Component.dll'), emit the supporting source files
-        // alongside the projection writer's output so the merged '.dll' plays the entry-assembly and
-        // merged-activation roles (interop type map union, 'SetEntryAssembly' module init, merged
-        // 'ABI.WinRT.Component.ManagedExports.GetActivationFactory', and AOT native export).
-        runner.RunPhase(
-            phaseName: "winrt-component-sources",
-            body: args => EmitWinRTComponentSources(args, processingState));
-
-        // Invoke Roslyn to compile the generated sources into 'WinRT.Projection.dll'
-        runner.RunPhase(
-            phaseName: "emit",
-            logMessage: "Compiling projection code",
-            body: args => Emit(args, processingState));
+        finally
+        {
+            try
+            {
+                if (Directory.Exists(processingState.SourcesFolder))
+                {
+                    Directory.Delete(processingState.SourcesFolder, recursive: true);
+                }
+            }
+            catch (Exception e) when (e is IOException or UnauthorizedAccessException)
+            {
+                // Cleanup must not replace the generation error. MSBuild Clean can retry it.
+                ConsoleApp.Log($"warning {WellKnownProjectionGeneratorExceptions.ErrorPrefix}0016: Failed to remove projection sources at '{processingState.SourcesFolder}': {e.Message}");
+            }
+        }
 
         // Notify the user that generation was successful
         ConsoleApp.Log($"Projection code generated -> {Path.Combine(runner.Args.GeneratedAssemblyDirectory, runner.Args.AssemblyName)}.dll");
