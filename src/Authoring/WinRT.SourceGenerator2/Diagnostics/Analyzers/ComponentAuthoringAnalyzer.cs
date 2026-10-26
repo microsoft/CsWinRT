@@ -219,7 +219,10 @@ public sealed class ComponentAuthoringAnalyzer : DiagnosticAnalyzer
     /// <summary>
     /// Validates the fields that define an authored struct's Windows Runtime layout.
     /// </summary>
-    private static void AnalyzeStruct(SymbolAnalysisContext context, INamedTypeSymbol type, AuthoringTypeValidation validation)
+    private static void AnalyzeStruct(
+        SymbolAnalysisContext context,
+        INamedTypeSymbol type,
+        AuthoringTypeValidation validation)
     {
         bool hasPublicField = false;
 
@@ -261,7 +264,10 @@ public sealed class ComponentAuthoringAnalyzer : DiagnosticAnalyzer
     /// <summary>
     /// Validates exported signatures and rejects parameter names that conflict with generated marshalling identifiers.
     /// </summary>
-    private static void AnalyzeMethod(SymbolAnalysisContext context, IMethodSymbol method, AuthoringTypeValidation validation)
+    private static void AnalyzeMethod(
+        SymbolAnalysisContext context,
+        IMethodSymbol method,
+        AuthoringTypeValidation validation)
     {
         if (method.IsGenericMethod)
         {
@@ -307,7 +313,9 @@ public sealed class ComponentAuthoringAnalyzer : DiagnosticAnalyzer
     /// <summary>
     /// Finds parameter names that collide with generated marshalling identifiers.
     /// </summary>
-    private static string? GetDerivedNameCollision(IParameterSymbol parameter, HashSet<string> names)
+    private static string? GetDerivedNameCollision(
+        IParameterSymbol parameter,
+        HashSet<string> names)
     {
         bool isArray = parameter.Type is IArrayTypeSymbol || AuthoringTypeValidation.IsSpan(parameter.Type);
         string prefix = "__" + parameter.Name;
@@ -412,7 +420,11 @@ public sealed class ComponentAuthoringAnalyzer : DiagnosticAnalyzer
     /// <summary>
     /// Validates parameter types and array/span calling conventions.
     /// </summary>
-    private static void AnalyzeParameter(SymbolAnalysisContext context, ISymbol member, IParameterSymbol parameter, AuthoringTypeValidation validation)
+    private static void AnalyzeParameter(
+        SymbolAnalysisContext context,
+        ISymbol member,
+        IParameterSymbol parameter,
+        AuthoringTypeValidation validation)
     {
         if (AuthoringTypeValidation.IsSpan(parameter.Type))
         {
@@ -439,7 +451,11 @@ public sealed class ComponentAuthoringAnalyzer : DiagnosticAnalyzer
     /// Reports a specific array-shape error or an unsupported signature type.
     /// </summary>
     private static void AnalyzeSignatureType(
-        SymbolAnalysisContext context, ISymbol member, ITypeSymbol type, AuthoringTypeValidation validation, bool arrayElement = false)
+        SymbolAnalysisContext context,
+        ISymbol member,
+        ITypeSymbol type,
+        AuthoringTypeValidation validation,
+        bool arrayElement = false)
     {
         if (type is IArrayTypeSymbol array)
         {
@@ -474,15 +490,19 @@ public sealed class ComponentAuthoringAnalyzer : DiagnosticAnalyzer
         List<IMethodSymbol> methods,
         INamedTypeSymbol? defaultOverloadAttributeType)
     {
-        foreach (IGrouping<int, IMethodSymbol> group in methods.Where(static method => method.MethodKind is MethodKind.Constructor)
+        // Group constructors by input parameter count
+        foreach (IGrouping<int, IMethodSymbol> group in methods
+            .Where(static method => method.MethodKind is MethodKind.Constructor)
             .GroupBy(static method => method.GetWindowsRuntimeInputArity()))
         {
+            // Report later declarations because the first constructor already occupies this input count
             foreach (IMethodSymbol duplicate in group.Skip(1))
             {
                 Report(context, DiagnosticDescriptors.AuthoredConstructorArityCollision, duplicate, type, group.Key);
             }
         }
 
+        // Overloads need one default per name and input count, separately for instance and static calls
         foreach (IGrouping<(string Name, int Arity, bool Static), IMethodSymbol> group in methods
             .Where(static method => method.MethodKind is MethodKind.Ordinary && !method.IsGenericMethod)
             .GroupBy(static method => (method.Name, method.GetWindowsRuntimeInputArity(), method.IsStatic)))
@@ -491,6 +511,7 @@ public sealed class ComponentAuthoringAnalyzer : DiagnosticAnalyzer
 
             if (defaults.Length > 1)
             {
+                // Report conflicting annotations after the first default declaration
                 foreach (IMethodSymbol duplicate in defaults.Skip(1))
                 {
                     Report(context, DiagnosticDescriptors.AuthoredDuplicateDefaultOverload, duplicate, group.Key.Name, group.Key.Arity);
@@ -506,7 +527,9 @@ public sealed class ComponentAuthoringAnalyzer : DiagnosticAnalyzer
     /// <summary>
     /// Collects interface implementations that the WinMD generator replaces or omits.
     /// </summary>
-    private static HashSet<ISymbol> GetOmittedMembers(INamedTypeSymbol type, AuthoringTypeValidation validation)
+    private static HashSet<ISymbol> GetOmittedMembers(
+        INamedTypeSymbol type,
+        AuthoringTypeValidation validation)
     {
         HashSet<ISymbol> members = new(SymbolEqualityComparer.Default);
 
@@ -532,7 +555,11 @@ public sealed class ComponentAuthoringAnalyzer : DiagnosticAnalyzer
     /// <summary>
     /// Reports an authoring diagnostic at the declaration's identifier.
     /// </summary>
-    private static void Report(SymbolAnalysisContext context, DiagnosticDescriptor descriptor, ISymbol symbol, params object[] arguments)
+    private static void Report(
+        SymbolAnalysisContext context,
+        DiagnosticDescriptor descriptor,
+        ISymbol symbol,
+        params object[] arguments)
     {
         context.ReportDiagnostic(Diagnostic.Create(descriptor, symbol.Locations.FirstOrDefault(), arguments));
     }

@@ -15,7 +15,9 @@ namespace WindowsRuntime.SourceGenerator;
 /// </summary>
 /// <param name="compilation">The compilation being analyzed.</param>
 /// <param name="useWindowsUIXamlProjections">Whether UWP XAML is selected instead of WinUI.</param>
-internal sealed class AuthoringTypeValidation(Compilation compilation, bool useWindowsUIXamlProjections)
+internal sealed class AuthoringTypeValidation(
+    Compilation compilation,
+    bool useWindowsUIXamlProjections)
 {
     /// <summary>
     /// The lookup for implementations of runtime classes declared in existing metadata.
@@ -118,7 +120,9 @@ internal sealed class AuthoringTypeValidation(Compilation compilation, bool useW
     /// <returns>Whether marshalling the type requires a named local.</returns>
     public static bool NeedsMarshallingLocal(ITypeSymbol type)
     {
-        static bool Visit(ITypeSymbol type, HashSet<ITypeSymbol> visited)
+        static bool Visit(
+            ITypeSymbol type,
+            HashSet<ITypeSymbol> visited)
         {
             return type.IsReferenceType || type is INamedTypeSymbol { IsGenericType: true } ||
                    type.GetFullyQualifiedMetadataName() is "System.DateTimeOffset" or "System.TimeSpan" ||
@@ -137,7 +141,9 @@ internal sealed class AuthoringTypeValidation(Compilation compilation, bool useW
     /// <param name="type">The type to classify.</param>
     /// <param name="allowArray">Whether a single-dimensional array is allowed in this position.</param>
     /// <returns>Whether the signature type is supported.</returns>
-    public bool IsSupported(ITypeSymbol type, bool allowArray = true)
+    public bool IsSupported(
+        ITypeSymbol type,
+        bool allowArray = true)
     {
         if (type.TypeKind is TypeKind.Error)
         {

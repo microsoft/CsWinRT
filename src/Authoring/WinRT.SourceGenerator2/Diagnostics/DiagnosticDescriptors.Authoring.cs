@@ -197,7 +197,12 @@ internal static partial class DiagnosticDescriptors
     /// <param name="description">The standalone explanation of the diagnostic.</param>
     /// <param name="compilationEnd">Whether the diagnostic is reported from a compilation-end action.</param>
     /// <returns>The diagnostic descriptor.</returns>
-    private static DiagnosticDescriptor CreateAuthoringRule(string id, string title, string message, string description, bool compilationEnd = false)
+    private static DiagnosticDescriptor CreateAuthoringRule(
+        string id,
+        string title,
+        string message,
+        string description,
+        bool compilationEnd = false)
     {
         return new DiagnosticDescriptor(
             id: id,

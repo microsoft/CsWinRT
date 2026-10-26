@@ -54,7 +54,9 @@ internal static class WindowsRuntimeExtensions
         /// <param name="method">The method to check for a default overload annotation.</param>
         /// <param name="defaultOverloadAttributeType">The default overload attribute type, if available.</param>
         /// <returns>Whether the method or its implemented interface member has a default overload annotation.</returns>
-        public bool HasDefaultOverload(IMethodSymbol method, INamedTypeSymbol? defaultOverloadAttributeType)
+        public bool HasDefaultOverload(
+            IMethodSymbol method,
+            INamedTypeSymbol? defaultOverloadAttributeType)
         {
             if (defaultOverloadAttributeType is null)
             {

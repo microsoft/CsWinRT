@@ -20,7 +20,7 @@ internal static class WindowsRuntimeTypeMappings
     /// <param name="Assembly">The Windows Runtime contract assembly.</param>
     /// <param name="IsValueType">Whether the mapped type is a value type.</param>
     /// <param name="IsBlittable">Whether the mapped value type is blittable.</param>
-    internal readonly record struct Mapping(
+    public readonly record struct Mapping(
         string Namespace,
         string Name,
         string Assembly,

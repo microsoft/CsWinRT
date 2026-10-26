@@ -517,7 +517,9 @@ public sealed class Test_ComponentAuthoringAnalyzer
     [DataRow("int[][]", "CSWINRT2042")]
     [DataRow("int[,]", "CSWINRT2043")]
     [DataRow("int[,,]", "CSWINRT2043")]
-    public async Task UnsupportedArrayShape_Warns(string type, string diagnostic)
+    public async Task UnsupportedArrayShape_Warns(
+        string type,
+        string diagnostic)
     {
         await VerifyAsync($$"""
             namespace Component;
@@ -539,7 +541,9 @@ public sealed class Test_ComponentAuthoringAnalyzer
     [DataRow("in int[]", "CSWINRT2045")]
     [DataRow("out System.Span<int>", "CSWINRT2046")]
     [DataRow("ref System.ReadOnlySpan<int>", "CSWINRT2046")]
-    public async Task UnsupportedByReferenceArrayConvention_Warns(string type, string diagnostic)
+    public async Task UnsupportedByReferenceArrayConvention_Warns(
+        string type,
+        string diagnostic)
     {
         await VerifyAsync($$"""
             namespace Component;
@@ -715,7 +719,9 @@ public sealed class Test_ComponentAuthoringAnalyzer
     [DataRow("System.ReadOnlySpan<string>", "_items_inlineHeaderArray")]
     [DataRow("System.ReadOnlySpan<string>", "__items_headerSpan")]
     [DataRow("System.ReadOnlySpan<string>", "__items_pinnedHandleSpan")]
-    public async Task ArrayTemporaryNameCollision_Warns(string type, string name)
+    public async Task ArrayTemporaryNameCollision_Warns(
+        string type,
+        string name)
     {
         await VerifyAsync($$"""
             namespace Component;

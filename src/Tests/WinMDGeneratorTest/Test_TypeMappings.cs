@@ -14,7 +14,9 @@ public sealed class Test_TypeMappings
     [TestMethod]
     [DataRow(false, "Microsoft.UI.Xaml")]
     [DataRow(true, "Windows.UI.Xaml")]
-    public void MappedSignatures_UseSelectedXamlMode(bool useWindowsUIXamlProjections, string xaml)
+    public void MappedSignatures_UseSelectedXamlMode(
+        bool useWindowsUIXamlProjections,
+        string xaml)
     {
         var (methods, _) = WinMDGeneratorRunner.GetGeneratedApiSurface("""
             namespace TestInput;
