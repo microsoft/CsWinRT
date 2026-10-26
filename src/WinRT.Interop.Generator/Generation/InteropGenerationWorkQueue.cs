@@ -38,46 +38,23 @@ internal sealed class InteropGenerationWorkQueue<TKey, TContext>(params InteropG
             return;
         }
 
-        Node[] nodes = CreateNodes();
         int workerCount = Math.Min(
             maxDegreesOfParallelism == -1 ? Environment.ProcessorCount : maxDegreesOfParallelism,
-            nodes.Length);
+            items.Length);
 
-        using BlockingCollection<Node> ready = new();
-
-        foreach (Node node in nodes)
-        {
-            if (node.RemainingPrerequisites == 0)
-            {
-                ready.Add(node);
-            }
-        }
+        using BlockingCollection<Node> ready = CreateReadyQueue();
 
         // A single worker needs neither the parallel loop nor linked cancellation
         if (workerCount == 1)
         {
-            while (ready.TryTake(out Node? node))
-            {
-                token.ThrowIfCancellationRequested();
-                node.Body(context);
-
-                foreach (Node dependent in node.Dependents)
-                {
-                    if (--dependent.RemainingPrerequisites == 0)
-                    {
-                        ready.Add(dependent);
-                    }
-                }
-            }
-
-            token.ThrowIfCancellationRequested();
+            RunSequential(context, ready, token);
 
             return;
         }
 
         using CancellationTokenSource cancellation = CancellationTokenSource.CreateLinkedTokenSource(token);
         ExceptionDispatchInfo? failure = null;
-        int remaining = nodes.Length;
+        int remaining = items.Length;
 
         try
         {
@@ -130,6 +107,42 @@ internal sealed class InteropGenerationWorkQueue<TKey, TContext>(params InteropG
         }
 
         token.ThrowIfCancellationRequested();
+    }
+
+    /// <summary>
+    /// Runs ready operations serially, releasing their dependents as prerequisites finish.
+    /// </summary>
+    /// <param name="context">The context to pass to each operation.</param>
+    /// <param name="ready">The validated queue of operations ready to run.</param>
+    /// <param name="token">The invocation's cancellation token.</param>
+    private static void RunSequential(TContext context, BlockingCollection<Node> ready, CancellationToken token)
+    {
+        while (ready.TryTake(out Node? node))
+        {
+            token.ThrowIfCancellationRequested();
+            node.Body(context);
+
+            foreach (Node dependent in node.Dependents)
+            {
+                if (--dependent.RemainingPrerequisites == 0)
+                {
+                    ready.Add(dependent);
+                }
+            }
+        }
+
+        token.ThrowIfCancellationRequested();
+    }
+
+    /// <summary>
+    /// Validates the work graph and seeds a FIFO queue with operations that have no prerequisites.
+    /// </summary>
+    /// <returns>The ready queue, which the caller owns and must dispose.</returns>
+    private BlockingCollection<Node> CreateReadyQueue()
+    {
+        Node[] nodes = CreateNodes();
+
+        return new(new ConcurrentQueue<Node>(nodes.Where(static node => node.RemainingPrerequisites == 0)));
     }
 
     /// <summary>
