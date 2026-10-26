@@ -15,6 +15,11 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     <ProduceOnlyReferenceAssembly Condition="'$(CsWinRTGenerateReferenceProjection)' == 'true'">true</ProduceOnlyReferenceAssembly>
   </PropertyGroup>
 
+  <!-- Use the publishing library as the root for Native AOT type-map discovery. -->
+  <PropertyGroup Condition="'$(PublishAot)' == 'true' and '$(OutputType)' == 'Library' and '$(TypeMapEntryAssembly)' == ''">
+    <TypeMapEntryAssembly>$(AssemblyName)</TypeMapEntryAssembly>
+  </PropertyGroup>
+
   <!--
     If we need to merge activation factories and the project is an executable, we need to emit a stub .exe,
     so in order to do that we need to tell the .NET SDK to export a custom main, and compile to a .dll instead.
