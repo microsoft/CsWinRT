@@ -134,7 +134,7 @@ internal static partial class AbiMethodBodyFactory
             string raw = parameter.GetRawName();
             string pointer = IdentifierEscaping.EscapeIdentifier(raw);
             string elementAbi = AbiTypeHelpers.GetArrayElementAbiType(context, array.BaseType);
-            writer.WriteLine($"WindowsRuntimeBlittableValueTypeArrayMarshaller.Clear(__{raw}Size, {pointer}, sizeof({elementAbi}));");
+            writer.WriteLine($"WindowsRuntimeArrayMarshaller.Clear(__{raw}Size, {pointer}, sizeof({elementAbi}));");
         }
     }
 
@@ -218,7 +218,7 @@ internal static partial class AbiMethodBodyFactory
                 if ({{pointer}} is not null)
                 {
                     {{dispose}}
-                    WindowsRuntimeBlittableValueTypeArrayMarshaller.Clear(__{{raw}}Size, {{pointer}}, sizeof({{elementAbi}}));
+                    WindowsRuntimeArrayMarshaller.Clear(__{{raw}}Size, {{pointer}}, sizeof({{elementAbi}}));
                 }
                 """);
         }

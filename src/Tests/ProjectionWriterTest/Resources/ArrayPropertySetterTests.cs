@@ -312,12 +312,12 @@ internal static unsafe class Program
     {
         Span<byte> storage = stackalloc byte[2 * GuardSize + 3 * sizeof(ABI.Contoso.Payload)];
         storage.Fill(GuardValue);
-        WindowsRuntimeBlittableValueTypeArrayMarshaller.Clear(3, null, sizeof(ABI.Contoso.Payload));
+        WindowsRuntimeArrayMarshaller.Clear(3, null, sizeof(ABI.Contoso.Payload));
         fixed (byte* data = storage)
         {
-            WindowsRuntimeBlittableValueTypeArrayMarshaller.Clear(0, data + GuardSize, sizeof(ABI.Contoso.Payload));
+            WindowsRuntimeArrayMarshaller.Clear(0, data + GuardSize, sizeof(ABI.Contoso.Payload));
             Check(storage.IndexOfAnyExcept(GuardValue) < 0, "zero-length clear modified storage");
-            WindowsRuntimeBlittableValueTypeArrayMarshaller.Clear(3, data + GuardSize, sizeof(ABI.Contoso.Payload));
+            WindowsRuntimeArrayMarshaller.Clear(3, data + GuardSize, sizeof(ABI.Contoso.Payload));
         }
         CheckClearedStorage(storage);
     }
