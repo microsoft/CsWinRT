@@ -49,6 +49,29 @@ internal partial class ProjectionGenerator
     }
 
     /// <summary>
+    /// Removes stale sources and prepares the current projection's source directory.
+    /// </summary>
+    /// <param name="args">The arguments for this invocation.</param>
+    /// <param name="processingState">The state from the processing phase.</param>
+    private static void PrepareSourcesDirectory(
+        ProjectionGeneratorArgs args,
+        ProjectionGeneratorProcessingState processingState)
+    {
+        args.Token.ThrowIfCancellationRequested();
+
+        // Remove stale sources even when the last projection input has been removed
+        if (Directory.Exists(processingState.SourcesFolder))
+        {
+            Directory.Delete(processingState.SourcesFolder, recursive: true);
+        }
+
+        if (processingState.HasTypesToProject || processingState.HasMergedActivation)
+        {
+            _ = Directory.CreateDirectory(processingState.SourcesFolder);
+        }
+    }
+
+    /// <summary>
     /// Runs the source generation logic for the generator.
     /// </summary>
     /// <param name="processingState">The state from the processing phase.</param>

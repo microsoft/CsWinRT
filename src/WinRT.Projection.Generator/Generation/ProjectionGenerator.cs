@@ -45,21 +45,10 @@ internal static partial class ProjectionGenerator
             },
             body: ProcessReferences);
 
-        // Remove stale sources even when the last projection input has been removed
+        // Prepare the source directory, removing stale files from the previous generation
         runner.RunPhase(
             phaseName: "source-directory",
-            body: args =>
-            {
-                if (Directory.Exists(processingState.SourcesFolder))
-                {
-                    Directory.Delete(processingState.SourcesFolder, recursive: true);
-                }
-
-                if (processingState.HasTypesToProject || processingState.HasMergedActivation)
-                {
-                    _ = Directory.CreateDirectory(processingState.SourcesFolder);
-                }
-            });
+            body: args => PrepareSourcesDirectory(args, processingState));
 
         // Nothing to project and nothing to merge: skip the remaining phases entirely (no .dll will be
         // produced at all). An assembly implementing classes declared in existing metadata contributes no
