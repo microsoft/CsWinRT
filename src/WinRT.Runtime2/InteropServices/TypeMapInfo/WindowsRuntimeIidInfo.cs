@@ -184,8 +184,8 @@ file static class WindowsRuntimeIidTypeName
     /// <remarks>Keep aligned with the existing mapped-type classifiers used by WindowsRuntimeIidTypeNameFactory.</remarks>
     private static bool IsSystemType(Type type)
     {
-        // Keep the 'typeof' references confined to comparisons so Native AOT need not retain their reflection metadata
-        // Storing these 'Type' objects in a static table would root that metadata instead
+        // Use 'typeof' only in comparisons so Native AOT can avoid retaining reflection metadata for these types.
+        // Storing the 'Type' objects in a static table would root that metadata instead.
         return
             type == typeof(bool) ||
             type == typeof(byte) ||

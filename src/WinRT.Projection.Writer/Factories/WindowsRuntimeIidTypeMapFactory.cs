@@ -137,6 +137,7 @@ internal static class WindowsRuntimeIidTypeMapFactory
 
         using IndentedTextWriterOwner owner = IndentedTextWriterPool.GetOrCreate();
         IndentedTextWriter writer = owner.Writer;
+
         MetadataAttributeFactory.WriteFileHeader(writer);
         writer.WriteLine(isMultiline: true, """
 
@@ -152,6 +153,7 @@ internal static class WindowsRuntimeIidTypeMapFactory
         foreach ((string key, (Guid iid, string trimTarget)) in entries.OrderBy(static entry => entry.Key, StringComparer.Ordinal))
         {
             token.ThrowIfCancellationRequested();
+
             if (!providers.TryGetValue(iid, out int provider))
             {
                 provider = providers.Count;

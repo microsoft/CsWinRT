@@ -143,7 +143,7 @@ internal static class GuidGenerator
     {
         return IidCaches
             .GetOrAdd(runtimeContext, static _ => new ConcurrentDictionary<string, Guid>(StringComparer.Ordinal))
-            .GetOrAdd(signature, CreateGuidFromSignature);
+            .GetOrAdd(signature, static signature => CreateGuidFromSignature(signature));
     }
 
     /// <summary>
@@ -186,7 +186,7 @@ internal static class GuidGenerator
     /// </summary>
     /// <param name="signature">The input Windows Runtime type signature.</param>
     /// <returns>The resulting IID for <paramref name="signature"/>.</returns>
-    private static Guid CreateGuidFromSignature(string signature)
+    private static Guid CreateGuidFromSignature(ReadOnlySpan<char> signature)
     {
         // Get the maximum UTF8 byte size and allocate a buffer for the encoding.
         // If the minimum buffer is small enough, we can stack-allocate it.
