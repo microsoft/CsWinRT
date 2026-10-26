@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using AsmResolver.DotNet;
 using WindowsRuntime.InteropGenerator.Helpers;
 using WindowsRuntime.InteropGenerator.References;
@@ -57,6 +58,8 @@ internal static partial class InteropGenerator
                 properties.OrderBy(static property => property.Name?.Value, StringComparer.Ordinal)),
             MetadataCollectionOrdering.Create(definitions.KeyValuePairMethods.Methods, static methods =>
                 methods.OrderBy(static method => method.Name?.Value, StringComparer.Ordinal)),
+
+            // Keep attributes last: the preceding collections can sort independently of their key batches
             attributeOrdering
         ];
 
@@ -75,22 +78,39 @@ internal static partial class InteropGenerator
         else
         {
             int batchCount = GetAttributeKeyBatchCount(attributes.Length, workerCount);
-            int[] batches = [.. Enumerable.Range(orderings.Length, batchCount)];
-            InteropGenerationWorkQueue<int, CancellationToken> queue = new(
-            [
-                .. orderings.Select((ordering, index) => new InteropGenerationWorkQueue<int, CancellationToken>.WorkItem(
-                    Key: index,
-                    Body: _ => ordering.Compute(),
-                    Prerequisites: ReferenceEquals(ordering, attributeOrdering) ? batches : [])),
-                .. batches.Select((key, batchIndex) => new InteropGenerationWorkQueue<int, CancellationToken>.WorkItem(
-                    Key: key,
-                    Body: token => PrepareAttributeKeys(
+            int independentCount = orderings.Length - 1;
+            int itemCount = independentCount + batchCount;
+            int remainingBatches = batchCount;
+
+            _ = Parallel.ForEachUnbufferedUntilFirstFailure(
+                source: _ => Enumerable.Range(0, itemCount),
+                token: args.Token,
+                maxDegreesOfParallelism: Math.Min(workerCount, itemCount),
+                body: (index, token) =>
+                {
+                    token.ThrowIfCancellationRequested();
+
+                    if (index < independentCount)
+                    {
+                        orderings[index].Compute();
+
+                        return;
+                    }
+
+                    int batchIndex = index - independentCount;
+
+                    PrepareAttributeKeys(
                         start: (int)((long)attributes.Length * batchIndex / batchCount),
                         end: (int)((long)attributes.Length * (batchIndex + 1) / batchCount),
-                        token: token)))
-            ]);
+                        token: token);
 
-            queue.Run(args.Token, args.MaxDegreesOfParallelism, args.Token);
+                    // The last batch can sort attributes immediately, while independent sorts may still be running
+                    if (Interlocked.Decrement(ref remainingBatches) == 0)
+                    {
+                        token.ThrowIfCancellationRequested();
+                        attributeOrdering.Compute();
+                    }
+                });
         }
 
         args.Token.ThrowIfCancellationRequested();

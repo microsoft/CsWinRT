@@ -3,7 +3,6 @@
 
 using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -20,24 +19,25 @@ public sealed class Test_EmissionWorkQueue
     [DataRow(-1)]
     public void ReusedQueue_RespectsDependencyBarriers(int parallelism)
     {
-        InteropGenerationWorkQueue<string, ConcurrentQueue<string>> queue = new(
-            new("root", static completed => completed.Enqueue("root")),
-            new("first", static completed =>
-            {
-                Assert.IsTrue(completed.Contains("root"));
-                completed.Enqueue("first");
-            }, "root"),
-            new("second", static completed =>
-            {
-                Assert.IsTrue(completed.Contains("root"));
-                completed.Enqueue("second");
-            }, "root"),
-            new("join", static completed =>
-            {
-                Assert.IsTrue(completed.Contains("first"));
-                Assert.IsTrue(completed.Contains("second"));
-                completed.Enqueue("join");
-            }, "first", "second"));
+        InteropGenerationWorkQueue<ConcurrentQueue<string>>.Builder graph = new();
+        var root = graph.Add(static completed => completed.Enqueue("root"));
+        var first = graph.Add(static completed =>
+        {
+            Assert.IsTrue(completed.Contains("root"));
+            completed.Enqueue("first");
+        }, root);
+        var second = graph.Add(static completed =>
+        {
+            Assert.IsTrue(completed.Contains("root"));
+            completed.Enqueue("second");
+        }, root);
+        _ = graph.Add(static completed =>
+        {
+            Assert.IsTrue(completed.Contains("first"));
+            Assert.IsTrue(completed.Contains("second"));
+            completed.Enqueue("join");
+        }, first, second);
+        InteropGenerationWorkQueue<ConcurrentQueue<string>> queue = graph.Build();
 
         for (int run = 0; run < 3; run++)
         {
@@ -54,10 +54,11 @@ public sealed class Test_EmissionWorkQueue
     [DataRow(8)]
     public void AllWorkItems_ReceiveTheCurrentRunContext(int parallelism)
     {
-        InteropGenerationWorkQueue<int, ConcurrentBag<object>> queue = new(
-            new(0, static context => context.Add(context)),
-            new(1, static context => context.Add(context)),
-            new(2, static context => context.Add(context), 0, 1));
+        InteropGenerationWorkQueue<ConcurrentBag<object>>.Builder graph = new();
+        var first = graph.Add(static context => context.Add(context));
+        var second = graph.Add(static context => context.Add(context));
+        _ = graph.Add(static context => context.Add(context), first, second);
+        InteropGenerationWorkQueue<ConcurrentBag<object>> queue = graph.Build();
 
         for (int run = 0; run < 3; run++)
         {
@@ -75,12 +76,59 @@ public sealed class Test_EmissionWorkQueue
     }
 
     [TestMethod]
+    [DataRow(1)]
+    [DataRow(4)]
+    public async Task ConcurrentRuns_KeepTheirDependencyCountersAndContextsSeparate(int parallelism)
+    {
+        using CountdownEvent started = new(2);
+        InteropGenerationWorkQueue<ConcurrentQueue<string>>.Builder graph = new();
+        var root = graph.Add(completed =>
+        {
+            completed.Enqueue("root");
+            started.Signal();
+            Assert.IsTrue(started.Wait(TimeSpan.FromSeconds(10)), "Both runs must overlap.");
+        });
+        var first = graph.Add(static completed =>
+        {
+            Assert.IsTrue(completed.Contains("root"));
+            completed.Enqueue("first");
+        }, root);
+        var second = graph.Add(static completed =>
+        {
+            Assert.IsTrue(completed.Contains("root"));
+            completed.Enqueue("second");
+        }, root);
+        _ = graph.Add(static completed =>
+        {
+            Assert.IsTrue(completed.Contains("first"));
+            Assert.IsTrue(completed.Contains("second"));
+            completed.Enqueue("join");
+        }, first, second);
+        InteropGenerationWorkQueue<ConcurrentQueue<string>> queue = graph.Build();
+        ConcurrentQueue<string> firstContext = new();
+        ConcurrentQueue<string> secondContext = new();
+
+        await Task.WhenAll(
+            Task.Run(() => queue.Run(firstContext, parallelism, CancellationToken.None)),
+            Task.Run(() => queue.Run(secondContext, parallelism, CancellationToken.None)))
+            .WaitAsync(TimeSpan.FromSeconds(15));
+
+        foreach (ConcurrentQueue<string> completed in new[] { firstContext, secondContext })
+        {
+            Assert.AreEqual(4, completed.Count);
+            Assert.AreEqual("root", completed.ToArray()[0]);
+            Assert.AreEqual("join", completed.ToArray()[^1]);
+        }
+    }
+
+    [TestMethod]
     public async Task ThrowingWorkItem_DoesNotStrandConsumers()
     {
         InvalidOperationException expected = new("queue failure");
-        InteropGenerationWorkQueue<int, InvalidOperationException> queue = new(
-            new(0, static exception => throw exception),
-            new(1, static _ => Assert.Fail("A failed prerequisite must not release its dependent."), 0));
+        InteropGenerationWorkQueue<InvalidOperationException>.Builder graph = new();
+        var failing = graph.Add(static exception => throw exception);
+        _ = graph.Add(static _ => Assert.Fail("A failed prerequisite must not release its dependent."), failing);
+        InteropGenerationWorkQueue<InvalidOperationException> queue = graph.Build();
 
         Task execution = Task.Run(() =>
         {
@@ -98,7 +146,8 @@ public sealed class Test_EmissionWorkQueue
         using CancellationTokenSource cancellation = new();
         using ManualResetEventSlim started = new();
         int finished = 0;
-        InteropGenerationWorkQueue<int, CancellationToken> queue = new(new(0, token =>
+        InteropGenerationWorkQueue<CancellationToken>.Builder graph = new();
+        var root = graph.Add(token =>
         {
             started.Set();
             try
@@ -110,7 +159,9 @@ public sealed class Test_EmissionWorkQueue
             {
                 Interlocked.Increment(ref finished);
             }
-        }), new(1, static _ => Assert.Fail("A canceled prerequisite must not release its dependent."), 0));
+        });
+        _ = graph.Add(static _ => Assert.Fail("A canceled prerequisite must not release its dependent."), root);
+        InteropGenerationWorkQueue<CancellationToken> queue = graph.Build();
 
         Task execution = Task.Run(() =>
         {
@@ -126,17 +177,59 @@ public sealed class Test_EmissionWorkQueue
     }
 
     [TestMethod]
-    public void InvalidGraphs_AreRejectedBeforeAnyBodyRuns()
+    public void ForeignPrerequisite_IsRejectedWithoutChangingTheGraph()
     {
         int calls = 0;
         Action context = () => calls++;
         Action<Action> body = static action => action();
-        Assert.ThrowsExactly<ArgumentException>(() =>
-            new InteropGenerationWorkQueue<int, Action>(new(0, body), new(0, body)).Run(context, 1, CancellationToken.None));
-        Assert.ThrowsExactly<KeyNotFoundException>(() =>
-            new InteropGenerationWorkQueue<int, Action>(new InteropGenerationWorkQueue<int, Action>.WorkItem(0, body, 99)).Run(context, 1, CancellationToken.None));
-        Assert.ThrowsExactly<InvalidOperationException>(() =>
-            new InteropGenerationWorkQueue<int, Action>(new(0, body, 1), new(1, body, 0)).Run(context, 1, CancellationToken.None));
+        InteropGenerationWorkQueue<Action>.Builder graph = new();
+        InteropGenerationWorkQueue<Action>.Builder other = new();
+        var foreign = other.Add(body);
+        Assert.ThrowsExactly<ArgumentException>(() => graph.Add(body, foreign));
+
+        var root = graph.Add(body);
+        Assert.ThrowsExactly<ArgumentException>(() => graph.Add(body, root, foreign));
         Assert.AreEqual(0, calls);
+
+        _ = graph.Add(body, root);
+        graph.Build().Run(context, 2, CancellationToken.None);
+        Assert.AreEqual(2, calls);
+    }
+
+    [TestMethod]
+    public void BuiltGraph_RejectsFurtherNodes()
+    {
+        InteropGenerationWorkQueue<Action>.Builder graph = new();
+        var root = graph.Add(static action => action());
+        InteropGenerationWorkQueue<Action> queue = graph.Build();
+
+        Assert.ThrowsExactly<InvalidOperationException>(() => graph.Add(static action => action(), root));
+
+        int calls = 0;
+        queue.Run(() => calls++, 1, CancellationToken.None);
+        Assert.AreEqual(1, calls);
+    }
+
+    [TestMethod]
+    public void EmptyGraph_CompletesAndObservesCancellation()
+    {
+        InteropGenerationWorkQueue<Action> queue = new InteropGenerationWorkQueue<Action>.Builder().Build();
+        queue.Run(static () => Assert.Fail(), -1, CancellationToken.None);
+
+        using CancellationTokenSource cancellation = new();
+        cancellation.Cancel();
+        OperationCanceledException exception = Assert.ThrowsExactly<OperationCanceledException>(
+            () => queue.Run(static () => Assert.Fail(), -1, cancellation.Token));
+        Assert.AreEqual(cancellation.Token, exception.CancellationToken);
+    }
+
+    [TestMethod]
+    [DataRow(0)]
+    [DataRow(-2)]
+    public void InvalidParallelism_IsRejected(int parallelism)
+    {
+        InteropGenerationWorkQueue<Action> queue = new InteropGenerationWorkQueue<Action>.Builder().Build();
+        Assert.ThrowsExactly<ArgumentOutOfRangeException>(
+            () => queue.Run(static () => Assert.Fail(), parallelism, CancellationToken.None));
     }
 }

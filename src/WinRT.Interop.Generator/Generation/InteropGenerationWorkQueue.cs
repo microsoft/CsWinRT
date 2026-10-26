@@ -13,12 +13,25 @@ namespace WindowsRuntime.InteropGenerator.Generation;
 /// <summary>
 /// Runs a dependency graph of coarse operations with bounded, non-buffering workers.
 /// </summary>
-/// <typeparam name="TKey">The work item identifier type.</typeparam>
 /// <typeparam name="TContext">The shared context passed to each operation.</typeparam>
-/// <param name="items">The operations and their prerequisites, in preferred scheduling order.</param>
-internal sealed class InteropGenerationWorkQueue<TKey, TContext>(params InteropGenerationWorkQueue<TKey, TContext>.WorkItem[] items)
-    where TKey : notnull
+internal sealed class InteropGenerationWorkQueue<TContext>
 {
+    /// <summary>The initial operations, in declaration order.</summary>
+    private readonly Node[] _roots;
+
+    /// <summary>The immutable prerequisite counts, copied for each run.</summary>
+    private readonly int[] _prerequisiteCounts;
+
+    /// <summary>
+    /// Captures a completed graph without retaining its builder.
+    /// </summary>
+    /// <param name="nodes">The operations in declaration order.</param>
+    private InteropGenerationWorkQueue(List<Node> nodes)
+    {
+        _roots = [.. nodes.Where(static node => node.PrerequisiteCount == 0)];
+        _prerequisiteCounts = [.. nodes.Select(static node => node.PrerequisiteCount)];
+    }
+
     /// <summary>
     /// Runs all operations, returning only after every worker has finished.
     /// </summary>
@@ -32,32 +45,34 @@ internal sealed class InteropGenerationWorkQueue<TKey, TContext>(params InteropG
 
         token.ThrowIfCancellationRequested();
 
-        if (items.Length == 0)
+        if (_prerequisiteCounts.Length == 0)
         {
             return;
         }
 
         int workerCount = Math.Min(
             maxDegreesOfParallelism == -1 ? Environment.ProcessorCount : maxDegreesOfParallelism,
-            items.Length);
+            _prerequisiteCounts.Length);
 
-        using BlockingCollection<Node> ready = CreateReadyQueue();
+        // Shared graph nodes stay immutable; concurrent runs own separate counters and ready queues
+        int[] pending = (int[])_prerequisiteCounts.Clone();
+        using BlockingCollection<Node> ready = new(new ConcurrentQueue<Node>(_roots));
 
         // A single worker needs neither the parallel loop nor linked cancellation
         if (workerCount == 1)
         {
-            RunSequential(context, ready, token);
+            RunSequential(context, pending, ready, token);
 
             return;
         }
 
-        int remaining = items.Length;
+        int remaining = pending.Length;
 
         _ = Parallel.ForEachUnbufferedUntilFirstFailure(
             source: ready.GetConsumingEnumerable,
             token: token,
             maxDegreesOfParallelism: workerCount,
-            body: (node, workerToken) => RunNode(node, context, ready, workerToken, ref remaining));
+            body: (node, workerToken) => RunNode(node, context, pending, ready, workerToken, ref remaining));
     }
 
     /// <summary>
@@ -65,12 +80,14 @@ internal sealed class InteropGenerationWorkQueue<TKey, TContext>(params InteropG
     /// </summary>
     /// <param name="node">The operation to run.</param>
     /// <param name="context">The context to pass to the operation.</param>
+    /// <param name="pending">This run's remaining prerequisite counts.</param>
     /// <param name="ready">The shared queue of operations ready to run.</param>
     /// <param name="token">The token observing invocation cancellation and sibling failures.</param>
     /// <param name="remaining">The shared count of unfinished operations, decremented atomically.</param>
     private static void RunNode(
         Node node,
         TContext context,
+        int[] pending,
         BlockingCollection<Node> ready,
         CancellationToken token,
         ref int remaining)
@@ -83,7 +100,7 @@ internal sealed class InteropGenerationWorkQueue<TKey, TContext>(params InteropG
         // Only the last completed prerequisite releases each dependent
         foreach (Node dependent in node.Dependents)
         {
-            if (Interlocked.Decrement(ref dependent.RemainingPrerequisites) == 0)
+            if (Interlocked.Decrement(ref pending[dependent.Index]) == 0)
             {
                 ready.Add(dependent, token);
             }
@@ -101,9 +118,10 @@ internal sealed class InteropGenerationWorkQueue<TKey, TContext>(params InteropG
     /// Runs ready operations serially, releasing their dependents as prerequisites finish.
     /// </summary>
     /// <param name="context">The context to pass to each operation.</param>
-    /// <param name="ready">The validated queue of operations ready to run.</param>
+    /// <param name="pending">This run's remaining prerequisite counts.</param>
+    /// <param name="ready">The queue of operations ready to run.</param>
     /// <param name="token">The invocation's cancellation token.</param>
-    private static void RunSequential(TContext context, BlockingCollection<Node> ready, CancellationToken token)
+    private static void RunSequential(TContext context, int[] pending, BlockingCollection<Node> ready, CancellationToken token)
     {
         while (ready.TryTake(out Node? node))
         {
@@ -112,7 +130,7 @@ internal sealed class InteropGenerationWorkQueue<TKey, TContext>(params InteropG
 
             foreach (Node dependent in node.Dependents)
             {
-                if (--dependent.RemainingPrerequisites == 0)
+                if (--pending[dependent.Index] == 0)
                 {
                     ready.Add(dependent);
                 }
@@ -123,98 +141,90 @@ internal sealed class InteropGenerationWorkQueue<TKey, TContext>(params InteropG
     }
 
     /// <summary>
-    /// Validates the work graph and seeds a FIFO queue with operations that have no prerequisites.
+    /// Builds a graph directly from references to previously declared operations.
     /// </summary>
-    /// <returns>The ready queue, which the caller owns and must dispose.</returns>
-    private BlockingCollection<Node> CreateReadyQueue()
+    public sealed class Builder
     {
-        Node[] nodes = CreateNodes();
+        /// <summary>The operations, whose positions provide stable counter indices.</summary>
+        private readonly List<Node> _nodes = [];
 
-        return new(new ConcurrentQueue<Node>(nodes.Where(static node => node.RemainingPrerequisites == 0)));
-    }
+        /// <summary>Whether the topology has been frozen for execution.</summary>
+        private bool _built;
 
-    /// <summary>
-    /// Creates per-run dependency counters and rejects incomplete or cyclic graphs before starting workers.
-    /// </summary>
-    /// <returns>The validated execution nodes.</returns>
-    private Node[] CreateNodes()
-    {
-        Dictionary<TKey, Node> lookup = new(items.Length);
-        Node[] nodes = new Node[items.Length];
-
-        // Keep mutable execution state per run, rejecting duplicate keys before any work starts
-        for (int i = 0; i < items.Length; i++)
+        /// <summary>
+        /// Registers an operation and links it to already registered prerequisites.
+        /// </summary>
+        /// <param name="body">The operation to run.</param>
+        /// <param name="prerequisites">The operations that must finish before this operation starts.</param>
+        /// <returns>The node to reference from subsequent operations.</returns>
+        public Node Add(Action<TContext> body, params Node[] prerequisites)
         {
-            WorkItem item = items[i];
-            Node node = new(item.Body, item.Prerequisites.Length);
-
-            lookup.Add(item.Key, node);
-            nodes[i] = node;
-        }
-
-        // Build reverse edges so completing a prerequisite can release its dependents; unknown keys fail here
-        for (int i = 0; i < items.Length; i++)
-        {
-            foreach (TKey prerequisite in items[i].Prerequisites)
+            if (_built)
             {
-                lookup[prerequisite].Dependents.Add(nodes[i]);
+                throw new InvalidOperationException("The interop generation work graph is already built.");
             }
-        }
 
-        // Simulate a topological traversal without executing bodies to validate the entire graph
-        Queue<Node> ready = new(nodes.Where(static node => node.RemainingPrerequisites == 0));
-        int visited = 0;
-
-        while (ready.TryDequeue(out Node? node))
-        {
-            visited++;
-
-            foreach (Node dependent in node.Dependents)
+            // References can only point backwards within this builder, so missing nodes and cycles are impossible
+            foreach (Node prerequisite in prerequisites)
             {
-                if (--dependent.RemainingPrerequisites == 0)
+                if (prerequisite.Index >= _nodes.Count || !ReferenceEquals(_nodes[prerequisite.Index], prerequisite))
                 {
-                    ready.Enqueue(dependent);
+                    throw new ArgumentException("A prerequisite belongs to a different work graph.", nameof(prerequisites));
                 }
             }
+
+            Node node = new(_nodes.Count, body, prerequisites.Length);
+
+            foreach (Node prerequisite in prerequisites)
+            {
+                prerequisite.Dependents.Add(node);
+            }
+
+            _nodes.Add(node);
+
+            return node;
         }
 
-        // Unvisited nodes belong to or depend on a cycle, preventing the scheduler from completing all work
-        if (visited != nodes.Length)
+        /// <summary>
+        /// Freezes the topology and creates a queue that can be shared across runs.
+        /// </summary>
+        /// <returns>The reusable work queue.</returns>
+        public InteropGenerationWorkQueue<TContext> Build()
         {
-            throw new InvalidOperationException("The interop generation work graph contains a dependency cycle.");
-        }
+            _built = true;
 
-        // Validation consumed the counters, so restore them before the actual execution
-        for (int i = 0; i < items.Length; i++)
-        {
-            nodes[i].RemainingPrerequisites = items[i].Prerequisites.Length;
+            return new(_nodes);
         }
-
-        return nodes;
     }
 
     /// <summary>
-    /// An operation and the named operations that must finish before it starts.
+    /// An operation in the graph, with no mutable per-run state.
     /// </summary>
-    /// <param name="Key">The operation's unique identifier.</param>
-    /// <param name="Body">The operation to run.</param>
-    /// <param name="Prerequisites">The prerequisite operation identifiers.</param>
-    public sealed record WorkItem(TKey Key, Action<TContext> Body, params TKey[] Prerequisites);
-
-    /// <summary>
-    /// The dependency state owned by one invocation of <see cref="Run"/>.
-    /// </summary>
-    /// <param name="body">The operation to run.</param>
-    /// <param name="remainingPrerequisites">The initial prerequisite count.</param>
-    private sealed class Node(Action<TContext> body, int remainingPrerequisites)
+    public sealed class Node
     {
+        /// <summary>
+        /// Creates an operation registered by a graph builder.
+        /// </summary>
+        /// <param name="index">The operation's counter index.</param>
+        /// <param name="body">The operation to run.</param>
+        /// <param name="prerequisiteCount">The number of prerequisite operations.</param>
+        internal Node(int index, Action<TContext> body, int prerequisiteCount)
+        {
+            Index = index;
+            Body = body;
+            PrerequisiteCount = prerequisiteCount;
+        }
+
+        /// <summary>Gets the operation's counter index.</summary>
+        internal int Index { get; }
+
         /// <summary>Gets the operation to run.</summary>
-        public Action<TContext> Body { get; } = body;
+        internal Action<TContext> Body { get; }
 
         /// <summary>Gets the operations released by this node.</summary>
-        public List<Node> Dependents { get; } = [];
+        internal List<Node> Dependents { get; } = [];
 
-        /// <summary>The remaining prerequisite count, decremented atomically by parallel workers.</summary>
-        public int RemainingPrerequisites = remainingPrerequisites;
+        /// <summary>Gets the number of prerequisite operations.</summary>
+        internal int PrerequisiteCount { get; }
     }
 }
