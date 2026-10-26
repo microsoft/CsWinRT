@@ -61,6 +61,8 @@ internal static class ParallelExtensions
             ArgumentOutOfRangeException.ThrowIfLessThan(maxDegreesOfParallelism, 1);
 
             using CancellationTokenSource cancellation = CancellationTokenSource.CreateLinkedTokenSource(token);
+
+            // Preserve the worker's original stack trace when rethrowing on the caller thread, rather than resetting it with 'throw exception'
             ExceptionDispatchInfo? failure = null;
 
             try
