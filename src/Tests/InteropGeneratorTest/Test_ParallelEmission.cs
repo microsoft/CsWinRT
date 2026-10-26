@@ -51,6 +51,18 @@ public sealed class Test_ParallelEmission
         Assert.IsTrue(module.TopLevelTypes.Any(type => type.Name!.ToString().EndsWith("IidProvider", StringComparison.Ordinal)),
             "The workload must also exercise deterministic IID provider names.");
 
+        TypeDefinition keyValuePairMethods = module.TopLevelTypes.Single(type =>
+            type.Name!.ToString().EndsWith(">KeyValuePairMethods", StringComparison.Ordinal));
+        string[] accessorNames = keyValuePairMethods.Methods.Select(method => method.Name!.ToString()).ToArray();
+
+        Assert.IsTrue(keyValuePairMethods.IsAbstract && keyValuePairMethods.IsSealed);
+        Assert.AreEqual("System.Object", keyValuePairMethods.BaseType!.FullName);
+        Assert.IsNotEmpty(accessorNames);
+        Assert.IsTrue(accessorNames.All(static name =>
+            name.StartsWith("get_Key(", StringComparison.Ordinal) || name.StartsWith("get_Value(", StringComparison.Ordinal)));
+        Assert.AreEqual(accessorNames.Length, accessorNames.Distinct(StringComparer.Ordinal).Count());
+        CollectionAssert.AreEqual(accessorNames.Order(StringComparer.Ordinal).ToArray(), accessorNames);
+
         foreach ((bool reverse, int parallelism) in new[] { (true, 1), (false, 2), (true, 4), (false, -1), (true, -1), (false, -1) })
         {
             byte[] actual = File.ReadAllBytes(await runner.GenerateAsync($"parallel-{reverse}-{parallelism}", reverse, parallelism));

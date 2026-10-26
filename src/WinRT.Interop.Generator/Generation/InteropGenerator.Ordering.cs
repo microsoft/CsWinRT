@@ -55,7 +55,7 @@ internal static partial class InteropGenerator
                 methods.OrderBy(static method => method.Name?.Value, StringComparer.Ordinal)),
             MetadataCollectionOrdering.Create(definitions.InterfaceIIDs.Properties, static properties =>
                 properties.OrderBy(static property => property.Name?.Value, StringComparer.Ordinal)),
-            MetadataCollectionOrdering.Create(definitions.KeyValuePairMethods?.Methods ?? [], static methods =>
+            MetadataCollectionOrdering.Create(definitions.KeyValuePairMethods.Methods, static methods =>
                 methods.OrderBy(static method => method.Name?.Value, StringComparer.Ordinal)),
             attributeOrdering
         ];

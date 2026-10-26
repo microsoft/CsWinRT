@@ -1308,16 +1308,10 @@ internal partial class InteropGenerator
         InteropReferences interopReferences = context.References;
         ModuleDefinition module = context.Module;
 
-        TypeDefinition? methodsType = null;
-
         // Generate shared code for helpers needed by instantiated 'KeyValuePair<,>' types
         try
         {
-            InteropTypeDefinitionBuilder.KeyValuePair.Methods(
-                interopDefinitions: interopDefinitions,
-                interopReferences: interopReferences,
-                module: module,
-                methodsType: out methodsType);
+            module.TopLevelTypes.Add(interopDefinitions.KeyValuePairMethods);
         }
         catch (Exception e)
         {
@@ -1357,7 +1351,6 @@ internal partial class InteropGenerator
 
                 InteropTypeDefinitionBuilder.KeyValuePair.Accessors(
                     keyValuePairType: typeSignature,
-                    methodsType: methodsType,
                     interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     emitState: emitState,

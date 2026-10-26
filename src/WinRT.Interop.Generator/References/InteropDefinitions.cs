@@ -124,9 +124,12 @@ internal sealed class InteropDefinitions
     public TypeDefinition InterfaceIIDs => field ??= WellKnownTypeDefinitionFactory.InterfaceIIDs(_interopReferences);
 
     /// <summary>
-    /// Gets or sets the shared key-value-pair accessor holder, published by its emit work item.
+    /// Gets the shared key-value-pair accessor holder.
     /// </summary>
-    public TypeDefinition? KeyValuePairMethods { get; set; }
+    /// <remarks>
+    /// Initialized by the key-value-pair emission step before other consumers access it after the emission barrier.
+    /// </remarks>
+    public TypeDefinition KeyValuePairMethods => field ??= WellKnownTypeDefinitionFactory.KeyValuePairMethods(this, _interopReferences);
 
     /// <summary>
     /// Adds an IID's generated members and indexes its getter for subsequent lookup.
