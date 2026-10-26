@@ -320,8 +320,10 @@ Copyright (C) Microsoft Corporation. All rights reserved.
 
     <ItemGroup>
 
-      <!-- Name inputs so equal values from different settings cannot share a cache key -->
-      <!-- Changes to tool selection or artifact locations must invalidate the cached output -->
+      <!--
+        Name inputs so equal values from different settings cannot share a cache key.
+        Changes to tool selection or artifact locations must invalidate the cached output.
+      -->
       <_RunCsWinRTGeneratorInputsCacheToHash Include="CsWinRTInteropGenEffectiveToolsDirectory=$(CsWinRTInteropGenEffectiveToolsDirectory)" />
       <_RunCsWinRTGeneratorInputsCacheToHash Include="CsWinRTMergedProjectionEffectiveToolsDirectory=$(CsWinRTMergedProjectionEffectiveToolsDirectory)" />
       <_RunCsWinRTGeneratorInputsCacheToHash Include="CsWinRTToolsArchitecture=$(CsWinRTToolsArchitecture)" />
@@ -334,6 +336,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
       <_RunCsWinRTGeneratorInputsCacheToHash Include="CsWinRTEnableDefaultCustomPropertyProviderSupport=$(CsWinRTEnableDefaultCustomPropertyProviderSupport)" />
       <_RunCsWinRTGeneratorInputsCacheToHash Include="CsWinRTMarshallingMode=$(CsWinRTMarshallingMode)" />
       <_RunCsWinRTGeneratorInputsCacheToHash Include="CsWinRTAnalyzeNetStandardAssemblies=$(CsWinRTAnalyzeNetStandardAssemblies)" />
+
       <!-- Counted headers identify empty lists and make item boundaries unambiguous -->
       <_RunCsWinRTGeneratorInputsCacheToHash Include="CsWinRTMarshallingEnabledAssembly.Count=$(_CsWinRTMarshallingEnabledAssemblyCount)" />
       <_RunCsWinRTGeneratorInputsCacheToHash Include="@(CsWinRTMarshallingEnabledAssembly)" />
