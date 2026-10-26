@@ -86,7 +86,7 @@ internal partial class ProjectionGenerator
     {
         args.Token.ThrowIfCancellationRequested();
 
-        outputFolder = Path.Combine(Path.GetFullPath(args.GeneratedAssemblyDirectory), "CsWinRTProjectionSources", Path.GetRandomFileName());
+        outputFolder = Path.Combine(Path.GetFullPath(args.GeneratedAssemblyDirectory), "CsWinRTProjectionSources", args.AssemblyName);
         projectionReferenceAssemblies = [];
         hasTypesToProject = false;
         componentAssemblyNames = [];

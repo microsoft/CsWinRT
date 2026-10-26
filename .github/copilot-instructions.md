@@ -495,7 +495,7 @@ A **.NET CLI tool** (`cswinrtprojectiongen.exe`) published as a **Native AOT** b
 **Three-phase pipeline:**
 
 1. **Process References**: load reference assemblies via AsmResolver, build a `ProjectionWriterOptions` describing the inputs, output folder, and namespace filters.
-2. **Generate Sources**: invoke `ProjectionWriter.Run(options)` in-process to produce C# files.
+2. **Generate Sources**: clear stale files from `CsWinRTProjectionSources\<AssemblyName>` under the generated assembly directory, then invoke `ProjectionWriter.Run(options)` in-process to produce C# files. Retain sources for inspection until the next generation or MSBuild Clean.
 3. **Emit Assembly**: parse the generated `.cs` files with Roslyn, compile to `.dll` with `CSharpCompilation`, emit with embedded debug info and generated source text so debugging does not depend on the generated files remaining on disk.
 
 **Debug repro support**: when `--debug-repro-directory` is provided, captures all reference `.dll`-s, all input `.winmd` files, and the expanded Windows metadata files (bundled into a separate `windows-metadata/` subfolder) along with a faithful `.rsp` into a self-contained `projection-debug-repro.zip`. The tool also accepts a `.zip` as input and replays the captured run.
@@ -749,7 +749,7 @@ All five .NET build tools (`cswinrtprojectionrefgen`, `cswinrtprojectiongen`, `c
 |---------|-----------------|-------|
 | Source Generator | `CSWINRT2xxx` | `CSWINRT2000`–`CSWINRT2027` |
 | Reference Projection Generator | `CSWINRTPROJECTIONREFGENxxxx` | `0001`–`0008`, `9999` |
-| Projection Generator (host) | `CSWINRTPROJECTIONGENxxxx` | `0001`–`0015`, `0016` (source cleanup warning), `9999` |
+| Projection Generator (host) | `CSWINRTPROJECTIONGENxxxx` | `0001`–`0015`, `9999` |
 | Projection Writer (library) | `CSWINRTPROJECTIONGEN5xxx` | `5003`–`5024`, `9999` (shares the `CSWINRTPROJECTIONGEN` prefix with the host; the writer reserves the 5000+ range so the two never collide) |
 | Impl Generator | `CSWINRTIMPLGENxxxx` | `0001`–`0014`, `9999` |
 | Interop Generator | `CSWINRTINTEROPGENxxxx` | `0001`–`0100`, `9999` |

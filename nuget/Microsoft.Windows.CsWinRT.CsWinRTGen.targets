@@ -644,7 +644,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
   -->
   <UsingTask Condition="'$(CsWinRTGeneratorTasksOverriden2)' != 'true'" TaskName="RunCsWinRTMergedProjectionGenerator" AssemblyFile="$(CsWinRTGenTasksAssembly)" />
 
-  <!-- Remove generated sources left behind by interrupted builds or failed cleanup. -->
+  <!-- Remove retained projection sources on Clean. -->
   <Target Name="_CsWinRTCleanProjectionSources"
           AfterTargets="Clean"
           Condition="'$(CsWinRTGeneratorInteropAssemblyDirectory)' != ''">
