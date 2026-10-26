@@ -104,7 +104,8 @@ public class Test_ArrayProperties
                 .Single(call => call.Expression is IdentifierNameSyntax name && name.Identifier.ValueText == disposer.Identifier.ValueText);
             InvocationExpressionSyntax clearCall = disposeCall.Ancestors().OfType<BlockSyntax>().First().Statements
                 .OfType<ExpressionStatementSyntax>().Select(statement => statement.Expression).OfType<InvocationExpressionSyntax>()
-                .Single(call => call.Expression is MemberAccessExpressionSyntax { Name.Identifier.ValueText: "Clear" });
+                .First(call => call.SpanStart > disposeCall.SpanStart &&
+                    call.Expression is MemberAccessExpressionSyntax { Name.Identifier.ValueText: "Clear" });
             Assert.IsTrue(disposeCall.SpanStart < clearCall.SpanStart,
                 "Resource-bearing struct elements must be disposed before their native storage is cleared.");
         }

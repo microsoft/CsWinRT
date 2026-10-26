@@ -169,10 +169,7 @@ internal static partial class AbiMethodBodyFactory
                 interopType: ArrayElementEncoder.GetArrayMarshallerInteropPath(context, array.BaseType),
                 parameterList: $"uint length, {elementAbi}* data");
             writer.WriteLine(isMultiline: true, $$"""
-                if (*{{pointer}} is not null)
-                {
-                    Free_{{raw}}(null, *__{{raw}}Size, *{{pointer}});
-                }
+                Free_{{raw}}(null, *__{{raw}}Size, *{{pointer}});
 
                 *{{pointer}} = default;
                 *__{{raw}}Size = default;
@@ -215,11 +212,8 @@ internal static partial class AbiMethodBodyFactory
                 dispose = $"Dispose_{raw}(null, __{raw}Size, ({elementAbi}*){pointer});";
             }
             writer.WriteLine(isMultiline: true, $$"""
-                if ({{pointer}} is not null)
-                {
-                    {{dispose}}
-                    WindowsRuntimeArrayMarshaller.Clear(__{{raw}}Size, {{pointer}}, sizeof({{elementAbi}}));
-                }
+                {{dispose}}
+                WindowsRuntimeArrayMarshaller.Clear(__{{raw}}Size, {{pointer}}, sizeof({{elementAbi}}));
                 """);
         }
     }
