@@ -20,24 +20,6 @@ namespace WindowsRuntime.ProjectionGenerator.Generation;
 internal partial class ProjectionGenerator
 {
     /// <summary>
-    /// Creates a temporary folder for CsWinRT generation output.
-    /// </summary>
-    /// <returns>The path to the created temporary folder.</returns>
-    /// <remarks>
-    /// The returned folder is guaranteed to already exist when this method returns.
-    /// </remarks>
-    private static string GetTempFolder()
-    {
-        // Create a temporary folder with this structure: '%TEMP%/CsWinRT/<RANDOM_NAME>'
-        string outputDir = Path.Combine(Path.GetTempPath(), "CsWinRT", Path.GetRandomFileName()).TrimEnd('\\');
-
-        // Ensure the folder does exist (code using it might rely on it existing already)
-        _ = Directory.CreateDirectory(outputDir);
-
-        return outputDir;
-    }
-
-    /// <summary>
     /// Runs the processing logic for the generator.
     /// </summary>
     /// <param name="args">The arguments for this invocation.</param>
@@ -64,6 +46,29 @@ internal partial class ProjectionGenerator
             hasTypesToProject,
             componentAssemblyNames,
             activationFactoryAssemblyNames);
+    }
+
+    /// <summary>
+    /// Removes stale sources and prepares the current projection's source directory.
+    /// </summary>
+    /// <param name="args">The arguments for this invocation.</param>
+    /// <param name="processingState">The state from the processing phase.</param>
+    private static void PrepareSourcesDirectory(
+        ProjectionGeneratorArgs args,
+        ProjectionGeneratorProcessingState processingState)
+    {
+        args.Token.ThrowIfCancellationRequested();
+
+        // Remove stale sources even when the last projection input has been removed
+        if (Directory.Exists(processingState.SourcesFolder))
+        {
+            Directory.Delete(processingState.SourcesFolder, recursive: true);
+        }
+
+        if (processingState.HasTypesToProject || processingState.HasMergedActivation)
+        {
+            _ = Directory.CreateDirectory(processingState.SourcesFolder);
+        }
     }
 
     /// <summary>
@@ -104,7 +109,7 @@ internal partial class ProjectionGenerator
     {
         args.Token.ThrowIfCancellationRequested();
 
-        outputFolder = GetTempFolder();
+        outputFolder = Path.Combine(Path.GetFullPath(args.GeneratedAssemblyDirectory), "CsWinRTProjectionSources", args.AssemblyName);
         projectionReferenceAssemblies = [];
         hasTypesToProject = false;
         componentAssemblyNames = [];

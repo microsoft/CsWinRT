@@ -644,6 +644,13 @@ Copyright (C) Microsoft Corporation. All rights reserved.
   -->
   <UsingTask Condition="'$(CsWinRTGeneratorTasksOverriden2)' != 'true'" TaskName="RunCsWinRTMergedProjectionGenerator" AssemblyFile="$(CsWinRTGenTasksAssembly)" />
 
+  <!-- Remove retained projection sources on Clean. -->
+  <Target Name="_CsWinRTCleanProjectionSources"
+          AfterTargets="Clean"
+          Condition="'$(CsWinRTGeneratorInteropAssemblyDirectory)' != ''">
+    <RemoveDir Directories="$([MSBuild]::NormalizePath('$(MSBuildProjectDirectory)', '$(CsWinRTGeneratorInteropAssemblyDirectory)', 'CsWinRTProjectionSources'))" />
+  </Target>
+
   <Target
     Name="_RunCsWinRTMergedProjectionGenerator"
     DependsOnTargets="_CsWinRTResolveGeneratorInputs;_CsWinRTComputeProjectionGenWinMDInputs;_RunCsWinRTSdkProjectionGenerator;_RunCsWinRTSdkXamlProjectionGenerator"
