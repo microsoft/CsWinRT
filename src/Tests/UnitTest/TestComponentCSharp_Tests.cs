@@ -2383,7 +2383,12 @@ namespace UnitTest
         }
 
         [TestMethod]
-        public void TestNonBlittableArrayConstructor()
+        [DataRow(1)]
+        [DataRow(16)]
+        [DataRow(17)]
+        [DataRow(33)]
+        [DataRow(64)]
+        public void TestNonBlittableArrayConstructor(int count)
         {
             // Activation factory taking arrays of non-blittable struct, mapped value-type, and
             // HResult/Exception elements by value (constructor PassArray marshalling).
@@ -2399,14 +2404,38 @@ namespace UnitTest
 
             var instance = new Class(
                 9,
-                new[] { structVal },
-                new[] { dateTime },
-                new Exception[] { exception });
+                Enumerable.Repeat(structVal, count).ToArray(),
+                Enumerable.Repeat(dateTime, count).ToArray(),
+                Enumerable.Repeat<Exception>(exception, count).ToArray());
 
             Assert.AreEqual(9, instance.IntProperty);
             Assert.AreEqual("I like tacos", instance.ComposedNonBlittableStructProperty.strings.str);
             Assert.AreEqual(dateTime, instance.DateTimeProperty);
             Assert.IsNotNull(instance.HResultProperty);
+            Assert.AreEqual(exception.HResult, instance.HResultProperty.HResult);
+        }
+
+        [TestMethod]
+        [DataRow(16)]
+        [DataRow(17)]
+        [DataRow(33)]
+        [DataRow(64)]
+        public void TestMappedArrays_Pooled(int count)
+        {
+            DateTimeOffset[] dates = Enumerable.Range(0, count)
+                .Select(i => DateTimeOffset.FromUnixTimeSeconds(i)).ToArray();
+            Exception[] errors = Enumerable.Range(0, count)
+                .Select(i => (Exception)(i % 2 == 0 ? new ArgumentException() : new NotImplementedException())).ToArray();
+            Uri[] uris = Enumerable.Range(0, count)
+                .Select(i => new Uri($"https://example.com/{i}")).ToArray();
+
+            for (int iteration = 0; iteration < 3; iteration++)
+            {
+                CollectionAssert.AreEqual(dates, TestObject.GetAndSetDateTimes(dates));
+                CollectionAssert.AreEqual(uris, TestObject.GetAndSetUris(uris));
+                CollectionAssert.AreEqual(errors.Select(error => error.HResult).ToArray(),
+                    TestObject.GetAndSetHResults(errors).Select(error => error.HResult).ToArray());
+            }
         }
 
         [TestMethod]

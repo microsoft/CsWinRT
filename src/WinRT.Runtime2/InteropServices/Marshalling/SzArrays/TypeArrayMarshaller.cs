@@ -85,25 +85,9 @@ public static unsafe class TypeArrayMarshaller
 
         ArgumentNullException.ThrowIfNull(destination);
 
-        int i = 0;
-
-        try
+        for (int i = 0; i < source.Length; i++)
         {
-            // Marshal the items in the input span
-            for (; i < source.Length; i++)
-            {
-                destination[i] = ABI.System.TypeMarshaller.ConvertToUnmanaged(source[i]);
-            }
-        }
-        catch
-        {
-            // Release resources for any items, if we failed
-            for (int j = 0; j < i; j++)
-            {
-                ABI.System.TypeMarshaller.Dispose(destination[j]);
-            }
-
-            throw;
+            destination[i] = ABI.System.TypeMarshaller.ConvertToUnmanaged(source[i]);
         }
     }
 

@@ -30,10 +30,12 @@ public static unsafe class WindowsRuntimeBlittableValueTypeArrayMarshaller<T>
             return;
         }
 
-        size = (uint)source.Length;
-        array = (T*)Marshal.AllocCoTaskMem(sizeof(T) * source.Length);
+        T* destination = (T*)Marshal.AllocCoTaskMem(sizeof(T) * source.Length);
 
-        source.CopyTo(new Span<T>(array, source.Length));
+        source.CopyTo(new Span<T>(destination, source.Length));
+
+        size = (uint)source.Length;
+        array = destination;
     }
 
     /// <summary>
@@ -60,6 +62,12 @@ public static unsafe class WindowsRuntimeBlittableValueTypeArrayMarshaller<T>
     /// <param name="source">The source array.</param>
     /// <param name="size">The size of the array.</param>
     /// <param name="destination">The destination array.</param>
+    /// <remarks>
+    /// The caller owns the destination and any resources acquired by non-blittable element conversions.
+    /// Initialize destination slots to their default values before calling resource-owning marshallers,
+    /// and dispose their contents even if conversion throws. Copying does not roll back completed elements.
+    /// The destination storage itself remains owned by the caller.
+    /// </remarks>
     public static void CopyToUnmanaged(ReadOnlySpan<T> source, uint size, T* destination)
     {
         WindowsRuntimeArrayMarshallerHelpers.ValidateDestinationSize(source.Length, size);

@@ -230,7 +230,8 @@ internal static class ProjectionWriterRunner
                 MetadataReference.CreateFromFile(typeof(WindowsRuntimeObject).Assembly.Location),
                 .. additionalReferences.Select(path => MetadataReference.CreateFromFile(path))
             ],
-            new CSharpCompilationOptions(outputKind, allowUnsafe: true));
+            new CSharpCompilationOptions(outputKind, allowUnsafe: true,
+                specificDiagnosticOptions: [new("CS9091", ReportDiagnostic.Error)]));
         using FileStream stream = File.Create(assemblyPath);
         EmitResult result = compilation.Emit(stream,
             options: new EmitOptions(metadataOnly: referenceProjection, includePrivateMembers: !referenceProjection));

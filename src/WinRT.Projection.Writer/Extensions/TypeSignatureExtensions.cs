@@ -186,8 +186,8 @@ internal static class TypeSignatureExtensions
         /// <param name="resolver">The active <see cref="AbiTypeKindResolver"/> (needed for runtime-class/interface resolution).</param>
         /// <returns><see langword="true"/> if the signature flows as a <c>void*</c> across the ABI; otherwise <see langword="false"/>.</returns>
         /// <remarks>
-        /// Use this variant for parameter/return types. For SZ-array element types (where generic
-        /// instances cannot appear as elements), use <see cref="IsAbiArrayElementRefLike"/> instead.
+        /// SZ-array elements use the same pointer shape, including generic interfaces such as
+        /// <c>IReference&lt;T&gt;</c> and <c>IKeyValuePair&lt;K, V&gt;</c>.
         /// </remarks>
         public bool IsAbiRefLike(AbiTypeKindResolver resolver)
         {
@@ -202,18 +202,14 @@ internal static class TypeSignatureExtensions
         /// Returns whether the signature has the "ABI array-element reference-pointer" shape:
         /// it crosses the ABI as a <c>void*</c> when carried as an element of an SZ-array.
         /// That covers <see cref="string"/>, WinRT runtime classes/interfaces, and
-        /// <see cref="object"/> — the 3-way variant of <see cref="IsAbiRefLike"/>
-        /// without the <c>IsGenericInstance</c> case, because generic instances cannot
-        /// appear as array elements in metadata.
+        /// <see cref="object"/>, and generic instances such as <c>IReference&lt;T&gt;</c>
+        /// and <c>IKeyValuePair&lt;K, V&gt;</c>.
         /// </summary>
         /// <param name="resolver">The active <see cref="AbiTypeKindResolver"/> (needed for runtime-class/interface resolution).</param>
         /// <returns><see langword="true"/> if the signature flows as a <c>void*</c> when used as an SZ-array element; otherwise <see langword="false"/>.</returns>
         public bool IsAbiArrayElementRefLike(AbiTypeKindResolver resolver)
         {
-            return
-                sig.IsString() ||
-                sig.IsObject() ||
-                resolver.IsRuntimeClassOrInterface(sig);
+            return sig.IsAbiRefLike(resolver);
         }
 
         /// <summary>

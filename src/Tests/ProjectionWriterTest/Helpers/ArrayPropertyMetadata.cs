@@ -61,12 +61,75 @@ internal static class ArrayPropertyMetadata
         payload.Fields.Add(new FieldDefinition("Text", FieldAttributes.Public, module.CorLibTypeFactory.String));
         module.TopLevelTypes.Add(payload);
 
+        TypeDefinition hresult = new("Windows.Foundation", "HResult",
+            TypeAttributes.Public | TypeAttributes.Sealed | TypeAttributes.SequentialLayout | TypeAttributes.WindowsRuntime,
+            valueType);
+        hresult.Fields.Add(new FieldDefinition("Value", FieldAttributes.Public, module.CorLibTypeFactory.Int32));
+        module.TopLevelTypes.Add(hresult);
+        payload.Fields.Insert(0, new FieldDefinition("Error", FieldAttributes.Public, hresult.ToTypeSignature(true)));
+
         TypeDefinition dateTime = new("Windows.Foundation", "DateTime",
             TypeAttributes.Public | TypeAttributes.Sealed | TypeAttributes.SequentialLayout | TypeAttributes.WindowsRuntime,
             valueType);
         dateTime.Fields.Add(new FieldDefinition("UniversalTime", FieldAttributes.Public, module.CorLibTypeFactory.Int64));
         module.TopLevelTypes.Add(dateTime);
         payload.Fields.Add(new FieldDefinition("Timestamp", FieldAttributes.Public, dateTime.ToTypeSignature(true)));
+
+        TypeDefinition stamp = new("Contoso", "Stamp",
+            TypeAttributes.Public | TypeAttributes.Sealed | TypeAttributes.SequentialLayout | TypeAttributes.WindowsRuntime,
+            valueType);
+        stamp.Fields.Add(new FieldDefinition("When", FieldAttributes.Public, dateTime.ToTypeSignature(true)));
+        stamp.Fields.Add(new FieldDefinition("Value", FieldAttributes.Public, module.CorLibTypeFactory.Int32));
+        module.TopLevelTypes.Add(stamp);
+        TypeDefinition nestedPayload = new("Contoso", "NestedPayload",
+            TypeAttributes.Public | TypeAttributes.Sealed | TypeAttributes.SequentialLayout | TypeAttributes.WindowsRuntime,
+            valueType);
+        nestedPayload.Fields.Add(new FieldDefinition("Inner", FieldAttributes.Public, payload.ToTypeSignature(true)));
+        nestedPayload.Fields.Add(new FieldDefinition("Text", FieldAttributes.Public, module.CorLibTypeFactory.String));
+        module.TopLevelTypes.Add(nestedPayload);
+
+        TypeDefinition primitiveThenString = new("Contoso", "PrimitiveThenString",
+            TypeAttributes.Public | TypeAttributes.Sealed | TypeAttributes.SequentialLayout | TypeAttributes.WindowsRuntime,
+            valueType);
+        primitiveThenString.Fields.Add(new FieldDefinition("A", FieldAttributes.Public, module.CorLibTypeFactory.Boolean));
+        primitiveThenString.Fields.Add(new FieldDefinition("B", FieldAttributes.Public, module.CorLibTypeFactory.Int32));
+        primitiveThenString.Fields.Add(new FieldDefinition("C", FieldAttributes.Public, module.CorLibTypeFactory.String));
+        module.TopLevelTypes.Add(primitiveThenString);
+
+        TypeDefinition stringThenPrimitive = new("Contoso", "StringThenPrimitive",
+            TypeAttributes.Public | TypeAttributes.Sealed | TypeAttributes.SequentialLayout | TypeAttributes.WindowsRuntime,
+            valueType);
+        stringThenPrimitive.Fields.Add(new FieldDefinition("A", FieldAttributes.Public, module.CorLibTypeFactory.String));
+        stringThenPrimitive.Fields.Add(new FieldDefinition("B", FieldAttributes.Public, module.CorLibTypeFactory.Int32));
+        module.TopLevelTypes.Add(stringThenPrimitive);
+
+        TypeDefinition twoStrings = new("Contoso", "TwoStrings",
+            TypeAttributes.Public | TypeAttributes.Sealed | TypeAttributes.SequentialLayout | TypeAttributes.WindowsRuntime,
+            valueType);
+        twoStrings.Fields.Add(new FieldDefinition("A", FieldAttributes.Public, module.CorLibTypeFactory.String));
+        twoStrings.Fields.Add(new FieldDefinition("B", FieldAttributes.Public, module.CorLibTypeFactory.String));
+        module.TopLevelTypes.Add(twoStrings);
+
+        TypeDefinition reference = new("Windows.Foundation", "IReference`1",
+            TypeAttributes.Public | TypeAttributes.Interface | TypeAttributes.Abstract | TypeAttributes.WindowsRuntime);
+        reference.GenericParameters.Add(new GenericParameter("T"));
+        module.TopLevelTypes.Add(reference);
+        TypeDefinition pair = new("Windows.Foundation.Collections", "IKeyValuePair`2",
+            TypeAttributes.Public | TypeAttributes.Interface | TypeAttributes.Abstract | TypeAttributes.WindowsRuntime);
+        pair.GenericParameters.Add(new GenericParameter("K"));
+        pair.GenericParameters.Add(new GenericParameter("V"));
+        module.TopLevelTypes.Add(pair);
+        TypeDefinition typeKind = new("Windows.UI.Xaml.Interop", "TypeKind",
+            TypeAttributes.Public | TypeAttributes.Sealed | TypeAttributes.WindowsRuntime,
+            new TypeReference(module, corlib, "System", "Enum"));
+        typeKind.Fields.Add(new FieldDefinition("value__", FieldAttributes.Public | FieldAttributes.SpecialName | FieldAttributes.RuntimeSpecialName,
+            module.CorLibTypeFactory.Int32));
+        module.TopLevelTypes.Add(typeKind);
+        TypeDefinition typeName = new("Windows.UI.Xaml.Interop", "TypeName",
+            TypeAttributes.Public | TypeAttributes.Sealed | TypeAttributes.SequentialLayout | TypeAttributes.WindowsRuntime, valueType);
+        typeName.Fields.Add(new FieldDefinition("Name", FieldAttributes.Public, module.CorLibTypeFactory.String));
+        typeName.Fields.Add(new FieldDefinition("Kind", FieldAttributes.Public, typeKind.ToTypeSignature(true)));
+        module.TopLevelTypes.Add(typeName);
 
         TypeDefinition tag = new("Contoso", "Tag",
             TypeAttributes.Public | TypeAttributes.Sealed | TypeAttributes.WindowsRuntime,
@@ -117,8 +180,89 @@ internal static class ArrayPropertyMetadata
 
         _ = AddMethod("AcceptValues", module.CorLibTypeFactory.Void, new SzArrayTypeSignature(module.CorLibTypeFactory.Int32));
         _ = AddMethod("AcceptNames", module.CorLibTypeFactory.Void, new SzArrayTypeSignature(module.CorLibTypeFactory.String));
+        _ = AddMethod("AcceptObjects", module.CorLibTypeFactory.Void, new SzArrayTypeSignature(module.CorLibTypeFactory.Object));
+        _ = AddMethod("AcceptWidgets", module.CorLibTypeFactory.Void, new SzArrayTypeSignature(owner.ToTypeSignature()));
+        _ = AddMethod("AcceptInterfaces", module.CorLibTypeFactory.Void, new SzArrayTypeSignature(iface.ToTypeSignature()));
+        _ = AddMethod("AcceptPayloads", module.CorLibTypeFactory.Void, new SzArrayTypeSignature(payload.ToTypeSignature(true)));
+        _ = AddMethod("AcceptDates", module.CorLibTypeFactory.Void, new SzArrayTypeSignature(dateTime.ToTypeSignature(true)));
+        MethodDefinition fillNames = AddMethod("FillNames", module.CorLibTypeFactory.Void, new SzArrayTypeSignature(module.CorLibTypeFactory.String));
+        fillNames.ParameterDefinitions[0].Attributes = ParameterAttributes.Out;
+        MethodDefinition fillObjects = AddMethod("FillObjects", module.CorLibTypeFactory.Void, new SzArrayTypeSignature(module.CorLibTypeFactory.Object));
+        fillObjects.ParameterDefinitions[0].Attributes = ParameterAttributes.Out;
         MethodDefinition fill = AddMethod("FillValues", module.CorLibTypeFactory.Void, new SzArrayTypeSignature(module.CorLibTypeFactory.Int32));
         fill.ParameterDefinitions[0].Attributes = ParameterAttributes.Out;
+
+        foreach ((string name, TypeSignature element) in new (string, TypeSignature)[]
+        {
+            ("Nullable", new GenericInstanceTypeSignature(reference, false, [module.CorLibTypeFactory.Int32])),
+            ("Pairs", new GenericInstanceTypeSignature(pair, false, [module.CorLibTypeFactory.String, module.CorLibTypeFactory.String])),
+            ("Types", typeName.ToTypeSignature(true))
+        })
+        {
+            SzArrayTypeSignature array = new(element);
+            _ = AddMethod($"Accept{name}", module.CorLibTypeFactory.Void, array);
+            MethodDefinition fillArray = AddMethod($"Fill{name}", module.CorLibTypeFactory.Void, array);
+            fillArray.ParameterDefinitions[0].Attributes = ParameterAttributes.Out;
+            _ = AddMethod($"Get{name}", array);
+            MethodDefinition receiveArray = AddMethod($"Receive{name}", module.CorLibTypeFactory.Void, new ByReferenceTypeSignature(array));
+            receiveArray.ParameterDefinitions[0].Attributes = ParameterAttributes.Out;
+        }
+
+        TypeSignature typeSignature = typeName.ToTypeSignature(true);
+        MethodDefinition outputs = AddMethod("GetOutputs", typeSignature,
+            module.CorLibTypeFactory.Object,
+            new ByReferenceTypeSignature(module.CorLibTypeFactory.String),
+            new ByReferenceTypeSignature(iface.ToTypeSignature()),
+            new ByReferenceTypeSignature(module.CorLibTypeFactory.Object),
+            new ByReferenceTypeSignature(nestedPayload.ToTypeSignature(true)),
+            new ByReferenceTypeSignature(typeSignature),
+            new ByReferenceTypeSignature(new GenericInstanceTypeSignature(reference, false, [module.CorLibTypeFactory.Int32])),
+            new ByReferenceTypeSignature(new GenericInstanceTypeSignature(pair, false, [module.CorLibTypeFactory.String, module.CorLibTypeFactory.String])),
+            new ByReferenceTypeSignature(new SzArrayTypeSignature(module.CorLibTypeFactory.Int32)),
+            new ByReferenceTypeSignature(new SzArrayTypeSignature(typeSignature)));
+        string[] outputNames = ["input", "text", "iface", "item", "payload", "type", "optional", "pair", "numbers", "types"];
+        for (int i = 0; i < outputs.ParameterDefinitions.Count; i++)
+        {
+            outputs.ParameterDefinitions[i].Name = outputNames[i];
+            outputs.ParameterDefinitions[i].Attributes = i == 0 ? ParameterAttributes.In : ParameterAttributes.Out;
+        }
+
+        MethodDefinition fillBoth = AddMethod("FillBoth", typeSignature,
+            new SzArrayTypeSignature(stamp.ToTypeSignature(true)),
+            new SzArrayTypeSignature(module.CorLibTypeFactory.Object), new SzArrayTypeSignature(typeSignature));
+        fillBoth.ParameterDefinitions[0].Name = "stamps";
+        fillBoth.ParameterDefinitions[1].Name = "first";
+        fillBoth.ParameterDefinitions[2].Name = "second";
+        foreach (ParameterDefinition parameter in fillBoth.ParameterDefinitions)
+        {
+            parameter.Attributes = ParameterAttributes.Out;
+        }
+
+        _ = AddMethod("AcceptStamps", module.CorLibTypeFactory.Void, new SzArrayTypeSignature(stamp.ToTypeSignature(true)));
+
+        MethodDefinition fillPayloads = AddMethod("FillPayloadsAndTypes", typeSignature,
+            new SzArrayTypeSignature(payload.ToTypeSignature(true)), new SzArrayTypeSignature(typeSignature));
+        fillPayloads.ParameterDefinitions[0].Name = "first";
+        fillPayloads.ParameterDefinitions[1].Name = "second";
+        foreach (ParameterDefinition parameter in fillPayloads.ParameterDefinitions)
+        {
+            parameter.Attributes = ParameterAttributes.Out;
+        }
+
+        MethodDefinition finalOutputs = AddMethod("GetFinalOutputs", module.CorLibTypeFactory.Int32, [.. outputs.Signature!.ParameterTypes]);
+        for (int i = 0; i < finalOutputs.ParameterDefinitions.Count; i++)
+        {
+            finalOutputs.ParameterDefinitions[i].Name = outputNames[i];
+            finalOutputs.ParameterDefinitions[i].Attributes = i == 0 ? ParameterAttributes.In : ParameterAttributes.Out;
+        }
+
+        MethodDefinition getName = AddMethod("GetName", module.CorLibTypeFactory.Void,
+            new ByReferenceTypeSignature(module.CorLibTypeFactory.String));
+        getName.ParameterDefinitions[0].Name = "name";
+        getName.ParameterDefinitions[0].Attributes = ParameterAttributes.Out;
+        MethodDefinition getScalarType = AddMethod("GetScalarType", module.CorLibTypeFactory.Void,
+            new ByReferenceTypeSignature(typeSignature));
+        getScalarType.ParameterDefinitions[0].Attributes = ParameterAttributes.Out;
 
         module.Write(path);
         return path;

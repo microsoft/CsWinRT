@@ -162,6 +162,16 @@ namespace TestComponentCSharp
         Windows.UI.Xaml.Interop.TypeName TypeProperty{ get; set; };
     };
 
+    interface IArrayMarshalling
+    {
+        Windows.Foundation.IReference<Int32>[] NullableValues;
+        Windows.Foundation.Collections.IKeyValuePair<String, String>[] PairValues;
+        Windows.UI.Xaml.Interop.TypeName[] TypeValues;
+        void FillNullableValues(ref Windows.Foundation.IReference<Int32>[] values);
+        void FillPairValues(ref Windows.Foundation.Collections.IKeyValuePair<String, String>[] values);
+        void FillTypeValues(ref Windows.UI.Xaml.Interop.TypeName[] values);
+    }
+
     interface IProperties1
     {
         Int32 ReadWriteProperty{ get; };
@@ -739,9 +749,12 @@ namespace TestComponentCSharp
     delegate Windows.Foundation.HResult HandleResult(Windows.Foundation.HResult value);
 
     [default_interface]
-    runtimeclass MarshalledValuesTest : IMarshalledValues
+    runtimeclass MarshalledValuesTest : IMarshalledValues, IArrayMarshalling
     {
         MarshalledValuesTest();
+        MarshalledValuesTest(Windows.Foundation.IReference<Int32>[] nullableValues, Windows.Foundation.Collections.IKeyValuePair<String, String>[] pairValues, Windows.UI.Xaml.Interop.TypeName[] typeValues);
+        // Forward calls through native code to exercise the RCW and managed CCW on the same array buffer.
+        MarshalledValuesTest(IArrayMarshalling target);
 
         // Invoke each 'IMarshalledValues' member from native code, so that tests can validate the
         // marshalling of every parameter shape it covers independently. Passing a managed
