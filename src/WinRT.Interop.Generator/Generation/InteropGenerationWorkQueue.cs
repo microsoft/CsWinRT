@@ -141,6 +141,7 @@ internal sealed class InteropGenerationWorkQueue<TKey, TContext>(params InteropG
         Dictionary<TKey, Node> lookup = new(items.Length);
         Node[] nodes = new Node[items.Length];
 
+        // Keep mutable execution state per run, rejecting duplicate keys before any work starts
         for (int i = 0; i < items.Length; i++)
         {
             WorkItem item = items[i];
@@ -150,6 +151,7 @@ internal sealed class InteropGenerationWorkQueue<TKey, TContext>(params InteropG
             nodes[i] = node;
         }
 
+        // Build reverse edges so completing a prerequisite can release its dependents; unknown keys fail here
         for (int i = 0; i < items.Length; i++)
         {
             foreach (TKey prerequisite in items[i].Prerequisites)
@@ -158,6 +160,7 @@ internal sealed class InteropGenerationWorkQueue<TKey, TContext>(params InteropG
             }
         }
 
+        // Simulate a topological traversal without executing bodies to validate the entire graph
         Queue<Node> ready = new(nodes.Where(static node => node.RemainingPrerequisites == 0));
         int visited = 0;
 
@@ -174,11 +177,13 @@ internal sealed class InteropGenerationWorkQueue<TKey, TContext>(params InteropG
             }
         }
 
+        // Unvisited nodes belong to or depend on a cycle, preventing the scheduler from completing all work
         if (visited != nodes.Length)
         {
             throw new InvalidOperationException("The interop generation work graph contains a dependency cycle.");
         }
 
+        // Validation consumed the counters, so restore them before the actual execution
         for (int i = 0; i < items.Length; i++)
         {
             nodes[i].RemainingPrerequisites = items[i].Prerequisites.Length;
