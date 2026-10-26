@@ -94,6 +94,7 @@ internal static class ParallelExtensions
             catch (AggregateException)
             {
                 token.ThrowIfCancellationRequested();
+
                 failure?.Throw();
 
                 throw;
@@ -101,6 +102,7 @@ internal static class ParallelExtensions
             catch (OperationCanceledException)
             {
                 token.ThrowIfCancellationRequested();
+
                 failure?.Throw();
 
                 throw;
