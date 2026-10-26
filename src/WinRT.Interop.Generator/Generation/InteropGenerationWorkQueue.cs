@@ -121,7 +121,11 @@ internal sealed class InteropGenerationWorkQueue<TContext>
     /// <param name="pending">This run's remaining prerequisite counts.</param>
     /// <param name="ready">The queue of operations ready to run.</param>
     /// <param name="token">The invocation's cancellation token.</param>
-    private static void RunSequential(TContext context, int[] pending, BlockingCollection<Node> ready, CancellationToken token)
+    private static void RunSequential(
+        TContext context,
+        int[] pending,
+        BlockingCollection<Node> ready,
+        CancellationToken token)
     {
         while (ready.TryTake(out Node? node))
         {
