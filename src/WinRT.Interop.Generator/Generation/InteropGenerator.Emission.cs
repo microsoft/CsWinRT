@@ -40,6 +40,10 @@ internal static partial class InteropGenerator
         InteropGenerationWorkQueue<InteropGeneratorEmissionContext>.Builder graph = new();
 
         _ = graph.Add(DefineTypeHierarchyLookup);
+        _ = graph.Add(DefineDynamicCustomMappedTypeMapEntries);
+        _ = graph.Add(DefineWindowsRuntimeIidTypeMapEntries);
+        _ = graph.Add(DefineIgnoresAccessChecksToAttributes);
+        _ = graph.Add(EmitMetadataAssemblyAttributes);
 
         EmissionNode delegates = graph.Add(DefineGenericDelegateTypes);
         EmissionNode enumerators = graph.Add(DefineIEnumeratorTypes);
@@ -82,10 +86,6 @@ internal static partial class InteropGenerator
 
         EmissionNode userDefinedTypes = graph.Add(DefineUserDefinedTypes, genericFamilies);
         _ = graph.Add(DefineDynamicImplementationDetailTypes, userDefinedTypes, arrays);
-        _ = graph.Add(DefineDynamicCustomMappedTypeMapEntries);
-        _ = graph.Add(DefineWindowsRuntimeIidTypeMapEntries);
-        _ = graph.Add(DefineIgnoresAccessChecksToAttributes);
-        _ = graph.Add(EmitMetadataAssemblyAttributes);
 
         return graph.Build();
     }
