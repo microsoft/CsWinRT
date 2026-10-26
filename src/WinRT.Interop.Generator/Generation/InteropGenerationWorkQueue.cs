@@ -65,21 +65,7 @@ internal sealed class InteropGenerationWorkQueue<TKey, TContext>(params InteropG
                 {
                     try
                     {
-                        cancellation.Token.ThrowIfCancellationRequested();
-                        node.Body(context);
-
-                        foreach (Node dependent in node.Dependents)
-                        {
-                            if (Interlocked.Decrement(ref dependent.RemainingPrerequisites) == 0)
-                            {
-                                ready.Add(dependent, cancellation.Token);
-                            }
-                        }
-
-                        if (Interlocked.Decrement(ref remaining) == 0)
-                        {
-                            ready.CompleteAdding();
-                        }
+                        RunNode(node, context, ready, cancellation.Token, ref remaining);
                     }
                     catch (Exception exception)
                     {
@@ -107,6 +93,43 @@ internal sealed class InteropGenerationWorkQueue<TKey, TContext>(params InteropG
         }
 
         token.ThrowIfCancellationRequested();
+    }
+
+    /// <summary>
+    /// Runs one parallel operation, releases its dependents, and closes the queue when all work is done.
+    /// </summary>
+    /// <param name="node">The operation to run.</param>
+    /// <param name="context">The context to pass to the operation.</param>
+    /// <param name="ready">The shared queue of operations ready to run.</param>
+    /// <param name="token">The token observing invocation cancellation and sibling failures.</param>
+    /// <param name="remaining">The shared count of unfinished operations, decremented atomically.</param>
+    private static void RunNode(
+        Node node,
+        TContext context,
+        BlockingCollection<Node> ready,
+        CancellationToken token,
+        ref int remaining)
+    {
+        // Don't start another operation after cancellation or a sibling failure
+        token.ThrowIfCancellationRequested();
+
+        node.Body(context);
+
+        // Only the last completed prerequisite releases each dependent
+        foreach (Node dependent in node.Dependents)
+        {
+            if (Interlocked.Decrement(ref dependent.RemainingPrerequisites) == 0)
+            {
+                ready.Add(dependent, token);
+            }
+        }
+
+        // The count includes not-yet-ready operations, so reaching zero means no producer can add more work
+        if (Interlocked.Decrement(ref remaining) == 0)
+        {
+            // Wake blocked consumers once no work remains
+            ready.CompleteAdding();
+        }
     }
 
     /// <summary>
