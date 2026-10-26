@@ -83,6 +83,8 @@ internal static class ParallelExtensions
                         {
                             // Preserve the initiating failure before cancellation wakes blocked source consumers
                             _ = Interlocked.CompareExchange(ref failure, ExceptionDispatchInfo.Capture(exception), null);
+
+                            // Rethrowing alone cannot wake workers blocked on the source; cancel so they can exit and be joined
                             cancellation.Cancel();
 
                             throw;
