@@ -312,36 +312,47 @@ Copyright (C) Microsoft Corporation. All rights reserved.
   -->
   <Target Name="_ComputeRunCsWinRTGeneratorCache" DependsOnTargets="ResolveAssemblyReferences;_ResolveCsWinRToolsDirectory">
 
+    <PropertyGroup>
+      <_CsWinRTMarshallingEnabledAssemblyCount>@(CsWinRTMarshallingEnabledAssembly->Count())</_CsWinRTMarshallingEnabledAssemblyCount>
+      <_CsWinRTMarshallingDisabledAssemblyCount>@(CsWinRTMarshallingDisabledAssembly->Count())</_CsWinRTMarshallingDisabledAssemblyCount>
+      <_CsWinRTGeneratorAdditionalArgumentCount>@(CsWinRTGeneratorAdditionalArgument->Count())</_CsWinRTGeneratorAdditionalArgumentCount>
+    </PropertyGroup>
+
     <ItemGroup>
 
+      <!-- Name inputs so equal values from different settings cannot share a cache key -->
       <!-- Changes to tool selection or artifact locations must invalidate the cached output -->
-      <_RunCsWinRTGeneratorInputsCacheToHash Include="$(CsWinRTInteropGenEffectiveToolsDirectory)" />
-      <_RunCsWinRTGeneratorInputsCacheToHash Include="$(CsWinRTMergedProjectionEffectiveToolsDirectory)" />
-      <_RunCsWinRTGeneratorInputsCacheToHash Include="$(CsWinRTToolsArchitecture)" />
-      <_RunCsWinRTGeneratorInputsCacheToHash Include="$(CsWinRTGeneratorInteropAssemblyDirectory)" />
-      <_RunCsWinRTGeneratorInputsCacheToHash Include="$(CsWinRTGeneratorDebugReproDirectory)" />
-      <_RunCsWinRTGeneratorInputsCacheToHash Include="$(CsWinRTGeneratorLogDirectory)" />
+      <_RunCsWinRTGeneratorInputsCacheToHash Include="CsWinRTInteropGenEffectiveToolsDirectory=$(CsWinRTInteropGenEffectiveToolsDirectory)" />
+      <_RunCsWinRTGeneratorInputsCacheToHash Include="CsWinRTMergedProjectionEffectiveToolsDirectory=$(CsWinRTMergedProjectionEffectiveToolsDirectory)" />
+      <_RunCsWinRTGeneratorInputsCacheToHash Include="CsWinRTToolsArchitecture=$(CsWinRTToolsArchitecture)" />
+      <_RunCsWinRTGeneratorInputsCacheToHash Include="CsWinRTGeneratorInteropAssemblyDirectory=$(CsWinRTGeneratorInteropAssemblyDirectory)" />
+      <_RunCsWinRTGeneratorInputsCacheToHash Include="CsWinRTGeneratorDebugReproDirectory=$(CsWinRTGeneratorDebugReproDirectory)" />
+      <_RunCsWinRTGeneratorInputsCacheToHash Include="CsWinRTGeneratorLogDirectory=$(CsWinRTGeneratorLogDirectory)" />
 
       <!-- Regenerate when discovery settings change even if assembly inputs do not -->
-      <_RunCsWinRTGeneratorInputsCacheToHash Include="$(CsWinRTUseWindowsUIXamlProjections)" />
-      <_RunCsWinRTGeneratorInputsCacheToHash Include="$(CsWinRTEnableDefaultCustomPropertyProviderSupport)" />
-      <_RunCsWinRTGeneratorInputsCacheToHash Include="$(CsWinRTMarshallingMode)" />
-      <_RunCsWinRTGeneratorInputsCacheToHash Include="$(CsWinRTAnalyzeNetStandardAssemblies)" />
+      <_RunCsWinRTGeneratorInputsCacheToHash Include="CsWinRTUseWindowsUIXamlProjections=$(CsWinRTUseWindowsUIXamlProjections)" />
+      <_RunCsWinRTGeneratorInputsCacheToHash Include="CsWinRTEnableDefaultCustomPropertyProviderSupport=$(CsWinRTEnableDefaultCustomPropertyProviderSupport)" />
+      <_RunCsWinRTGeneratorInputsCacheToHash Include="CsWinRTMarshallingMode=$(CsWinRTMarshallingMode)" />
+      <_RunCsWinRTGeneratorInputsCacheToHash Include="CsWinRTAnalyzeNetStandardAssemblies=$(CsWinRTAnalyzeNetStandardAssemblies)" />
+      <!-- Counted headers identify empty lists and make item boundaries unambiguous -->
+      <_RunCsWinRTGeneratorInputsCacheToHash Include="CsWinRTMarshallingEnabledAssembly.Count=$(_CsWinRTMarshallingEnabledAssemblyCount)" />
       <_RunCsWinRTGeneratorInputsCacheToHash Include="@(CsWinRTMarshallingEnabledAssembly)" />
+      <_RunCsWinRTGeneratorInputsCacheToHash Include="CsWinRTMarshallingDisabledAssembly.Count=$(_CsWinRTMarshallingDisabledAssemblyCount)" />
       <_RunCsWinRTGeneratorInputsCacheToHash Include="@(CsWinRTMarshallingDisabledAssembly)" />
-      <_RunCsWinRTGeneratorInputsCacheToHash Include="$(CsWinRTGenerateCollectionChangedListVtables)" />
-      <_RunCsWinRTGeneratorInputsCacheToHash Include="EmitEntryPointInitializer=$(CsWinRTEmitEntryPointInitializer)" />
+      <_RunCsWinRTGeneratorInputsCacheToHash Include="CsWinRTGenerateCollectionChangedListVtables=$(CsWinRTGenerateCollectionChangedListVtables)" />
+      <_RunCsWinRTGeneratorInputsCacheToHash Include="CsWinRTEmitEntryPointInitializer=$(CsWinRTEmitEntryPointInitializer)" />
 
       <!-- Invocation settings can change diagnostics or tool behavior without changing assembly inputs -->
-      <_RunCsWinRTGeneratorInputsCacheToHash Include="$(CsWinRTGeneratorValidateWinRTRuntimeAssemblyVersion)" />
-      <_RunCsWinRTGeneratorInputsCacheToHash Include="$(CsWinRTGeneratorValidateWinRTRuntimeDllVersion2References)" />
-      <_RunCsWinRTGeneratorInputsCacheToHash Include="$(CsWinRTGeneratorEnableIncrementalGeneration)" />
-      <_RunCsWinRTGeneratorInputsCacheToHash Include="$(CsWinRTGeneratorTreatWarningsAsErrors)" />
-      <_RunCsWinRTGeneratorInputsCacheToHash Include="$(CsWinRTGeneratorMaxDegreesOfParallelism)" />
+      <_RunCsWinRTGeneratorInputsCacheToHash Include="CsWinRTGeneratorValidateWinRTRuntimeAssemblyVersion=$(CsWinRTGeneratorValidateWinRTRuntimeAssemblyVersion)" />
+      <_RunCsWinRTGeneratorInputsCacheToHash Include="CsWinRTGeneratorValidateWinRTRuntimeDllVersion2References=$(CsWinRTGeneratorValidateWinRTRuntimeDllVersion2References)" />
+      <_RunCsWinRTGeneratorInputsCacheToHash Include="CsWinRTGeneratorEnableIncrementalGeneration=$(CsWinRTGeneratorEnableIncrementalGeneration)" />
+      <_RunCsWinRTGeneratorInputsCacheToHash Include="CsWinRTGeneratorTreatWarningsAsErrors=$(CsWinRTGeneratorTreatWarningsAsErrors)" />
+      <_RunCsWinRTGeneratorInputsCacheToHash Include="CsWinRTGeneratorMaxDegreesOfParallelism=$(CsWinRTGeneratorMaxDegreesOfParallelism)" />
+      <_RunCsWinRTGeneratorInputsCacheToHash Include="CsWinRTGeneratorAdditionalArgument.Count=$(_CsWinRTGeneratorAdditionalArgumentCount)" />
       <_RunCsWinRTGeneratorInputsCacheToHash Include="@(CsWinRTGeneratorAdditionalArgument)" />
-      <_RunCsWinRTGeneratorInputsCacheToHash Include="$(CsWinRTGeneratorStandardOutputImportance)" />
-      <_RunCsWinRTGeneratorInputsCacheToHash Include="$(CsWinRTGeneratorStandardErrorImportance)" />
-      <_RunCsWinRTGeneratorInputsCacheToHash Include="$(CsWinRTGeneratorLogStandardErrorAsError)" />
+      <_RunCsWinRTGeneratorInputsCacheToHash Include="CsWinRTGeneratorStandardOutputImportance=$(CsWinRTGeneratorStandardOutputImportance)" />
+      <_RunCsWinRTGeneratorInputsCacheToHash Include="CsWinRTGeneratorStandardErrorImportance=$(CsWinRTGeneratorStandardErrorImportance)" />
+      <_RunCsWinRTGeneratorInputsCacheToHash Include="CsWinRTGeneratorLogStandardErrorAsError=$(CsWinRTGeneratorLogStandardErrorAsError)" />
     </ItemGroup>
 
     <Hash ItemsToHash="@(_RunCsWinRTGeneratorInputsCacheToHash)">
