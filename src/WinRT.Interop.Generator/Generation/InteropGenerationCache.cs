@@ -147,6 +147,7 @@ internal static class InteropGenerationCache
             using FileStream assembly = new(assemblyPath, FileMode.Create, FileAccess.ReadWrite, FileShare.None);
 
             InteropModuleWriter.Write(module, assembly);
+
             args.Token.ThrowIfCancellationRequested();
 
             Span<byte> record = stackalloc byte[RecordSize];
