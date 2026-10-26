@@ -10,9 +10,6 @@ namespace WindowsRuntime.InteropGenerator.Generation;
 /// <inheritdoc cref="InteropGenerator"/>
 internal static partial class InteropGenerator
 {
-    /// <summary>The fixed emission graph, shared by all invocations.</summary>
-    private static readonly InteropGenerationWorkQueue<InteropGeneratorEmissionContext> EmissionQueue = CreateEmissionQueue();
-
     /// <summary>
     /// Runs whole emit families as soon as their prerequisites complete.
     /// </summary>
@@ -25,16 +22,18 @@ internal static partial class InteropGenerator
 
         inputs.PrepareForConcurrentEmission();
 
-        EmissionQueue.Run(context, args.MaxDegreesOfParallelism, args.Token);
+        InteropGenerationWorkQueue<InteropGeneratorEmissionContext> queue = CreateEmissionQueue();
+
+        queue.Run(context, args.MaxDegreesOfParallelism, args.Token);
 
         // Fixups enumerate generated types, so all emit workers must have finished
         FixupMethodDefinitions(args, module);
     }
 
     /// <summary>
-    /// Defines the emission graph once, using node references for all dependencies.
+    /// Creates the fixed emission graph using node references for all dependencies.
     /// </summary>
-    /// <returns>The reusable emission queue.</returns>
+    /// <returns>The emission queue for this invocation.</returns>
     private static InteropGenerationWorkQueue<InteropGeneratorEmissionContext> CreateEmissionQueue()
     {
         InteropGenerationWorkQueue<InteropGeneratorEmissionContext>.Builder graph = new();
