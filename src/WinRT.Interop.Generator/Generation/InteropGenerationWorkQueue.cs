@@ -30,6 +30,7 @@ internal sealed class InteropGenerationWorkQueue<TKey, TContext>(params InteropG
     {
         ArgumentOutOfRangeException.ThrowIfLessThan(maxDegreesOfParallelism, -1);
         ArgumentOutOfRangeException.ThrowIfZero(maxDegreesOfParallelism);
+
         token.ThrowIfCancellationRequested();
 
         if (items.Length == 0)
