@@ -82,9 +82,9 @@ internal static partial class InteropGenerator
         ];
 
         EmissionNode arrays = graph.Add(DefineSzArrayTypes, genericFamilies);
-        _ = graph.Add(RewriteMethodDefinitions, arrays);
-
         EmissionNode userDefinedTypes = graph.Add(DefineUserDefinedTypes, genericFamilies);
+
+        _ = graph.Add(RewriteMethodDefinitions, arrays);
         _ = graph.Add(DefineDynamicImplementationDetailTypes, userDefinedTypes, arrays);
 
         return graph.Build();
