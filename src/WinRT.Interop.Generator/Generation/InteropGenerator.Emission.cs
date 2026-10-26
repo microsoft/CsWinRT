@@ -61,6 +61,9 @@ internal static partial class InteropGenerator
         EmissionNode asyncProgressOperations = graph.Add(DefineIAsyncOperationWithProgressTypes, delegates);
         EmissionNode readOnlyCollections = graph.Add(DefineIReadOnlyCollectionKeyValuePair2Types, readOnlyLists, readOnlyDictionaries);
         EmissionNode collections = graph.Add(DefineICollectionKeyValuePair2Types, lists, dictionaries);
+
+        // Arrays and user-defined CCWs can resolve generic IID/vtable entries from any of these families
+        // Group every family into a completion barrier so all referenced definitions exist before either consumer runs
         EmissionNode[] genericFamilies =
         [
             delegates,
