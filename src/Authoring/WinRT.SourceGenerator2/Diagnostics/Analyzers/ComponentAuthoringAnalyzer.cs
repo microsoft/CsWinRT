@@ -59,6 +59,8 @@ public sealed class ComponentAuthoringAnalyzer : DiagnosticAnalyzer
             AuthoringTypeValidation validation = new(
                 context.Compilation,
                 context.Options.AnalyzerConfigOptionsProvider.GlobalOptions.GetCsWinRTUseWindowsUIXamlProjections());
+            INamedTypeSymbol? defaultOverloadAttributeType =
+                context.Compilation.GetTypeByMetadataName("Windows.Foundation.Metadata.DefaultOverloadAttribute");
             ConcurrentDictionary<string, INamedTypeSymbol> namespaces = new(StringComparer.Ordinal);
 
             context.RegisterSymbolAction(context =>
@@ -88,6 +90,7 @@ public sealed class ComponentAuthoringAnalyzer : DiagnosticAnalyzer
                     current = separator < 0 ? "" : current[..separator];
                 }
 
+                // CsWinRT cannot author generic Windows Runtime types; skip redundant member diagnostics
                 if (type.IsGenericType)
                 {
                     Report(context, DiagnosticDescriptors.AuthoredGenericDeclaration, type, type);
@@ -104,6 +107,7 @@ public sealed class ComponentAuthoringAnalyzer : DiagnosticAnalyzer
 
                 if (type.TypeKind is TypeKind.Delegate)
                 {
+                    // Validate the delegate's declared return type and parameters through its Invoke method
                     if (type.DelegateInvokeMethod is { } invoke)
                     {
                         AnalyzeMethod(context, invoke, validation);
@@ -122,7 +126,7 @@ public sealed class ComponentAuthoringAnalyzer : DiagnosticAnalyzer
                     Report(context, DiagnosticDescriptors.AuthoredClassRequiresSealed, type, type);
                 }
 
-                // Abstract managed bases are replaced with System.Object in the WinMD
+                // The WinMD generator replaces abstract managed bases with System.Object, so allow them
                 if (type.BaseType is { SpecialType: not SpecialType.System_Object, TypeKind: not TypeKind.Error } baseType &&
                     !baseType.IsAbstract &&
                     !validation.IsProjected(baseType))
@@ -132,6 +136,7 @@ public sealed class ComponentAuthoringAnalyzer : DiagnosticAnalyzer
 
                 foreach (INamedTypeSymbol iface in type.Interfaces)
                 {
+                    // Non-public managed implementation interfaces are not emitted as Windows Runtime contracts
                     if (type.TypeKind is TypeKind.Class && !iface.IsPubliclyAccessible)
                     {
                         continue;
@@ -143,6 +148,7 @@ public sealed class ComponentAuthoringAnalyzer : DiagnosticAnalyzer
                     }
                 }
 
+                // Skip members replaced by mapped contracts, but validate other exported members
                 HashSet<ISymbol> omittedMembers = GetOmittedMembers(type, validation);
                 List<IMethodSymbol> methods = [];
 
@@ -186,14 +192,14 @@ public sealed class ComponentAuthoringAnalyzer : DiagnosticAnalyzer
                     }
                 }
 
-                AnalyzeOverloads(context, type, methods);
+                AnalyzeOverloads(context, type, methods, defaultOverloadAttributeType);
             }, SymbolKind.NamedType);
 
             context.RegisterCompilationEndAction(context =>
             {
                 Dictionary<string, string> seen = new(StringComparer.OrdinalIgnoreCase);
 
-                // Order namespace spellings consistently before checking for case-insensitive collisions
+                // Sort namespace spellings so collision diagnostics report casing in a stable order
                 foreach ((string ns, INamedTypeSymbol type) in namespaces.OrderBy(static pair => pair.Key, StringComparer.Ordinal))
                 {
                     if (seen.TryGetValue(ns, out string? previous))
@@ -253,7 +259,7 @@ public sealed class ComponentAuthoringAnalyzer : DiagnosticAnalyzer
     }
 
     /// <summary>
-    /// Validates the return and parameter types of an exported method or constructor.
+    /// Validates exported signatures and rejects parameter names that conflict with generated marshalling identifiers.
     /// </summary>
     private static void AnalyzeMethod(SymbolAnalysisContext context, IMethodSymbol method, AuthoringTypeValidation validation)
     {
@@ -279,6 +285,7 @@ public sealed class ComponentAuthoringAnalyzer : DiagnosticAnalyzer
         {
             AnalyzeParameter(context, method, parameter, validation);
 
+            // Constructors return an instance at the ABI, so they also reserve return-value identifiers
             bool hasReturn = !method.ReturnsVoid || method.MethodKind is MethodKind.Constructor;
             string? collision = parameter.Name switch
             {
@@ -298,19 +305,21 @@ public sealed class ComponentAuthoringAnalyzer : DiagnosticAnalyzer
     }
 
     /// <summary>
-    /// Checks the names of locals, array temporaries, and accessors emitted for a parameter.
+    /// Finds parameter names that collide with generated marshalling identifiers.
     /// </summary>
     private static string? GetDerivedNameCollision(IParameterSymbol parameter, HashSet<string> names)
     {
         bool isArray = parameter.Type is IArrayTypeSymbol || AuthoringTypeValidation.IsSpan(parameter.Type);
         string prefix = "__" + parameter.Name;
 
+        // Array marshalling, value conversions, and out parameters can introduce a '__name' local
         if (names.Contains(prefix) &&
             (isArray || parameter.RefKind is RefKind.Out || AuthoringTypeValidation.NeedsMarshallingLocal(parameter.Type)))
         {
             return prefix;
         }
 
+        // Some inputs also need a '_name' alias for pinning or passing native pointers
         if (parameter.RefKind is not RefKind.Out &&
             (isArray || parameter.Type.SpecialType is SpecialType.System_String ||
              parameter.Type.GetFullyQualifiedMetadataName() == "System.Type" ||
@@ -320,6 +329,7 @@ public sealed class ComponentAuthoringAnalyzer : DiagnosticAnalyzer
             return "_" + parameter.Name;
         }
 
+        // Parameters with constructed generic types also introduce named conversion callbacks
         if (parameter.RefKind is RefKind.None &&
             parameter.Type is INamedTypeSymbol { IsGenericType: true } &&
             !AuthoringTypeValidation.IsSpan(parameter.Type))
@@ -349,6 +359,7 @@ public sealed class ComponentAuthoringAnalyzer : DiagnosticAnalyzer
 
         if (parameter.RefKind is RefKind.Out)
         {
+            // Receive arrays use separate native length and data locals
             return names.Contains(prefix + "_length")
                 ? prefix + "_length"
                 : names.Contains(prefix + "_data") ? prefix + "_data" : null;
@@ -360,7 +371,7 @@ public sealed class ComponentAuthoringAnalyzer : DiagnosticAnalyzer
 
         if (AuthoringTypeValidation.NeedsMarshallingLocal(element))
         {
-            // These names match the projection writer's 'ArrayTempNames' helper
+            // Array conversion buffers use the projection writer's 'ArrayTempNames' naming scheme
             foreach (string suffix in new[] { "_span", "_inlineArray", "_arrayFromPool" })
             {
                 if (names.Contains(prefix + suffix))
@@ -374,6 +385,7 @@ public sealed class ComponentAuthoringAnalyzer : DiagnosticAnalyzer
 
         if (isPassArray && element.SpecialType is SpecialType.System_String)
         {
+            // String pass arrays pin HSTRING headers separately from the managed elements
             string headerPin = "_" + parameter.Name + "_inlineHeaderArray";
 
             if (names.Contains(headerPin))
@@ -398,7 +410,7 @@ public sealed class ComponentAuthoringAnalyzer : DiagnosticAnalyzer
     }
 
     /// <summary>
-    /// Validates array and span calling conventions without imposing legacy direction attributes.
+    /// Validates parameter types and array/span calling conventions.
     /// </summary>
     private static void AnalyzeParameter(SymbolAnalysisContext context, ISymbol member, IParameterSymbol parameter, AuthoringTypeValidation validation)
     {
@@ -438,6 +450,7 @@ public sealed class ComponentAuthoringAnalyzer : DiagnosticAnalyzer
                 return;
             }
 
+            // Span<T[]> is also jagged, since the span represents the outer Windows Runtime array
             if (array.ElementType is IArrayTypeSymbol || arrayElement)
             {
                 Report(context, DiagnosticDescriptors.AuthoredJaggedArray, member, member, type);
@@ -453,12 +466,16 @@ public sealed class ComponentAuthoringAnalyzer : DiagnosticAnalyzer
     }
 
     /// <summary>
-    /// Validates constructor arities and default overloads across all partial declarations.
+    /// Validates constructor arity collisions and default overload annotations, counting only input parameters.
     /// </summary>
-    private static void AnalyzeOverloads(SymbolAnalysisContext context, INamedTypeSymbol type, List<IMethodSymbol> methods)
+    private static void AnalyzeOverloads(
+        SymbolAnalysisContext context,
+        INamedTypeSymbol type,
+        List<IMethodSymbol> methods,
+        INamedTypeSymbol? defaultOverloadAttributeType)
     {
         foreach (IGrouping<int, IMethodSymbol> group in methods.Where(static method => method.MethodKind is MethodKind.Constructor)
-            .GroupBy(GetInputArity))
+            .GroupBy(static method => method.GetWindowsRuntimeInputArity()))
         {
             foreach (IMethodSymbol duplicate in group.Skip(1))
             {
@@ -468,9 +485,9 @@ public sealed class ComponentAuthoringAnalyzer : DiagnosticAnalyzer
 
         foreach (IGrouping<(string Name, int Arity, bool Static), IMethodSymbol> group in methods
             .Where(static method => method.MethodKind is MethodKind.Ordinary && !method.IsGenericMethod)
-            .GroupBy(static method => (method.Name, GetInputArity(method), method.IsStatic)))
+            .GroupBy(static method => (method.Name, method.GetWindowsRuntimeInputArity(), method.IsStatic)))
         {
-            IMethodSymbol[] defaults = [.. group.Where(method => HasDefaultOverload(type, method))];
+            IMethodSymbol[] defaults = [.. group.Where(method => type.HasDefaultOverload(method, defaultOverloadAttributeType))];
 
             if (defaults.Length > 1)
             {
@@ -487,46 +504,7 @@ public sealed class ComponentAuthoringAnalyzer : DiagnosticAnalyzer
     }
 
     /// <summary>
-    /// Counts input parameters, treating spans as one and excluding output parameters.
-    /// </summary>
-    private static int GetInputArity(IMethodSymbol method)
-    {
-        return method.Parameters.Count(static parameter => parameter.RefKind is not RefKind.Out);
-    }
-
-    /// <summary>
-    /// Checks a default overload annotation, including one supplied by an implemented interface.
-    /// </summary>
-    private static bool HasDefaultOverload(INamedTypeSymbol type, IMethodSymbol method)
-    {
-        static bool HasAttribute(IMethodSymbol candidate)
-        {
-            return candidate.GetAttributes().Any(static attribute =>
-                attribute.AttributeClass?.ToDisplayString() == "Windows.Foundation.Metadata.DefaultOverloadAttribute");
-        }
-
-        if (HasAttribute(method))
-        {
-            return true;
-        }
-
-        foreach (INamedTypeSymbol iface in type.AllInterfaces)
-        {
-            foreach (IMethodSymbol candidate in iface.GetMembers(method.Name).OfType<IMethodSymbol>())
-            {
-                if (SymbolEqualityComparer.Default.Equals(type.FindImplementationForInterfaceMember(candidate), method) &&
-                    HasAttribute(candidate))
-                {
-                    return true;
-                }
-            }
-        }
-
-        return false;
-    }
-
-    /// <summary>
-    /// Collects implementations replaced by custom-mapped or intentionally omitted interfaces.
+    /// Collects interface implementations that the WinMD generator replaces or omits.
     /// </summary>
     private static HashSet<ISymbol> GetOmittedMembers(INamedTypeSymbol type, AuthoringTypeValidation validation)
     {
