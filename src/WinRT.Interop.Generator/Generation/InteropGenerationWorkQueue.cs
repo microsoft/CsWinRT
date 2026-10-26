@@ -53,7 +53,7 @@ internal sealed class InteropGenerationWorkQueue<TKey, TContext>(params InteropG
 
         int remaining = items.Length;
 
-        Parallel.ForEachUnbufferedUntilFirstFailure(
+        _ = Parallel.ForEachUnbufferedUntilFirstFailure(
             source: ready.GetConsumingEnumerable,
             token: token,
             maxDegreesOfParallelism: workerCount,

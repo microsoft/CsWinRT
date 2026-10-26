@@ -31,6 +31,24 @@ public sealed class Test_ParallelExtensions
     }
 
     [TestMethod]
+    [DataRow(0)]
+    [DataRow(128)]
+    public void FirstFailureLoop_ReturnsCompletionStatus(int count)
+    {
+        int completed = 0;
+
+        ParallelLoopResult result = Parallel.ForEachUnbufferedUntilFirstFailure(
+            source: _ => Enumerable.Range(0, count),
+            token: CancellationToken.None,
+            maxDegreesOfParallelism: 4,
+            body: (_, _) => Interlocked.Increment(ref completed));
+
+        Assert.IsTrue(result.IsCompleted);
+        Assert.IsNull(result.LowestBreakIteration);
+        Assert.AreEqual(count, completed);
+    }
+
+    [TestMethod]
     public void StandardLoop_BodyFailureRemainsAggregated()
     {
         InvalidOperationException expected = new("body failure");
@@ -149,7 +167,7 @@ public sealed class Test_ParallelExtensions
         {
             if (cancelOnFirstFailure)
             {
-                Parallel.ForEachUnbufferedUntilFirstFailure(
+                _ = Parallel.ForEachUnbufferedUntilFirstFailure(
                     source: _ => source,
                     token: CancellationToken.None,
                     maxDegreesOfParallelism: 4,

@@ -47,12 +47,13 @@ internal static class ParallelExtensions
         /// <param name="token">The invocation's cancellation token.</param>
         /// <param name="maxDegreesOfParallelism">The worker limit, which must be bounded for a blocking source.</param>
         /// <param name="body">The operation to run for each item, with the token observing sibling failures.</param>
+        /// <returns>The loop's completion status, after all workers have finished.</returns>
         /// <remarks>
         /// Source waits must observe the supplied linked token. All workers finish before the method returns or throws.
         /// Invocation cancellation takes precedence over a body failure and preserves the invocation's original token.
         /// Failures outside a body retain the underlying parallel loop's exception behavior.
         /// </remarks>
-        public static void ForEachUnbufferedUntilFirstFailure<T>(
+        public static ParallelLoopResult ForEachUnbufferedUntilFirstFailure<T>(
             Func<CancellationToken, IEnumerable<T>> source,
             CancellationToken token,
             int maxDegreesOfParallelism,
@@ -64,10 +65,11 @@ internal static class ParallelExtensions
 
             // Preserve the worker's original stack trace when rethrowing on the caller thread, rather than resetting it with 'throw exception'
             ExceptionDispatchInfo? failure = null;
+            ParallelLoopResult result;
 
             try
             {
-                _ = Parallel.ForEachUnbuffered(
+                result = Parallel.ForEachUnbuffered(
                     source: source(cancellation.Token),
                     token: cancellation.Token,
                     maxDegreesOfParallelism: maxDegreesOfParallelism,
@@ -103,6 +105,8 @@ internal static class ParallelExtensions
             }
 
             token.ThrowIfCancellationRequested();
+
+            return result;
         }
     }
 }
