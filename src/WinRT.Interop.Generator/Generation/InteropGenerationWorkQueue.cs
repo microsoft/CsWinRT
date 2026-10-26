@@ -5,7 +5,6 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.ExceptionServices;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -52,47 +51,13 @@ internal sealed class InteropGenerationWorkQueue<TKey, TContext>(params InteropG
             return;
         }
 
-        using CancellationTokenSource cancellation = CancellationTokenSource.CreateLinkedTokenSource(token);
-        ExceptionDispatchInfo? failure = null;
         int remaining = items.Length;
 
-        try
-        {
-            _ = Parallel.ForEach(
-                source: Partitioner.Create(ready.GetConsumingEnumerable(cancellation.Token), EnumerablePartitionerOptions.NoBuffering),
-                parallelOptions: new ParallelOptions { CancellationToken = cancellation.Token, MaxDegreeOfParallelism = workerCount },
-                body: node =>
-                {
-                    try
-                    {
-                        RunNode(node, context, ready, cancellation.Token, ref remaining);
-                    }
-                    catch (Exception exception)
-                    {
-                        // Publish the initiating failure before cancellation wakes the blocked consumers
-                        _ = Interlocked.CompareExchange(ref failure, ExceptionDispatchInfo.Capture(exception), null);
-                        cancellation.Cancel();
-
-                        throw;
-                    }
-                });
-        }
-        catch (AggregateException)
-        {
-            token.ThrowIfCancellationRequested();
-            failure?.Throw();
-
-            throw;
-        }
-        catch (OperationCanceledException)
-        {
-            token.ThrowIfCancellationRequested();
-            failure?.Throw();
-
-            throw;
-        }
-
-        token.ThrowIfCancellationRequested();
+        Parallel.ForEachUnbufferedUntilFirstFailure(
+            source: ready.GetConsumingEnumerable,
+            token: token,
+            maxDegreesOfParallelism: workerCount,
+            body: (node, workerToken) => RunNode(node, context, ready, workerToken, ref remaining));
     }
 
     /// <summary>

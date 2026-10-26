@@ -880,6 +880,8 @@ Both discovery and emit states use `ConcurrentDictionary` for thread-safe access
 
 AsmResolver's owned collections support concurrent additions, so emit does not add per-item locks. Enumeration and check-then-add operations are different: the output importer uses a concurrent assembly-identity cache instead of enumerating a growing `AssemblyReferences` list. Shared input grouping/canonicalization and the IID RVA element type are initialized before workers start, default generated definitions are forced serially, and metadata ordering/fixups wait for the final worker barrier. Key-value-pair accessor creation stays inside its single coarse work item. Default (`-1`) queue consumers are bounded by processor/work-item count so the blocking source cannot continually inject idle workers; failures unblock consumers, and external cancellation retains the invocation's original token.
 
+`ParallelExtensions` centralizes non-buffering scheduling through static `Parallel` extensions while preserving two distinct exception policies. Discovery's module-processing loop uses `ForEachUnbuffered`, retaining standard aggregate exceptions and its existing diagnostic wrapping. The emit queue uses `ForEachUnbufferedUntilFirstFailure`: the source factory receives the linked cancellation token so blocked consumers wake after a body failure, all workers are joined, and the initiating exception is rethrown unless invocation cancellation takes precedence. The buffered module-loading loop and indexed fingerprint hashing keep their original `Parallel` APIs and exception behavior.
+
 ### Determinism
 
 - MVID is computed deterministically from input assembly content
