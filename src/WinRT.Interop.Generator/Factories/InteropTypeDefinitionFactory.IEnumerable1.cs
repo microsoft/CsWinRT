@@ -79,7 +79,7 @@ internal partial class InteropTypeDefinitionFactory
                     { Ldc_I4_0 },
                     { Ret },
 
-                    // GetEnumerator guarantees a non-null iterator
+                    // Return 'GetEnumerator()' directly from the cast instance
                     { callvirt_getEnumerator },
                     { Stind_Ref },
                     { Ldc_I4_1 },

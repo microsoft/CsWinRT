@@ -4125,8 +4125,7 @@ internal sealed class InteropReferences
     /// <summary>
     /// Gets the constructor for the non-generic enumeration attribute base.
     /// </summary>
-    public MemberReference DynamicInterfaceCastableEnumerableAttribute_ctor => field ??= DynamicInterfaceCastableEnumerableAttribute
-        .CreateConstructorReference(_corLibTypeFactory);
+    public MemberReference DynamicInterfaceCastableEnumerableAttribute_ctor => field ??= DynamicInterfaceCastableEnumerableAttribute.CreateConstructorReference(_corLibTypeFactory);
 
     /// <summary>
     /// Gets the <see cref="MemberReference"/> for the <c>.ctor</c> method of a given delegate type.
