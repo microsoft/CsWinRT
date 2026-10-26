@@ -122,8 +122,9 @@ public sealed class ComponentAuthoringAnalyzer : DiagnosticAnalyzer
                     Report(context, DiagnosticDescriptors.AuthoredClassRequiresSealed, type, type);
                 }
 
+                // Abstract managed bases are replaced with System.Object in the WinMD
                 if (type.BaseType is { SpecialType: not SpecialType.System_Object, TypeKind: not TypeKind.Error } baseType &&
-                    baseType.GetFullyQualifiedMetadataName() != "System.Attribute" &&
+                    !baseType.IsAbstract &&
                     !validation.IsProjected(baseType))
                 {
                     Report(context, DiagnosticDescriptors.AuthoredUnsupportedInheritance, type, type, baseType);

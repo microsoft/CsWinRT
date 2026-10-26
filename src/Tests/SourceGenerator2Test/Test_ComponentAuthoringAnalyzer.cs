@@ -548,11 +548,24 @@ public sealed class Test_ComponentAuthoringAnalyzer
     }
 
     [TestMethod]
-    public async Task UnsupportedBaseClass_Warns()
+    [DataRow("System.Collections.CollectionBase")]
+    [DataRow("System.Collections.DictionaryBase")]
+    public async Task AbstractManagedBaseClass_DoesNotWarn(string baseType)
     {
-        await VerifyAsync("""
+        await VerifyAsync($$"""
             namespace Component;
-            public sealed class {|CSWINRT2044:Service|} : System.Exception { }
+            public sealed class Service : {{baseType}} { }
+            """);
+    }
+
+    [TestMethod]
+    [DataRow("System.Exception")]
+    [DataRow("System.Collections.ObjectModel.Collection<int>")]
+    public async Task UnsupportedBaseClass_Warns(string baseType)
+    {
+        await VerifyAsync($$"""
+            namespace Component;
+            public sealed class {|CSWINRT2044:Service|} : {{baseType}} { }
             """);
     }
 
