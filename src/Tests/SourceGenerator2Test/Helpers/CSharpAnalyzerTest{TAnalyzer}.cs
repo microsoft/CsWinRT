@@ -72,6 +72,8 @@ internal sealed class CSharpAnalyzerTest<TAnalyzer> : CSharpAnalyzerTest<TAnalyz
     /// to not add one. This is used to validate scenarios involving projected Windows Runtime types, which are always
     /// consumed from reference projections.
     /// </param>
+    /// <param name="assemblyName">An optional assembly name to use when validating component namespace rules.</param>
+    /// <param name="useWindowsUIXamlProjections">Whether to select UWP XAML instead of WinUI.</param>
     public static Task VerifyAnalyzerAsync(
         string source,
         ReadOnlySpan<DiagnosticResult> expectedDiagnostics = default,
@@ -79,9 +81,16 @@ internal sealed class CSharpAnalyzerTest<TAnalyzer> : CSharpAnalyzerTest<TAnalyz
         LanguageVersion languageVersion = LanguageVersion.CSharp14,
         bool isCsWinRTComponent = false,
         string generatedSource = null,
-        string referenceProjectionSource = null)
+        string referenceProjectionSource = null,
+        string assemblyName = null,
+        bool useWindowsUIXamlProjections = false)
     {
         CSharpAnalyzerTest<TAnalyzer> test = new(allowUnsafeBlocks, languageVersion) { TestCode = source };
+
+        if (assemblyName is not null)
+        {
+            test.SolutionTransforms.Add((solution, projectId) => solution.WithProjectAssemblyName(projectId, assemblyName));
+        }
 
         test.TestState.ReferenceAssemblies = ReferenceAssemblies.Net.Net100;
         test.TestState.AdditionalReferences.Add(MetadataReference.CreateFromFile(typeof(WindowsRuntimeObject).Assembly.Location));
@@ -116,12 +125,13 @@ internal sealed class CSharpAnalyzerTest<TAnalyzer> : CSharpAnalyzerTest<TAnalyz
         }
 
         // Configure the desired MSBuild properties via a global analyzer config file
-        if (isCsWinRTComponent)
+        if (isCsWinRTComponent || useWindowsUIXamlProjections)
         {
-            test.TestState.AnalyzerConfigFiles.Add(("/.globalconfig", """
+            test.TestState.AnalyzerConfigFiles.Add(("/.globalconfig", $"""
                 is_global = true
 
-                build_property.CsWinRTComponent = true
+                build_property.CsWinRTComponent = {isCsWinRTComponent}
+                build_property.CsWinRTUseWindowsUIXamlProjections = {useWindowsUIXamlProjections}
                 """));
         }
 

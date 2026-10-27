@@ -13,6 +13,25 @@ internal static class INamedTypeSymbolExtensions
     extension(INamedTypeSymbol symbol)
     {
         /// <summary>
+        /// Gets whether the type and all of its containing types are public.
+        /// </summary>
+        public bool IsPubliclyAccessible
+        {
+            get
+            {
+                for (INamedTypeSymbol? current = symbol; current is not null; current = current.ContainingType)
+                {
+                    if (current.DeclaredAccessibility is not Accessibility.Public)
+                    {
+                        return false;
+                    }
+                }
+
+                return true;
+            }
+        }
+
+        /// <summary>
         /// Gets whether the type is generic, or is nested (at any depth) in a generic type.
         /// </summary>
         public bool IsGenericOrNestedInGenericType
