@@ -140,6 +140,7 @@ internal static partial class InteropGenerator
     {
         Dictionary<ICustomAttributeType, string> constructors = new(ReferenceEqualityComparer.Instance);
 
+        // Format each constructor instance's type/signature key once, then reuse it across attributes and key batches
         foreach (CustomAttribute attribute in attributes)
         {
             token.ThrowIfCancellationRequested();
