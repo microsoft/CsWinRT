@@ -57,16 +57,12 @@ internal static partial class InteropGenerator
             MetadataCollectionOrdering.Create(definitions.InterfaceIIDs.Properties, static properties =>
                 properties.OrderBy(static property => property.Name?.Value, StringComparer.Ordinal)),
             MetadataCollectionOrdering.Create(definitions.KeyValuePairMethods.Methods, static methods =>
-                methods.OrderBy(static method => method.Name?.Value, StringComparer.Ordinal)),
-
-            // Keep attributes last: the preceding collections can sort independently of their key batches
-            attributeOrdering
+                methods.OrderBy(static method => method.Name?.Value, StringComparer.Ordinal))
         ];
 
         int workerCount = args.MaxDegreesOfParallelism == -1 ? Environment.ProcessorCount : args.MaxDegreesOfParallelism;
         int batchCount = GetAttributeKeyBatchCount(attributes.Length, workerCount);
-        int independentCount = orderings.Length - 1;
-        int itemCount = independentCount + batchCount;
+        int itemCount = orderings.Length + batchCount;
         int remainingBatches = batchCount;
 
         _ = Parallel.ForEachUnbufferedUntilFirstFailure(
@@ -77,14 +73,14 @@ internal static partial class InteropGenerator
             {
                 token.ThrowIfCancellationRequested();
 
-                if (index < independentCount)
+                if (index < orderings.Length)
                 {
                     orderings[index].Compute();
 
                     return;
                 }
 
-                int batchIndex = index - independentCount;
+                int batchIndex = index - orderings.Length;
 
                 PrepareAttributeKeys(
                     start: (int)((long)attributes.Length * batchIndex / batchCount),
@@ -107,6 +103,8 @@ internal static partial class InteropGenerator
         {
             ordering.Apply();
         }
+
+        attributeOrdering.Apply();
 
         void PrepareAttributeKeys(int start, int end, CancellationToken token)
         {
