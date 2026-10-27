@@ -56,29 +56,34 @@ internal sealed class MemoizingMetadataTokenProvider : IMetadataTokenProvider
     /// </summary>
     public DiagnosticBag Diagnostics { get; }
 
+    // AsmResolver annotates operands as non-null, but invalid requests must reach the wrapped provider unchanged
+#pragma warning disable CS8604
+
     /// <inheritdoc/>
-    public MetadataToken GetTypeReferenceToken(TypeReference type, object? diagnosticSource = null)
+    public MetadataToken GetTypeReferenceToken(TypeReference? type, object? diagnosticSource = null)
     {
         return GetOrAddToken(type, diagnosticSource, static (provider, type, source) => provider.GetTypeReferenceToken(type, source));
     }
 
     /// <inheritdoc/>
-    public MetadataToken GetMemberReferenceToken(MemberReference member, object? diagnosticSource = null)
+    public MetadataToken GetMemberReferenceToken(MemberReference? member, object? diagnosticSource = null)
     {
         return GetOrAddToken(member, diagnosticSource, static (provider, member, source) => provider.GetMemberReferenceToken(member, source));
     }
 
     /// <inheritdoc/>
-    public MetadataToken GetTypeSpecificationToken(TypeSpecification type, object? diagnosticSource = null)
+    public MetadataToken GetTypeSpecificationToken(TypeSpecification? type, object? diagnosticSource = null)
     {
         return GetOrAddToken(type, diagnosticSource, static (provider, type, source) => provider.GetTypeSpecificationToken(type, source));
     }
 
     /// <inheritdoc/>
-    public MetadataToken GetMethodSpecificationToken(MethodSpecification method, object? diagnosticSource = null)
+    public MetadataToken GetMethodSpecificationToken(MethodSpecification? method, object? diagnosticSource = null)
     {
         return GetOrAddToken(method, diagnosticSource, static (provider, method, source) => provider.GetMethodSpecificationToken(method, source));
     }
+
+#pragma warning restore CS8604
 
     /// <inheritdoc/>
     public MetadataToken GetTypeDefinitionToken(TypeDefinition type, object? diagnosticSource = null)
@@ -138,20 +143,20 @@ internal sealed class MemoizingMetadataTokenProvider : IMetadataTokenProvider
     /// Gets the token of a member, using the wrapped provider until a request for it succeeds.
     /// </summary>
     /// <typeparam name="T">The type of member.</typeparam>
-    /// <param name="member">The member to get the token for.</param>
+    /// <param name="member">The member to get the token for, or null to pass an invalid request to the wrapped provider.</param>
     /// <param name="diagnosticSource">The object to report errors for.</param>
     /// <param name="getToken">The callback to get the token from the wrapped provider.</param>
     /// <returns>The token of <paramref name="member"/>.</returns>
     private MetadataToken GetOrAddToken<T>(
-        T member,
+        T? member,
         object? diagnosticSource,
-        Func<IMetadataTokenProvider, T, object?, MetadataToken> getToken)
+        Func<IMetadataTokenProvider, T?, object?, MetadataToken> getToken)
         where T : class, IMetadataMember
     {
         // Leave invalid requests to the wrapped provider, which decides how to handle them
         if (member is null)
         {
-            return getToken(Inner, member!, diagnosticSource);
+            return getToken(Inner, member, diagnosticSource);
         }
 
         if (_tokens.TryGetValue(member, out MetadataToken token))
