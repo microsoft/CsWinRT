@@ -37,14 +37,13 @@ internal static partial class InteropGenerator
     {
         CustomAttribute[] attributes = [.. module.Assembly!.CustomAttributes];
         Dictionary<ICustomAttributeType, string> constructors = GetAttributeConstructorOrderingKeys(attributes, args.Token);
-        (CustomAttribute Attribute, string Constructor, ReadOnlyMemory<byte> Blob)[] entries =
-            new (CustomAttribute, string, ReadOnlyMemory<byte>)[attributes.Length];
+        AttributeOrderingEntry[] entries = new AttributeOrderingEntry[attributes.Length];
 
         // Unlike the independent orderings below, attributes must wait for all key-preparation batches. The last batch
         // computes their ordering, and the snapshot is applied separately after all metadata readers have finished.
         MetadataCollectionOrdering attributeOrdering = MetadataCollectionOrdering.Create(module.Assembly.CustomAttributes, _ => entries
-            .OrderBy(static entry => entry.Constructor, StringComparer.Ordinal)
-            .ThenBy(static entry => entry.Blob, ByteSequenceComparer.Instance)
+            .OrderBy(static entry => entry.ConstructorKey, StringComparer.Ordinal)
+            .ThenBy(static entry => entry.Payload, ByteSequenceComparer.Instance)
             .Select(static entry => entry.Attribute));
 
         // These holders, unlike ordinary generated types, receive members from multiple workers
@@ -120,7 +119,7 @@ internal static partial class InteropGenerator
 
                 CustomAttribute attribute = attributes[index];
 
-                entries[index] = (attribute, constructors[attribute.Constructor!], payloads.GetOrAdd(attribute));
+                entries[index] = new(attribute, constructors[attribute.Constructor!], payloads.GetOrAdd(attribute));
             }
         }
     }
@@ -159,5 +158,26 @@ internal static partial class InteropGenerator
         }
 
         return constructors;
+    }
+
+    /// <summary>
+    /// An assembly attribute and the precomputed keys used to order it.
+    /// </summary>
+    /// <param name="attribute">The attribute to order.</param>
+    /// <param name="constructorKey">The constructor identity used as the primary ordering key.</param>
+    /// <param name="payload">The serialized payload used to break constructor-key ties.</param>
+    private readonly struct AttributeOrderingEntry(
+        CustomAttribute attribute,
+        string constructorKey,
+        ReadOnlyMemory<byte> payload)
+    {
+        /// <summary>Gets the attribute to order.</summary>
+        public CustomAttribute Attribute { get; } = attribute;
+
+        /// <summary>Gets the constructor identity used as the primary ordering key.</summary>
+        public string ConstructorKey { get; } = constructorKey;
+
+        /// <summary>Gets the serialized payload used to break constructor-key ties.</summary>
+        public ReadOnlyMemory<byte> Payload { get; } = payload;
     }
 }
