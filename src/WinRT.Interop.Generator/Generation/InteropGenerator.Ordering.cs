@@ -39,6 +39,9 @@ internal static partial class InteropGenerator
         Dictionary<ICustomAttributeType, string> constructors = GetAttributeConstructorOrderingKeys(attributes, args.Token);
         (CustomAttribute Attribute, string Constructor, ReadOnlyMemory<byte> Blob)[] entries =
             new (CustomAttribute, string, ReadOnlyMemory<byte>)[attributes.Length];
+
+        // Unlike the independent orderings below, attributes must wait for all key-preparation batches. The last batch
+        // computes their ordering, and the snapshot is applied separately after all metadata readers have finished.
         MetadataCollectionOrdering attributeOrdering = MetadataCollectionOrdering.Create(module.Assembly.CustomAttributes, _ => entries
             .OrderBy(static entry => entry.Constructor, StringComparer.Ordinal)
             .ThenBy(static entry => entry.Blob, ByteSequenceComparer.Instance)
