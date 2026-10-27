@@ -17,7 +17,7 @@ public sealed class Test_EmissionWorkQueue
     [DataRow(1)]
     [DataRow(2)]
     [DataRow(-1)]
-    public void ReusedQueue_RespectsDependencyBarriers(int parallelism)
+    public void Queue_RespectsDependencyBarriers(int parallelism)
     {
         InteropGenerationWorkQueue<ConcurrentQueue<string>>.Builder graph = new();
         var root = graph.Add(static completed => completed.Enqueue("root"));
@@ -39,20 +39,17 @@ public sealed class Test_EmissionWorkQueue
         }, first, second);
         InteropGenerationWorkQueue<ConcurrentQueue<string>> queue = graph.Build();
 
-        for (int run = 0; run < 3; run++)
-        {
-            ConcurrentQueue<string> completed = new();
-            queue.Run(completed, parallelism, CancellationToken.None);
-            Assert.AreEqual(4, completed.Count);
-            Assert.AreEqual("root", completed.ToArray()[0]);
-            Assert.AreEqual("join", completed.ToArray()[^1]);
-        }
+        ConcurrentQueue<string> completed = new();
+        queue.Run(completed, parallelism, CancellationToken.None);
+        Assert.AreEqual(4, completed.Count);
+        Assert.AreEqual("root", completed.ToArray()[0]);
+        Assert.AreEqual("join", completed.ToArray()[^1]);
     }
 
     [TestMethod]
     [DataRow(1)]
     [DataRow(8)]
-    public void AllWorkItems_ReceiveTheCurrentRunContext(int parallelism)
+    public void AllWorkItems_ReceiveTheInvocationContext(int parallelism)
     {
         InteropGenerationWorkQueue<ConcurrentBag<object>>.Builder graph = new();
         var first = graph.Add(static context => context.Add(context));
@@ -60,57 +57,32 @@ public sealed class Test_EmissionWorkQueue
         _ = graph.Add(static context => context.Add(context), first, second);
         InteropGenerationWorkQueue<ConcurrentBag<object>> queue = graph.Build();
 
-        for (int run = 0; run < 3; run++)
+        ConcurrentBag<object> context = [];
+
+        queue.Run(context, parallelism, CancellationToken.None);
+
+        Assert.AreEqual(3, context.Count);
+
+        foreach (object actual in context)
         {
-            ConcurrentBag<object> context = [];
-
-            queue.Run(context, parallelism, CancellationToken.None);
-
-            Assert.AreEqual(3, context.Count);
-
-            foreach (object actual in context)
-            {
-                Assert.AreSame(context, actual);
-            }
+            Assert.AreSame(context, actual);
         }
     }
 
     [TestMethod]
     [DataRow(1)]
     [DataRow(4)]
-    public async Task ConcurrentRuns_KeepTheirDependencyCountersAndContextsSeparate(int parallelism)
+    public async Task SeparateQueues_CanRunConcurrently(int parallelism)
     {
         using CountdownEvent started = new(2);
-        InteropGenerationWorkQueue<ConcurrentQueue<string>>.Builder graph = new();
-        var root = graph.Add(completed =>
-        {
-            completed.Enqueue("root");
-            started.Signal();
-            Assert.IsTrue(started.Wait(TimeSpan.FromSeconds(10)), "Both runs must overlap.");
-        });
-        var first = graph.Add(static completed =>
-        {
-            Assert.IsTrue(completed.Contains("root"));
-            completed.Enqueue("first");
-        }, root);
-        var second = graph.Add(static completed =>
-        {
-            Assert.IsTrue(completed.Contains("root"));
-            completed.Enqueue("second");
-        }, root);
-        _ = graph.Add(static completed =>
-        {
-            Assert.IsTrue(completed.Contains("first"));
-            Assert.IsTrue(completed.Contains("second"));
-            completed.Enqueue("join");
-        }, first, second);
-        InteropGenerationWorkQueue<ConcurrentQueue<string>> queue = graph.Build();
+        InteropGenerationWorkQueue<ConcurrentQueue<string>> firstQueue = CreateQueue();
+        InteropGenerationWorkQueue<ConcurrentQueue<string>> secondQueue = CreateQueue();
         ConcurrentQueue<string> firstContext = new();
         ConcurrentQueue<string> secondContext = new();
 
         await Task.WhenAll(
-            Task.Run(() => queue.Run(firstContext, parallelism, CancellationToken.None)),
-            Task.Run(() => queue.Run(secondContext, parallelism, CancellationToken.None)))
+            Task.Run(() => firstQueue.Run(firstContext, parallelism, CancellationToken.None)),
+            Task.Run(() => secondQueue.Run(secondContext, parallelism, CancellationToken.None)))
             .WaitAsync(TimeSpan.FromSeconds(15));
 
         foreach (ConcurrentQueue<string> completed in new[] { firstContext, secondContext })
@@ -119,6 +91,86 @@ public sealed class Test_EmissionWorkQueue
             Assert.AreEqual("root", completed.ToArray()[0]);
             Assert.AreEqual("join", completed.ToArray()[^1]);
         }
+
+        InteropGenerationWorkQueue<ConcurrentQueue<string>> CreateQueue()
+        {
+            InteropGenerationWorkQueue<ConcurrentQueue<string>>.Builder graph = new();
+            var root = graph.Add(completed =>
+            {
+                completed.Enqueue("root");
+                started.Signal();
+                Assert.IsTrue(started.Wait(TimeSpan.FromSeconds(10)), "Both queues must overlap.");
+            });
+            var first = graph.Add(static completed =>
+            {
+                Assert.IsTrue(completed.Contains("root"));
+                completed.Enqueue("first");
+            }, root);
+            var second = graph.Add(static completed =>
+            {
+                Assert.IsTrue(completed.Contains("root"));
+                completed.Enqueue("second");
+            }, root);
+            _ = graph.Add(static completed =>
+            {
+                Assert.IsTrue(completed.Contains("first"));
+                Assert.IsTrue(completed.Contains("second"));
+                completed.Enqueue("join");
+            }, first, second);
+
+            return graph.Build();
+        }
+    }
+
+    [TestMethod]
+    [DataRow(1)]
+    [DataRow(4)]
+    public void CompletedQueue_RejectsAnotherRun(int parallelism)
+    {
+        InteropGenerationWorkQueue<Action>.Builder graph = new();
+        var root = graph.Add(static action => action());
+        _ = graph.Add(static action => action(), root);
+        InteropGenerationWorkQueue<Action> queue = graph.Build();
+        int calls = 0;
+        queue.Run(() => calls++, parallelism, CancellationToken.None);
+
+        Assert.ThrowsExactly<InvalidOperationException>(
+            () => queue.Run(() => calls++, parallelism, CancellationToken.None));
+        Assert.AreEqual(2, calls);
+    }
+
+    [TestMethod]
+    [DataRow(1)]
+    [DataRow(4)]
+    public async Task RunningQueue_RejectsConcurrentRun(int parallelism)
+    {
+        using ManualResetEventSlim started = new();
+        using ManualResetEventSlim release = new();
+        int calls = 0;
+        InteropGenerationWorkQueue<Action>.Builder graph = new();
+        var root = graph.Add(action =>
+        {
+            action();
+            started.Set();
+            Assert.IsTrue(release.Wait(TimeSpan.FromSeconds(10)));
+        });
+        _ = graph.Add(static action => action(), root);
+        InteropGenerationWorkQueue<Action> queue = graph.Build();
+        Task execution = Task.Run(() => queue.Run(() => Interlocked.Increment(ref calls), parallelism, CancellationToken.None));
+
+        try
+        {
+            Assert.IsTrue(started.Wait(TimeSpan.FromSeconds(10)));
+            Assert.ThrowsExactly<InvalidOperationException>(
+                () => queue.Run(() => Interlocked.Increment(ref calls), parallelism, CancellationToken.None));
+        }
+        finally
+        {
+            release.Set();
+            await execution.WaitAsync(TimeSpan.FromSeconds(15));
+        }
+
+        Assert.AreEqual(2, calls);
     }
 
     [TestMethod]
@@ -138,6 +190,9 @@ public sealed class Test_EmissionWorkQueue
         });
 
         await execution.WaitAsync(TimeSpan.FromSeconds(15));
+        InvalidOperationException repeated = Assert.ThrowsExactly<InvalidOperationException>(
+            () => queue.Run(expected, 8, CancellationToken.None));
+        Assert.AreNotSame(expected, repeated);
     }
 
     [TestMethod]
@@ -174,6 +229,7 @@ public sealed class Test_EmissionWorkQueue
         await execution.WaitAsync(TimeSpan.FromSeconds(15));
         Assert.IsTrue(began);
         Assert.AreEqual(1, finished, "Run must join all admitted work before returning.");
+        Assert.ThrowsExactly<InvalidOperationException>(() => queue.Run(cancellation.Token, 4, cancellation.Token));
     }
 
     [TestMethod]
@@ -197,13 +253,14 @@ public sealed class Test_EmissionWorkQueue
     }
 
     [TestMethod]
-    public void BuiltGraph_RejectsFurtherNodes()
+    public void BuiltGraph_RejectsFurtherNodesAndAnotherBuild()
     {
         InteropGenerationWorkQueue<Action>.Builder graph = new();
         var root = graph.Add(static action => action());
         InteropGenerationWorkQueue<Action> queue = graph.Build();
 
         Assert.ThrowsExactly<InvalidOperationException>(() => graph.Add(static action => action(), root));
+        Assert.ThrowsExactly<InvalidOperationException>(() => graph.Build());
 
         int calls = 0;
         queue.Run(() => calls++, 1, CancellationToken.None);
@@ -215,12 +272,17 @@ public sealed class Test_EmissionWorkQueue
     {
         InteropGenerationWorkQueue<Action> queue = new InteropGenerationWorkQueue<Action>.Builder().Build();
         queue.Run(static () => Assert.Fail(), -1, CancellationToken.None);
+        Assert.ThrowsExactly<InvalidOperationException>(
+            () => queue.Run(static () => Assert.Fail(), -1, CancellationToken.None));
 
         using CancellationTokenSource cancellation = new();
         cancellation.Cancel();
+        InteropGenerationWorkQueue<Action> canceledQueue = new InteropGenerationWorkQueue<Action>.Builder().Build();
         OperationCanceledException exception = Assert.ThrowsExactly<OperationCanceledException>(
-            () => queue.Run(static () => Assert.Fail(), -1, cancellation.Token));
+            () => canceledQueue.Run(static () => Assert.Fail(), -1, cancellation.Token));
         Assert.AreEqual(cancellation.Token, exception.CancellationToken);
+        Assert.ThrowsExactly<InvalidOperationException>(
+            () => canceledQueue.Run(static () => Assert.Fail(), -1, CancellationToken.None));
     }
 
     [TestMethod]
@@ -231,5 +293,7 @@ public sealed class Test_EmissionWorkQueue
         InteropGenerationWorkQueue<Action> queue = new InteropGenerationWorkQueue<Action>.Builder().Build();
         Assert.ThrowsExactly<ArgumentOutOfRangeException>(
             () => queue.Run(static () => Assert.Fail(), parallelism, CancellationToken.None));
+
+        queue.Run(static () => Assert.Fail(), 1, CancellationToken.None);
     }
 }
