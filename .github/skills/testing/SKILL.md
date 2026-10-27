@@ -13,7 +13,7 @@ Before adding tests, always check whether tests for the same functionality alrea
 
 ## Test project overview
 
-CsWinRT 3.0 has 7 primary test project areas, each serving a different purpose. Additional specialized test projects also exist under `src/Tests/`:
+CsWinRT 3.0 has 9 primary test project areas, each serving a different purpose. Additional specialized test projects also exist under `src/Tests/`:
 
 ### 1. Unit tests (`src/Tests/UnitTest/`)
 
@@ -312,6 +312,16 @@ public void RefArrayParameter_IsRejected()
 **Test helper (in `Helpers/`):**
 - `ImplGeneratorRunner` — compiles a C# input assembly (optionally with symbols), runs the actual tool as a subprocess, and exposes PE/PDB inspection helpers (`GetDebugDirectoryEntryTypes`, `GetEmbeddedPortablePdbDocumentNames`, `GetEmbeddedPortablePdbDocumentText`, `GetCompilationOptionValue`, `IsCodeViewEntryConsistent`, `IsPdbChecksumValid`, `RunTwice`).
 
+### 9. Projection writer tests (`src/Tests/ProjectionWriterTest/`)
+
+**What it tests:** Metadata-driven projection source generation and generated code executed through real projection and interop generators.
+
+**When to add tests here:** For projection-writer output, generated accessor contracts, or isolated native-backed code-generation regressions.
+
+**Native-backed coverage:** `Test_NonGenericEnumeration` covers opaque collection enumeration and adapter round-trips; `Test_GenericMarshallerNames` covers generic marshaller accessors. `NativeProjectionFixture` builds their metadata, projections, consumers, and interop sidecars.
+
+**Execution:** Every Release CI job runs the generic-marshaller consumer and both enumeration consumers with Native AOT, using an x64 harness. `FALLBACK_ONLY` removes other enumeration scenarios to avoid masking missing trimming roots; discovery and publishing use the same symbols without rooting the whole sidecar. Enabled by default in x64 Release; use `CSWINRT_TEST_GENERIC_MARSHALLERS_AOT=1` elsewhere. Native compilation requires Visual Studio C++ tools.
+
 ## Deciding where to add tests
 
 | You want to test... | Add test to... |
@@ -328,6 +338,7 @@ public void RefArrayParameter_IsRejected()
 | WinRT component authoring patterns | `AuthoringTest/` |
 | A WinMD generator failure mode (a `CSWINRTWINMDGEN` error) | `WinMDGeneratorTest/` (add to `Test_ParameterConventions` or `Test_InvalidInputs`) |
 | The forwarder assembly's PE shape, symbols, or determinism | `ImplGeneratorTest/` (add to `Test_DebugDirectory`) |
+| Projection-writer output or isolated native-backed generated code | `ProjectionWriterTest/` |
 | The produced NuGet package works end-to-end (real `ref`/`lib` assemblies, generators) | `SmokeTests/` (`Consumption/`, `Authoring/`, or a reference-projection project) |
 | Generated projection code patterns or cross-ABI control flow | Update `TestComponentCSharp/` and add tests in `UnitTest/` or `FunctionalTests/` |
 

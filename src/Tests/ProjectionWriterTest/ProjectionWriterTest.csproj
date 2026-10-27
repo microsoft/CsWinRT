@@ -7,7 +7,8 @@
     <!-- This project runs the projection writer end-to-end; it needs no CsWinRT processing itself -->
     <CsWinRTEnabled>false</CsWinRTEnabled>
 
-    <!-- Opt in at build time; normal test runs do not invoke the native compiler. -->
+    <!-- Release CI jobs use the x64 generator test harness; other builds can opt in explicitly -->
+    <CSWINRT_TEST_GENERIC_MARSHALLERS_AOT Condition="'$(CSWINRT_TEST_GENERIC_MARSHALLERS_AOT)' == '' and '$(Configuration)' == 'Release' and '$(Platform)' == 'x64'">1</CSWINRT_TEST_GENERIC_MARSHALLERS_AOT>
     <DefineConstants Condition="'$(CSWINRT_TEST_GENERIC_MARSHALLERS_AOT)' == '1'">$(DefineConstants);CSWINRT_GENERIC_MARSHALLERS_AOT</DefineConstants>
   </PropertyGroup>
 
@@ -69,6 +70,10 @@
     <EmbeddedResource Include="Resources\ArrayPropertySetterTests.cs" />
     <Compile Remove="Resources\GenericMarshallerTests.cs" />
     <EmbeddedResource Include="Resources\GenericMarshallerTests.cs" />
+    <Compile Remove="Resources\NonGenericEnumerableTests.cs" />
+    <EmbeddedResource Include="Resources\NonGenericEnumerableTests.cs" />
+    <Compile Remove="Resources\NonGenericEnumerableNativeObjects.cs" />
+    <EmbeddedResource Include="Resources\NonGenericEnumerableNativeObjects.cs" />
   </ItemGroup>
 
   <!-- Pass the built tool and the pinned WinUI metadata paths to the tests via assembly metadata. -->

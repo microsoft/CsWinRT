@@ -834,11 +834,20 @@ internal partial class InteropGenerator
                     module: module,
                     marshallerType: out TypeDefinition marshallerType);
 
+                InteropTypeDefinitionBuilder.IEnumerable1.EnumerableAttribute(
+                    enumerableType: typeSignature,
+                    interopDefinitions: interopDefinitions,
+                    interopReferences: interopReferences,
+                    emitState: emitState,
+                    module: module,
+                    attributeType: out _);
+
                 InteropTypeDefinitionBuilder.IEnumerable1.InterfaceImpl(
                     enumerableType: typeSignature,
                     iterableMethodsType: iterableMethodsType,
                     interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
+                    emitState: emitState,
                     module: module,
                     useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
                     interfaceImplType: out TypeDefinition interfaceImplType);
@@ -974,6 +983,7 @@ internal partial class InteropGenerator
                     readOnlyListMethodsType: readOnlyListMethodsType,
                     interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
+                    emitState: emitState,
                     module: module,
                     useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
                     interfaceImplType: out TypeDefinition interfaceImplType);
@@ -1118,6 +1128,7 @@ internal partial class InteropGenerator
                     listMethodsType: listMethodsType,
                     interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
+                    emitState: emitState,
                     module: module,
                     useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
                     interfaceImplType: out TypeDefinition interfaceImplType);
@@ -1254,6 +1265,7 @@ internal partial class InteropGenerator
                     readOnlyDictionaryMethodsType: readOnlyDictionaryMethodsType,
                     interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
+                    emitState: emitState,
                     module: module,
                     useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
                     interfaceImplType: out TypeDefinition interfaceImplType);
@@ -1399,6 +1411,7 @@ internal partial class InteropGenerator
                     dictionaryMethodsType: dictionaryMethodsType,
                     interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
+                    emitState: emitState,
                     module: module,
                     useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
                     interfaceImplType: out TypeDefinition interfaceImplType);
@@ -1765,6 +1778,7 @@ internal partial class InteropGenerator
                     vectorMethodsType: methodsType,
                     interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
+                    emitState: emitState,
                     module: module,
                     useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
                     interfaceImplType: out TypeDefinition interfaceImplType);
@@ -1898,6 +1912,7 @@ internal partial class InteropGenerator
                     mapMethodsType: methodsType,
                     interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
+                    emitState: emitState,
                     module: module,
                     useWindowsUIXamlProjections: args.UseWindowsUIXamlProjections,
                     interfaceImplType: out TypeDefinition interfaceImplType);

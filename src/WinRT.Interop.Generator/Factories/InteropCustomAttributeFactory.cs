@@ -6,6 +6,7 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
+using WindowsRuntime.InteropGenerator.Generation;
 using WindowsRuntime.InteropGenerator.Helpers;
 using WindowsRuntime.InteropGenerator.References;
 
@@ -16,6 +17,19 @@ namespace WindowsRuntime.InteropGenerator.Factories;
 /// </summary>
 internal static class InteropCustomAttributeFactory
 {
+    /// <summary>
+    /// Creates the association between a collection implementation and its constructed generic enumerable.
+    /// </summary>
+    /// <param name="elementType">The element type of the constructed generic enumerable interface.</param>
+    /// <param name="emitState">The emit state containing the specialized attribute types.</param>
+    /// <returns>The enumerable association attribute.</returns>
+    public static CustomAttribute DynamicInterfaceCastableEnumerable(TypeSignature elementType, InteropGeneratorEmitState emitState)
+    {
+        TypeDefinition attributeType = emitState.LookupTypeDefinition(elementType, "EnumerableAttribute");
+
+        return new(attributeType.GetMethod(".ctor"u8), new CustomAttributeSignature());
+    }
+
     /// <summary>
     /// Creates a type-valued argument using its resolved identity rather than a discovery-order-dependent alias.
     /// </summary>
