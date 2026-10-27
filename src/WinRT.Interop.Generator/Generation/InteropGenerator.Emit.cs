@@ -90,22 +90,25 @@ internal partial class InteropGenerator
 
         InteropGeneratorEmissionContext context = new(args, discoveryState, inputs, emitState, interopDefinitions, interopReferences, module);
 
+        // Emit interop code as dependencies complete, then join all workers before applying IL fixups
         RunEmission(context);
 
         args.Token.ThrowIfCancellationRequested();
 
+        // Share serialized assembly attribute payloads between ordering and writing to avoid serializing them twice
         CustomAttributePayloadCache payloads = new(module);
 
+        // Sort independently emitted metadata before token assignment so worker completion order cannot affect the binary
         OrderGeneratedMetadata(args, module, interopDefinitions, payloads);
 
         args.Token.ThrowIfCancellationRequested();
 
-        // Emit the interop .dll to disk
+        // Write the finalized module, publishing the incremental cache when a fingerprint is available
         WriteInteropModuleToDisk(args, module, fingerprint, payloads);
 
         args.Token.ThrowIfCancellationRequested();
 
-        // Write the optional interop generation report
+        // Write the optional diagnostic report with discovery results and final output statistics
         WriteLog(args, discoveryState, module);
     }
 
