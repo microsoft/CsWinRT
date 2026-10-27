@@ -502,12 +502,18 @@ internal sealed partial class WinMDWriter
             return false;
         }
 
+        if (attribute.Constructor?.DeclaringType is TypeDefinition definition && definition.IsExcludedFromWindowsMetadata())
+        {
+            return false;
+        }
+
         // Skip attributes already handled separately by the generator.
         // '[Overload]' is emitted by 'AddOverloadAttributesForType', which honors any author-specified
         // name (see 'RecordUserSpecifiedOverloadName'), so copying it here would produce duplicates.
         if (attributeTypeName is
             "System.Runtime.InteropServices.GuidAttribute" or
             "WindowsRuntime.Xaml.GeneratedCustomPropertyProviderAttribute" or
+            "WindowsRuntime.ExcludeFromWindowsMetadataAttribute" or
             "Windows.Foundation.Metadata.VersionAttribute" or
             "Windows.Foundation.Metadata.OverloadAttribute" or
             "System.Reflection.DefaultMemberAttribute")
@@ -526,7 +532,9 @@ internal sealed partial class WinMDWriter
             attribute.Constructor?.DeclaringType is { } attributeType &&
             attributeType is not TypeDefinition &&
             attributeType.Resolve(runtimeContext, out TypeDefinition? attributeTypeDefinition) == ResolutionStatus.Success &&
-            !attributeTypeDefinition!.IsPublic && !attributeTypeDefinition.IsNestedPublic)
+            ((!attributeTypeDefinition!.IsPublic &&
+              !attributeTypeDefinition.IsNestedPublic) ||
+             attributeTypeDefinition.IsExcludedFromWindowsMetadata()))
         {
             return false;
         }

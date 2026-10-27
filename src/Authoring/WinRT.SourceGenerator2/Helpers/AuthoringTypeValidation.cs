@@ -48,6 +48,12 @@ internal sealed class AuthoringTypeValidation(
         WindowsRuntimeTypeMappings.GetMappings(useWindowsUIXamlProjections);
 
     /// <summary>
+    /// Gets the metadata exclusion marker for the compilation, if available.
+    /// </summary>
+    public INamedTypeSymbol? ExcludeAttributeType { get; } =
+        compilation.GetTypeByMetadataName("WindowsRuntime.ExcludeFromWindowsMetadataAttribute");
+
+    /// <summary>
     /// Gets whether a type is exported as a new declaration in the component's WinMD.
     /// </summary>
     /// <param name="type">The type to classify.</param>
@@ -57,6 +63,7 @@ internal sealed class AuthoringTypeValidation(
         return SymbolEqualityComparer.Default.Equals(type.ContainingAssembly, compilation.Assembly) &&
                type is { DeclaredAccessibility: Accessibility.Public, ContainingType: null, IsImplicitlyDeclared: false } &&
                !type.IsInAbiNamespace &&
+               !type.IsExcludedFromWindowsMetadata(ExcludeAttributeType) &&
                (_activationFactory is null || !type.HasAttributeWithType(_activationFactory)) &&
                _implementableClasses.GetInstanceBase(type.BaseType) is null;
     }
@@ -114,6 +121,50 @@ internal sealed class AuthoringTypeValidation(
     }
 
     /// <summary>
+    /// Enumerates interface declarations without crossing an explicitly excluded base class.
+    /// </summary>
+    /// <param name="type">The type whose projected contracts to inspect.</param>
+    /// <returns>The declared interfaces, with constructed base arguments already substituted by Roslyn.</returns>
+    public IEnumerable<INamedTypeSymbol> EnumerateProjectedInterfaceDeclarations(INamedTypeSymbol type)
+    {
+        for (INamedTypeSymbol? current = type;
+             current is not null && !current.IsExcludedFromWindowsMetadata(ExcludeAttributeType);
+             current = current.BaseType)
+        {
+            foreach (INamedTypeSymbol iface in current.Interfaces)
+            {
+                yield return iface;
+            }
+        }
+    }
+
+    /// <summary>
+    /// Enumerates publicly accessible projected interface candidates and their required interfaces.
+    /// </summary>
+    /// <param name="type">The type whose projected contracts to inspect.</param>
+    /// <returns>The distinct interface closure, excluding contracts inherited only through excluded bases.</returns>
+    public IEnumerable<INamedTypeSymbol> EnumerateProjectedInterfaces(INamedTypeSymbol type)
+    {
+        HashSet<INamedTypeSymbol> seen = new(SymbolEqualityComparer.Default);
+
+        foreach (INamedTypeSymbol iface in EnumerateProjectedInterfaceDeclarations(type))
+        {
+            if (iface.IsPubliclyAccessible && seen.Add(iface))
+            {
+                yield return iface;
+            }
+
+            foreach (INamedTypeSymbol ancestor in iface.AllInterfaces)
+            {
+                if (ancestor.IsPubliclyAccessible && seen.Add(ancestor))
+                {
+                    yield return ancestor;
+                }
+            }
+        }
+    }
+
+    /// <summary>
     /// Gets whether an input needs a named marshalling local in the projection writer.
     /// </summary>
     /// <param name="type">The parameter type to classify.</param>
@@ -145,6 +196,11 @@ internal sealed class AuthoringTypeValidation(
         ITypeSymbol type,
         bool allowArray = true)
     {
+        if (FindIgnoredType(type) is not null)
+        {
+            return false;
+        }
+
         if (type.TypeKind is TypeKind.Error)
         {
             return true;
@@ -188,6 +244,42 @@ internal sealed class AuthoringTypeValidation(
         }
 
         return true;
+    }
+
+    /// <summary>
+    /// Finds an excluded type in a signature, including array elements and generic arguments.
+    /// </summary>
+    /// <param name="type">The signature type to inspect.</param>
+    /// <returns>The excluded type, or <see langword="null"/> if no type is excluded.</returns>
+    public INamedTypeSymbol? FindIgnoredType(ITypeSymbol type)
+    {
+        if (type is IArrayTypeSymbol array)
+        {
+            return FindIgnoredType(array.ElementType);
+        }
+
+        if (type is IPointerTypeSymbol pointer)
+        {
+            return FindIgnoredType(pointer.PointedAtType);
+        }
+
+        if (type is INamedTypeSymbol named)
+        {
+            if (named.IsExcludedFromWindowsMetadata(ExcludeAttributeType))
+            {
+                return named;
+            }
+
+            foreach (ITypeSymbol argument in named.TypeArguments)
+            {
+                if (FindIgnoredType(argument) is { } ignored)
+                {
+                    return ignored;
+                }
+            }
+        }
+
+        return null;
     }
 
     /// <summary>

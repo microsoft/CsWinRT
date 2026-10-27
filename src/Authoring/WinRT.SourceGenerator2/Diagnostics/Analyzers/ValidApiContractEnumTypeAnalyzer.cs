@@ -37,10 +37,13 @@ public sealed class ValidApiContractEnumTypeAnalyzer : DiagnosticAnalyzer
                 return;
             }
 
+            INamedTypeSymbol? excludeAttributeType = context.Compilation.GetTypeByMetadataName("WindowsRuntime.ExcludeFromWindowsMetadataAttribute");
+
             context.RegisterSymbolAction(context =>
             {
                 // Only enum types can be annotated with '[ApiContract]'
-                if (context.Symbol is not INamedTypeSymbol { TypeKind: TypeKind.Enum } typeSymbol)
+                if (context.Symbol is not INamedTypeSymbol { TypeKind: TypeKind.Enum } typeSymbol ||
+                    typeSymbol.IsExcludedFromWindowsMetadata(excludeAttributeType))
                 {
                     return;
                 }

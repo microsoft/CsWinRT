@@ -54,6 +54,8 @@ public sealed class ExperimentalAttributeTargetAnalyzer : DiagnosticAnalyzer
                 return;
             }
 
+            INamedTypeSymbol? excludeAttributeType = context.Compilation.GetTypeByMetadataName("WindowsRuntime.ExcludeFromWindowsMetadataAttribute");
+
             context.RegisterSyntaxNodeAction(context =>
             {
                 AttributeSyntax attributeSyntax = (AttributeSyntax)context.Node;
@@ -72,7 +74,13 @@ public sealed class ExperimentalAttributeTargetAnalyzer : DiagnosticAnalyzer
 
                 // Classify the target syntactically, so the semantic lookup below only runs for the targets
                 // that would actually be reported (the vast majority of applications are on valid targets)
-                if (!TryGetUnsupportedTarget(attributeList, context.SemanticModel, context.CancellationToken, out object? target, out string? targets))
+                if (!TryGetUnsupportedTarget(
+                    attributeList,
+                    context.SemanticModel,
+                    excludeAttributeType,
+                    context.CancellationToken,
+                    out object? target,
+                    out string? targets))
                 {
                     return;
                 }
@@ -99,6 +107,7 @@ public sealed class ExperimentalAttributeTargetAnalyzer : DiagnosticAnalyzer
     /// </summary>
     /// <param name="attributeList">The attribute list to classify.</param>
     /// <param name="semanticModel">The semantic model for the syntax tree being analyzed.</param>
+    /// <param name="excludeAttributeType">The metadata exclusion marker, if available.</param>
     /// <param name="cancellationToken">The token to monitor for cancellation requests.</param>
     /// <param name="target">The resulting message argument identifying the target, if it is unsupported.</param>
     /// <param name="targets">The resulting message argument naming the target kind in plural form, if it is unsupported.</param>
@@ -106,6 +115,7 @@ public sealed class ExperimentalAttributeTargetAnalyzer : DiagnosticAnalyzer
     private static bool TryGetUnsupportedTarget(
         AttributeListSyntax attributeList,
         SemanticModel semanticModel,
+        INamedTypeSymbol? excludeAttributeType,
         CancellationToken cancellationToken,
         out object? target,
         out string? targets)
@@ -137,6 +147,7 @@ public sealed class ExperimentalAttributeTargetAnalyzer : DiagnosticAnalyzer
                 MethodKind: MethodKind.Constructor,
                 DeclaredAccessibility: Accessibility.Public
             } constructorSymbol &&
+            !constructorSymbol.IsExcludedFromWindowsMetadata(excludeAttributeType) &&
             IsExternallyVisible(constructorSymbol.ContainingType))
         {
             target = constructorSymbol;

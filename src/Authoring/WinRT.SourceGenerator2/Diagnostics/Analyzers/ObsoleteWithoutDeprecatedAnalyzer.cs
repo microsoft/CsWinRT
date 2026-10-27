@@ -52,9 +52,11 @@ public sealed class ObsoleteWithoutDeprecatedAnalyzer : DiagnosticAnalyzer
                 return;
             }
 
+            INamedTypeSymbol? excludeAttributeType = context.Compilation.GetTypeByMetadataName("WindowsRuntime.ExcludeFromWindowsMetadataAttribute");
+
             context.RegisterSymbolAction(context =>
             {
-                if (!IsPubliclyExposedFromComponent(context.Symbol))
+                if (!IsPubliclyExposedFromComponent(context.Symbol, excludeAttributeType))
                 {
                     return;
                 }
@@ -79,13 +81,16 @@ public sealed class ObsoleteWithoutDeprecatedAnalyzer : DiagnosticAnalyzer
     /// in the generated <c>.winmd</c>.
     /// </summary>
     /// <param name="symbol">The symbol to check.</param>
+    /// <param name="excludeAttributeType">The metadata exclusion marker, if available.</param>
     /// <returns>Whether <paramref name="symbol"/> is publicly exposed from the component.</returns>
-    private static bool IsPubliclyExposedFromComponent(ISymbol symbol)
+    private static bool IsPubliclyExposedFromComponent(
+        ISymbol symbol,
+        INamedTypeSymbol? excludeAttributeType)
     {
         // Skip symbols with no declaration in source (eg. the implicit parameterless constructor of a class,
         // or the 'value__' field of an enum), which cannot carry an attribute of their own and have nowhere
         // to report a diagnostic
-        if (symbol.IsImplicitlyDeclared)
+        if (symbol.IsImplicitlyDeclared || symbol.IsExcludedFromWindowsMetadata(excludeAttributeType))
         {
             return false;
         }

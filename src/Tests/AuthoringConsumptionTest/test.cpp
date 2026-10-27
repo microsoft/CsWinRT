@@ -1,4 +1,5 @@
 #include "pch.h"
+#include <winrt/AuthoringTest.ExcludedBases.h>
 
 using namespace winrt;
 using namespace Windows::Foundation;
@@ -37,6 +38,43 @@ TEST(AuthoringTest, Statics)
     });
     StaticClass::FireDelegate(4.5);
     EXPECT_EQ(result2, 4.5);
+}
+
+TEST(AuthoringTest, ExcludedConcreteManagedBase)
+{
+    AuthoringTest::ExcludedBases::ConcreteDerived value;
+    EXPECT_EQ(value.Forwarded(5), 12);
+    EXPECT_EQ(value.Overridden(5), 113);
+
+    AuthoringTest::ExcludedBases::IInheritedContract contract = value;
+    EXPECT_EQ(contract.FromInterface(5), 35);
+
+    static_assert(!std::is_convertible_v<decltype(value), Windows::Foundation::IClosable>);
+    static_assert(!std::is_convertible_v<decltype(value), Windows::Foundation::IWwwFormUrlDecoderEntry>);
+    EXPECT_EQ(value.as<Windows::Foundation::IWwwFormUrlDecoderEntry>().Name(), L"inherited");
+    EXPECT_FALSE(value.GetDisposed());
+    value.as<Windows::Foundation::IClosable>().Close();
+    EXPECT_TRUE(value.GetDisposed());
+}
+
+TEST(AuthoringTest, ExcludedBaseRedeclaredInterfaces)
+{
+    AuthoringTest::ExcludedBases::RedeclaredDerived value;
+    Windows::Foundation::IWwwFormUrlDecoderEntry entry = value;
+    EXPECT_EQ(entry.Name(), L"inherited");
+    EXPECT_EQ(entry.Value(), L"contract");
+
+    EXPECT_FALSE(value.GetDisposed());
+    Windows::Foundation::IClosable closable = value;
+    closable.Close();
+    EXPECT_TRUE(value.GetDisposed());
+}
+
+TEST(AuthoringTest, ExcludedAbstractManagedBase)
+{
+    AuthoringTest::ExcludedBases::AbstractDerived value;
+    EXPECT_EQ(value.Forwarded(5), 16);
+    EXPECT_EQ(value.Compute(5), 55);
 }
 
 TEST(AuthoringTest, FunctionCalls)

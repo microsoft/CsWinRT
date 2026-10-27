@@ -45,6 +45,7 @@ public sealed class PublicTypeRequiresContractVersionAnalyzer : DiagnosticAnalyz
             // Get the '[ApiContract]' symbol (used to skip API contract types, which use '[ContractVersion]'
             // with the version-only constructors to declare their own contract version, not as an association).
             INamedTypeSymbol? apiContractAttributeType = context.Compilation.GetTypeByMetadataName("Windows.Foundation.Metadata.ApiContractAttribute");
+            INamedTypeSymbol? excludeAttributeType = context.Compilation.GetTypeByMetadataName("WindowsRuntime.ExcludeFromWindowsMetadataAttribute");
 
             // Shared state across symbol actions: collect public types missing '[ContractVersion]' and track
             // whether at least one public type in the compilation does have a '[ContractVersion]' applied.
@@ -54,7 +55,8 @@ public sealed class PublicTypeRequiresContractVersionAnalyzer : DiagnosticAnalyz
             context.RegisterSymbolAction(context =>
             {
                 // Only consider top-level public types
-                if (context.Symbol is not INamedTypeSymbol { DeclaredAccessibility: Accessibility.Public, ContainingType: null } typeSymbol)
+                if (context.Symbol is not INamedTypeSymbol { DeclaredAccessibility: Accessibility.Public, ContainingType: null } typeSymbol ||
+                    typeSymbol.IsExcludedFromWindowsMetadata(excludeAttributeType))
                 {
                     return;
                 }

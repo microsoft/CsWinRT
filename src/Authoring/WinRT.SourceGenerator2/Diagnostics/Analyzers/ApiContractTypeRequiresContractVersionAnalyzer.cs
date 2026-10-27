@@ -43,10 +43,13 @@ public sealed class ApiContractTypeRequiresContractVersionAnalyzer : DiagnosticA
                 return;
             }
 
+            INamedTypeSymbol? excludeAttributeType = context.Compilation.GetTypeByMetadataName("WindowsRuntime.ExcludeFromWindowsMetadataAttribute");
+
             context.RegisterSymbolAction(context =>
             {
                 // Only enum types can be valid API contract types
-                if (context.Symbol is not INamedTypeSymbol { TypeKind: TypeKind.Enum } typeSymbol)
+                if (context.Symbol is not INamedTypeSymbol { TypeKind: TypeKind.Enum } typeSymbol ||
+                    typeSymbol.IsExcludedFromWindowsMetadata(excludeAttributeType))
                 {
                     return;
                 }
