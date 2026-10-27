@@ -60,7 +60,7 @@ internal static partial class InteropGenerator
                 methods.OrderBy(static method => method.Name?.Value, StringComparer.Ordinal))
         ];
 
-        int workerCount = args.MaxDegreesOfParallelism == -1 ? Environment.ProcessorCount : args.MaxDegreesOfParallelism;
+        int workerCount = args.GetEffectiveMaxDegreesOfParallelism();
         int batchCount = GetAttributeKeyBatchCount(attributes.Length, workerCount);
         int itemCount = orderings.Length + batchCount;
         int remainingBatches = batchCount;

@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System;
 using System.ComponentModel;
 using System.Threading;
 using WindowsRuntime.Generator;
@@ -119,4 +120,13 @@ internal sealed class InteropGeneratorArgs : IGeneratorArgs
     /// <summary>Gets the directory in which to write a JSON report of the generated interop code, if requested.</summary>
     [CommandLineArgumentName("--log-directory")]
     public string? LogDirectory { get; init; }
+
+    /// <summary>
+    /// Gets the effective worker limit, resolving the default to the processor count.
+    /// </summary>
+    /// <returns>The configured limit, or <see cref="Environment.ProcessorCount"/> when it is -1.</returns>
+    public int GetEffectiveMaxDegreesOfParallelism()
+    {
+        return MaxDegreesOfParallelism == -1 ? Environment.ProcessorCount : MaxDegreesOfParallelism;
+    }
 }

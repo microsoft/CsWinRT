@@ -23,7 +23,7 @@ internal static partial class InteropGenerator
 
         InteropGenerationWorkQueue<InteropGeneratorEmissionContext> queue = CreateEmissionQueue();
 
-        queue.Run(context, args.MaxDegreesOfParallelism, args.Token);
+        queue.Run(context, args.GetEffectiveMaxDegreesOfParallelism(), args.Token);
 
         // Fixups enumerate generated types, so all emit workers must have finished
         FixupMethodDefinitions(args, module);

@@ -39,7 +39,7 @@ internal sealed class InteropGenerationWorkQueue<TContext>
     /// Runs all operations once, returning only after every worker has finished.
     /// </summary>
     /// <param name="context">The context to pass to each operation.</param>
-    /// <param name="maxDegreesOfParallelism">The worker limit, or -1 for the processor count.</param>
+    /// <param name="maxDegreesOfParallelism">The positive worker limit, with the default already resolved.</param>
     /// <param name="token">The invocation's cancellation token.</param>
     /// <remarks>
     /// Once the arguments are validated, the queue is consumed even if empty, canceled, or faulted.
@@ -47,8 +47,7 @@ internal sealed class InteropGenerationWorkQueue<TContext>
     /// </remarks>
     public void Run(TContext context, int maxDegreesOfParallelism, CancellationToken token)
     {
-        ArgumentOutOfRangeException.ThrowIfLessThan(maxDegreesOfParallelism, -1);
-        ArgumentOutOfRangeException.ThrowIfZero(maxDegreesOfParallelism);
+        ArgumentOutOfRangeException.ThrowIfLessThan(maxDegreesOfParallelism, 1);
 
         if (Interlocked.Exchange(ref _started, 1) != 0)
         {
@@ -62,9 +61,7 @@ internal sealed class InteropGenerationWorkQueue<TContext>
             return;
         }
 
-        int workerCount = Math.Min(
-            maxDegreesOfParallelism == -1 ? Environment.ProcessorCount : maxDegreesOfParallelism,
-            _count);
+        int workerCount = Math.Min(maxDegreesOfParallelism, _count);
 
         using BlockingCollection<Node> ready = new(new ConcurrentQueue<Node>(_roots));
 

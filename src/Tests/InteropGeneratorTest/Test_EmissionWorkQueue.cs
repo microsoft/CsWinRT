@@ -16,7 +16,7 @@ public sealed class Test_EmissionWorkQueue
     [TestMethod]
     [DataRow(1)]
     [DataRow(2)]
-    [DataRow(-1)]
+    [DataRow(8)]
     public void Queue_RespectsDependencyBarriers(int parallelism)
     {
         InteropGenerationWorkQueue<ConcurrentQueue<string>>.Builder graph = new();
@@ -271,22 +271,23 @@ public sealed class Test_EmissionWorkQueue
     public void EmptyGraph_CompletesAndObservesCancellation()
     {
         InteropGenerationWorkQueue<Action> queue = new InteropGenerationWorkQueue<Action>.Builder().Build();
-        queue.Run(static () => Assert.Fail(), -1, CancellationToken.None);
+        queue.Run(static () => Assert.Fail(), 1, CancellationToken.None);
         Assert.ThrowsExactly<InvalidOperationException>(
-            () => queue.Run(static () => Assert.Fail(), -1, CancellationToken.None));
+            () => queue.Run(static () => Assert.Fail(), 1, CancellationToken.None));
 
         using CancellationTokenSource cancellation = new();
         cancellation.Cancel();
         InteropGenerationWorkQueue<Action> canceledQueue = new InteropGenerationWorkQueue<Action>.Builder().Build();
         OperationCanceledException exception = Assert.ThrowsExactly<OperationCanceledException>(
-            () => canceledQueue.Run(static () => Assert.Fail(), -1, cancellation.Token));
+            () => canceledQueue.Run(static () => Assert.Fail(), 1, cancellation.Token));
         Assert.AreEqual(cancellation.Token, exception.CancellationToken);
         Assert.ThrowsExactly<InvalidOperationException>(
-            () => canceledQueue.Run(static () => Assert.Fail(), -1, CancellationToken.None));
+            () => canceledQueue.Run(static () => Assert.Fail(), 1, CancellationToken.None));
     }
 
     [TestMethod]
     [DataRow(0)]
+    [DataRow(-1)]
     [DataRow(-2)]
     public void InvalidParallelism_IsRejected(int parallelism)
     {
