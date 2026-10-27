@@ -68,6 +68,8 @@ internal static partial class InteropGenerator
         int itemCount = orderings.Length + batchCount;
         int remainingBatches = batchCount;
 
+        // The index range represents one job per independent collection followed by one per attribute-key batch. Both job
+        // kinds share the same workers, letting collection sorts overlap with key preparation without an extra barrier.
         _ = Parallel.ForEachUnbufferedUntilFirstFailure(
             source: _ => Enumerable.Range(0, itemCount),
             token: args.Token,
@@ -76,6 +78,7 @@ internal static partial class InteropGenerator
             {
                 token.ThrowIfCancellationRequested();
 
+                // Leading indices compute sorted snapshots; the rest prepare attribute ordering keys in batches
                 if (index < orderings.Length)
                 {
                     orderings[index].Compute();
