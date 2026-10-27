@@ -111,6 +111,8 @@ internal sealed class CustomAttributePayloadCache
 
         Substitution substitution = new(this);
 
+        // Reuse cached bytes by temporarily replacing unchanged signatures with payload writers. The substitution scope
+        // restores signatures and discards payloads when disposed, either after writing or immediately if setup fails.
         try
         {
             foreach ((CustomAttribute attribute, Payload payload) in _payloads)
