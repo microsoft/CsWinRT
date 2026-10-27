@@ -2573,7 +2573,6 @@ internal partial class InteropGenerator
             // be referenced (and imported) without causing issues. The reason is that adding these
             // earlier on ensures that they're already part of the output module.
             module.TopLevelTypes.Add(interopDefinitions.RvaFields);
-            _ = interopDefinitions.IIDRvaDataSize_16;
             module.TopLevelTypes.Add(interopDefinitions.InterfaceIIDs);
             module.TopLevelTypes.Add(interopDefinitions.IUnknownVftbl);
             module.TopLevelTypes.Add(interopDefinitions.IInspectableVftbl);
