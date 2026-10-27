@@ -142,7 +142,10 @@ internal sealed class MemoizingMetadataTokenProvider : IMetadataTokenProvider
     /// <param name="diagnosticSource">The object to report errors for.</param>
     /// <param name="getToken">The callback to get the token from the wrapped provider.</param>
     /// <returns>The token of <paramref name="member"/>.</returns>
-    private MetadataToken GetOrAddToken<T>(T member, object? diagnosticSource, Func<IMetadataTokenProvider, T, object?, MetadataToken> getToken)
+    private MetadataToken GetOrAddToken<T>(
+        T member,
+        object? diagnosticSource,
+        Func<IMetadataTokenProvider, T, object?, MetadataToken> getToken)
         where T : class, IMetadataMember
     {
         // Leave invalid requests to the wrapped provider, which decides how to handle them
