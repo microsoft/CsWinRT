@@ -19,6 +19,12 @@ internal sealed class NativeProjectionFixture : IDisposable
 {
     public string DirectoryPath { get; } = Directory.CreateTempSubdirectory("NativeProjection_").FullName;
 
+    public NativeProjectionFixture()
+    {
+        // Preserve repository restore sources when publishing projects outside the checkout
+        File.Copy(ProjectionWriterRunner.GetRequiredFilePath("RepositoryNuGetConfigPath"), Path.Combine(DirectoryPath, "nuget.config"));
+    }
+
     public static NativeProjectionFixture Create(
         string fileStem,
         string resourceName,
