@@ -2339,13 +2339,12 @@ internal partial class InteropGenerator
 
         // Rewrites within a method retain their original ordering, including rewrite kind and marker position.
         // Different methods can be rewritten independently without comparing their expensive metadata names.
-        MethodRewriteInfo[][] rewritesByMethod = [.. emitState.EnumerateMethodRewriteInfos()
-            .GroupBy(static rewrite => rewrite.Method)
-            .Select(static group => group.Order().ToArray())];
+        IEnumerable<IGrouping<MethodDefinition, MethodRewriteInfo>> rewritesByMethod = emitState.EnumerateMethodRewriteInfos()
+            .GroupBy(static rewrite => rewrite.Method);
 
-        foreach (MethodRewriteInfo[] rewriteInfos in rewritesByMethod)
+        foreach (IGrouping<MethodDefinition, MethodRewriteInfo> rewriteInfos in rewritesByMethod)
         {
-            foreach (MethodRewriteInfo rewriteInfo in rewriteInfos)
+            foreach (MethodRewriteInfo rewriteInfo in rewriteInfos.Order())
             {
                 args.Token.ThrowIfCancellationRequested();
 
