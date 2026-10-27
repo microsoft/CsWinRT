@@ -18,7 +18,9 @@ internal abstract class MetadataCollectionOrdering
     /// <param name="collection">The collection to reorder.</param>
     /// <param name="order">The ordering to compute while metadata ownership remains unchanged.</param>
     /// <returns>The deferred ordering operation.</returns>
-    public static MetadataCollectionOrdering Create<T>(IList<T> collection, Func<IEnumerable<T>, IEnumerable<T>> order)
+    public static MetadataCollectionOrdering Create<T>(
+        IList<T> collection,
+        Func<IEnumerable<T>, IEnumerable<T>> order)
     {
         return new Collection<T>(collection, order);
     }
