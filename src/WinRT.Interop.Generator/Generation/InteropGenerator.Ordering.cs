@@ -73,39 +73,7 @@ internal static partial class InteropGenerator
             source: _ => Enumerable.Range(0, itemCount),
             token: args.Token,
             maxDegreesOfParallelism: Math.Min(workerCount, itemCount),
-            body: (index, token) =>
-            {
-                token.ThrowIfCancellationRequested();
-
-                // Leading indices compute sorted snapshots; the rest prepare attribute ordering keys in batches
-                if (index < orderings.Length)
-                {
-                    orderings[index].Compute();
-
-                    return;
-                }
-
-                int batchIndex = index - orderings.Length;
-                int start = (int)((long)attributes.Length * batchIndex / batchCount);
-                int end = (int)((long)attributes.Length * (batchIndex + 1) / batchCount);
-
-                // Prepare constructor and payload ordering keys for this batch's non-overlapping attribute range
-                for (int attributeIndex = start; attributeIndex < end; attributeIndex++)
-                {
-                    token.ThrowIfCancellationRequested();
-
-                    CustomAttribute attribute = attributes[attributeIndex];
-
-                    entries[attributeIndex] = new(attribute, constructors[attribute.Constructor!], payloads.GetOrAdd(attribute));
-                }
-
-                // The last batch can sort attributes immediately, while independent sorts may still be running
-                if (Interlocked.Decrement(ref remainingBatches) == 0)
-                {
-                    token.ThrowIfCancellationRequested();
-                    attributeOrdering.Compute();
-                }
-            });
+            body: (index, token) => ComputeOrdering(index, orderings, attributes, constructors, payloads, entries, attributeOrdering, batchCount, ref remainingBatches, token));
 
         args.Token.ThrowIfCancellationRequested();
 
@@ -117,6 +85,63 @@ internal static partial class InteropGenerator
         }
 
         attributeOrdering.Apply();
+    }
+
+    /// <summary>
+    /// Computes one independent collection ordering or prepares one batch of attribute ordering keys.
+    /// </summary>
+    /// <param name="index">The work-item index in the combined collection and batch range.</param>
+    /// <param name="orderings">The independently computed collection orderings.</param>
+    /// <param name="attributes">The attributes whose ordering keys are prepared in batches.</param>
+    /// <param name="constructors">The precomputed constructor identity keys.</param>
+    /// <param name="payloads">The attribute payload cache shared with the writer.</param>
+    /// <param name="entries">The non-overlapping output slots for attribute ordering keys.</param>
+    /// <param name="attributeOrdering">The ordering computed after all attribute keys are ready.</param>
+    /// <param name="batchCount">The total number of attribute-key preparation batches.</param>
+    /// <param name="remainingBatches">The shared count of unfinished batches, decremented atomically.</param>
+    /// <param name="token">The worker token observing invocation cancellation and sibling failures.</param>
+    private static void ComputeOrdering(
+        int index,
+        MetadataCollectionOrdering[] orderings,
+        CustomAttribute[] attributes,
+        Dictionary<ICustomAttributeType, string> constructors,
+        CustomAttributePayloadCache payloads,
+        AttributeOrderingEntry[] entries,
+        MetadataCollectionOrdering attributeOrdering,
+        int batchCount,
+        ref int remainingBatches,
+        CancellationToken token)
+    {
+        token.ThrowIfCancellationRequested();
+
+        // Leading indices compute sorted snapshots; the rest prepare attribute ordering keys in batches
+        if (index < orderings.Length)
+        {
+            orderings[index].Compute();
+
+            return;
+        }
+
+        int batchIndex = index - orderings.Length;
+        int start = (int)((long)attributes.Length * batchIndex / batchCount);
+        int end = (int)((long)attributes.Length * (batchIndex + 1) / batchCount);
+
+        // Prepare constructor and payload ordering keys for this batch's non-overlapping attribute range
+        for (int attributeIndex = start; attributeIndex < end; attributeIndex++)
+        {
+            token.ThrowIfCancellationRequested();
+
+            CustomAttribute attribute = attributes[attributeIndex];
+
+            entries[attributeIndex] = new(attribute, constructors[attribute.Constructor!], payloads.GetOrAdd(attribute));
+        }
+
+        // The last batch can sort attributes immediately, while independent sorts may still be running
+        if (Interlocked.Decrement(ref remainingBatches) == 0)
+        {
+            token.ThrowIfCancellationRequested();
+            attributeOrdering.Compute();
+        }
     }
 
     /// <summary>
