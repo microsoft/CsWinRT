@@ -16,7 +16,7 @@ namespace WindowsRuntime.InteropGenerator.Generation;
 /// <inheritdoc cref="InteropGenerator"/>
 internal static partial class InteropGenerator
 {
-    /// <summary>The minimum useful collection or attribute batch size for parallel ordering.</summary>
+    /// <summary>The minimum useful attribute key batch size for parallel ordering.</summary>
     private const int MinimumOrderingBatchSize = 256;
 
     /// <summary>The maximum number of attribute batches per worker, allowing uneven payload costs to balance.</summary>
@@ -64,59 +64,45 @@ internal static partial class InteropGenerator
         ];
 
         int workerCount = args.MaxDegreesOfParallelism == -1 ? Environment.ProcessorCount : args.MaxDegreesOfParallelism;
+        int batchCount = GetAttributeKeyBatchCount(attributes.Length, workerCount);
+        int independentCount = orderings.Length - 1;
+        int itemCount = independentCount + batchCount;
+        int remainingBatches = batchCount;
 
-        if (workerCount == 1 || orderings.All(static ordering => ordering.Count < MinimumOrderingBatchSize))
-        {
-            PrepareAttributeKeys(0, attributes.Length, args.Token);
-
-            foreach (MetadataCollectionOrdering ordering in orderings)
+        _ = Parallel.ForEachUnbufferedUntilFirstFailure(
+            source: _ => Enumerable.Range(0, itemCount),
+            token: args.Token,
+            maxDegreesOfParallelism: Math.Min(workerCount, itemCount),
+            body: (index, token) =>
             {
-                args.Token.ThrowIfCancellationRequested();
-                ordering.Compute();
-            }
-        }
-        else
-        {
-            int batchCount = GetAttributeKeyBatchCount(attributes.Length, workerCount);
-            int independentCount = orderings.Length - 1;
-            int itemCount = independentCount + batchCount;
-            int remainingBatches = batchCount;
+                token.ThrowIfCancellationRequested();
 
-            _ = Parallel.ForEachUnbufferedUntilFirstFailure(
-                source: _ => Enumerable.Range(0, itemCount),
-                token: args.Token,
-                maxDegreesOfParallelism: Math.Min(workerCount, itemCount),
-                body: (index, token) =>
+                if (index < independentCount)
+                {
+                    orderings[index].Compute();
+
+                    return;
+                }
+
+                int batchIndex = index - independentCount;
+
+                PrepareAttributeKeys(
+                    start: (int)((long)attributes.Length * batchIndex / batchCount),
+                    end: (int)((long)attributes.Length * (batchIndex + 1) / batchCount),
+                    token: token);
+
+                // The last batch can sort attributes immediately, while independent sorts may still be running
+                if (Interlocked.Decrement(ref remainingBatches) == 0)
                 {
                     token.ThrowIfCancellationRequested();
-
-                    if (index < independentCount)
-                    {
-                        orderings[index].Compute();
-
-                        return;
-                    }
-
-                    int batchIndex = index - independentCount;
-
-                    PrepareAttributeKeys(
-                        start: (int)((long)attributes.Length * batchIndex / batchCount),
-                        end: (int)((long)attributes.Length * (batchIndex + 1) / batchCount),
-                        token: token);
-
-                    // The last batch can sort attributes immediately, while independent sorts may still be running
-                    if (Interlocked.Decrement(ref remainingBatches) == 0)
-                    {
-                        token.ThrowIfCancellationRequested();
-                        attributeOrdering.Compute();
-                    }
-                });
-        }
+                    attributeOrdering.Compute();
+                }
+            });
 
         args.Token.ThrowIfCancellationRequested();
 
         // Clearing owned collections temporarily detaches types from their module. Every name/payload
-        // reader must finish before any collection is changed, including on the serial small-input path.
+        // reader must finish before any collection is changed, even when only one worker is used.
         foreach (MetadataCollectionOrdering ordering in orderings)
         {
             ordering.Apply();

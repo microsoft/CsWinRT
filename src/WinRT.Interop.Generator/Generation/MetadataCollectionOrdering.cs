@@ -11,9 +11,6 @@ namespace WindowsRuntime.InteropGenerator.Generation;
 /// </summary>
 internal abstract class MetadataCollectionOrdering
 {
-    /// <summary>Gets the number of elements to order.</summary>
-    public abstract int Count { get; }
-
     /// <summary>
     /// Creates an ordering operation for an owned metadata collection.
     /// </summary>
@@ -46,9 +43,6 @@ internal abstract class MetadataCollectionOrdering
     {
         /// <summary>The sorted snapshot, computed before metadata ownership changes.</summary>
         private T[]? _ordered;
-
-        /// <inheritdoc/>
-        public override int Count => collection.Count;
 
         /// <inheritdoc/>
         public override void Compute()

@@ -72,6 +72,39 @@ public sealed class Test_ParallelEmission
     }
 
     [TestMethod]
+    public async Task SmallCatalog_IsByteIdenticalAcrossWorkerCounts()
+    {
+        using InteropGeneratorRunner runner = new();
+        string output = await runner.GenerateAsync(
+            "small-serial", marshallingMode: "Strict", marshallingDisabledAssemblyNames: ["WinRT.Runtime.dll"]);
+        byte[] expected = File.ReadAllBytes(output);
+        (_, ModuleDefinition module) = runner.LoadOutput(output);
+        TypeDefinition fields = module.TopLevelTypes.Single(type => type.Name == "<RvaFields>");
+        TypeDefinition iids = module.TopLevelTypes.Single(type => type.FullName == "ABI.InterfaceIIDs");
+        TypeDefinition keyValuePairMethods = module.TopLevelTypes.Single(type =>
+            type.Name!.ToString().EndsWith(">KeyValuePairMethods", StringComparison.Ordinal));
+        int[] counts =
+        [
+            module.TopLevelTypes.Count,
+            fields.Fields.Count,
+            iids.Methods.Count,
+            iids.Properties.Count,
+            keyValuePairMethods.Methods.Count,
+            module.Assembly!.CustomAttributes.Count
+        ];
+        Assert.IsTrue(counts.All(static count => count < 256),
+            $"All collection sizes must be below the former parallel-ordering threshold: {string.Join(", ", counts)}.");
+
+        foreach (int parallelism in new[] { 1, 2, -1 })
+        {
+            string replay = await runner.GenerateAsync(
+                $"small-{parallelism}", reverseInputs: true, parallelism: parallelism,
+                marshallingMode: "Strict", marshallingDisabledAssemblyNames: ["WinRT.Runtime.dll"]);
+            CollectionAssert.AreEqual(expected, File.ReadAllBytes(replay));
+        }
+    }
+
+    [TestMethod]
     public async Task LargeAttributeCatalog_IsByteIdenticalAcrossParallelAndCachedWrites()
     {
         string source = """
