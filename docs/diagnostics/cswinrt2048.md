@@ -1,4 +1,4 @@
-# CsWinRT warning CSWINRT2028
+# CsWinRT warning CSWINRT2048
 
 A by-value `Span<T>` parameter of an authored Windows Runtime method is projected as a **fill array**: the caller provides storage for output, not initialized input data. Reading the buffer's existing contents is not supported.
 
@@ -11,7 +11,7 @@ public sealed class Component
 {
     public void Fill(Span<int> destination)
     {
-        destination[0] = destination[0] + 1; // CSWINRT2028
+        destination[0] = destination[0] + 1; // CSWINRT2048
     }
 }
 ```
