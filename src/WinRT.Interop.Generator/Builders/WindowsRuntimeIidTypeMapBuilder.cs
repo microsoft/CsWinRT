@@ -86,6 +86,8 @@ internal static class WindowsRuntimeIidTypeMapBuilder
             {
                 (TypeSignature previousType, Guid previousIid) = entries[key];
 
+                // Reference and implementation projections can share a runtime key but disagree on IIDs if their metadata
+                // is inconsistent. Reject the ambiguity rather than choosing an IID based on discovery order.
                 if (previousIid != iid)
                 {
                     throw WellKnownInteropExceptions.ConflictingIidTypeNames(key, previousIid, iid);
