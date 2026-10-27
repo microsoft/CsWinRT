@@ -313,6 +313,21 @@ internal partial class InteropGenerator
     }
 
     /// <summary>
+    /// Defines the Windows Runtime type hierarchy lookup.
+    /// </summary>
+    /// <param name="context">The shared emission context.</param>
+    private static void DefineTypeHierarchyLookup(InteropGeneratorEmissionContext context)
+    {
+        WindowsRuntimeTypeHierarchyBuilder.Lookup(
+            context.DiscoveryState.TypeHierarchyEntries,
+            context.Definitions,
+            context.References,
+            context.Module,
+            context.Args.Token,
+            out _);
+    }
+
+    /// <summary>
     /// Defines the interop types for generic delegates.
     /// </summary>
     /// <param name="context">The shared emission context.</param>

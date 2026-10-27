@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using AsmResolver.DotNet;
-using WindowsRuntime.InteropGenerator.Builders;
 using EmissionNode = WindowsRuntime.InteropGenerator.Generation.InteropGenerationWorkQueue<WindowsRuntime.InteropGenerator.Generation.InteropGeneratorEmissionContext>.Node;
 
 namespace WindowsRuntime.InteropGenerator.Generation;
@@ -90,20 +89,5 @@ internal static partial class InteropGenerator
         _ = graph.Add(DefineDynamicImplementationDetailTypes, userDefinedTypes, arrays);
 
         return graph.Build();
-    }
-
-    /// <summary>
-    /// Defines the Windows Runtime type hierarchy lookup.
-    /// </summary>
-    /// <param name="context">The shared emission context.</param>
-    private static void DefineTypeHierarchyLookup(InteropGeneratorEmissionContext context)
-    {
-        WindowsRuntimeTypeHierarchyBuilder.Lookup(
-            context.DiscoveryState.TypeHierarchyEntries,
-            context.Definitions,
-            context.References,
-            context.Module,
-            context.Args.Token,
-            out _);
     }
 }
