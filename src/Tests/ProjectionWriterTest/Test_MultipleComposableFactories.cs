@@ -63,7 +63,7 @@ public class Test_MultipleComposableFactories
             string output = Path.Combine(directory, "generated");
             ProjectionWriter.Run(new ProjectionWriterOptions
             {
-                InputPaths = [metadata],
+                InputPaths = [metadata, ImplementableHierarchyMetadata.FindWindowsFoundationWinmd()],
                 OutputFolder = output,
                 OutputAssemblyName = "Projection",
                 Include = ["Contoso"]
