@@ -398,7 +398,7 @@ public sealed class WriteOnlySpanParameterAnalyzer : DiagnosticAnalyzer
         // The containing type must be a public, top-level class (i.e. an authored runtime class). Other type
         // kinds can't have method bodies with fill array parameters, and nested types are never projected.
         if (method.ContainingType is not { TypeKind: TypeKind.Class, DeclaredAccessibility: Accessibility.Public, ContainingType: null } ||
-            IsAbiNamespace(method.ContainingNamespace))
+            method.ContainingType.IsInAbiNamespace)
         {
             return false;
         }
@@ -416,7 +416,7 @@ public sealed class WriteOnlySpanParameterAnalyzer : DiagnosticAnalyzer
             INamedTypeSymbol interfaceType = implementedMethod.ContainingType;
 
             if (interfaceType is not { DeclaredAccessibility: Accessibility.Public, ContainingType: null } ||
-                IsAbiNamespace(interfaceType.ContainingNamespace))
+                interfaceType.IsInAbiNamespace)
             {
                 continue;
             }
@@ -429,26 +429,6 @@ public sealed class WriteOnlySpanParameterAnalyzer : DiagnosticAnalyzer
             {
                 return true;
             }
-        }
-
-        return false;
-    }
-
-    /// <summary>
-    /// Checks whether a namespace belongs to the implementation-only ABI namespace tree.
-    /// </summary>
-    /// <param name="namespaceSymbol">The namespace to check.</param>
-    /// <returns>Whether the WinMD generator excludes this namespace.</returns>
-    private static bool IsAbiNamespace(INamespaceSymbol namespaceSymbol)
-    {
-        while (!namespaceSymbol.IsGlobalNamespace)
-        {
-            if (namespaceSymbol.ContainingNamespace.IsGlobalNamespace)
-            {
-                return namespaceSymbol.Name == "ABI";
-            }
-
-            namespaceSymbol = namespaceSymbol.ContainingNamespace;
         }
 
         return false;
