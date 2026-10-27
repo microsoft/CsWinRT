@@ -86,11 +86,18 @@ internal static partial class InteropGenerator
                 }
 
                 int batchIndex = index - orderings.Length;
+                int start = (int)((long)attributes.Length * batchIndex / batchCount);
+                int end = (int)((long)attributes.Length * (batchIndex + 1) / batchCount);
 
-                PrepareAttributeKeys(
-                    start: (int)((long)attributes.Length * batchIndex / batchCount),
-                    end: (int)((long)attributes.Length * (batchIndex + 1) / batchCount),
-                    token: token);
+                // Prepare constructor and payload ordering keys for this batch's non-overlapping attribute range
+                for (int attributeIndex = start; attributeIndex < end; attributeIndex++)
+                {
+                    token.ThrowIfCancellationRequested();
+
+                    CustomAttribute attribute = attributes[attributeIndex];
+
+                    entries[attributeIndex] = new(attribute, constructors[attribute.Constructor!], payloads.GetOrAdd(attribute));
+                }
 
                 // The last batch can sort attributes immediately, while independent sorts may still be running
                 if (Interlocked.Decrement(ref remainingBatches) == 0)
@@ -110,18 +117,6 @@ internal static partial class InteropGenerator
         }
 
         attributeOrdering.Apply();
-
-        void PrepareAttributeKeys(int start, int end, CancellationToken token)
-        {
-            for (int index = start; index < end; index++)
-            {
-                token.ThrowIfCancellationRequested();
-
-                CustomAttribute attribute = attributes[index];
-
-                entries[index] = new(attribute, constructors[attribute.Constructor!], payloads.GetOrAdd(attribute));
-            }
-        }
     }
 
     /// <summary>
