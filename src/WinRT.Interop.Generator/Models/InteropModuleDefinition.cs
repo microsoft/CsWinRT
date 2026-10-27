@@ -60,6 +60,7 @@ internal sealed class InteropModuleDefinition(DotNetRuntimeInfo runtime)
                 valueFactory: static (descriptor, target) => new(() =>
                 {
                     AssemblyReference imported = new(descriptor);
+
                     target.AssemblyReferences.Add(imported);
 
                     return imported;
