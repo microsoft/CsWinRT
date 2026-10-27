@@ -86,7 +86,7 @@ steps:
       testRunTitle: Projection Writer Tests
 
 # Run the same AOT regressions in the other Release jobs without repeating the full writer suite.
-# The solution builds this generator test harness as x64 for every Release job on the x64 agents.
+# Build the x64 harness here rather than changing the solution's per-platform mappings.
   - task: DotNetCoreCLI@2
     displayName: Run Projection Writer Native AOT Tests
     condition: and(succeeded(), eq(variables['BuildConfiguration'], 'release'), ne(variables['BuildPlatform'], 'x64'))
@@ -95,7 +95,7 @@ steps:
       projects: 'src/Tests/ProjectionWriterTest/ProjectionWriterTest.csproj'
       arguments: >
         /p:platform=x64;configuration=$(BuildConfiguration)
-        --no-build
+        /p:VersionNumber=$(VersionNumber);VersionString=$(Build.BuildNumber);AssemblyVersionNumber=$(WinRT.Runtime.AssemblyVersion)
         --filter "TestCategory=NativeAOT"
         --minimum-expected-tests 3
       testRunTitle: Projection Writer Native AOT Tests

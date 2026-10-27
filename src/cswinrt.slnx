@@ -297,10 +297,8 @@
       <Platform Solution="*|ARM64" Project="ARM64" />
       <Platform Solution="*|x64" Project="x64" />
       <Platform Solution="*|x86" Project="x86" />
-      <Platform Solution="Release|ARM64" Project="x64" />
-      <Platform Solution="Release|x86" Project="x64" />
       <Build Solution="*|ARM64" Project="false" />
-      <Build Solution="Release|ARM64" Project="true" />
+      <Build Solution="*|x86" Project="false" />
     </Project>
     <Project Path="Tests/SourceGenerator2Test/SourceGenerator2Test.csproj">
       <Platform Solution="*|ARM64" Project="ARM64" />
