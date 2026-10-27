@@ -56,34 +56,30 @@ internal sealed class MemoizingMetadataTokenProvider : IMetadataTokenProvider
     /// </summary>
     public DiagnosticBag Diagnostics { get; }
 
-    // AsmResolver annotates operands as non-null, but invalid requests must reach the wrapped provider unchanged
-#pragma warning disable CS8604
-
     /// <inheritdoc/>
-    public MetadataToken GetTypeReferenceToken(TypeReference? type, object? diagnosticSource = null)
+    public MetadataToken GetTypeReferenceToken(TypeReference type, object? diagnosticSource = null)
     {
-        return GetOrAddToken(type, diagnosticSource, static (provider, type, source) => provider.GetTypeReferenceToken(type, source));
+        // AsmResolver's contract is non-nullable; forward invalid null operands unchanged for its own diagnostics
+        return GetOrAddToken(type, diagnosticSource, static (provider, type, source) => provider.GetTypeReferenceToken(type!, source));
     }
 
     /// <inheritdoc/>
-    public MetadataToken GetMemberReferenceToken(MemberReference? member, object? diagnosticSource = null)
+    public MetadataToken GetMemberReferenceToken(MemberReference member, object? diagnosticSource = null)
     {
-        return GetOrAddToken(member, diagnosticSource, static (provider, member, source) => provider.GetMemberReferenceToken(member, source));
+        return GetOrAddToken(member, diagnosticSource, static (provider, member, source) => provider.GetMemberReferenceToken(member!, source));
     }
 
     /// <inheritdoc/>
-    public MetadataToken GetTypeSpecificationToken(TypeSpecification? type, object? diagnosticSource = null)
+    public MetadataToken GetTypeSpecificationToken(TypeSpecification type, object? diagnosticSource = null)
     {
-        return GetOrAddToken(type, diagnosticSource, static (provider, type, source) => provider.GetTypeSpecificationToken(type, source));
+        return GetOrAddToken(type, diagnosticSource, static (provider, type, source) => provider.GetTypeSpecificationToken(type!, source));
     }
 
     /// <inheritdoc/>
-    public MetadataToken GetMethodSpecificationToken(MethodSpecification? method, object? diagnosticSource = null)
+    public MetadataToken GetMethodSpecificationToken(MethodSpecification method, object? diagnosticSource = null)
     {
-        return GetOrAddToken(method, diagnosticSource, static (provider, method, source) => provider.GetMethodSpecificationToken(method, source));
+        return GetOrAddToken(method, diagnosticSource, static (provider, method, source) => provider.GetMethodSpecificationToken(method!, source));
     }
-
-#pragma warning restore CS8604
 
     /// <inheritdoc/>
     public MetadataToken GetTypeDefinitionToken(TypeDefinition type, object? diagnosticSource = null)

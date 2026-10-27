@@ -89,14 +89,14 @@ public sealed class Test_InteropWriterCaches
     {
         CountingTokenProvider inner = new();
         MemoizingMetadataTokenProvider memo = new(inner, new DiagnosticBag());
-        _ = memo.GetTypeReferenceToken(null, "null-first");
-        _ = memo.GetTypeReferenceToken(null, "null-second");
-        _ = memo.GetMemberReferenceToken(null, "null-member-first");
-        _ = memo.GetMemberReferenceToken(null, "null-member-second");
-        _ = memo.GetTypeSpecificationToken(null, "null-type-first");
-        _ = memo.GetTypeSpecificationToken(null, "null-type-second");
-        _ = memo.GetMethodSpecificationToken(null, "null-method-first");
-        _ = memo.GetMethodSpecificationToken(null, "null-method-second");
+        _ = memo.GetTypeReferenceToken(null!, "null-first");
+        _ = memo.GetTypeReferenceToken(null!, "null-second");
+        _ = memo.GetMemberReferenceToken(null!, "null-member-first");
+        _ = memo.GetMemberReferenceToken(null!, "null-member-second");
+        _ = memo.GetTypeSpecificationToken(null!, "null-type-first");
+        _ = memo.GetTypeSpecificationToken(null!, "null-type-second");
+        _ = memo.GetMethodSpecificationToken(null!, "null-method-first");
+        _ = memo.GetMethodSpecificationToken(null!, "null-method-second");
         Assert.AreEqual(8, inner.Calls);
         Assert.AreEqual("null-method-second", inner.LastSource);
         _ = memo.GetMethodDefinitionToken(null!, "definition-first");
