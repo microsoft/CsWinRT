@@ -116,7 +116,7 @@ public class Test_GenericMarshallerNames
     [TestMethod]
     [TestCategory("NativeAOT")]
 #if !CSWINRT_GENERIC_MARSHALLERS_AOT
-    [Ignore("Build with CSWINRT_TEST_GENERIC_MARSHALLERS_AOT=1 to publish and run the same consumer with Native AOT.")]
+    [Ignore("Run in x64 Release, or build with CSWINRT_TEST_GENERIC_MARSHALLERS_AOT=1, to publish and run the same consumer with Native AOT.")]
 #endif
     public void NativeBackedAccessors_NativeAot()
     {

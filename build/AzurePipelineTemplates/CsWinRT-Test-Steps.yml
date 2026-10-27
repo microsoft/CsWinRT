@@ -73,6 +73,7 @@ steps:
 
 # Run Projection Writer Tests. Gated to x64 only: these drive the projection writer through the
 # 'cswinrtprojectionrefgen' tool as a separate process, so the target platform adds no coverage.
+# Release also enables the native collection and generic marshaller AOT tests.
   - task: DotNetCoreCLI@2
     displayName: Run Projection Writer Tests
     condition: and(succeeded(), eq(variables['BuildPlatform'], 'x64'))
@@ -83,6 +84,21 @@ steps:
         /p:platform=$(BuildPlatform);configuration=$(BuildConfiguration)
         --no-build
       testRunTitle: Projection Writer Tests
+
+# Run the same AOT regressions in the other Release jobs without repeating the full writer suite.
+# The solution builds this generator test harness as x64 for every Release job on the x64 agents.
+  - task: DotNetCoreCLI@2
+    displayName: Run Projection Writer Native AOT Tests
+    condition: and(succeeded(), eq(variables['BuildConfiguration'], 'release'), ne(variables['BuildPlatform'], 'x64'))
+    inputs:
+      command: test
+      projects: 'src/Tests/ProjectionWriterTest/ProjectionWriterTest.csproj'
+      arguments: >
+        /p:platform=x64;configuration=$(BuildConfiguration)
+        --no-build
+        --filter "TestCategory=NativeAOT"
+        --minimum-expected-tests 3
+      testRunTitle: Projection Writer Native AOT Tests
 
 # Run Impl Generator Tests. Gated to x64 only for the same reason as the other generator tests: these
 # run the 'cswinrtimplgen' tool end-to-end as a separate process (which is always built for the build

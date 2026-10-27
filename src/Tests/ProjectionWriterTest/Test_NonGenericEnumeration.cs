@@ -137,7 +137,7 @@ public sealed class Test_NonGenericEnumeration
     [DataRow(true)]
     [TestCategory("NativeAOT")]
 #if !CSWINRT_GENERIC_MARSHALLERS_AOT
-    [Ignore("Build with CSWINRT_TEST_GENERIC_MARSHALLERS_AOT=1 to run the generated native collection consumer with Native AOT.")]
+    [Ignore("Run in x64 Release, or build with CSWINRT_TEST_GENERIC_MARSHALLERS_AOT=1, to run the generated native collection consumer with Native AOT.")]
 #endif
     public void NativeCollections_NativeAot(bool fallbackOnly)
     {
