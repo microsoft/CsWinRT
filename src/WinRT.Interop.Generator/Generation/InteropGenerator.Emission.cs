@@ -3,7 +3,7 @@
 
 using AsmResolver.DotNet;
 
-#pragma warning disable IDE0008 // Use 'var' to keep graph node declarations readable
+#pragma warning disable IDE0008
 
 namespace WindowsRuntime.InteropGenerator.Generation;
 
