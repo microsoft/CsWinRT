@@ -161,7 +161,9 @@ internal static partial class InteropGenerator
     /// <param name="attributes">The attributes whose constructors are used as ordering keys.</param>
     /// <param name="token">The invocation's cancellation token.</param>
     /// <returns>The constructor identity keys, frozen for the remainder of this ordering pass.</returns>
-    private static Dictionary<ICustomAttributeType, string> GetAttributeConstructorOrderingKeys(IEnumerable<CustomAttribute> attributes, CancellationToken token)
+    private static Dictionary<ICustomAttributeType, string> GetAttributeConstructorOrderingKeys(
+        IEnumerable<CustomAttribute> attributes,
+        CancellationToken token)
     {
         Dictionary<ICustomAttributeType, string> constructors = new(ReferenceEqualityComparer.Instance);
 
