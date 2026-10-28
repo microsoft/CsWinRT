@@ -220,7 +220,7 @@ internal sealed class CustomAttributePayloadCache
     private sealed class Substitution(CustomAttributePayloadCache cache) : IDisposable
     {
         /// <summary>The attributes with a replaced signature, along with both signatures.</summary>
-        private readonly List<(CustomAttribute Attribute, CustomAttributeSignature Original, SerializedPayloadSignature Replacement)> _replacements = [];
+        private readonly List<SignatureReplacement> _replacements = [];
 
         /// <summary>
         /// Replaces the signature of an attribute.
@@ -229,7 +229,7 @@ internal sealed class CustomAttributePayloadCache
         /// <param name="replacement">The signature to use while writing.</param>
         public void Replace(CustomAttribute attribute, SerializedPayloadSignature replacement)
         {
-            _replacements.Add((attribute, attribute.Signature!, replacement));
+            _replacements.Add(new(attribute, attribute.Signature!, replacement));
 
             attribute.Signature = replacement;
         }
@@ -237,12 +237,12 @@ internal sealed class CustomAttributePayloadCache
         /// <inheritdoc/>
         public void Dispose()
         {
-            foreach ((CustomAttribute attribute, CustomAttributeSignature original, SerializedPayloadSignature replacement) in _replacements)
+            foreach (SignatureReplacement entry in _replacements)
             {
                 // Don't overwrite a signature that was replaced again in the meantime
-                if (ReferenceEquals(attribute.Signature, replacement))
+                if (ReferenceEquals(entry.Attribute.Signature, entry.Replacement))
                 {
-                    attribute.Signature = original;
+                    entry.Attribute.Signature = entry.Original;
                 }
             }
 
@@ -251,6 +251,27 @@ internal sealed class CustomAttributePayloadCache
             // The arguments may be modified after this write, so payloads must be serialized again for any later one
             cache._payloads.Clear();
         }
+    }
+
+    /// <summary>
+    /// An attribute and the signatures needed to undo its temporary substitution.
+    /// </summary>
+    /// <param name="attribute">The attribute whose signature was replaced.</param>
+    /// <param name="original">The signature to restore after writing.</param>
+    /// <param name="replacement">The temporary signature installed for writing.</param>
+    private readonly struct SignatureReplacement(
+        CustomAttribute attribute,
+        CustomAttributeSignature original,
+        SerializedPayloadSignature replacement)
+    {
+        /// <summary>Gets the attribute whose signature was replaced.</summary>
+        public CustomAttribute Attribute { get; } = attribute;
+
+        /// <summary>Gets the signature to restore after writing.</summary>
+        public CustomAttributeSignature Original { get; } = original;
+
+        /// <summary>Gets the temporary signature installed for writing.</summary>
+        public SerializedPayloadSignature Replacement { get; } = replacement;
     }
 
     /// <summary>
