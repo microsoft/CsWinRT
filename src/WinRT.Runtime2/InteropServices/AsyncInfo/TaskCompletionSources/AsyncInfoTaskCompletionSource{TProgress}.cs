@@ -51,7 +51,8 @@ internal sealed class AsyncInfoTaskCompletionSource<TProgress> : TaskCompletionS
             // (if the callback threw, 'CancellationTokenSource.Cancel()' would stop invoking the remaining ones).
             try
             {
-                _registration = _cancellationToken.Register(
+                // Forwarding cancellation does not require capturing or retaining the caller's 'ExecutionContext'
+                _registration = _cancellationToken.UnsafeRegister(
                     callback: static @this => Unsafe.As<AsyncInfoTaskCompletionSource<TProgress>>(@this!).OnCancellation(),
                     state: this);
             }

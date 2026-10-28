@@ -262,6 +262,37 @@ namespace UnitTest
         }
 
         [TestMethod]
+        [DataRow(false)]
+        [DataRow(true)]
+        public void CancellationUsesCancelingExecutionContext(bool hasResult)
+        {
+            using var cancellation = new CancellationTokenSource();
+            var ambient = new AsyncLocal<string>();
+            string observed = null;
+            Action onCancel = () => observed = ambient.Value;
+            ambient.Value = "registration";
+
+            try
+            {
+                Task task = hasResult
+                    ? new CancellationOnlyAsyncOperation(onCancel).AsTask(cancellation.Token)
+                    : new CancellationOnlyAsyncAction(null) { OnCancel = onCancel }.AsTask(cancellation.Token);
+
+                ambient.Value = "cancellation";
+                cancellation.Cancel();
+
+                Assert.AreEqual("cancellation", observed);
+                Assert.IsTrue(task.IsCanceled);
+                var canceled = Assert.ThrowsExactly<TaskCanceledException>(() => task.GetAwaiter().GetResult());
+                Assert.AreEqual(cancellation.Token, canceled.CancellationToken);
+            }
+            finally
+            {
+                ambient.Value = null;
+            }
+        }
+
+        [TestMethod]
         public void CancellationStopsOnFirstExceptionStillCancelsTask()
         {
             using var cancellation = new CancellationTokenSource();
@@ -336,11 +367,13 @@ namespace UnitTest
             public AsyncStatus Status => (AsyncStatus)Volatile.Read(ref _status);
             public Exception ErrorCode => null;
             public AsyncActionCompletedHandler Completed { get; set; }
+            public Action OnCancel { get; init; }
 
             // Cancellation intentionally does not invoke Completed, even when it succeeds.
             public void Cancel()
             {
                 Interlocked.Increment(ref _cancelCalls);
+                OnCancel?.Invoke();
                 if (_cancelError != null)
                 {
                     throw _cancelError;
@@ -355,6 +388,17 @@ namespace UnitTest
 
             public void Close() => throw new InvalidOperationException("The test action must not be closed by AsTask.");
             public void GetResults() => throw new InvalidOperationException("The test action has no results.");
+        }
+
+        private sealed partial class CancellationOnlyAsyncOperation(Action onCancel) : IAsyncOperation<int>
+        {
+            public uint Id => 1;
+            public AsyncStatus Status => AsyncStatus.Started;
+            public Exception ErrorCode => null;
+            public AsyncOperationCompletedHandler<int> Completed { get; set; }
+            public void Cancel() => onCancel();
+            public void Close() => throw new InvalidOperationException("The test operation must not be closed by AsTask.");
+            public int GetResults() => throw new InvalidOperationException("The test operation never completes.");
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]

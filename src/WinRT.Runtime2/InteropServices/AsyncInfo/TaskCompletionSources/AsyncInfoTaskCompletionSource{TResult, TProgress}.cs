@@ -41,7 +41,8 @@ internal sealed class AsyncInfoTaskCompletionSource<TResult, TProgress> : TaskCo
         {
             try
             {
-                _registration = _cancellationToken.Register(
+                // Forwarding cancellation does not require capturing or retaining the caller's 'ExecutionContext'
+                _registration = _cancellationToken.UnsafeRegister(
                     callback: static @this => Unsafe.As<AsyncInfoTaskCompletionSource<TResult, TProgress>>(@this!).OnCancellation(),
                     state: this);
             }
