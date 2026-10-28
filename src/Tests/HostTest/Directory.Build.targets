@@ -5,9 +5,9 @@
     <MsAppxPackageTargets>$(MSBuildProjectDirectory)/DoNotImport_MsAppxPackageTargets.targets</MsAppxPackageTargets>
     <PrepareForRunDependsOn>CopyTestAssets;$(PrepareForRunDependsOn)</PrepareForRunDependsOn>
     <HostTestSourceDir>$([MSBuild]::NormalizeDirectory('$(MSBuildThisFileDirectory)'))</HostTestSourceDir>
-    <TestProjectionOutDir>$([MSBuild]::NormalizeDirectory('$(MSBuildThisFileDirectory)..\..\Projections\Test\bin', '$(Platform)', '$(Configuration)', 'net8.0'))</TestProjectionOutDir>
-    <TestHostProbeByClassOutDir>$([MSBuild]::NormalizeDirectory('$(MSBuildThisFileDirectory)..\..\Projections\TestHost.ProbeByClass\bin', '$(Platform)', '$(Configuration)', 'net8.0'))</TestHostProbeByClassOutDir>
-    <WinRTHostShimOutDir>$([MSBuild]::NormalizeDirectory('$(MSBuildThisFileDirectory)..\..\Authoring\WinRT.Host.Shim\bin', '$(Platform)', '$(Configuration)', 'net8.0'))</WinRTHostShimOutDir>
+    <TestProjectionOutDir>$([MSBuild]::NormalizeDirectory('$(MSBuildThisFileDirectory)..\..\Projections\Test\bin', '$(BuildPlatform)', '$(Configuration)', 'net8.0'))</TestProjectionOutDir>
+    <TestHostProbeByClassOutDir>$([MSBuild]::NormalizeDirectory('$(MSBuildThisFileDirectory)..\..\Projections\TestHost.ProbeByClass\bin', '$(BuildPlatform)', '$(Configuration)', 'net8.0'))</TestHostProbeByClassOutDir>
+    <WinRTHostShimOutDir>$([MSBuild]::NormalizeDirectory('$(MSBuildThisFileDirectory)..\..\Authoring\WinRT.Host.Shim\bin', '$(Configuration)', 'net8.0'))</WinRTHostShimOutDir>
   </PropertyGroup>
 
   <!--Rename host/test dlls for various tests (requires disabling hardlinks)-->
