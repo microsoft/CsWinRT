@@ -3,6 +3,8 @@
 
 using AsmResolver.DotNet;
 
+#pragma warning disable IDE0008 // Use 'var' to keep graph node declarations readable
+
 namespace WindowsRuntime.InteropGenerator.Generation;
 
 /// <inheritdoc cref="InteropGenerator"/>
@@ -42,22 +44,22 @@ internal static partial class InteropGenerator
         _ = graph.Add(DefineIgnoresAccessChecksToAttributes);
         _ = graph.Add(EmitMetadataAssemblyAttributes);
 
-        InteropGenerationWorkQueue<InteropGeneratorEmissionContext>.Node delegates = graph.Add(DefineGenericDelegateTypes);
-        InteropGenerationWorkQueue<InteropGeneratorEmissionContext>.Node enumerators = graph.Add(DefineIEnumeratorTypes);
-        InteropGenerationWorkQueue<InteropGeneratorEmissionContext>.Node enumerables = graph.Add(DefineIEnumerableTypes, enumerators);
-        InteropGenerationWorkQueue<InteropGeneratorEmissionContext>.Node readOnlyLists = graph.Add(DefineIReadOnlyListTypes, enumerables);
-        InteropGenerationWorkQueue<InteropGeneratorEmissionContext>.Node lists = graph.Add(DefineIListTypes, enumerables);
-        InteropGenerationWorkQueue<InteropGeneratorEmissionContext>.Node readOnlyDictionaries = graph.Add(DefineIReadOnlyDictionaryTypes, enumerables);
-        InteropGenerationWorkQueue<InteropGeneratorEmissionContext>.Node dictionaries = graph.Add(DefineIDictionaryTypes, enumerables);
-        InteropGenerationWorkQueue<InteropGeneratorEmissionContext>.Node keyValuePairs = graph.Add(DefineKeyValuePairTypes);
-        InteropGenerationWorkQueue<InteropGeneratorEmissionContext>.Node mapChangedArguments = graph.Add(DefineIMapChangedEventArgsTypes);
-        InteropGenerationWorkQueue<InteropGeneratorEmissionContext>.Node observableVectors = graph.Add(DefineIObservableVectorTypes, delegates, lists);
-        InteropGenerationWorkQueue<InteropGeneratorEmissionContext>.Node observableMaps = graph.Add(DefineIObservableMapTypes, delegates, dictionaries);
-        InteropGenerationWorkQueue<InteropGeneratorEmissionContext>.Node asyncActions = graph.Add(DefineIAsyncActionWithProgressTypes, delegates);
-        InteropGenerationWorkQueue<InteropGeneratorEmissionContext>.Node asyncOperations = graph.Add(DefineIAsyncOperationTypes, delegates);
-        InteropGenerationWorkQueue<InteropGeneratorEmissionContext>.Node asyncProgressOperations = graph.Add(DefineIAsyncOperationWithProgressTypes, delegates);
-        InteropGenerationWorkQueue<InteropGeneratorEmissionContext>.Node readOnlyCollections = graph.Add(DefineIReadOnlyCollectionKeyValuePair2Types, readOnlyLists, readOnlyDictionaries);
-        InteropGenerationWorkQueue<InteropGeneratorEmissionContext>.Node collections = graph.Add(DefineICollectionKeyValuePair2Types, lists, dictionaries);
+        var delegates = graph.Add(DefineGenericDelegateTypes);
+        var enumerators = graph.Add(DefineIEnumeratorTypes);
+        var enumerables = graph.Add(DefineIEnumerableTypes, enumerators);
+        var readOnlyLists = graph.Add(DefineIReadOnlyListTypes, enumerables);
+        var lists = graph.Add(DefineIListTypes, enumerables);
+        var readOnlyDictionaries = graph.Add(DefineIReadOnlyDictionaryTypes, enumerables);
+        var dictionaries = graph.Add(DefineIDictionaryTypes, enumerables);
+        var keyValuePairs = graph.Add(DefineKeyValuePairTypes);
+        var mapChangedArguments = graph.Add(DefineIMapChangedEventArgsTypes);
+        var observableVectors = graph.Add(DefineIObservableVectorTypes, delegates, lists);
+        var observableMaps = graph.Add(DefineIObservableMapTypes, delegates, dictionaries);
+        var asyncActions = graph.Add(DefineIAsyncActionWithProgressTypes, delegates);
+        var asyncOperations = graph.Add(DefineIAsyncOperationTypes, delegates);
+        var asyncProgressOperations = graph.Add(DefineIAsyncOperationWithProgressTypes, delegates);
+        var readOnlyCollections = graph.Add(DefineIReadOnlyCollectionKeyValuePair2Types, readOnlyLists, readOnlyDictionaries);
+        var collections = graph.Add(DefineICollectionKeyValuePair2Types, lists, dictionaries);
 
         // Arrays and user-defined CCWs can resolve generic IID/vtable entries from any of these families. Group every
         // family into a completion barrier so all referenced definitions exist before either consumer runs.
@@ -81,8 +83,8 @@ internal static partial class InteropGenerator
             collections
         ];
 
-        InteropGenerationWorkQueue<InteropGeneratorEmissionContext>.Node arrays = graph.Add(DefineSzArrayTypes, genericFamilies);
-        InteropGenerationWorkQueue<InteropGeneratorEmissionContext>.Node userDefinedTypes = graph.Add(DefineUserDefinedTypes, genericFamilies);
+        var arrays = graph.Add(DefineSzArrayTypes, genericFamilies);
+        var userDefinedTypes = graph.Add(DefineUserDefinedTypes, genericFamilies);
 
         _ = graph.Add(RewriteMethodDefinitions, arrays);
         _ = graph.Add(DefineDynamicImplementationDetailTypes, userDefinedTypes, arrays);
