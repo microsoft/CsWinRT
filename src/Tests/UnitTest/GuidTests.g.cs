@@ -23,6 +23,7 @@ using Microsoft.UI.Xaml.Media.Media3D;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using TestComponentCSharp;
+using WindowsRuntime.InteropServices;
 
 namespace UnitTest;
 
@@ -44,6 +45,7 @@ public partial class TestGuids
         Use(default!);
 
         Assert.AreEqual(new Guid("dd725452-2da3-5103-9c7d-22ee9bb14ad3"), GetIID(null));
+        Assert.AreEqual(new Guid("dd725452-2da3-5103-9c7d-22ee9bb14ad3"), WindowsRuntimeMarshal.GetIid<IAsyncActionWithProgress<A>>());
     }
 
     [TestMethod]
@@ -58,6 +60,7 @@ public partial class TestGuids
         Use(default!);
 
         Assert.AreEqual(new Guid("94645425-b9e5-5b91-b509-8da4df6a8916"), GetIID(null));
+        Assert.AreEqual(new Guid("94645425-b9e5-5b91-b509-8da4df6a8916"), WindowsRuntimeMarshal.GetIid<IAsyncOperationWithProgress<A, B>>());
     }
 
     [TestMethod]
@@ -72,6 +75,7 @@ public partial class TestGuids
         Use(default!);
 
         Assert.AreEqual(new Guid("2bd35ee6-72d9-5c5d-9827-05ebb81487ab"), GetIID(null));
+        Assert.AreEqual(new Guid("2bd35ee6-72d9-5c5d-9827-05ebb81487ab"), WindowsRuntimeMarshal.GetIid<IAsyncOperation<A>>());
     }
 
     [TestMethod]
@@ -86,6 +90,7 @@ public partial class TestGuids
         Use(default!);
 
         Assert.AreEqual(new Guid("c261d8d0-71ba-5f38-a239-872342253a18"), GetIID(null));
+        Assert.AreEqual(new Guid("c261d8d0-71ba-5f38-a239-872342253a18"), WindowsRuntimeMarshal.GetIid<AsyncActionProgressHandler<A>>());
     }
 
     [TestMethod]
@@ -100,6 +105,7 @@ public partial class TestGuids
         Use(default!);
 
         Assert.AreEqual(new Guid("9a0d211c-0374-5d23-9e15-eaa3570fae63"), GetIID(null));
+        Assert.AreEqual(new Guid("9a0d211c-0374-5d23-9e15-eaa3570fae63"), WindowsRuntimeMarshal.GetIid<AsyncActionWithProgressCompletedHandler<A>>());
     }
 
     [TestMethod]
@@ -114,6 +120,7 @@ public partial class TestGuids
         Use(default!);
 
         Assert.AreEqual(new Guid("9d534225-231f-55e7-a6d0-6c938e2d9160"), GetIID(null));
+        Assert.AreEqual(new Guid("9d534225-231f-55e7-a6d0-6c938e2d9160"), WindowsRuntimeMarshal.GetIid<AsyncOperationCompletedHandler<A>>());
     }
 
     [TestMethod]
@@ -128,6 +135,7 @@ public partial class TestGuids
         Use(default!);
 
         Assert.AreEqual(new Guid("264f1e0c-abe4-590b-9d37-e1cc118ecc75"), GetIID(null));
+        Assert.AreEqual(new Guid("264f1e0c-abe4-590b-9d37-e1cc118ecc75"), WindowsRuntimeMarshal.GetIid<AsyncOperationProgressHandler<A, B>>());
     }
 
     [TestMethod]
@@ -142,6 +150,7 @@ public partial class TestGuids
         Use(default!);
 
         Assert.AreEqual(new Guid("c2d078d8-ac47-55ab-83e8-123b2be5bc5a"), GetIID(null));
+        Assert.AreEqual(new Guid("c2d078d8-ac47-55ab-83e8-123b2be5bc5a"), WindowsRuntimeMarshal.GetIid<AsyncOperationWithProgressCompletedHandler<A, B>>());
     }
 
     [TestMethod]
@@ -156,6 +165,7 @@ public partial class TestGuids
         Use(default!);
 
         Assert.AreEqual(new Guid("fa0b7d80-7efa-52df-9b69-0574ce57ada4"), GetIID(null));
+        Assert.AreEqual(new Guid("fa0b7d80-7efa-52df-9b69-0574ce57ada4"), WindowsRuntimeMarshal.GetIid<EventHandler<A>>());
     }
 
     [TestMethod]
@@ -170,6 +180,7 @@ public partial class TestGuids
         Use(default!);
 
         Assert.AreEqual(new Guid("edb31843-b4cf-56eb-925a-d4d0ce97a08d"), GetIID(null));
+        Assert.AreEqual(new Guid("edb31843-b4cf-56eb-925a-d4d0ce97a08d"), WindowsRuntimeMarshal.GetIid<EventHandler<A, B>>());
     }
 
     [TestMethod]
@@ -184,6 +195,7 @@ public partial class TestGuids
         Use(default!);
 
         Assert.AreEqual(new Guid("96565eb9-a692-59c8-bcb5-647cde4e6c4d"), GetIID(null));
+        Assert.AreEqual(new Guid("96565eb9-a692-59c8-bcb5-647cde4e6c4d"), WindowsRuntimeMarshal.GetIid<IEnumerable<A>>());
     }
 
     [TestMethod]
@@ -198,6 +210,7 @@ public partial class TestGuids
         Use(default!);
 
         Assert.AreEqual(new Guid("3c9b1e27-8357-590b-8828-6e917f172390"), GetIID(null));
+        Assert.AreEqual(new Guid("3c9b1e27-8357-590b-8828-6e917f172390"), WindowsRuntimeMarshal.GetIid<IEnumerator<A>>());
     }
 
     [TestMethod]
@@ -212,6 +225,7 @@ public partial class TestGuids
         Use(default!);
 
         Assert.AreEqual(new Guid("89336cd9-8b66-50a7-9759-eb88ccb2e1fe"), GetIID(null));
+        Assert.AreEqual(new Guid("89336cd9-8b66-50a7-9759-eb88ccb2e1fe"), WindowsRuntimeMarshal.GetIid<KeyValuePair<A, B>>());
     }
 
     [TestMethod]
@@ -226,6 +240,7 @@ public partial class TestGuids
         Use(default!);
 
         Assert.AreEqual(new Guid("b78f0653-fa89-59cf-ba95-726938aae666"), GetIID(null));
+        Assert.AreEqual(new Guid("b78f0653-fa89-59cf-ba95-726938aae666"), WindowsRuntimeMarshal.GetIid<IReadOnlyDictionary<A, B>>());
     }
 
     [TestMethod]
@@ -240,6 +255,7 @@ public partial class TestGuids
         Use(default!);
 
         Assert.AreEqual(new Guid("9962cd50-09d5-5c46-b1e1-3c679c1c8fae"), GetIID(null));
+        Assert.AreEqual(new Guid("9962cd50-09d5-5c46-b1e1-3c679c1c8fae"), WindowsRuntimeMarshal.GetIid<IDictionary<A, B>>());
     }
 
     [TestMethod]
@@ -254,6 +270,7 @@ public partial class TestGuids
         Use(default!);
 
         Assert.AreEqual(new Guid("5f07498b-8e14-556e-9d2e-2e98d5615da9"), GetIID(null));
+        Assert.AreEqual(new Guid("5f07498b-8e14-556e-9d2e-2e98d5615da9"), WindowsRuntimeMarshal.GetIid<IReadOnlyList<A>>());
     }
 
     [TestMethod]
@@ -268,6 +285,7 @@ public partial class TestGuids
         Use(default!);
 
         Assert.AreEqual(new Guid("0e3f106f-a266-50a1-8043-c90fcf3844f6"), GetIID(null));
+        Assert.AreEqual(new Guid("0e3f106f-a266-50a1-8043-c90fcf3844f6"), WindowsRuntimeMarshal.GetIid<IList<A>>());
     }
 
     [TestMethod]
@@ -282,6 +300,7 @@ public partial class TestGuids
         Use(default!);
 
         Assert.AreEqual(new Guid("e1aa5138-12bd-51a1-8558-698dfd070abe"), GetIID(null));
+        Assert.AreEqual(new Guid("e1aa5138-12bd-51a1-8558-698dfd070abe"), WindowsRuntimeMarshal.GetIid<IMapChangedEventArgs<A>>());
     }
 
     [TestMethod]
@@ -296,6 +315,7 @@ public partial class TestGuids
         Use(default!);
 
         Assert.AreEqual(new Guid("75f99e2a-137e-537e-a5b1-0b5a6245fc02"), GetIID(null));
+        Assert.AreEqual(new Guid("75f99e2a-137e-537e-a5b1-0b5a6245fc02"), WindowsRuntimeMarshal.GetIid<IObservableMap<A, B>>());
     }
 
     [TestMethod]
@@ -310,6 +330,7 @@ public partial class TestGuids
         Use(default!);
 
         Assert.AreEqual(new Guid("d24c289f-2341-5128-aaa1-292dd0dc1950"), GetIID(null));
+        Assert.AreEqual(new Guid("d24c289f-2341-5128-aaa1-292dd0dc1950"), WindowsRuntimeMarshal.GetIid<IObservableVector<A>>());
     }
 
     [TestMethod]
@@ -324,6 +345,7 @@ public partial class TestGuids
         Use(default!);
 
         Assert.AreEqual(new Guid("19046f0b-cf81-5dec-bbb2-7cc250da8b8b"), GetIID(null));
+        Assert.AreEqual(new Guid("19046f0b-cf81-5dec-bbb2-7cc250da8b8b"), WindowsRuntimeMarshal.GetIid<MapChangedEventHandler<A, B>>());
     }
 
     [TestMethod]
@@ -338,6 +360,7 @@ public partial class TestGuids
         Use(default!);
 
         Assert.AreEqual(new Guid("a1e9acd7-e4df-5a79-aefa-de07934ab0fb"), GetIID(null));
+        Assert.AreEqual(new Guid("a1e9acd7-e4df-5a79-aefa-de07934ab0fb"), WindowsRuntimeMarshal.GetIid<VectorChangedEventHandler<A>>());
     }
 
     [TestMethod]
@@ -352,6 +375,7 @@ public partial class TestGuids
         Use(default!);
 
         Assert.AreEqual(new Guid("b32bdca4-5e52-5b27-bc5d-d66a1a268c2a"), GetIID(null));
+        Assert.AreEqual(new Guid("b32bdca4-5e52-5b27-bc5d-d66a1a268c2a"), WindowsRuntimeMarshal.GetIid<IList<object>>());
     }
 
     [TestMethod]
@@ -366,6 +390,7 @@ public partial class TestGuids
         Use(default!);
 
         Assert.AreEqual(new Guid("0d82bd8d-fe62-5d67-a7b9-7886dd75bc4e"), GetIID(null));
+        Assert.AreEqual(new Guid("0d82bd8d-fe62-5d67-a7b9-7886dd75bc4e"), WindowsRuntimeMarshal.GetIid<IList<Uri>>());
     }
 
     [TestMethod]
@@ -380,6 +405,7 @@ public partial class TestGuids
         Use(default!);
 
         Assert.AreEqual(new Guid("5dafe591-86dc-59aa-bfda-07f5d59fc708"), GetIID(null));
+        Assert.AreEqual(new Guid("5dafe591-86dc-59aa-bfda-07f5d59fc708"), WindowsRuntimeMarshal.GetIid<IList<AsyncActionCompletedHandler>>());
     }
 
     [TestMethod]
@@ -394,6 +420,7 @@ public partial class TestGuids
         Use(default!);
 
         Assert.AreEqual(new Guid("c196c8b3-c597-53da-94c3-ec63aa2abdb5"), GetIID(null));
+        Assert.AreEqual(new Guid("c196c8b3-c597-53da-94c3-ec63aa2abdb5"), WindowsRuntimeMarshal.GetIid<IList<NotifyCollectionChangedEventHandler>>());
     }
 
     [TestMethod]
@@ -408,6 +435,7 @@ public partial class TestGuids
         Use(default!);
 
         Assert.AreEqual(new Guid("74b00599-79ae-5ebd-9c1c-3d9cae3f971b"), GetIID(null));
+        Assert.AreEqual(new Guid("74b00599-79ae-5ebd-9c1c-3d9cae3f971b"), WindowsRuntimeMarshal.GetIid<IList<PropertyChangedEventHandler>>());
     }
 
     [TestMethod]
@@ -422,6 +450,7 @@ public partial class TestGuids
         Use(default!);
 
         Assert.AreEqual(new Guid("c8477314-b257-511b-a3a1-9e4eb6385152"), GetIID(null));
+        Assert.AreEqual(new Guid("c8477314-b257-511b-a3a1-9e4eb6385152"), WindowsRuntimeMarshal.GetIid<IList<ComposedNonBlittableStruct>>());
     }
 
     [TestMethod]
@@ -436,6 +465,7 @@ public partial class TestGuids
         Use(default!);
 
         Assert.AreEqual(new Guid("1bfca4f6-2c4e-5174-9869-b39d35848fcc"), GetIID(null));
+        Assert.AreEqual(new Guid("1bfca4f6-2c4e-5174-9869-b39d35848fcc"), WindowsRuntimeMarshal.GetIid<IList<IDisposable>>());
     }
 
     [TestMethod]
@@ -450,6 +480,7 @@ public partial class TestGuids
         Use(default!);
 
         Assert.AreEqual(new Guid("2f5fb6d3-231f-57a1-9f2a-daa7e43bf075"), GetIID(null));
+        Assert.AreEqual(new Guid("2f5fb6d3-231f-57a1-9f2a-daa7e43bf075"), WindowsRuntimeMarshal.GetIid<IList<IWwwFormUrlDecoderEntry>>());
     }
 
     [TestMethod]
@@ -464,6 +495,7 @@ public partial class TestGuids
         Use(default!);
 
         Assert.AreEqual(new Guid("1d9ba3f5-b997-5a7d-82c4-7857ecbf3a42"), GetIID(null));
+        Assert.AreEqual(new Guid("1d9ba3f5-b997-5a7d-82c4-7857ecbf3a42"), WindowsRuntimeMarshal.GetIid<IList<WwwFormUrlDecoderEntry>>());
     }
 
     [TestMethod]
@@ -478,6 +510,7 @@ public partial class TestGuids
         Use(default!);
 
         Assert.AreEqual(new Guid("a3c9b753-57ad-537f-9626-4ae5785473d4"), GetIID(null));
+        Assert.AreEqual(new Guid("a3c9b753-57ad-537f-9626-4ae5785473d4"), WindowsRuntimeMarshal.GetIid<IList<Deferral>>());
     }
 
     [TestMethod]
@@ -492,6 +525,7 @@ public partial class TestGuids
         Use(default!);
 
         Assert.AreEqual(new Guid("94390dc5-e442-5870-88b6-007e232f902c"), GetIID(null));
+        Assert.AreEqual(new Guid("94390dc5-e442-5870-88b6-007e232f902c"), WindowsRuntimeMarshal.GetIid<IList<DateTimeOffset>>());
     }
 
     [TestMethod]
@@ -506,6 +540,7 @@ public partial class TestGuids
         Use(default!);
 
         Assert.AreEqual(new Guid("c0d513a9-ec4a-5a5d-b6d5-b707defdb9f7"), GetIID(null));
+        Assert.AreEqual(new Guid("c0d513a9-ec4a-5a5d-b6d5-b707defdb9f7"), WindowsRuntimeMarshal.GetIid<IList<Point>>());
     }
 
     [TestMethod]
@@ -520,6 +555,7 @@ public partial class TestGuids
         Use(default!);
 
         Assert.AreEqual(new Guid("88241f54-588f-529b-8344-08d8a4a3c25a"), GetIID(null));
+        Assert.AreEqual(new Guid("88241f54-588f-529b-8344-08d8a4a3c25a"), WindowsRuntimeMarshal.GetIid<IEnumerable<IStringable>>());
     }
 
     [TestMethod]
@@ -534,6 +570,7 @@ public partial class TestGuids
         Use(default!);
 
         Assert.AreEqual(new Guid("af2aea1d-08d9-5ca3-9870-c43ea54b9786"), GetIID(null));
+        Assert.AreEqual(new Guid("af2aea1d-08d9-5ca3-9870-c43ea54b9786"), WindowsRuntimeMarshal.GetIid<IEnumerable<IEnumerable>>());
     }
 
     [TestMethod]
@@ -548,6 +585,7 @@ public partial class TestGuids
         Use(default!);
 
         Assert.AreEqual(new Guid("884f89c1-b19c-58fb-bb64-2907b5b72083"), GetIID(null));
+        Assert.AreEqual(new Guid("884f89c1-b19c-58fb-bb64-2907b5b72083"), WindowsRuntimeMarshal.GetIid<IEnumerable<IList>>());
     }
 
     [TestMethod]
@@ -562,6 +600,7 @@ public partial class TestGuids
         Use(default!);
 
         Assert.AreEqual(new Guid("5608aa8b-dd8d-56a4-86db-4c223a1ce8b6"), GetIID(null));
+        Assert.AreEqual(new Guid("5608aa8b-dd8d-56a4-86db-4c223a1ce8b6"), WindowsRuntimeMarshal.GetIid<IEnumerable<NotifyCollectionChangedEventHandler>>());
     }
 
     [TestMethod]
@@ -576,6 +615,7 @@ public partial class TestGuids
         Use(default!);
 
         Assert.AreEqual(new Guid("d80b2894-23a6-5e94-b3e4-bb5be4c87a67"), GetIID(null));
+        Assert.AreEqual(new Guid("d80b2894-23a6-5e94-b3e4-bb5be4c87a67"), WindowsRuntimeMarshal.GetIid<IEnumerable<PropertyChangedEventHandler>>());
     }
 
     [TestMethod]
@@ -590,6 +630,7 @@ public partial class TestGuids
         Use(default!);
 
         Assert.AreEqual(new Guid("b4e71894-d8db-5429-9cee-9e957c01a3fa"), GetIID(null));
+        Assert.AreEqual(new Guid("b4e71894-d8db-5429-9cee-9e957c01a3fa"), WindowsRuntimeMarshal.GetIid<IEnumerable<bool?>>());
     }
 
     [TestMethod]
@@ -604,6 +645,7 @@ public partial class TestGuids
         Use(default!);
 
         Assert.AreEqual(new Guid("d41c6075-62bb-54a7-aba5-b80920dddab1"), GetIID(null));
+        Assert.AreEqual(new Guid("d41c6075-62bb-54a7-aba5-b80920dddab1"), WindowsRuntimeMarshal.GetIid<IEnumerable<short?>>());
     }
 
     [TestMethod]
@@ -618,6 +660,7 @@ public partial class TestGuids
         Use(default!);
 
         Assert.AreEqual(new Guid("03c10a1b-b584-5081-a76d-017a80eeebfe"), GetIID(null));
+        Assert.AreEqual(new Guid("03c10a1b-b584-5081-a76d-017a80eeebfe"), WindowsRuntimeMarshal.GetIid<IEnumerable<int?>>());
     }
 
     [TestMethod]
@@ -632,6 +675,7 @@ public partial class TestGuids
         Use(default!);
 
         Assert.AreEqual(new Guid("ff5ca13c-3fc7-5867-9d95-c2c8d366b4ae"), GetIID(null));
+        Assert.AreEqual(new Guid("ff5ca13c-3fc7-5867-9d95-c2c8d366b4ae"), WindowsRuntimeMarshal.GetIid<IEnumerable<long?>>());
     }
 
     [TestMethod]
@@ -646,6 +690,7 @@ public partial class TestGuids
         Use(default!);
 
         Assert.AreEqual(new Guid("b486c1cb-165b-5128-9e8e-bb0ccb6ea9d2"), GetIID(null));
+        Assert.AreEqual(new Guid("b486c1cb-165b-5128-9e8e-bb0ccb6ea9d2"), WindowsRuntimeMarshal.GetIid<IEnumerable<byte?>>());
     }
 
     [TestMethod]
@@ -660,6 +705,7 @@ public partial class TestGuids
         Use(default!);
 
         Assert.AreEqual(new Guid("e8985950-7e57-5c8b-b6fa-604a465d258c"), GetIID(null));
+        Assert.AreEqual(new Guid("e8985950-7e57-5c8b-b6fa-604a465d258c"), WindowsRuntimeMarshal.GetIid<IEnumerable<ushort?>>());
     }
 
     [TestMethod]
@@ -674,6 +720,7 @@ public partial class TestGuids
         Use(default!);
 
         Assert.AreEqual(new Guid("1225929a-80bd-5d32-9912-a256befadb75"), GetIID(null));
+        Assert.AreEqual(new Guid("1225929a-80bd-5d32-9912-a256befadb75"), WindowsRuntimeMarshal.GetIid<IEnumerable<uint?>>());
     }
 
     [TestMethod]
@@ -688,6 +735,7 @@ public partial class TestGuids
         Use(default!);
 
         Assert.AreEqual(new Guid("6a8145dc-f08b-59e9-aa95-f00f7e0d133c"), GetIID(null));
+        Assert.AreEqual(new Guid("6a8145dc-f08b-59e9-aa95-f00f7e0d133c"), WindowsRuntimeMarshal.GetIid<IEnumerable<ulong?>>());
     }
 
     [TestMethod]
@@ -702,6 +750,7 @@ public partial class TestGuids
         Use(default!);
 
         Assert.AreEqual(new Guid("7eeb4894-d4b0-5fc0-8994-ed10b6b140a5"), GetIID(null));
+        Assert.AreEqual(new Guid("7eeb4894-d4b0-5fc0-8994-ed10b6b140a5"), WindowsRuntimeMarshal.GetIid<IEnumerable<float?>>());
     }
 
     [TestMethod]
@@ -716,6 +765,7 @@ public partial class TestGuids
         Use(default!);
 
         Assert.AreEqual(new Guid("8b82b07e-3cdc-5e09-8d24-b1ed4aba9dc9"), GetIID(null));
+        Assert.AreEqual(new Guid("8b82b07e-3cdc-5e09-8d24-b1ed4aba9dc9"), WindowsRuntimeMarshal.GetIid<IEnumerable<double?>>());
     }
 
     [TestMethod]
@@ -730,6 +780,7 @@ public partial class TestGuids
         Use(default!);
 
         Assert.AreEqual(new Guid("4664e871-2a74-5091-80a9-7c57b61c0227"), GetIID(null));
+        Assert.AreEqual(new Guid("4664e871-2a74-5091-80a9-7c57b61c0227"), WindowsRuntimeMarshal.GetIid<IEnumerable<char?>>());
     }
 
     [TestMethod]
@@ -744,6 +795,7 @@ public partial class TestGuids
         Use(default!);
 
         Assert.AreEqual(new Guid("6c0e1bb4-8a19-550d-9a66-de23be625600"), GetIID(null));
+        Assert.AreEqual(new Guid("6c0e1bb4-8a19-550d-9a66-de23be625600"), WindowsRuntimeMarshal.GetIid<IEnumerable<Guid?>>());
     }
 
     [TestMethod]
@@ -758,6 +810,7 @@ public partial class TestGuids
         Use(default!);
 
         Assert.AreEqual(new Guid("aa591268-d773-57d5-9791-7ca8d6870d45"), GetIID(null));
+        Assert.AreEqual(new Guid("aa591268-d773-57d5-9791-7ca8d6870d45"), WindowsRuntimeMarshal.GetIid<IEnumerable<TimeSpan?>>());
     }
 
     [TestMethod]
@@ -772,6 +825,7 @@ public partial class TestGuids
         Use(default!);
 
         Assert.AreEqual(new Guid("9e757eb6-dcaf-5aa0-8e1a-260f0ee9d183"), GetIID(null));
+        Assert.AreEqual(new Guid("9e757eb6-dcaf-5aa0-8e1a-260f0ee9d183"), WindowsRuntimeMarshal.GetIid<IEnumerable<DateTimeOffset?>>());
     }
 
     [TestMethod]
@@ -786,6 +840,7 @@ public partial class TestGuids
         Use(default!);
 
         Assert.AreEqual(new Guid("8add533b-3c9c-5e53-b2ab-bcc2a5502e5f"), GetIID(null));
+        Assert.AreEqual(new Guid("8add533b-3c9c-5e53-b2ab-bcc2a5502e5f"), WindowsRuntimeMarshal.GetIid<IEnumerable<WindowsRuntime.InteropServices.EventRegistrationToken?>>());
     }
 
     [TestMethod]
@@ -800,6 +855,7 @@ public partial class TestGuids
         Use(default!);
 
         Assert.AreEqual(new Guid("e889008d-6a55-5f13-98ba-0752e40405f4"), GetIID(null));
+        Assert.AreEqual(new Guid("e889008d-6a55-5f13-98ba-0752e40405f4"), WindowsRuntimeMarshal.GetIid<IEnumerable<Point?>>());
     }
 
     [TestMethod]
@@ -814,6 +870,7 @@ public partial class TestGuids
         Use(default!);
 
         Assert.AreEqual(new Guid("53e74ab1-1a40-514a-ae73-c48b4a7ba095"), GetIID(null));
+        Assert.AreEqual(new Guid("53e74ab1-1a40-514a-ae73-c48b4a7ba095"), WindowsRuntimeMarshal.GetIid<IEnumerable<Rect?>>());
     }
 
     [TestMethod]
@@ -828,6 +885,7 @@ public partial class TestGuids
         Use(default!);
 
         Assert.AreEqual(new Guid("693ec203-656d-52f7-a649-31eea2e31a18"), GetIID(null));
+        Assert.AreEqual(new Guid("693ec203-656d-52f7-a649-31eea2e31a18"), WindowsRuntimeMarshal.GetIid<IEnumerable<Size?>>());
     }
 
     [TestMethod]
@@ -842,6 +900,7 @@ public partial class TestGuids
         Use(default!);
 
         Assert.AreEqual(new Guid("25224526-def3-5369-8945-b75072a638e7"), GetIID(null));
+        Assert.AreEqual(new Guid("25224526-def3-5369-8945-b75072a638e7"), WindowsRuntimeMarshal.GetIid<IEnumerable<Color?>>());
     }
 
     [TestMethod]
@@ -856,6 +915,7 @@ public partial class TestGuids
         Use(default!);
 
         Assert.AreEqual(new Guid("511ece22-5784-569e-bec3-dc48838e041a"), GetIID(null));
+        Assert.AreEqual(new Guid("511ece22-5784-569e-bec3-dc48838e041a"), WindowsRuntimeMarshal.GetIid<IEnumerable<PropertyType?>>());
     }
 
     [TestMethod]
@@ -870,6 +930,7 @@ public partial class TestGuids
         Use(default!);
 
         Assert.AreEqual(new Guid("4b61d6df-a772-5dc1-b9fd-9622e6712018"), GetIID(null));
+        Assert.AreEqual(new Guid("4b61d6df-a772-5dc1-b9fd-9622e6712018"), WindowsRuntimeMarshal.GetIid<IEnumerable<Matrix3x2?>>());
     }
 
     [TestMethod]
@@ -884,6 +945,7 @@ public partial class TestGuids
         Use(default!);
 
         Assert.AreEqual(new Guid("93d192a0-6579-5e92-98ec-52abeb0590b5"), GetIID(null));
+        Assert.AreEqual(new Guid("93d192a0-6579-5e92-98ec-52abeb0590b5"), WindowsRuntimeMarshal.GetIid<IEnumerable<Matrix4x4?>>());
     }
 
     [TestMethod]
@@ -898,6 +960,7 @@ public partial class TestGuids
         Use(default!);
 
         Assert.AreEqual(new Guid("78627ff3-abd5-50ef-8a66-e1224024541d"), GetIID(null));
+        Assert.AreEqual(new Guid("78627ff3-abd5-50ef-8a66-e1224024541d"), WindowsRuntimeMarshal.GetIid<IEnumerable<Plane?>>());
     }
 
     [TestMethod]
@@ -912,6 +975,7 @@ public partial class TestGuids
         Use(default!);
 
         Assert.AreEqual(new Guid("36514ff8-a3ef-5353-ae54-029c54627f00"), GetIID(null));
+        Assert.AreEqual(new Guid("36514ff8-a3ef-5353-ae54-029c54627f00"), WindowsRuntimeMarshal.GetIid<IEnumerable<Quaternion?>>());
     }
 
     [TestMethod]
@@ -926,6 +990,7 @@ public partial class TestGuids
         Use(default!);
 
         Assert.AreEqual(new Guid("68cf9b6c-91fb-508d-9d94-a351e52b5e03"), GetIID(null));
+        Assert.AreEqual(new Guid("68cf9b6c-91fb-508d-9d94-a351e52b5e03"), WindowsRuntimeMarshal.GetIid<IEnumerable<Vector2?>>());
     }
 
     [TestMethod]
@@ -940,6 +1005,7 @@ public partial class TestGuids
         Use(default!);
 
         Assert.AreEqual(new Guid("8a40ba7a-7c34-54e6-9178-1df1f39deeae"), GetIID(null));
+        Assert.AreEqual(new Guid("8a40ba7a-7c34-54e6-9178-1df1f39deeae"), WindowsRuntimeMarshal.GetIid<IEnumerable<Vector3?>>());
     }
 
     [TestMethod]
@@ -954,5 +1020,6 @@ public partial class TestGuids
         Use(default!);
 
         Assert.AreEqual(new Guid("eb7d2b5f-56bf-53fb-82ba-413e0891acaf"), GetIID(null));
+        Assert.AreEqual(new Guid("eb7d2b5f-56bf-53fb-82ba-413e0891acaf"), WindowsRuntimeMarshal.GetIid<IEnumerable<Vector4?>>());
     }
 }

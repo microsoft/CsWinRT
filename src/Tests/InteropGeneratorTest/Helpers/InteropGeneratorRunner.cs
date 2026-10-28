@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -99,6 +100,8 @@ internal sealed class InteropGeneratorRunner : IDisposable
     private readonly string[] implementationPaths;
     private readonly string applicationPath;
     private readonly string sdkProjectionPath;
+    private readonly string? componentProjectionPath;
+    private readonly string? iidLibraryPath;
     private int msbuildInvocation;
 
     public InteropGeneratorRunner(
@@ -107,7 +110,15 @@ internal sealed class InteropGeneratorRunner : IDisposable
         bool forwardedEnumerableAliases = false,
         bool ccwGroupingCases = false,
         bool iidNameCollisionCases = false,
-        bool enumerableProviders = false)
+        bool enumerableProviders = false,
+        string? applicationSource = null,
+        string sdkProjectionSource = "",
+        string? componentProjectionSource = null,
+        string? iidLibrarySource = null,
+        bool publicSignIidLibrary = false,
+        string? sdkReferenceSource = null,
+        string iidLibraryName = "IidLibrary",
+        bool forwardUriToFutureAssembly = false)
     {
         Root = Directory.CreateTempSubdirectory("InteropGeneratorTest_").FullName;
         string referencesDirectory = Directory.CreateDirectory(Path.Combine(Root, "references")).FullName;
@@ -151,14 +162,34 @@ internal sealed class InteropGeneratorRunner : IDisposable
             """, references: Directory.GetFiles(GetAssemblyMetadata("NetStandard20ReferenceDirectory"), "*.dll")
                 .Select(path => MetadataReference.CreateFromFile(path)));
 
-        applicationPath = Compile("Application", """
-            [assembly: System.Runtime.Versioning.TargetFramework(".NETCoreApp,Version=v10.0")]
-            public static class Program { public static void Main() { } }
-            """, OutputKind.ConsoleApplication);
-
-        sdkProjectionPath = Compile("WinRT.Sdk.Projection", "");
         string runtimePath = typeof(Windows.Foundation.IStringable).Assembly.Location;
-        string sdkReference = Compile("Microsoft.Windows.SDK.NET", """
+        MetadataReference[] runtimeReferences = [.. Net100.References.All, MetadataReference.CreateFromFile(runtimePath)];
+        sdkProjectionPath = Compile("WinRT.Sdk.Projection", sdkProjectionSource, references: runtimeReferences);
+
+        if (iidLibrarySource is not null)
+        {
+            byte[]? publicKey = publicSignIidLibrary
+                ? AssemblyName.GetAssemblyName(referencePaths.Single(path => Path.GetFileName(path) == "System.Runtime.dll")).GetPublicKey()
+                : null;
+            iidLibraryPath = Compile(iidLibraryName, iidLibrarySource,
+                references: [.. runtimeReferences, MetadataReference.CreateFromFile(sdkProjectionPath)], publicKey: publicKey);
+        }
+
+        applicationPath = Compile("Application", applicationSource ?? """
+            public static class Program { public static void Main() { } }
+            """, OutputKind.ConsoleApplication,
+            [
+                .. runtimeReferences, MetadataReference.CreateFromFile(sdkProjectionPath),
+                .. iidLibraryPath is not null ? new[] { MetadataReference.CreateFromFile(iidLibraryPath) } : []
+            ]);
+
+        if (componentProjectionSource is not null)
+        {
+            componentProjectionPath = Compile("WinRT.Component", componentProjectionSource,
+                references: [.. runtimeReferences, MetadataReference.CreateFromFile(applicationPath)]);
+        }
+
+        string sdkReference = Compile("Microsoft.Windows.SDK.NET", sdkReferenceSource ?? """
             [assembly: WindowsRuntime.InteropServices.WindowsRuntimeReferenceAssembly]
             namespace ProjectionInput;
             [WindowsRuntime.WindowsRuntimeType]
@@ -256,6 +287,47 @@ internal sealed class InteropGeneratorRunner : IDisposable
             iidNameCollisions = [path];
         }
 
+        if (forwardUriToFutureAssembly)
+        {
+            string future = Compile("FutureFramework", "namespace System; public sealed class Uri;");
+            string facadePath = referencePaths.Single(path => Path.GetFileName(path) == "System.Runtime.dll");
+            ModuleDefinition facade = ModuleDefinition.FromFile(facadePath);
+            TypeDefinition uri = facade.TopLevelTypes.Single(type => type.FullName == "System.Uri");
+            AssemblyReference futureAssembly = new("FutureFramework", new Version(0, 0, 0, 0));
+            ForwardedFrameworkTypeImporter importer = new(facade, uri, new TypeReference(futureAssembly, "System", "Uri"));
+
+            foreach (TypeDefinition type in facade.GetAllTypes())
+            {
+                foreach (MethodDefinition method in type.Methods)
+                {
+                    method.Signature = importer.ImportMethodSignature(method.Signature!);
+                }
+
+                foreach (PropertyDefinition property in type.Properties)
+                {
+                    property.Signature = importer.ImportPropertySignature(property.Signature!);
+                }
+
+                foreach (FieldDefinition field in type.Fields)
+                {
+                    field.Signature = importer.ImportFieldSignature(field.Signature!);
+                }
+            }
+
+            facade.TopLevelTypes.Remove(uri);
+            facade.ExportedTypes.Add(new ExportedType(
+                implementation: futureAssembly,
+                ns: "System",
+                name: "Uri")
+            {
+                Attributes = AsmResolver.PE.DotNet.Metadata.Tables.TypeAttributes.Forwarder
+            });
+            using MemoryStream stream = new();
+            facade.Write(stream);
+            File.WriteAllBytes(facadePath, stream.ToArray());
+            referencePaths = [.. referencePaths, future];
+        }
+
         implementationPaths =
         [
             .. useFrameworkImplementations ? GetFrameworkImplementationPaths() : referencePaths,
@@ -264,6 +336,7 @@ internal sealed class InteropGeneratorRunner : IDisposable
             .. groupingTypes,
             .. iidNameCollisions,
             .. enumerableRoots,
+            .. iidLibraryPath is not null ? new[] { iidLibraryPath } : [],
             .. useFrameworkImplementations ? new[] { implementation } : []
         ];
     }
@@ -299,6 +372,16 @@ internal sealed class InteropGeneratorRunner : IDisposable
         File.Delete(attributeAssembly);
     }
 
+    public void RewriteApplicationTypeScope(
+        string typeNamespace,
+        string typeName,
+        string assemblyName,
+        string originalAssemblyName = "System.Runtime")
+    {
+        RewriteTypeScope(applicationPath, typeNamespace, typeName,
+            new AssemblyReference(assemblyName, new Version(0, 0, 0, 0)), originalAssemblyName);
+    }
+
     public async Task<string> GenerateAsync(
         string name,
         bool reverseInputs = false,
@@ -309,11 +392,12 @@ internal sealed class InteropGeneratorRunner : IDisposable
         string? debugReproDirectory = null,
         string[]? marshallingDisabledAssemblyNames = null,
         bool treatWarningsAsErrors = true,
-        string? logDirectory = null)
+        string? logDirectory = null,
+        bool useWindowsUIXamlProjections = false)
     {
         (int exitCode, string log, string outputPath) = await RunAsync(
             name, reverseInputs, parallelism, marshallingMode, optInNetStandard, analyzeNetStandardAssemblies,
-            debugReproDirectory, marshallingDisabledAssemblyNames, treatWarningsAsErrors, logDirectory);
+            debugReproDirectory, marshallingDisabledAssemblyNames, treatWarningsAsErrors, logDirectory, useWindowsUIXamlProjections);
         Assert.AreEqual(0, exitCode, log);
         Assert.IsTrue(File.Exists(outputPath), "The generator did not produce an interop assembly.");
         return outputPath;
@@ -324,7 +408,7 @@ internal sealed class InteropGeneratorRunner : IDisposable
         (int exitCode, string log, string outputPath) = await RunAsync(
             name, reverseInputs, parallelism, marshallingMode: "Minimal", optInNetStandard: false,
             analyzeNetStandardAssemblies: null, debugReproDirectory: null, marshallingDisabledAssemblyNames: null,
-            treatWarningsAsErrors: false, logDirectory: null);
+            treatWarningsAsErrors: false, logDirectory: null, useWindowsUIXamlProjections: false);
 
         Assert.AreNotEqual(0, exitCode, log);
         StringAssert.Contains(log, error);
@@ -342,7 +426,8 @@ internal sealed class InteropGeneratorRunner : IDisposable
         string? debugReproDirectory,
         string[]? marshallingDisabledAssemblyNames,
         bool treatWarningsAsErrors,
-        string? logDirectory)
+        string? logDirectory,
+        bool useWindowsUIXamlProjections)
     {
         string directory = Directory.CreateDirectory(Path.Combine(Root, name)).FullName;
         string responsePath = Path.Combine(directory, "interop.rsp");
@@ -354,8 +439,9 @@ internal sealed class InteropGeneratorRunner : IDisposable
             --implementation-assembly-paths {string.Join(",", implementations)}
             --output-assembly-path {applicationPath}
             --winrt-sdk-projection-assembly-path {sdkProjectionPath}
+            {(componentProjectionPath is not null ? $"--winrt-component-assembly-path {componentProjectionPath}" : "")}
             --generated-assembly-directory {directory}
-            --use-windows-ui-xaml-projections False
+            --use-windows-ui-xaml-projections {useWindowsUIXamlProjections}
             --marshalling-mode {marshallingMode}
             {(analyzeNetStandardAssemblies is { } analyze ? $"--analyze-net-standard-assemblies {analyze}" : "")}
             {(optInNetStandard ? "--marshalling-enabled-assembly-names NetStandardTypes" : "")}
@@ -573,7 +659,8 @@ internal sealed class InteropGeneratorRunner : IDisposable
         PathAssemblyResolver resolver = new([
             .. GetFrameworkImplementationPaths(),
             .. implementationPaths.Except(referencePaths),
-            applicationPath, sdkProjectionPath, path]);
+            applicationPath, sdkProjectionPath, path,
+            .. componentProjectionPath is not null ? new[] { componentProjectionPath } : []]);
         RuntimeContext context = new(runtime, resolver);
         return (context, context.LoadAssembly(path).Modules[0]);
     }
@@ -634,13 +721,26 @@ internal sealed class InteropGeneratorRunner : IDisposable
         string name,
         string source,
         OutputKind outputKind = OutputKind.DynamicallyLinkedLibrary,
-        IEnumerable<MetadataReference>? references = null)
+        IEnumerable<MetadataReference>? references = null,
+        byte[]? publicKey = null)
     {
+        CSharpCompilationOptions options = new(outputKind, deterministic: true, allowUnsafe: true);
+        if (publicKey is not null)
+        {
+            options = options.WithCryptoPublicKey(ImmutableArray.CreateRange(publicKey)).WithPublicSign(true);
+        }
         CSharpCompilation compilation = CSharpCompilation.Create(
             name,
-            [CSharpSyntaxTree.ParseText(source)],
+            [
+                CSharpSyntaxTree.ParseText(source),
+                .. outputKind == OutputKind.ConsoleApplication
+                    ? new[] { CSharpSyntaxTree.ParseText("""
+                        [assembly: System.Runtime.Versioning.TargetFramework(".NETCoreApp,Version=v10.0")]
+                        """) }
+                    : []
+            ],
             references ?? Net100.References.All,
-            new CSharpCompilationOptions(outputKind, deterministic: true));
+            options);
 
         string path = Path.Combine(Root, name + ".dll");
         EmitResult result = compilation.Emit(path);
@@ -653,18 +753,34 @@ internal sealed class InteropGeneratorRunner : IDisposable
         RewriteTypeScope(path, "System.Collections.ObjectModel", "ReadOnlyDictionary`2", scope);
     }
 
-    private static void RewriteTypeScope(string path, string typeNamespace, string typeName, AssemblyReference scope)
+    private static void RewriteTypeScope(
+        string path,
+        string typeNamespace,
+        string typeName,
+        AssemblyReference scope,
+        string originalAssemblyName = "System.Runtime")
     {
         ModuleDefinition module = ModuleDefinition.FromFile(path);
         TypeReference typeReference = module.EnumerateTableMembers<TypeReference>(TableIndex.TypeRef)
             .Single(type => type.Namespace == typeNamespace && type.Name == typeName);
 
-        Assert.AreEqual("System.Runtime", typeReference.Scope!.GetAssembly()!.Name!.ToString());
+        Assert.AreEqual(originalAssemblyName, typeReference.Scope!.GetAssembly()!.Name!.ToString());
         typeReference.Scope = scope;
 
         // Model valid inputs from older reference packs and implementation metadata, not patched generator output
         using MemoryStream stream = new();
         module.Write(stream);
         File.WriteAllBytes(path, stream.ToArray());
+    }
+}
+
+file sealed class ForwardedFrameworkTypeImporter(ModuleDefinition module, TypeDefinition source, ITypeDefOrRef target)
+    : ReferenceImporter(module)
+{
+    public override TypeSignature ImportTypeSignature(TypeSignature signature)
+    {
+        return signature is TypeDefOrRefSignature type && ReferenceEquals(type.Type, source)
+            ? target.ToTypeSignature(isValueType: false)
+            : base.ImportTypeSignature(signature);
     }
 }

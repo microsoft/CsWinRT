@@ -11,9 +11,8 @@ using WindowsRuntime.InteropServices;
 using WindowsRuntime.InteropServices.Marshalling;
 using static System.Runtime.InteropServices.ComWrappers;
 
-#pragma warning disable IDE1006
+#pragma warning disable IL2026, IDE1006
 
-#pragma warning disable IL2026 // Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code
 [assembly: TypeMap<WindowsRuntimeMetadataTypeMapGroup>(
     value: "Windows.Foundation.Numerics.Matrix3x2",
     target: typeof(ABI.System.Numerics.Matrix3x2),
@@ -23,11 +22,21 @@ using static System.Runtime.InteropServices.ComWrappers;
     value: "Windows.Foundation.IReference`1<Windows.Foundation.Numerics.Matrix3x2>",
     target: typeof(ABI.System.Numerics.Matrix3x2),
     trimTarget: typeof(Matrix3x2))]
-#pragma warning restore IL2026 // Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code
+
+[assembly: TypeMap<WindowsRuntimeIidTypeMapGroup>(
+    value: "[#System]System.Nullable`1[[#System]System.Numerics.Matrix3x2]",
+    target: typeof(ABI.System.Numerics.Matrix3x2IidProvider),
+    trimTarget: typeof(Matrix3x2))]
 
 [assembly: TypeMapAssociation<WindowsRuntimeComWrappersTypeMapGroup>(typeof(Matrix3x2), typeof(ABI.System.Numerics.Matrix3x2))]
 
 namespace ABI.System.Numerics;
+
+/// <summary>
+/// IID metadata for the nullable projection of <see cref="global::System.Numerics.Matrix3x2"/>.
+/// </summary>
+[Guid("76358CFD-2CBD-525B-A49E-90EE18247B71")]
+file static class Matrix3x2IidProvider;
 
 /// <summary>
 /// ABI type for <see cref="global::System.Numerics.Matrix3x2"/>.

@@ -63,8 +63,9 @@ public class Test_MultipleComposableFactories
             string output = Path.Combine(directory, "generated");
             ProjectionWriter.Run(new ProjectionWriterOptions
             {
-                InputPaths = [metadata],
+                InputPaths = [metadata, ImplementableHierarchyMetadata.FindWindowsFoundationWinmd()],
                 OutputFolder = output,
+                OutputAssemblyName = "Projection",
                 Include = ["Contoso"]
             });
             string[] sources = Directory.GetFiles(output, "*.cs").Select(File.ReadAllText).ToArray();
@@ -113,6 +114,7 @@ public class Test_MultipleComposableFactories
             {
                 InputPaths = [ComposableFactoryMetadata.Create(directory)],
                 OutputFolder = output,
+                OutputAssemblyName = "Projection",
                 Include = ["Contoso"],
                 ReferenceProjection = referenceProjection
             });

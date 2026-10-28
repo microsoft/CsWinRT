@@ -12,20 +12,29 @@ using WindowsRuntime.InteropServices;
 using WindowsRuntime.InteropServices.Marshalling;
 using static System.Runtime.InteropServices.ComWrappers;
 
-#pragma warning disable CA2256, IDE0008, IDE1006
+#pragma warning disable IL2026, IDE0008, IDE1006, CA2256
 
-#pragma warning disable IL2026 // Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code
 [assembly: TypeMap<WindowsRuntimeMetadataTypeMapGroup>(
     value: "Windows.Storage.Streams.IOutputStream",
     target: typeof(IOutputStream),
     trimTarget: typeof(IOutputStream))]
-#pragma warning restore IL2026 // Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code
+
+[assembly: TypeMap<WindowsRuntimeIidTypeMapGroup>(
+    value: "[WinRT.Runtime]Windows.Storage.Streams.IOutputStream",
+    target: typeof(ABI.Windows.Storage.Streams.IOutputStreamIidProvider),
+    trimTarget: typeof(IOutputStream))]
 
 [assembly: TypeMapAssociation<DynamicInterfaceCastableImplementationTypeMapGroup>(
     source: typeof(IOutputStream),
     proxy: typeof(ABI.Windows.Storage.Streams.IOutputStreamInterfaceImpl))]
 
 namespace ABI.Windows.Storage.Streams;
+
+/// <summary>
+/// IID metadata for <see cref="global::Windows.Storage.Streams.IOutputStream"/>.
+/// </summary>
+[Guid("905A0FE6-BC53-11DF-8C49-001E4FC686DA")]
+file static class IOutputStreamIidProvider;
 
 /// <summary>
 /// Marshaller for <see cref="IOutputStream"/>.

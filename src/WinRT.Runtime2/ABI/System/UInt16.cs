@@ -10,9 +10,8 @@ using WindowsRuntime.InteropServices;
 using WindowsRuntime.InteropServices.Marshalling;
 using static System.Runtime.InteropServices.ComWrappers;
 
-#pragma warning disable IDE1006, CA1416
+#pragma warning disable IL2026, IDE1006, CA1416
 
-#pragma warning disable IL2026 // Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code
 [assembly: TypeMap<WindowsRuntimeMetadataTypeMapGroup>(
     value: "UInt16",
     target: typeof(ABI.System.UInt16),
@@ -22,11 +21,21 @@ using static System.Runtime.InteropServices.ComWrappers;
     value: "Windows.Foundation.IReference`1<UInt16>",
     target: typeof(ABI.System.UInt16),
     trimTarget: typeof(ushort))]
-#pragma warning restore IL2026 // Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code
+
+[assembly: TypeMap<WindowsRuntimeIidTypeMapGroup>(
+    value: "[#System]System.Nullable`1[[#System]System.UInt16]",
+    target: typeof(ABI.System.UInt16IidProvider),
+    trimTarget: typeof(ushort))]
 
 [assembly: TypeMapAssociation<WindowsRuntimeComWrappersTypeMapGroup>(typeof(ushort), typeof(ABI.System.UInt16))]
 
 namespace ABI.System;
+
+/// <summary>
+/// IID metadata for the nullable projection of <see cref="global::System.UInt16"/>.
+/// </summary>
+[Guid("5AB7D2C3-6B62-5E71-A4B6-2D49C4F238FD")]
+file static class UInt16IidProvider;
 
 /// <summary>
 /// ABI type for <see cref="ushort"/>.

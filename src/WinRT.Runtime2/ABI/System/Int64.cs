@@ -10,9 +10,8 @@ using WindowsRuntime.InteropServices;
 using WindowsRuntime.InteropServices.Marshalling;
 using static System.Runtime.InteropServices.ComWrappers;
 
-#pragma warning disable IDE1006, CA1416
+#pragma warning disable IL2026, IDE1006, CA1416
 
-#pragma warning disable IL2026 // Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code
 [assembly: TypeMap<WindowsRuntimeMetadataTypeMapGroup>(
     value: "Int64",
     target: typeof(ABI.System.Int64),
@@ -22,11 +21,21 @@ using static System.Runtime.InteropServices.ComWrappers;
     value: "Windows.Foundation.IReference`1<Int64>",
     target: typeof(ABI.System.Int64),
     trimTarget: typeof(long))]
-#pragma warning restore IL2026 // Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code
+
+[assembly: TypeMap<WindowsRuntimeIidTypeMapGroup>(
+    value: "[#System]System.Nullable`1[[#System]System.Int64]",
+    target: typeof(ABI.System.Int64IidProvider),
+    trimTarget: typeof(long))]
 
 [assembly: TypeMapAssociation<WindowsRuntimeComWrappersTypeMapGroup>(typeof(long), typeof(ABI.System.Int64))]
 
 namespace ABI.System;
+
+/// <summary>
+/// IID metadata for the nullable projection of <see cref="global::System.Int64"/>.
+/// </summary>
+[Guid("4DDA9E24-E69F-5C6A-A0A6-93427365AF2A")]
+file static class Int64IidProvider;
 
 /// <summary>
 /// ABI type for <see cref="long"/>.

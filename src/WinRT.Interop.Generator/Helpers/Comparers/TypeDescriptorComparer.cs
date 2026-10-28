@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using AsmResolver.DotNet;
@@ -13,7 +14,7 @@ namespace WindowsRuntime.InteropGenerator.Helpers;
 /// <summary>
 /// A comparer for <see cref="ITypeDescriptor"/> values.
 /// </summary>
-internal sealed class TypeDescriptorComparer : IComparer<ITypeDescriptor>
+internal sealed class TypeDescriptorComparer : IComparer<ITypeDescriptor?>
 {
     /// <summary>The context used to order equivalent forwarded names consistently.</summary>
     private readonly RuntimeContext? _runtimeContext;
@@ -46,10 +47,10 @@ internal sealed class TypeDescriptorComparer : IComparer<ITypeDescriptor>
     /// <summary>
     /// Creates an invocation-local comparer that reuses display names during single-threaded emission.
     /// </summary>
-    /// <param name="runtimeContext">The context whose type and assembly identities have been normalized.</param>
+    /// <param name="runtimeContext">The context whose type and assembly identities have been normalized, or <see langword="null"/> for context-free ordering.</param>
     /// <returns>A comparer with emission-local display-name caches.</returns>
     /// <remarks>Type names and assembly identities must remain unchanged for this comparer's lifetime.</remarks>
-    public static TypeDescriptorComparer CreateForEmission(RuntimeContext runtimeContext)
+    public static TypeDescriptorComparer CreateForEmission(RuntimeContext? runtimeContext)
     {
         return new(runtimeContext)
         {
@@ -67,7 +68,68 @@ internal sealed class TypeDescriptorComparer : IComparer<ITypeDescriptor>
     public static IComparer<T> Create<T>(RuntimeContext? runtimeContext)
         where T : ITypeDescriptor
     {
-        return (IComparer<T>)(IComparer<ITypeDescriptor>)(runtimeContext is null ? Default : new TypeDescriptorComparer(runtimeContext));
+        return (IComparer<T>)(IComparer<ITypeDescriptor?>)(runtimeContext is null ? Default : new TypeDescriptorComparer(runtimeContext));
+    }
+
+    /// <summary>
+    /// Orders type descriptors by their fully qualified name and structural identity.
+    /// </summary>
+    /// <typeparam name="T">The type of descriptors to order.</typeparam>
+    /// <param name="source">The descriptors to order.</param>
+    /// <param name="runtimeContext">The resolution context, or <see langword="null"/> for context-free ordering.</param>
+    /// <returns>A deferred sequence with fresh ordering keys for each enumeration.</returns>
+    public static IEnumerable<T> Order<T>(IEnumerable<T> source, RuntimeContext? runtimeContext)
+        where T : class, ITypeDescriptor
+    {
+        ArgumentNullException.ThrowIfNull(source);
+
+        IEnumerable<T> Enumerate()
+        {
+            TypeDescriptorComparer comparer = CreateForEmission(runtimeContext);
+
+            // Finish reading the source before formatting any names
+            foreach (T type in source
+                .OrderBy(type => type is null ? null : comparer.GetOrderKey(type), StringComparer.Ordinal)
+                .ThenBy(static type => type, comparer))
+            {
+                yield return type;
+            }
+        }
+
+        return Enumerate();
+    }
+
+    /// <summary>
+    /// Orders values by their selected type's fully qualified name and structural identity.
+    /// </summary>
+    /// <typeparam name="T">The type of values to order.</typeparam>
+    /// <param name="source">The values to order.</param>
+    /// <param name="keySelector">The type to use for each value's ordering key.</param>
+    /// <param name="runtimeContext">The resolution context, or <see langword="null"/> for context-free ordering.</param>
+    /// <returns>A deferred sequence with fresh ordering keys for each enumeration.</returns>
+    public static IEnumerable<T> OrderBy<T>(
+        IEnumerable<T> source,
+        Func<T, ITypeDescriptor?> keySelector,
+        RuntimeContext? runtimeContext)
+    {
+        ArgumentNullException.ThrowIfNull(source);
+        ArgumentNullException.ThrowIfNull(keySelector);
+
+        IEnumerable<T> Enumerate()
+        {
+            TypeDescriptorComparer comparer = CreateForEmission(runtimeContext);
+
+            // 'OrderBy' finishes the source and descriptor projections before formatting any names
+            foreach ((T item, _) in source
+                .Select(item => (Item: item, Type: keySelector(item)))
+                .OrderBy(pair => pair.Type is null ? null : comparer.GetOrderKey(pair.Type), StringComparer.Ordinal)
+                .ThenBy(static pair => pair.Type, comparer))
+            {
+                yield return item;
+            }
+        }
+
+        return Enumerate();
     }
 
     /// <summary>

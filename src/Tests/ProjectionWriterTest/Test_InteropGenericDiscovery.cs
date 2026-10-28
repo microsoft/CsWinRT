@@ -263,7 +263,9 @@ public partial class Test_InteropGenericDiscovery
     }
 
     [TestMethod]
-    public void MixedAssembly_UnresolvedPrivateImplementationDependencyDoesNotBlockRuntimeTypes()
+    [DataRow(false)]
+    [DataRow(true)]
+    public void MixedAssembly_UnresolvedPrivateImplementationDependencyDoesNotBlockRuntimeTypes(bool iidOnly)
     {
         string directory = Directory.CreateTempSubdirectory("InteropMixedAssemblyTest_").FullName;
 
@@ -303,6 +305,7 @@ public partial class Test_InteropGenericDiscovery
                 using System.Collections;
                 using Compiler;
                 using Windows.Foundation;
+                using WindowsRuntime.InteropServices;
 
                 namespace Mixed;
 
@@ -326,11 +329,27 @@ public partial class Test_InteropGenericDiscovery
                 {
                     public override string ToString() => "view model";
                 }
+
+                public sealed class MetadataQueries<T>
+                {
+                    public System.Guid GetIid()
+                    {
+                        _ = Factory.Create<int>();
+                        _ = typeof(Symbol);
+                        object boxed = new LinePositionSpan(0);
+                        return WindowsRuntimeMarshal.GetIid<IList<T>>();
+                    }
+                }
                 """],
                 Path.Combine(directory, "Mixed.dll"),
                 additionalReferences: [dependency]);
             string app = ProjectionWriterRunner.CompileSources(
-                ["""
+                [iidOnly ? """
+                public static class Program
+                {
+                    public static void Main() => new Mixed.MetadataQueries<int>().GetIid();
+                }
+                """ : """
                 public static class Program
                 {
                     public static void Main() => _ = new Mixed.ViewModel();
@@ -352,6 +371,15 @@ public partial class Test_InteropGenericDiscovery
             StringAssert.Contains(log, "System.Collections.Generic.KeyValuePair`2<System.String, Compiler.Symbol>[]");
             Assert.IsTrue(GetComWrappersTypeAssociations(Path.Combine(directory, "WinRT.Interop.dll"))
                 .Any(type => type.StartsWith("Mixed.ViewModel,", StringComparison.Ordinal)), log);
+            if (iidOnly)
+            {
+                AsmResolver.DotNet.ModuleDefinition interop = AsmResolver.DotNet.ModuleDefinition.FromFile(Path.Combine(directory, "WinRT.Interop.dll"));
+                Assert.IsTrue(interop.Assembly!.CustomAttributes.Any(attribute =>
+                    attribute.Constructor?.DeclaringType?.FullName ==
+                        "System.Runtime.InteropServices.TypeMapAttribute`1<WindowsRuntime.InteropServices.WindowsRuntimeIidTypeMapGroup>" &&
+                    attribute.Signature?.FixedArguments[0].Element?.ToString() ==
+                        "[#System]System.Collections.Generic.IList`1[[#System]System.Int32]"));
+            }
         }
         finally
         {
@@ -765,6 +793,7 @@ public partial class Test_InteropGenericDiscovery
                 {
                     InputPaths = [metadata],
                     OutputFolder = output,
+                    OutputAssemblyName = "WinRT.Sdk.Projection",
                     Include = ["Contoso"],
                     ReferenceProjection = referenceProjection
                 });

@@ -10,9 +10,8 @@ using WindowsRuntime.InteropServices;
 using WindowsRuntime.InteropServices.Marshalling;
 using static System.Runtime.InteropServices.ComWrappers;
 
-#pragma warning disable IDE1006, CA1416
+#pragma warning disable IL2026, IDE1006, CA1416
 
-#pragma warning disable IL2026 // Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code
 [assembly: TypeMap<WindowsRuntimeMetadataTypeMapGroup>(
     value: "Windows.Foundation.Collections.CollectionChange",
     target: typeof(CollectionChange),
@@ -22,9 +21,19 @@ using static System.Runtime.InteropServices.ComWrappers;
     value: "Windows.Foundation.IReference`1<Windows.Foundation.Collections.CollectionChange>",
     target: typeof(CollectionChange),
     trimTarget: typeof(CollectionChange))]
-#pragma warning restore IL2026 // Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code
+
+[assembly: TypeMap<WindowsRuntimeIidTypeMapGroup>(
+    value: "[#System]System.Nullable`1[[WinRT.Runtime]Windows.Foundation.Collections.CollectionChange]",
+    target: typeof(ABI.Windows.Foundation.Collections.CollectionChangeIidProvider),
+    trimTarget: typeof(CollectionChange))]
 
 namespace ABI.Windows.Foundation.Collections;
+
+/// <summary>
+/// IID metadata for the nullable projection of <see cref="global::Windows.Foundation.Collections.CollectionChange"/>.
+/// </summary>
+[Guid("25BCAF91-880D-537D-82FC-9BBF0CACCB8B")]
+file static class CollectionChangeIidProvider;
 
 /// <summary>
 /// Marshaller for <see cref="CollectionChange"/>.

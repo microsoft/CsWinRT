@@ -11,9 +11,8 @@ using WindowsRuntime.InteropServices;
 using WindowsRuntime.InteropServices.Marshalling;
 using static System.Runtime.InteropServices.ComWrappers;
 
-#pragma warning disable IDE1006
+#pragma warning disable IL2026, IDE1006
 
-#pragma warning disable IL2026 // Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code
 [assembly: TypeMap<WindowsRuntimeMetadataTypeMapGroup>(
     value: "Windows.Foundation.Numerics.Quaternion",
     target: typeof(ABI.System.Numerics.Quaternion),
@@ -23,11 +22,21 @@ using static System.Runtime.InteropServices.ComWrappers;
     value: "Windows.Foundation.IReference`1<Windows.Foundation.Numerics.Quaternion>",
     target: typeof(ABI.System.Numerics.Quaternion),
     trimTarget: typeof(Quaternion))]
-#pragma warning restore IL2026 // Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code
+
+[assembly: TypeMap<WindowsRuntimeIidTypeMapGroup>(
+    value: "[#System]System.Nullable`1[[#System]System.Numerics.Quaternion]",
+    target: typeof(ABI.System.Numerics.QuaternionIidProvider),
+    trimTarget: typeof(Quaternion))]
 
 [assembly: TypeMapAssociation<WindowsRuntimeComWrappersTypeMapGroup>(typeof(Quaternion), typeof(ABI.System.Numerics.Quaternion))]
 
 namespace ABI.System.Numerics;
+
+/// <summary>
+/// IID metadata for the nullable projection of <see cref="global::System.Numerics.Quaternion"/>.
+/// </summary>
+[Guid("B27004BB-C014-5DCE-9A21-799C5A3C1461")]
+file static class QuaternionIidProvider;
 
 /// <summary>
 /// ABI type for <see cref="global::System.Numerics.Quaternion"/>.

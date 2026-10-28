@@ -253,6 +253,41 @@ internal sealed class InteropGeneratorEmitInputs
         return new([.. groups.OrderBy(static group => group.OrderedTypes)], types);
     }
 
+    /// <summary>
+    /// Enumerates discovered constructed types and mode-dependent custom mappings.
+    /// </summary>
+    /// <returns>The canonicalized types used to populate the external IID map.</returns>
+    public IEnumerable<TypeSignature> EnumerateIidTypes()
+    {
+        IEnumerable<TypeSignature> types = [
+            .. _discoveryState.GenericDelegateTypes,
+            .. _discoveryState.IEnumerator1Types,
+            .. _discoveryState.IEnumerable1Types,
+            .. _discoveryState.IList1Types,
+            .. _discoveryState.IReadOnlyList1Types,
+            .. _discoveryState.IDictionary2Types,
+            .. _discoveryState.IReadOnlyDictionary2Types,
+            .. _discoveryState.KeyValuePairTypes,
+            .. _discoveryState.IObservableVector1Types,
+            .. _discoveryState.IObservableMap2Types,
+            .. _discoveryState.IMapChangedEventArgs1Types,
+            .. _discoveryState.IAsyncOperation1Types,
+            .. _discoveryState.IAsyncActionWithProgress1Types,
+            .. _discoveryState.IAsyncOperationWithProgress2Types,
+            .. _discoveryState.SzArrayAndVtableTypes.Keys,
+
+            // Fixed runtime IIDs are precompiled (only these custom mappings vary by XAML mode)
+            _interopReferences.INotifyCollectionChanged.ToReferenceTypeSignature(),
+            _interopReferences.INotifyPropertyChanged.ToReferenceTypeSignature(),
+            _interopReferences.NotifyCollectionChangedEventArgs.ToReferenceTypeSignature(),
+            _interopReferences.PropertyChangedEventArgs.ToReferenceTypeSignature(),
+            _interopReferences.NotifyCollectionChangedEventHandler.ToReferenceTypeSignature(),
+            _interopReferences.PropertyChangedEventHandler.ToReferenceTypeSignature(),
+            _interopReferences.NotifyCollectionChangedAction.ToValueTypeSignature()];
+
+        return CanonicalizeTypes(types);
+    }
+
     /// <summary>Resolves aliases and orders signatures by fully qualified type name.</summary>
     /// <typeparam name="TSignature">The type of signature to enumerate.</typeparam>
     /// <param name="signatures">The discovered signatures.</param>

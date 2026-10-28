@@ -166,6 +166,7 @@ internal sealed partial class InteropGenerationFingerprint
         writer.Write(_args.EnableDefaultCustomPropertyProviderSupport);
         writer.Write((int)_args.MarshallingMode);
         writer.Write(_args.AnalyzeNetStandardAssemblies);
+        writer.Write(_state.HasIidLookupReferences);
         writer.Write(_state.MarshallingEnabledAssemblyNames.Count);
 
         foreach (string name in _state.MarshallingEnabledAssemblyNames.Order(StringComparer.OrdinalIgnoreCase))

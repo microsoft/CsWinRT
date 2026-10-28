@@ -8,18 +8,29 @@ using WindowsRuntime;
 using WindowsRuntime.InteropServices;
 using WindowsRuntime.InteropServices.Marshalling;
 
-#pragma warning disable IL2026 // Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code
+#pragma warning disable IL2026
+
 [assembly: TypeMap<WindowsRuntimeComWrappersTypeMapGroup>(
     value: "Microsoft.UI.Xaml.Data.DataErrorsChangedEventArgs",
     target: typeof(ABI.System.ComponentModel.DataErrorsChangedEventArgs),
     trimTarget: typeof(DataErrorsChangedEventArgs))]
-#pragma warning restore IL2026 // Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code
+
+[assembly: TypeMap<WindowsRuntimeIidTypeMapGroup>(
+    value: "[#System]System.ComponentModel.DataErrorsChangedEventArgs",
+    target: typeof(ABI.System.ComponentModel.DataErrorsChangedEventArgsIidProvider),
+    trimTarget: typeof(DataErrorsChangedEventArgs))]
 
 [assembly: TypeMapAssociation<WindowsRuntimeComWrappersTypeMapGroup>(
     typeof(DataErrorsChangedEventArgs),
     typeof(ABI.System.ComponentModel.DataErrorsChangedEventArgs))]
 
 namespace ABI.System.ComponentModel;
+
+/// <summary>
+/// IID metadata for <see cref="global::System.ComponentModel.DataErrorsChangedEventArgs"/>.
+/// </summary>
+[Guid("D026DD64-5F26-5F15-A86A-0DEC8A431796")]
+file static class DataErrorsChangedEventArgsIidProvider;
 
 /// <summary>
 /// ABI type for <see cref="global::System.ComponentModel.DataErrorsChangedEventArgs"/>.

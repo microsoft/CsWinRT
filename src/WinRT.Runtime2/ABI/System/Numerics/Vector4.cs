@@ -11,9 +11,8 @@ using WindowsRuntime.InteropServices;
 using WindowsRuntime.InteropServices.Marshalling;
 using static System.Runtime.InteropServices.ComWrappers;
 
-#pragma warning disable IDE1006
+#pragma warning disable IL2026, IDE1006
 
-#pragma warning disable IL2026 // Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code
 [assembly: TypeMap<WindowsRuntimeMetadataTypeMapGroup>(
     value: "Windows.Foundation.Numerics.Vector4",
     target: typeof(ABI.System.Numerics.Vector4),
@@ -23,11 +22,21 @@ using static System.Runtime.InteropServices.ComWrappers;
     value: "Windows.Foundation.IReference`1<Windows.Foundation.Numerics.Vector4>",
     target: typeof(ABI.System.Numerics.Vector4),
     trimTarget: typeof(Vector4))]
-#pragma warning restore IL2026 // Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code
+
+[assembly: TypeMap<WindowsRuntimeIidTypeMapGroup>(
+    value: "[#System]System.Nullable`1[[#System]System.Numerics.Vector4]",
+    target: typeof(ABI.System.Numerics.Vector4IidProvider),
+    trimTarget: typeof(Vector4))]
 
 [assembly: TypeMapAssociation<WindowsRuntimeComWrappersTypeMapGroup>(typeof(Vector4), typeof(ABI.System.Numerics.Vector4))]
 
 namespace ABI.System.Numerics;
+
+/// <summary>
+/// IID metadata for the nullable projection of <see cref="global::System.Numerics.Vector4"/>.
+/// </summary>
+[Guid("A5E843C9-ED20-5339-8F8D-9FE404CF3654")]
+file static class Vector4IidProvider;
 
 /// <summary>
 /// ABI type for <see cref="global::System.Numerics.Vector4"/>.

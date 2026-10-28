@@ -178,6 +178,22 @@ internal static class WellKnownProjectionWriterExceptions
         return Exception(5024, $"The activation factory for '{runtimeClassName}' can only extend one class, but both '{firstTypeName}' and '{secondTypeName}' are declared for it.");
     }
 
+    /// <summary>
+    /// An implementation projection has no destination assembly identity for its IID map keys.
+    /// </summary>
+    public static WellKnownProjectionWriterException MissingOutputAssemblyName()
+    {
+        return Exception(5025, "An output assembly simple name must be provided for implementation projections.");
+    }
+
+    /// <summary>
+    /// Two projection types claim the same IID key with conflicting identities or trim dependencies.
+    /// </summary>
+    public static WellKnownProjectionWriterException ConflictingIidTypeNames(string key)
+    {
+        return Exception(5026, $"Conflicting IID registrations were generated for the type key '{key}'.");
+    }
+
     private static WellKnownProjectionWriterException Exception(int id, string message, Exception? innerException = null)
     {
         return new WellKnownProjectionWriterException($"{ErrorPrefix}{id:0000}", message, innerException);

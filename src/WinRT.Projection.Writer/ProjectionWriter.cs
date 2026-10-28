@@ -36,6 +36,11 @@ public static class ProjectionWriter
             throw WellKnownProjectionWriterExceptions.MissingOutputFolder();
         }
 
+        if (!options.ReferenceProjection && string.IsNullOrWhiteSpace(options.OutputAssemblyName))
+        {
+            throw WellKnownProjectionWriterExceptions.MissingOutputAssemblyName();
+        }
+
         Settings settings;
 
         // Translate the public options into the internal settings bag.
@@ -53,6 +58,7 @@ public static class ProjectionWriter
                 IdicExclusiveTo = options.IdicExclusiveTo,
                 ReferenceProjection = options.ReferenceProjection,
                 OutputFolder = Path.GetFullPath(options.OutputFolder),
+                OutputAssemblyName = options.OutputAssemblyName ?? string.Empty,
             };
 
             settings.Input.UnionWith(options.InputPaths);
