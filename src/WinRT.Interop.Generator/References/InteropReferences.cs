@@ -2138,6 +2138,20 @@ internal sealed class InteropReferences
             returnType: _corLibTypeFactory.IntPtr));
 
     /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IReferenceArrayObjectImpl.get_IID()</c>.
+    /// </summary>
+    public MemberReference IReferenceArrayObjectImplget_IID => field ??= IReferenceArrayObjectImpl
+        .CreateMemberReference("get_IID"u8, MethodSignature.CreateStatic(
+            returnType: WellKnownTypeSignatureFactory.InGuid(this)));
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IReferenceArrayObjectImpl.get_Vtable()</c>.
+    /// </summary>
+    public MemberReference IReferenceArrayObjectImplget_Vtable => field ??= IReferenceArrayObjectImpl
+        .CreateMemberReference("get_Vtable"u8, MethodSignature.CreateStatic(
+            returnType: _corLibTypeFactory.IntPtr));
+
+    /// <summary>
     /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IStringableImpl.get_Vtable()</c>.
     /// </summary>
     public MemberReference IStringableImplget_Vtable => field ??= IStringableImpl

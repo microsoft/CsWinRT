@@ -35,16 +35,20 @@ internal sealed class AsyncInfoTaskCompletionSource<TProgress> : TaskCompletionS
     /// <param name="asyncInfo">The <see cref="IAsyncInfo"/> instance to wrap.</param>
     /// <param name="cancellationToken">The input <see cref="CancellationToken"/> value.</param>
     public AsyncInfoTaskCompletionSource(IAsyncInfo asyncInfo, CancellationToken cancellationToken)
-        // Keeping only the task alive must also keep the native operation and its completion callbacks alive
-        // Store the operation in 'Task.AsyncState' for the task's full lifetime, even without cancellation support
+
+        // Store the operation in 'Task.AsyncState' for the full lifetime of the task, even when cancellation is not supported.
+        // This ensures that keeping only the task alive also keeps the native operation and its completion callbacks alive.
         : base(asyncInfo)
     {
         _cancellationToken = cancellationToken;
 
         if (_cancellationToken.CanBeCanceled)
         {
-            // Use one callback so task completion does not depend on another registration
-            // running after native cancellation, which could throw or never report completion
+            // Register a single callback that cancels the underlying 'IAsyncInfo' and also completes the task. Handling both
+            // responsibilities (forwarding the cancellation to native and completing the task) in one callback means that the
+            // task is completed even if the native cancellation throws (e.g. 'RPC_E_DISCONNECTED' if the backing COM server
+            // has died) or never reports completion, and doesn't depend on some other registration still running afterwards
+            // (if the callback threw, 'CancellationTokenSource.Cancel()' would stop invoking the remaining ones).
             try
             {
                 _registration = _cancellationToken.Register(
@@ -54,7 +58,7 @@ internal sealed class AsyncInfoTaskCompletionSource<TProgress> : TaskCompletionS
             catch (Exception e)
             {
                 // An already-canceled token runs the callback during registration; its 'finally'
-                // has already made the task terminal, so 'TrySetException' preserves that outcome
+                // has already made the task terminal, so 'TrySetException' preserves that outcome.
                 _ = TrySetException(e);
             }
         }
@@ -74,7 +78,8 @@ internal sealed class AsyncInfoTaskCompletionSource<TProgress> : TaskCompletionS
     {
         try
         {
-            ((IAsyncInfo)Task.AsyncState!).Cancel();
+            // 'Task.AsyncState' is always the 'IAsyncInfo' passed to the base constructor, and it cannot change afterwards
+            Unsafe.As<IAsyncInfo>(Task.AsyncState!).Cancel();
         }
         catch (Exception e) when (e is COMException { HResult:
             WellKnownErrorCodes.RPC_E_DISCONNECTED or
@@ -84,6 +89,8 @@ internal sealed class AsyncInfoTaskCompletionSource<TProgress> : TaskCompletionS
             // A disconnected COM server cannot deliver completion. Swallow these expected failures
             // so they do not escape from 'CancellationTokenSource.Cancel()' on the calling thread
             // (potentially a thread pool thread), where an unhandled exception could terminate the process.
+            // The task is still completed as canceled by the 'finally' block below, so awaiters will
+            // observe the cancellation as expected.
             //
             // Note that we're intentionally only handling well-known exceptions due to "valid"
             // infrastructure issues that can happen normally (e.g. a COM server disconnecting).
@@ -93,7 +100,7 @@ internal sealed class AsyncInfoTaskCompletionSource<TProgress> : TaskCompletionS
         finally
         {
             // Complete even if native cancellation never reports completion or throws and causes
-            // 'CancellationTokenSource.Cancel(throwOnFirstException: true)' to stop invoking callbacks
+            // 'CancellationTokenSource.Cancel(throwOnFirstException: true)' to stop invoking callbacks.
             _ = TrySetCanceled(_cancellationToken);
         }
     }

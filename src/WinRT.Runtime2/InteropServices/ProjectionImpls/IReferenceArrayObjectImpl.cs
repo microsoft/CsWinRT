@@ -4,6 +4,10 @@
 using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using WindowsRuntime.InteropServices.Marshalling;
+using static System.Runtime.InteropServices.ComWrappers;
+
+#pragma warning disable IDE1006
 
 namespace WindowsRuntime.InteropServices;
 
@@ -26,7 +30,7 @@ public static unsafe class IReferenceArrayObjectImpl
     {
         *(IInspectableVftbl*)Unsafe.AsPointer(ref Vftbl) = *(IInspectableVftbl*)IInspectableImpl.Vtable;
 
-        Vftbl.get_Value = (delegate* unmanaged[MemberFunction]<void*, uint*, void**, HRESULT>)(delegate* unmanaged[MemberFunction]<void*, uint*, void***, HRESULT>)&InspectableArrayPropertyValueImpl.GetInspectableArray;
+        Vftbl.get_Value = (delegate* unmanaged[MemberFunction]<void*, uint*, void**, HRESULT>)(delegate* unmanaged[MemberFunction]<void*, uint*, void***, HRESULT>)&get_Value;
     }
 
     /// <summary>
@@ -35,16 +39,7 @@ public static unsafe class IReferenceArrayObjectImpl
     public static ref readonly Guid IID
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get
-        {
-            ReadOnlySpan<byte> data =
-            [
-                0x4F, 0xA8, 0xD7, 0x9C, 0x80, 0x0C, 0xC5, 0x59,
-                0xB4, 0x4E, 0x97, 0x78, 0x41, 0xBB, 0x43, 0xD9
-            ];
-
-            return ref Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
-        }
+        get => ref WellKnownWindowsInterfaceIIDs.IID_IReferenceArrayOfObject;
     }
 
     /// <summary>
@@ -54,5 +49,28 @@ public static unsafe class IReferenceArrayObjectImpl
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get => (nint)Unsafe.AsPointer(in Vftbl);
+    }
+
+    /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.ireferencearray-1.value"/>
+    [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
+    internal static HRESULT get_Value(void* thisPtr, uint* size, void*** value)
+    {
+        if (size is null || value is null)
+        {
+            return WellKnownErrorCodes.E_POINTER;
+        }
+
+        try
+        {
+            object[] thisObject = ComInterfaceDispatch.GetInstance<object[]>((ComInterfaceDispatch*)thisPtr);
+
+            WindowsRuntimeObjectArrayMarshaller.ConvertToUnmanaged(thisObject, out *size, out *value);
+
+            return WellKnownErrorCodes.S_OK;
+        }
+        catch (Exception e)
+        {
+            return RestrictedErrorInfoExceptionMarshaller.ConvertToUnmanaged(e);
+        }
     }
 }

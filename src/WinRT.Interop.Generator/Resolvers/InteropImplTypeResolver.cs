@@ -187,9 +187,7 @@ internal static class InteropImplTypeResolver
             _ when interopReferences.SignatureComparer.Equals(type.BaseType, interopReferences.Point) => "Point",
             _ when interopReferences.SignatureComparer.Equals(type.BaseType, interopReferences.Size) => "Size",
             _ when interopReferences.SignatureComparer.Equals(type.BaseType, interopReferences.Rect) => "Rect",
-            _ when !type.BaseType.IsValueType &&
-                !type.BaseType.IsTypeOfType(interopReferences) &&
-                !type.BaseType.IsTypeOfException(interopReferences) => "Inspectable",
+            _ when type.IsCovariantSzArrayType(interopReferences) => "Inspectable",
             _ => "OtherType"
         };
 
@@ -211,10 +209,6 @@ internal static class InteropImplTypeResolver
     /// <returns>The IID and vtable getters.</returns>
     public static (IMethodDefOrRef get_IID, IMethodDefOrRef get_Vtable) GetInspectableArrayTypeImpl(InteropReferences interopReferences)
     {
-        return (
-            interopReferences.IReferenceArrayObjectImpl.CreateMemberReference(
-                "get_IID"u8, MethodSignature.CreateStatic(WellKnownTypeSignatureFactory.InGuid(interopReferences))),
-            interopReferences.IReferenceArrayObjectImpl.CreateMemberReference(
-                "get_Vtable"u8, MethodSignature.CreateStatic(interopReferences.IntPtr)));
+        return (interopReferences.IReferenceArrayObjectImplget_IID, interopReferences.IReferenceArrayObjectImplget_Vtable);
     }
 }

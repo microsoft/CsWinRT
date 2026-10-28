@@ -399,15 +399,11 @@ internal partial class InteropTypeDefinitionBuilder
             entriesList.Add(InteropInterfaceEntriesResolver.Create(get_IidMethod, implType.GetMethod("get_Vtable"u8)));
 
             // Preserve the typed array identity while also supporting inspectable array unboxing
-            if (!arrayType.BaseType.IsValueType &&
-                !arrayType.BaseType.IsTypeOfObject() &&
-                !arrayType.BaseType.IsTypeOfString() &&
-                !arrayType.BaseType.IsTypeOfType(interopReferences) &&
-                !arrayType.BaseType.IsTypeOfException(interopReferences))
+            if (arrayType.IsCovariantSzArrayType(interopReferences))
             {
-                var inspectableArrayImpl = InteropImplTypeResolver.GetInspectableArrayTypeImpl(interopReferences);
+                (IMethodDefOrRef get_IID, IMethodDefOrRef get_Vtable) = InteropImplTypeResolver.GetInspectableArrayTypeImpl(interopReferences);
 
-                entriesList.Add(InteropInterfaceEntriesResolver.Create(inspectableArrayImpl.get_IID, inspectableArrayImpl.get_Vtable));
+                entriesList.Add(InteropInterfaceEntriesResolver.Create(get_IID, get_Vtable));
             }
 
             // Add the default 'ICustomPropertyProvider' without changing the first array-reference slot

@@ -456,9 +456,9 @@ internal static partial class InteropTypeDiscovery
         }
         else
         {
-            // Non-WinRT reference arrays are boxed as 'IReferenceArray<Object>', so also discover 'object[]'
-            // to provide the runtime class name lookup and marshalling code needed to unbox them on return
-            if (!typeSignature.BaseType.IsValueType)
+            // Reference arrays that are not Windows Runtime types are boxed as 'IReferenceArray<Object>', so also discover
+            // 'object[]' to provide the runtime class name lookup and marshalling code needed to unbox them on return.
+            if (typeSignature.IsCovariantSzArrayType(interopReferences))
             {
                 TryTrackSzArrayType(
                     typeSignature: interopReferences.Object.MakeSzArrayType(),
@@ -469,7 +469,7 @@ internal static partial class InteropTypeDiscovery
                     module: module);
             }
 
-            // Non-WinRT arrays use user-defined marshalling, with inspectable-array boxing for reference elements
+            // Arrays that are not Windows Runtime types use user-defined marshalling, with inspectable-array boxing for reference elements
             discoveryState.TrackUserDefinedType(typeSignature, interfaces.ToEquatableSet());
         }
 

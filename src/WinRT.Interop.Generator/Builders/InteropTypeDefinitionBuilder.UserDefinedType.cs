@@ -64,16 +64,12 @@ internal partial class InteropTypeDefinitionBuilder
             // It's not guaranteed that the list is empty, so we must always reset it first
             entriesList.Clear();
 
-            // Non-WinRT reference arrays are handled as user-defined types, but still need
-            // 'IReferenceArray<Object>' and 'IPropertyValue' to support native array unboxing
-            if (userDefinedType is SzArrayTypeSignature { BaseType.IsValueType: false })
-            {
-                (IMethodDefOrRef arrayIid, IMethodDefOrRef arrayVtable) = InteropImplTypeResolver.GetInspectableArrayTypeImpl(interopReferences);
-                (IMethodDefOrRef propertyValueIid, IMethodDefOrRef propertyValueVtable) = InteropImplTypeResolver.GetSzArrayTypeImpl(interopReferences.Object.MakeSzArrayType(), interopReferences);
-
-                entriesList.Add(InteropInterfaceEntriesResolver.Create(arrayIid, arrayVtable));
-                entriesList.Add(InteropInterfaceEntriesResolver.Create(propertyValueIid, propertyValueVtable));
-            }
+            // Covariant reference arrays that are not Windows Runtime types are handled as user-defined types, but still
+            // need 'IReferenceArray<Object>' and 'IPropertyValue' to support native array unboxing. These entries are
+            // added first, to match the ordering used for the other SZ array types.
+            entriesList.AddRange(InteropInterfaceEntriesResolver.EnumerateCovariantSzArrayInterfaceEntries(
+                type: userDefinedType,
+                interopReferences: interopReferences));
 
             // Add the default 'ICustomPropertyProvider' unless it is disabled or explicitly implemented
             entriesList.AddRange(InteropInterfaceEntriesResolver.EnumerateDefaultCustomPropertyProviderInterfaceEntries(
@@ -228,9 +224,10 @@ internal partial class InteropTypeDefinitionBuilder
                 _ = userDefinedType.Resolve(module.RuntimeContext);
             }
 
-            // Use the boxed inspectable-array name so RCW lookup unboxes these arrays
-            // instead of treating them as ordinary collection objects
-            if (userDefinedType is SzArrayTypeSignature { BaseType.IsValueType: false })
+            // Special-case covariant arrays and report 'IReferenceArray<Object>' as their runtime class name, so that when marshalling
+            // this CCW it will be correctly recognized as an array by consumers and unboxed, rather than being treated as an arbitrary
+            // custom object collection.
+            if (userDefinedType is SzArrayTypeSignature szArrayType && szArrayType.IsCovariantSzArrayType(interopReferences))
             {
                 InteropTypeDefinitionBuilder.Proxy(
                     ns: InteropUtf8NameFactory.TypeNamespace(userDefinedType, interopReferences.RuntimeContext),

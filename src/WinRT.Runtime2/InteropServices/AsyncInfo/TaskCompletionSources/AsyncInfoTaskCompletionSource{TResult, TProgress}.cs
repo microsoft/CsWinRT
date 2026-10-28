@@ -32,8 +32,6 @@ internal sealed class AsyncInfoTaskCompletionSource<TResult, TProgress> : TaskCo
     /// <param name="asyncInfo">The <see cref="IAsyncInfo"/> instance to wrap.</param>
     /// <param name="cancellationToken">The input <see cref="CancellationToken"/> value.</param>
     public AsyncInfoTaskCompletionSource(IAsyncInfo asyncInfo, CancellationToken cancellationToken)
-        // Retain the operation through 'Task.AsyncState', just as in the constructor without 'TResult'
-        // The task must preserve native completion callbacks even when cancellation is unavailable
         : base(asyncInfo)
     {
         _cancellationToken = cancellationToken;
@@ -64,11 +62,12 @@ internal sealed class AsyncInfoTaskCompletionSource<TResult, TProgress> : TaskCo
     /// <inheritdoc cref="AsyncInfoTaskCompletionSource{TProgress}.OnCancellation"/>
     private void OnCancellation()
     {
-        // Keep cancellation ordering and exception handling in sync with the implementation without 'TResult'.
-        // See more details about this in 'AsyncInfoTaskCompletionSource<TProgress>.OnCancellation'.
+        // Keep cancellation ordering and exception handling in sync with the implementation without 'TResult'
+        // (see more details about this in 'AsyncInfoTaskCompletionSource<TProgress>.OnCancellation').
         try
         {
-            ((IAsyncInfo)Task.AsyncState!).Cancel();
+            // 'Task.AsyncState' is always the 'IAsyncInfo' passed to the base constructor, and it cannot change afterwards
+            Unsafe.As<IAsyncInfo>(Task.AsyncState!).Cancel();
         }
         catch (Exception e) when (e is COMException { HResult:
             WellKnownErrorCodes.RPC_E_DISCONNECTED or
