@@ -106,36 +106,50 @@ public sealed class Test_InteropWriterCaches
     }
 
     [TestMethod]
-    public void Serializer_UsesCurrentContextAndResetsOnTokenProviderChange()
+    public void Serializer_SharesOneMemoizingContextAcrossMethodBodies()
     {
         DiagnosticBag diagnostics = new();
         CountingTokenProvider first = new();
-        CountingTokenProvider second = new();
         CapturingSerializer inner = new();
         MemoizingMethodBodySerializer serializer = new(inner, diagnostics);
         NativeSymbolsProvider symbols = new();
         MethodBodySerializationContext firstContext = new(first, symbols, diagnostics);
-        MethodDefinition method = new("Method", MethodAttributes.Static, MethodSignature.CreateStatic(new ModuleDefinition("Fixture.dll").CorLibTypeFactory.Void));
+        ModuleDefinition module = new("Fixture.dll");
+        MethodDefinition method = new("Method", MethodAttributes.Static, MethodSignature.CreateStatic(module.CorLibTypeFactory.Void));
+        MethodDefinition otherMethod = new("OtherMethod", MethodAttributes.Static, MethodSignature.CreateStatic(module.CorLibTypeFactory.Void));
+        TypeReference reference = new(module, module.CorLibTypeFactory.CorLibScope, "Fixture", "Target");
 
         _ = serializer.SerializeMethodBody(firstContext, method);
         MethodBodySerializationContext wrapped = inner.Context!;
         Assert.AreNotSame(firstContext, wrapped);
         Assert.AreSame(symbols, wrapped.SymbolsProvider);
         Assert.AreSame(diagnostics, wrapped.ErrorListener);
-        _ = serializer.SerializeMethodBody(firstContext, method);
+        Assert.IsInstanceOfType<MemoizingMetadataTokenProvider>(wrapped.TokenProvider);
+        MetadataToken expected = wrapped.TokenProvider.GetTypeReferenceToken(reference);
+
+        _ = serializer.SerializeMethodBody(firstContext, otherMethod);
         Assert.AreSame(wrapped, inner.Context);
+        Assert.AreEqual(expected, inner.Context!.TokenProvider.GetTypeReferenceToken(reference));
+        Assert.AreEqual(1, first.Calls);
 
         NativeSymbolsProvider newSymbols = new();
-        _ = serializer.SerializeMethodBody(new(first, newSymbols, diagnostics), method);
-        Assert.AreNotSame(wrapped, inner.Context);
-        Assert.AreSame(wrapped.TokenProvider, inner.Context!.TokenProvider);
-        Assert.AreSame(newSymbols, inner.Context.SymbolsProvider);
-        _ = serializer.SerializeMethodBody(new(second, symbols, diagnostics), method);
-        Assert.AreNotSame(wrapped.TokenProvider, inner.Context!.TokenProvider);
+        Assert.ThrowsExactly<InvalidOperationException>(
+            () => serializer.SerializeMethodBody(new(first, newSymbols, diagnostics), method));
+        Assert.ThrowsExactly<InvalidOperationException>(
+            () => serializer.SerializeMethodBody(new(new CountingTokenProvider(), symbols, diagnostics), method));
+        Assert.AreSame(wrapped, inner.Context);
+    }
 
-        MethodBodySerializationContext foreign = new(first, symbols, EmptyErrorListener.Instance);
-        _ = serializer.SerializeMethodBody(foreign, method);
-        Assert.AreSame(foreign, inner.Context);
+    [TestMethod]
+    public void Serializer_RejectsAnUnobservedDiagnosticListener()
+    {
+        CapturingSerializer inner = new();
+        MemoizingMethodBodySerializer serializer = new(inner, new DiagnosticBag());
+        MethodBodySerializationContext foreign = new(new CountingTokenProvider(), new NativeSymbolsProvider(), EmptyErrorListener.Instance);
+        MethodDefinition method = new("Method", MethodAttributes.Static, MethodSignature.CreateStatic(new ModuleDefinition("Fixture.dll").CorLibTypeFactory.Void));
+
+        Assert.ThrowsExactly<InvalidOperationException>(() => serializer.SerializeMethodBody(foreign, method));
+        Assert.IsNull(inner.Context);
     }
 
     [TestMethod]
