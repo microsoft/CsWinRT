@@ -36,9 +36,12 @@ set cswinrt_configuration=%2
 set cswinrt_version_number=%3
 set cswinrt_version_string=%4
 set cswinrt_assembly_version=%5
-set "%6"!="" set cswinrt_label=%6
+if not "%~6"=="" set "cswinrt_label=%~6"
 
 if "%cswinrt_platform%"=="" set cswinrt_platform=x64
+
+if /I "%cswinrt_label%"=="product" goto :product
+if /I "%cswinrt_label%"=="productpackage" goto :productpackage
 
 if /I "%cswinrt_platform%" equ "all" (
   if "%cswinrt_configuration%"=="" (
@@ -66,6 +69,13 @@ if "%cswinrt_assembly_version%"=="" set cswinrt_assembly_version=0.0.0.0
 
 if "%cswinrt_baseline_breaking_compat_errors%"=="" set cswinrt_baseline_breaking_compat_errors=false
 if "%cswinrt_baseline_assembly_version_compat_errors%"=="" set cswinrt_baseline_assembly_version_compat_errors=false
+
+set "cswinrt_solution=%this_dir%cswinrt.slnx"
+set cswinrt_generate_test_projection=true
+set "cswinrt_build_tools_arch=%cswinrt_platform%"
+set cswinrt_solution_build_params=
+set cswinrt_reference_build_params=
+set cswinrt_reference_output=
 
 set cswinrt_functional_tests=JsonValueFunctionCalls, ClassActivation, CustomPropertyProvider, DefaultCustomPropertyProviderDisabled, DefaultCustomPropertyProviderSuppressed, DefaultCustomPropertyProviderWinUI, Structs, Events, DynamicInterfaceCasting, Collections, Async, DerivedClassActivation, DerivedClassAsBaseClass, CCW, NativeExposedType, ForwardedTypeIdentities
 
@@ -100,39 +110,10 @@ call %this_dir%get_testwinrt.cmd
 call :exec %msbuild_path%msbuild.exe %cswinrt_build_params% /p:RestorePackagesConfig=true /t:restore /p:platform=%cswinrt_platform%;configuration=%cswinrt_configuration%;RuntimeIdentifier=win-%cswinrt_platform% %this_dir%cswinrt.slnx 
 
 :build
-echo Building cswinrt for %cswinrt_platform% %cswinrt_configuration%
-call :exec %msbuild_path%msbuild.exe %cswinrt_build_params% /p:platform=%cswinrt_platform%;configuration=%cswinrt_configuration%;VersionNumber=%cswinrt_version_number%;VersionString=%cswinrt_version_string%;AssemblyVersionNumber=%cswinrt_assembly_version%;GenerateTestProjection=true;BaselineAllAPICompatError=%cswinrt_baseline_breaking_compat_errors%;BaselineAllMatchingRefApiCompatError=%cswinrt_baseline_assembly_version_compat_errors%;PublishBuildTool=true;BuildToolArch=%cswinrt_platform% %this_dir%cswinrt.slnx 
-if ErrorLevel 1 (
-  echo.
-  echo ERROR: Build failed
-  exit /b !ErrorLevel!
-)
-
-rem Build the WinRT.Runtime reference assembly. This recompiles WinRT.Runtime with all implementation-only
-rem types stripped out (via 'CsWinRTBuildReferenceAssembly=true'), producing a lightweight reference assembly
-rem (and its matching, stripped XML documentation) for packaging under 'ref\net10.0'. Like the implementation
-rem assembly, it is built as AnyCPU (no platform), so its outputs land in the platform-less 'bin\<config>\net10.0'
-rem and 'obj\<config>\net10.0\ref' folders. The reference build overwrites the implementation assembly in 'bin',
-rem so the implementation outputs are staged out first, and both are then packaged from the staging folder.
-set winrt_runtime_bin=%this_dir%WinRT.Runtime2\bin\%cswinrt_configuration%\net10.0\
-set winrt_runtime_staging=%this_dir%_build\%cswinrt_platform%\%cswinrt_configuration%\WinRT.Runtime\
-
-echo Staging WinRT.Runtime implementation assembly for %cswinrt_platform% %cswinrt_configuration%
-if not exist "%winrt_runtime_staging%lib\" mkdir "%winrt_runtime_staging%lib\"
-copy /y "%winrt_runtime_bin%WinRT.Runtime.dll" "%winrt_runtime_staging%lib\WinRT.Runtime.dll"
-
-echo Building WinRT.Runtime reference assembly for %cswinrt_platform% %cswinrt_configuration%
-call :exec %msbuild_path%msbuild.exe %cswinrt_build_params% /restore /p:configuration=%cswinrt_configuration%;VersionNumber=%cswinrt_version_number%;VersionString=%cswinrt_version_string%;AssemblyVersionNumber=%cswinrt_assembly_version%;CsWinRTBuildReferenceAssembly=true %this_dir%WinRT.Runtime2\WinRT.Runtime.csproj
-if ErrorLevel 1 (
-  echo.
-  echo ERROR: Reference assembly build failed
-  exit /b !ErrorLevel!
-)
-
-echo Staging WinRT.Runtime reference assembly for %cswinrt_platform% %cswinrt_configuration%
-if not exist "%winrt_runtime_staging%ref\" mkdir "%winrt_runtime_staging%ref\"
-copy /y "%this_dir%WinRT.Runtime2\obj\%cswinrt_configuration%\net10.0\ref\WinRT.Runtime.dll" "%winrt_runtime_staging%ref\WinRT.Runtime.dll"
-copy /y "%winrt_runtime_bin%WinRT.Runtime.xml" "%winrt_runtime_staging%ref\WinRT.Runtime.xml"
+call :buildsolution
+if errorlevel 1 exit /b !errorlevel!
+call :buildruntimereference
+if errorlevel 1 exit /b !errorlevel!
 
 rem skip tests for now
 goto :package
@@ -280,7 +261,7 @@ if "%cswinrt_label%"=="functionaltest" exit /b 0
 
 :package
 rem We set the properties of the CsWinRT.nuspec here, and pass them as the -Properties option when we call `nuget pack`
-set cswinrt_bin_dir=%this_dir%_build\%cswinrt_platform%\%cswinrt_configuration%\cswinrt\bin\
+set cswinrt_bin_dir=%this_dir%_build\%cswinrt_platform%\%cswinrt_configuration%\cswinrt\bin
 set interop_winmd=%this_dir%WinRT.Internal\bin\%cswinrt_configuration%\net10.0-windows10.0.26100.1\WindowsRuntime.Internal.winmd
 set net10_runtime=%this_dir%_build\%cswinrt_platform%\%cswinrt_configuration%\WinRT.Runtime\lib\WinRT.Runtime.dll
 set net10_runtime_ref=%this_dir%_build\%cswinrt_platform%\%cswinrt_configuration%\WinRT.Runtime\ref\WinRT.Runtime.dll
@@ -297,9 +278,39 @@ set cswinrtprojectionrefgen_%cswinrt_platform%=%this_dir%WinRT.Projection.Ref.Ge
 set cswinrtwinmdgen_%cswinrt_platform%=%this_dir%WinRT.WinMD.Generator\bin\%cswinrt_configuration%\net10.0\win-%cswinrt_platform%\publish\cswinrtwinmdgen.exe
 set run_cswinrt_generator_task=%this_dir%WinRT.Generator.Tasks\bin\%cswinrt_configuration%\netstandard2.0\WinRT.Generator.Tasks.dll
 
+set "cswinrt_nuspec=%this_dir%..\nuget\Microsoft.Windows.CsWinRT.nuspec"
+set "cswinrt_nuget_exe=%nuget_dir%\nuget.exe"
+set cswinrt_repository_properties=
+call :packnuget
+if errorlevel 1 exit /b !errorlevel!
+goto :smoketest
+
+:packnuget
 rem Now call pack
 echo Creating nuget package
-call :exec %nuget_dir%\nuget pack %this_dir%..\nuget\Microsoft.Windows.CsWinRT.nuspec -Properties interop_winmd=%interop_winmd%;net10_runtime=%net10_runtime%;net10_runtime_ref=%net10_runtime_ref%;net10_runtime_ref_xml=%net10_runtime_ref_xml%;source_generator=%source_generator%;cswinrt_nuget_version=%cswinrt_version_string%;winrt_host_x86=%winrt_host_x86%;winrt_host_x64=%winrt_host_x64%;winrt_host_arm=%winrt_host_arm%;winrt_host_arm64=%winrt_host_arm64%;winrt_host_resource_x86=%winrt_host_resource_x86%;winrt_host_resource_x64=%winrt_host_resource_x64%;winrt_host_resource_arm=%winrt_host_resource_arm%;winrt_host_resource_arm64=%winrt_host_resource_arm64%;winrt_shim=%winrt_shim%;cswinrtinteropgen_x64=%cswinrtinteropgen_x64%;cswinrtinteropgen_arm64=%cswinrtinteropgen_arm64%;cswinrtimplgen_x64=%cswinrtimplgen_x64%;cswinrtimplgen_arm64=%cswinrtimplgen_arm64%;cswinrtprojectiongen_x64=%cswinrtprojectiongen_x64%;cswinrtprojectiongen_arm64=%cswinrtprojectiongen_arm64%;cswinrtprojectionrefgen_x64=%cswinrtprojectionrefgen_x64%;cswinrtprojectionrefgen_arm64=%cswinrtprojectionrefgen_arm64%;cswinrtwinmdgen_x64=%cswinrtwinmdgen_x64%;cswinrtwinmdgen_arm64=%cswinrtwinmdgen_arm64%;run_cswinrt_generator_task=%run_cswinrt_generator_task%; -OutputDirectory %cswinrt_bin_dir% -NonInteractive -Verbosity Detailed -NoPackageAnalysis
+rem NuGet expects all nuspec substitutions in one semicolon-separated argument
+set "cswinrt_package_properties=cswinrt_nuget_version=%cswinrt_version_string%;"
+for %%p in (
+  interop_winmd
+  net10_runtime net10_runtime_ref net10_runtime_ref_xml
+  source_generator winrt_shim run_cswinrt_generator_task
+  winrt_host_x86 winrt_host_x64 winrt_host_arm winrt_host_arm64
+  winrt_host_resource_x86 winrt_host_resource_x64
+  winrt_host_resource_arm winrt_host_resource_arm64
+  cswinrtinteropgen_x64 cswinrtinteropgen_arm64
+  cswinrtimplgen_x64 cswinrtimplgen_arm64
+  cswinrtprojectiongen_x64 cswinrtprojectiongen_arm64
+  cswinrtprojectionrefgen_x64 cswinrtprojectionrefgen_arm64
+  cswinrtwinmdgen_x64 cswinrtwinmdgen_arm64
+) do set "cswinrt_package_properties=!cswinrt_package_properties!%%p=!%%p!;"
+call :exec "%cswinrt_nuget_exe%" pack "%cswinrt_nuspec%" ^
+  -BasePath "%this_dir%..\nuget" ^
+  -Properties "%cswinrt_package_properties%%cswinrt_repository_properties%" ^
+  -OutputDirectory "%cswinrt_bin_dir%" ^
+  -NonInteractive ^
+  -Verbosity Detailed ^
+  -NoPackageAnalysis
+exit /b %errorlevel%
 
 :smoketest
 rem Build and run the end-to-end smoke tests against the just-built NuGet package. These
@@ -336,6 +347,273 @@ if ErrorLevel 1 (
  exit /b !ErrorLevel!
 )
 goto :eof
+
+:productsettings
+if "%cswinrt_configuration%"=="" set cswinrt_configuration=Release
+if "%cswinrt_version_number%"=="" set cswinrt_version_number=0.0.0.0
+if "%cswinrt_version_string%"=="" set cswinrt_version_string=0.0.0-private.0
+if "%cswinrt_assembly_version%"=="" set cswinrt_assembly_version=0.0.0.0
+if "%cswinrt_baseline_breaking_compat_errors%"=="" set cswinrt_baseline_breaking_compat_errors=false
+if "%cswinrt_baseline_assembly_version_compat_errors%"=="" set cswinrt_baseline_assembly_version_compat_errors=false
+if "%cswinrt_artifacts_dir%"=="" set "cswinrt_artifacts_dir=%this_dir%..\artifacts"
+if /I not "%cswinrt_configuration%"=="Release" (
+  echo ERROR: Product-only builds require the Release configuration.
+  exit /b 1
+)
+if not exist "%cswinrt_artifacts_dir%\logs" mkdir "%cswinrt_artifacts_dir%\logs"
+exit /b %errorlevel%
+
+:product
+rem Product orchestration is separate from the full developer build; compilation and packing are shared
+call :productsettings
+if errorlevel 1 exit /b !errorlevel!
+if defined cswinrt_unit_test_runtime (
+  if /I not "%cswinrt_unit_test_runtime%"=="jit" if /I not "%cswinrt_unit_test_runtime%"=="aot" (
+    echo ERROR: cswinrt_unit_test_runtime must be jit or aot.
+    exit /b 1
+  )
+)
+if /I "%cswinrt_platform%"=="all" (
+  rem Defer packaging until every architecture is staged, preserving the caller's skip choice
+  set "cswinrt_original_skip_package=!cswinrt_skip_package!"
+  set cswinrt_skip_package=true
+  for %%a in (x86 x64 arm64) do (
+    call "%~f0" %%a %cswinrt_configuration% %cswinrt_version_number% %cswinrt_version_string% %cswinrt_assembly_version% product
+    if errorlevel 1 exit /b !errorlevel!
+  )
+  if /I "!cswinrt_original_skip_package!"=="true" exit /b 0
+  goto :productpackage
+)
+call :setupvisualstudio
+if errorlevel 1 exit /b !errorlevel!
+set "PATH=%ProgramFiles(x86)%\Microsoft Visual Studio\Installer;%PATH%"
+set msbuild_path=
+set "cswinrt_solution=%this_dir%cswinrt.product.slnf"
+set cswinrt_generate_test_projection=false
+set "cswinrt_build_tools_arch=%cswinrt_platform%"
+rem x86 targets still use x64 generators on the build host
+if /I "%cswinrt_platform%"=="x86" set cswinrt_build_tools_arch=x64
+set "cswinrt_build_params=%cswinrt_build_params% /m /nr:false /nologo /v:minimal /p:CIBuildReason=CI;ContinuousIntegrationBuild=true"
+set "cswinrt_solution_build_params=/restore /p:RestorePackagesConfig=true /bl:"%cswinrt_artifacts_dir%\logs\product.binlog""
+call :buildsolution
+if errorlevel 1 exit /b !errorlevel!
+rem Unit-test builds retain the implementation runtime and do not stage a NuGet payload
+if defined cswinrt_unit_test_runtime goto :buildunittest
+rem Architecture-neutral outputs are produced once, on the x64 leg
+if /I "%cswinrt_platform%"=="x64" (
+  if /I "%cswinrt_generate_sdk_projection%"=="true" (
+    for %%v in (10.0.17763.1000 10.0.18362.2007 10.0.19041.2 10.0.22000.197 10.0.22621.3233 10.0.26100.7705) do (
+      call :buildsdkprojection %%v
+      if errorlevel 1 exit /b !errorlevel!
+    )
+  )
+  rem Isolate the reference output from the implementation used by projections and tests
+  set "cswinrt_reference_output=%cswinrt_artifacts_dir%\runtime-reference\%cswinrt_configuration%\net10.0\"
+  set "cswinrt_reference_build_params=/p:BaseOutputPath="%cswinrt_artifacts_dir%\runtime-reference\\" /bl:"%cswinrt_artifacts_dir%\logs\runtime-reference.binlog""
+  call :buildruntimereference
+  if errorlevel 1 exit /b !errorlevel!
+)
+call :stageproduct
+if errorlevel 1 exit /b !errorlevel!
+if /I "%cswinrt_skip_package%"=="true" exit /b 0
+goto :productpackage
+
+:productpackage
+rem Packaging consumes merged artifacts and does not need the compiler environment
+call :productsettings
+if errorlevel 1 exit /b !errorlevel!
+set "cswinrt_bin_dir=%cswinrt_artifacts_dir%\packages"
+set cswinrt_nuget_exe=nuget.exe
+set "cswinrt_nuspec=%this_dir%..\nuget\Microsoft.Windows.CsWinRT.nuspec"
+set "interop_winmd=%cswinrt_artifacts_dir%\product\x64\native\WindowsRuntime.Internal.winmd"
+set "net10_runtime=%cswinrt_artifacts_dir%\product\x64\WinRT.Runtime.dll"
+set "net10_runtime_ref=%cswinrt_artifacts_dir%\product\x64\ref\WinRT.Runtime.dll"
+set "net10_runtime_ref_xml=%cswinrt_artifacts_dir%\product\x64\ref\WinRT.Runtime.xml"
+set "source_generator=%cswinrt_artifacts_dir%\product\x64\WinRT.SourceGenerator.dll"
+set "winrt_shim=%cswinrt_artifacts_dir%\product\x64\WinRT.Host.Shim.dll"
+set "run_cswinrt_generator_task=%cswinrt_artifacts_dir%\product\x64\WinRT.Generator.Tasks.dll"
+for %%a in (x86 x64 arm64) do (
+  set "winrt_host_%%a=%cswinrt_artifacts_dir%\product\%%a\native\WinRT.Host.dll"
+  set "winrt_host_resource_%%a=%cswinrt_artifacts_dir%\product\%%a\native\WinRT.Host.dll.mui"
+)
+for %%a in (x64 arm64) do (
+  for %%t in (cswinrtinteropgen cswinrtimplgen cswinrtprojectiongen cswinrtprojectionrefgen cswinrtwinmdgen) do (
+    set "%%t_%%a=%cswinrt_artifacts_dir%\product\%%a\tools\%%t.exe"
+  )
+)
+set "cswinrt_repository_properties=branch=%GITHUB_REF_NAME%;commit=%GITHUB_SHA%;"
+if /I "%cswinrt_generate_sdk_projection%"=="true" (
+  rem Add both projections for each SDK to a temporary nuspec, leaving the checked-in file untouched
+  powershell -NoProfile -Command ^
+    "$ErrorActionPreference='Stop';" ^
+    "$n=[xml](Get-Content -LiteralPath $env:cswinrt_nuspec -Raw);" ^
+    "foreach($sdk in 17763,18362,19041,22000,22621,26100) {" ^
+    "  foreach($assembly in 'WinRT.Sdk.Projection','WinRT.Sdk.Xaml.Projection') {" ^
+    "    $source=Join-Path $env:cswinrt_artifacts_dir ('product\x64\impl\'+$sdk+'\'+$assembly+'.dll');" ^
+    "    if(-not(Test-Path -LiteralPath $source)) { throw ('Missing SDK projection: '+$source) };" ^
+    "    $file=$n.CreateElement('file',$n.DocumentElement.NamespaceURI);" ^
+    "    $file.SetAttribute('src',$source);" ^
+    "    $file.SetAttribute('target',('impl\net10\'+$sdk));" ^
+    "    [void]$n.package.files.AppendChild($file);" ^
+    "  }" ^
+    "};" ^
+    "$n.Save((Join-Path $env:cswinrt_artifacts_dir 'Microsoft.Windows.CsWinRT.nuspec'));"
+  if errorlevel 1 exit /b !errorlevel!
+  set "cswinrt_nuspec=%cswinrt_artifacts_dir%\Microsoft.Windows.CsWinRT.nuspec"
+)
+call :packnuget
+exit /b %errorlevel%
+
+:buildsolution
+echo Building cswinrt for %cswinrt_platform% %cswinrt_configuration%
+call :exec %msbuild_path%msbuild.exe %cswinrt_build_params% ^
+  /p:platform=%cswinrt_platform% ^
+  /p:configuration=%cswinrt_configuration% ^
+  /p:VersionNumber=%cswinrt_version_number% ^
+  /p:VersionString=%cswinrt_version_string% ^
+  /p:AssemblyVersionNumber=%cswinrt_assembly_version% ^
+  /p:GenerateTestProjection=%cswinrt_generate_test_projection% ^
+  /p:BaselineAllAPICompatError=%cswinrt_baseline_breaking_compat_errors% ^
+  /p:BaselineAllMatchingRefApiCompatError=%cswinrt_baseline_assembly_version_compat_errors% ^
+  /p:PublishBuildTool=true ^
+  /p:BuildToolArch=%cswinrt_build_tools_arch% ^
+  "%cswinrt_solution%" %cswinrt_solution_build_params%
+exit /b %errorlevel%
+
+:buildruntimereference
+rem Stage the implementation before recompiling with implementation-only APIs stripped out
+set "winrt_runtime_bin=%this_dir%WinRT.Runtime2\bin\%cswinrt_configuration%\net10.0\"
+set "winrt_runtime_staging=%this_dir%_build\%cswinrt_platform%\%cswinrt_configuration%\WinRT.Runtime\"
+if "%cswinrt_reference_output%"=="" set "cswinrt_reference_output=%winrt_runtime_bin%"
+echo Staging WinRT.Runtime implementation assembly for %cswinrt_platform% %cswinrt_configuration%
+call :copyproduct "%winrt_runtime_bin%WinRT.Runtime.dll" "%winrt_runtime_staging%lib"
+if errorlevel 1 exit /b !errorlevel!
+echo Building WinRT.Runtime reference assembly for %cswinrt_platform% %cswinrt_configuration%
+call :exec %msbuild_path%msbuild.exe %cswinrt_build_params% /restore ^
+  /p:configuration=%cswinrt_configuration% ^
+  /p:VersionNumber=%cswinrt_version_number% ^
+  /p:VersionString=%cswinrt_version_string% ^
+  /p:AssemblyVersionNumber=%cswinrt_assembly_version% ^
+  /p:CsWinRTBuildReferenceAssembly=true ^
+  "%this_dir%WinRT.Runtime2\WinRT.Runtime.csproj" %cswinrt_reference_build_params%
+if errorlevel 1 exit /b !errorlevel!
+echo Staging WinRT.Runtime reference assembly for %cswinrt_platform% %cswinrt_configuration%
+call :copyproduct "%this_dir%WinRT.Runtime2\obj\%cswinrt_configuration%\net10.0\ref\WinRT.Runtime.dll" "%winrt_runtime_staging%ref"
+if errorlevel 1 exit /b !errorlevel!
+call :copyproduct "%cswinrt_reference_output%WinRT.Runtime.xml" "%winrt_runtime_staging%ref"
+exit /b %errorlevel%
+
+:setupvisualstudio
+set cswinrt_vs_dir=
+"%ProgramFiles(x86)%\Microsoft Visual Studio\Installer\vswhere.exe" ^
+  -latest -prerelease -products * ^
+  -version "[18.0,19.0)" ^
+  -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 ^
+  -property installationPath >"%cswinrt_artifacts_dir%\logs\visual-studio.txt"
+if errorlevel 1 exit /b %errorlevel%
+set /p cswinrt_vs_dir=<"%cswinrt_artifacts_dir%\logs\visual-studio.txt"
+if not defined cswinrt_vs_dir (
+  echo ERROR: Visual Studio 2026 with the C++ build tools is required.
+  exit /b 1
+)
+call "%cswinrt_vs_dir%\Common7\Tools\VsDevCmd.bat" -no_logo -host_arch=amd64 -arch=amd64
+exit /b %errorlevel%
+
+:buildsdkprojection
+rem The Contracts package version identifies the SDK build; generate base before XAML, which references it
+for /f "tokens=3 delims=." %%s in ("%~1") do set "cswinrt_sdk_build=%%s"
+for %%x in (false true) do (
+  call :exec %msbuild_path%msbuild.exe %cswinrt_build_params% /restore ^
+    /p:Configuration=%cswinrt_configuration% ^
+    /p:VersionNumber=%cswinrt_version_number% ^
+    /p:VersionString=%cswinrt_version_string% ^
+    /p:AssemblyVersionNumber=%cswinrt_assembly_version% ^
+    /p:BuildToolArch=x64 ^
+    /p:WindowsSdkBuild=%cswinrt_sdk_build% ^
+    /p:SdkPackageVersion=%~1 ^
+    /p:WindowsSdkXaml=%%x ^
+    "%this_dir%WinRT.Sdk.Projection\WinRT.Sdk.Projection.csproj" ^
+    /bl:"%cswinrt_artifacts_dir%\logs\sdk-%cswinrt_sdk_build%-xaml-%%x.binlog"
+  if errorlevel 1 exit /b !errorlevel!
+)
+for %%a in (WinRT.Sdk.Projection WinRT.Sdk.Xaml.Projection) do (
+  call :copyproduct "%this_dir%WinRT.Sdk.Projection\bin\%cswinrt_configuration%\%cswinrt_sdk_build%\%%a.dll" "%cswinrt_artifacts_dir%\product\x64\impl\%cswinrt_sdk_build%"
+  if errorlevel 1 exit /b !errorlevel!
+)
+exit /b 0
+
+:stageproduct
+set "cswinrt_stage=%cswinrt_artifacts_dir%\product\%cswinrt_platform%"
+for %%f in (WinRT.Host.dll WinRT.Host.dll.mui) do (
+  call :copyproduct "%this_dir%_build\%cswinrt_platform%\%cswinrt_configuration%\WinRT.Host\bin\%%f" "%cswinrt_stage%\native"
+  if errorlevel 1 exit /b !errorlevel!
+)
+rem The package ships generators for x64 and ARM64 hosts, not x86
+if /I not "%cswinrt_platform%"=="x86" (
+  for %%t in (
+    "WinRT.Interop.Generator,cswinrtinteropgen"
+    "WinRT.Impl.Generator,cswinrtimplgen"
+    "WinRT.Projection.Generator,cswinrtprojectiongen"
+    "WinRT.Projection.Ref.Generator,cswinrtprojectionrefgen"
+    "WinRT.WinMD.Generator,cswinrtwinmdgen"
+  ) do (
+    for /f "tokens=1,2 delims=," %%p in ("%%~t") do (
+      call :copyproduct "%this_dir%%%p\bin\%cswinrt_configuration%\net10.0\win-%cswinrt_platform%\publish\%%q.exe" "%cswinrt_stage%\tools"
+      if errorlevel 1 exit /b !errorlevel!
+    )
+  )
+)
+if /I "%cswinrt_platform%"=="x64" (
+  call :copyproduct "%winrt_runtime_staging%lib\WinRT.Runtime.dll" "%cswinrt_stage%"
+  if errorlevel 1 exit /b !errorlevel!
+  for %%f in (WinRT.Runtime.dll WinRT.Runtime.xml) do (
+    call :copyproduct "%winrt_runtime_staging%ref\%%f" "%cswinrt_stage%\ref"
+    if errorlevel 1 exit /b !errorlevel!
+  )
+  call :copyproduct "%this_dir%Authoring\WinRT.SourceGenerator2\bin\%cswinrt_configuration%\net10.0\WinRT.SourceGenerator.dll" "%cswinrt_stage%"
+  if errorlevel 1 exit /b !errorlevel!
+  call :copyproduct "%this_dir%Authoring\WinRT.Host.Shim\bin\%cswinrt_configuration%\net10.0\WinRT.Host.Shim.dll" "%cswinrt_stage%"
+  if errorlevel 1 exit /b !errorlevel!
+  call :copyproduct "%this_dir%WinRT.Generator.Tasks\bin\%cswinrt_configuration%\netstandard2.0\WinRT.Generator.Tasks.dll" "%cswinrt_stage%"
+  if errorlevel 1 exit /b !errorlevel!
+  call :copyproduct "%this_dir%WinRT.Internal\bin\%cswinrt_configuration%\net10.0-windows10.0.26100.1\WindowsRuntime.Internal.winmd" "%cswinrt_stage%\native"
+  if errorlevel 1 exit /b !errorlevel!
+)
+exit /b 0
+
+:copyproduct
+if not exist "%~1" (
+  echo ERROR: Missing product output: %~1
+  exit /b 1
+)
+if not exist "%~2" mkdir "%~2"
+copy /y "%~1" "%~2\" >nul
+exit /b %errorlevel%
+
+:buildunittest
+set "cswinrt_test_params=/p:Platform=%cswinrt_platform%"
+set "cswinrt_test_params=%cswinrt_test_params% /p:Configuration=%cswinrt_configuration%"
+set "cswinrt_test_params=%cswinrt_test_params% /p:RuntimeIdentifier=win-%cswinrt_platform%"
+set "cswinrt_test_params=%cswinrt_test_params% /p:BuildToolArch=%cswinrt_build_tools_arch%"
+set "cswinrt_test_params=%cswinrt_test_params% /p:GenerateTestProjection=true"
+set "cswinrt_test_params=%cswinrt_test_params% /p:VersionNumber=%cswinrt_version_number%"
+set "cswinrt_test_params=%cswinrt_test_params% /p:VersionString=%cswinrt_version_string%"
+set "cswinrt_test_params=%cswinrt_test_params% /p:AssemblyVersionNumber=%cswinrt_assembly_version%"
+set "cswinrt_test_params=%cswinrt_test_params% /p:SolutionDir="%this_dir%\""
+rem Restore without TargetFramework so it does not propagate to the netstandard2.0 task project.
+call :exec %msbuild_path%msbuild.exe %cswinrt_build_params% %cswinrt_test_params% ^
+  /t:Restore ^
+  /p:RestorePackagesConfig=true ^
+  "%this_dir%Tests\UnitTest\UnitTest.csproj" ^
+  /bl:"%cswinrt_artifacts_dir%\logs\unit-test-restore.binlog"
+if errorlevel 1 exit /b !errorlevel!
+set cswinrt_test_target=/t:Build
+if /I "%cswinrt_unit_test_runtime%"=="aot" set cswinrt_test_target=/t:Publish /p:TargetFramework=net10.0
+call :exec %msbuild_path%msbuild.exe %cswinrt_build_params% %cswinrt_test_params% ^
+  %cswinrt_test_target% ^
+  "%this_dir%Tests\UnitTest\UnitTest.csproj" ^
+  /bl:"%cswinrt_artifacts_dir%\logs\unit-test-%cswinrt_unit_test_runtime%.binlog"
+exit /b %errorlevel%
 
 :exec
 if /i "%cswinrt_echo%" == "only" (
