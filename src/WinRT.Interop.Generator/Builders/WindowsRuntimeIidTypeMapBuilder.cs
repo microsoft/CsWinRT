@@ -113,7 +113,7 @@ internal static class WindowsRuntimeIidTypeMapBuilder
                 // Providers need only a '[Guid]' attribute, with no fields or executable code
                 providerType = new TypeDefinition(
                     ns: "ABI"u8,
-                    name: $"<{entry.Value.Iid:N}>IidProvider",
+                    name: $"<{entry.Value.Iid.ToString("N").ToUpperInvariant()}>IidProvider",
                     attributes: TypeAttributes.Abstract | TypeAttributes.Sealed | TypeAttributes.BeforeFieldInit,
                     baseType: interopReferences.Object.ToTypeDefOrRef())
                 {

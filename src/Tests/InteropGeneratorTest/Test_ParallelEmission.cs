@@ -51,6 +51,12 @@ public sealed class Test_ParallelEmission
         Assert.IsTrue(module.TopLevelTypes.Any(type => type.Name!.ToString().EndsWith("IidProvider", StringComparison.Ordinal)),
             "The workload must also exercise deterministic IID provider names.");
 
+        foreach (TypeDefinition provider in module.TopLevelTypes.Where(type => type.Name!.ToString().EndsWith("IidProvider", StringComparison.Ordinal)))
+        {
+            Guid iid = Guid.Parse(provider.CustomAttributes.Single().Signature!.FixedArguments[0].Element!.ToString()!);
+            Assert.AreEqual($"<{iid.ToString("N").ToUpperInvariant()}>IidProvider", provider.Name!.ToString());
+        }
+
         TypeDefinition keyValuePairMethods = module.TopLevelTypes.Single(type =>
             type.Name!.ToString().EndsWith(">KeyValuePairMethods", StringComparison.Ordinal));
         string[] accessorNames = keyValuePairMethods.Methods.Select(method => method.Name!.ToString()).ToArray();
