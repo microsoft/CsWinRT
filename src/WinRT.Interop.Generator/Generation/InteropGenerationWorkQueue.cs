@@ -65,14 +65,6 @@ internal sealed class InteropGenerationWorkQueue<TContext>
 
         using BlockingCollection<Node> ready = new(new ConcurrentQueue<Node>(_roots));
 
-        // A single worker needs neither the parallel loop nor linked cancellation
-        if (workerCount == 1)
-        {
-            RunSequential(context, ready, token);
-
-            return;
-        }
-
         int remaining = _count;
 
         _ = Parallel.ForEachUnbufferedUntilFirstFailure(
@@ -117,34 +109,6 @@ internal sealed class InteropGenerationWorkQueue<TContext>
             // Wake blocked consumers once no work remains
             ready.CompleteAdding();
         }
-    }
-
-    /// <summary>
-    /// Runs ready operations serially, releasing their dependents as prerequisites finish.
-    /// </summary>
-    /// <param name="context">The context to pass to each operation.</param>
-    /// <param name="ready">The queue of operations ready to run.</param>
-    /// <param name="token">The invocation's cancellation token.</param>
-    private static void RunSequential(
-        TContext context,
-        BlockingCollection<Node> ready,
-        CancellationToken token)
-    {
-        while (ready.TryTake(out Node? node))
-        {
-            token.ThrowIfCancellationRequested();
-            node.Body(context);
-
-            foreach (Node dependent in node.Dependents)
-            {
-                if (--dependent.RemainingPrerequisites == 0)
-                {
-                    ready.Add(dependent);
-                }
-            }
-        }
-
-        token.ThrowIfCancellationRequested();
     }
 
     /// <summary>

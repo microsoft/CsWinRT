@@ -174,7 +174,9 @@ public sealed class Test_EmissionWorkQueue
     }
 
     [TestMethod]
-    public async Task ThrowingWorkItem_DoesNotStrandConsumers()
+    [DataRow(1)]
+    [DataRow(8)]
+    public async Task ThrowingWorkItem_DoesNotStrandConsumers(int parallelism)
     {
         InvalidOperationException expected = new("queue failure");
         InteropGenerationWorkQueue<InvalidOperationException>.Builder graph = new();
@@ -185,18 +187,20 @@ public sealed class Test_EmissionWorkQueue
         Task execution = Task.Run(() =>
         {
             InvalidOperationException actual = Assert.ThrowsExactly<InvalidOperationException>(
-                () => queue.Run(expected, 8, CancellationToken.None));
+                () => queue.Run(expected, parallelism, CancellationToken.None));
             Assert.AreSame(expected, actual);
         });
 
         await execution.WaitAsync(TimeSpan.FromSeconds(15));
         InvalidOperationException repeated = Assert.ThrowsExactly<InvalidOperationException>(
-            () => queue.Run(expected, 8, CancellationToken.None));
+            () => queue.Run(expected, parallelism, CancellationToken.None));
         Assert.AreNotSame(expected, repeated);
     }
 
     [TestMethod]
-    public async Task ExternalCancellation_PreservesOriginalTokenAndJoinsWorkers()
+    [DataRow(1)]
+    [DataRow(4)]
+    public async Task ExternalCancellation_PreservesOriginalTokenAndJoinsWorkers(int parallelism)
     {
         using CancellationTokenSource cancellation = new();
         using ManualResetEventSlim started = new();
@@ -221,7 +225,7 @@ public sealed class Test_EmissionWorkQueue
         Task execution = Task.Run(() =>
         {
             OperationCanceledException exception = Assert.ThrowsExactly<OperationCanceledException>(
-                () => queue.Run(cancellation.Token, 4, cancellation.Token));
+                () => queue.Run(cancellation.Token, parallelism, cancellation.Token));
             Assert.AreEqual(cancellation.Token, exception.CancellationToken);
         });
         bool began = started.Wait(TimeSpan.FromSeconds(10));
@@ -229,7 +233,7 @@ public sealed class Test_EmissionWorkQueue
         await execution.WaitAsync(TimeSpan.FromSeconds(15));
         Assert.IsTrue(began);
         Assert.AreEqual(1, finished, "Run must join all admitted work before returning.");
-        Assert.ThrowsExactly<InvalidOperationException>(() => queue.Run(cancellation.Token, 4, cancellation.Token));
+        Assert.ThrowsExactly<InvalidOperationException>(() => queue.Run(cancellation.Token, parallelism, cancellation.Token));
     }
 
     [TestMethod]
