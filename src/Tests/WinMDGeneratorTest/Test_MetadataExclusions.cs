@@ -19,7 +19,7 @@ public sealed class Test_MetadataExclusions
         const string source = """
             using System;
             using System.Collections.Generic;
-            using WindowsRuntime;
+            using WindowsRuntime.InteropServices;
             namespace Component;
             [ExcludeFromWindowsMetadata]
             public class Managed<T> { public List<T> Values { get; set; } }
@@ -71,7 +71,7 @@ public sealed class Test_MetadataExclusions
     {
         (Dictionary<string, string> methods, Dictionary<string, string[]> interfaces) =
             WinMDGeneratorRunner.GetGeneratedApiSurface("""
-                using WindowsRuntime;
+                using WindowsRuntime.InteropServices;
                 namespace Component;
                 [ExcludeFromWindowsMetadata]
                 public interface IManaged { int Work(); }
@@ -87,15 +87,36 @@ public sealed class Test_MetadataExclusions
     }
 
     [TestMethod]
+    public void ExcludedAutoPropertyAndFieldLikeEvent_DoNotLeaveAccessors()
+    {
+        string[] members = WinMDGeneratorRunner.GetGeneratedMemberNames("""
+            using WindowsRuntime.InteropServices;
+            namespace Component;
+            public sealed class Visible
+            {
+                [ExcludeFromWindowsMetadata]
+                public int HiddenProperty { get; set; }
+                [ExcludeFromWindowsMetadata]
+                public event System.EventHandler HiddenEvent;
+                public int Value { get; set; }
+            }
+            """);
+
+        Assert.IsFalse(members.Any(static name => name.Contains("Hidden", System.StringComparison.Ordinal)));
+        CollectionAssert.Contains(members, "Component.IVisibleClass.get_Value");
+        CollectionAssert.Contains(members, "Component.IVisibleClass.put_Value");
+    }
+
+    [TestMethod]
     public void IgnoredConstructors_DoNotSynthesizeActivation()
     {
         const string source = """
             namespace Component;
             public sealed class Visible
             {
-                [WindowsRuntime.ExcludeFromWindowsMetadata]
+                [WindowsRuntime.InteropServices.ExcludeFromWindowsMetadata]
                 public Visible() { }
-                [WindowsRuntime.ExcludeFromWindowsMetadata]
+                [WindowsRuntime.InteropServices.ExcludeFromWindowsMetadata]
                 public Visible(int value) { }
                 public void Work() { }
             }
@@ -115,7 +136,7 @@ public sealed class Test_MetadataExclusions
     {
         const string source = """
             namespace Component;
-            [WindowsRuntime.ExcludeFromWindowsMetadata]
+            [WindowsRuntime.InteropServices.ExcludeFromWindowsMetadata]
             public interface IManaged { void Work(); }
             public sealed class Visible : IManaged
             {
@@ -140,7 +161,7 @@ public sealed class Test_MetadataExclusions
         (_, Dictionary<string, string[]> interfaces) = WinMDGeneratorRunner.GetGeneratedApiSurface("""
             namespace Component;
             public interface IContract { void Work(); }
-            [WindowsRuntime.ExcludeFromWindowsMetadata]
+            [WindowsRuntime.InteropServices.ExcludeFromWindowsMetadata]
             public interface IManaged : IContract;
             public sealed class Visible : IManaged
             {
@@ -157,7 +178,7 @@ public sealed class Test_MetadataExclusions
     {
         ILookup<string, string> attributes = WinMDGeneratorRunner.GetGeneratedAttributes("""
             namespace Component;
-            [WindowsRuntime.ExcludeFromWindowsMetadata]
+            [WindowsRuntime.InteropServices.ExcludeFromWindowsMetadata]
             public sealed class ManagedAttribute : System.Attribute;
             public sealed class VisibleAttribute : System.Attribute;
             [Managed]
@@ -173,7 +194,7 @@ public sealed class Test_MetadataExclusions
     public void IgnoredInterfaceMembers_AreNotReintroducedThroughImplementations()
     {
         (Dictionary<string, string> methods, _) = WinMDGeneratorRunner.GetGeneratedApiSurface("""
-            using WindowsRuntime;
+            using WindowsRuntime.InteropServices;
             namespace Component;
             public interface IContract
             {
@@ -196,7 +217,7 @@ public sealed class Test_MetadataExclusions
     {
         string[] members = WinMDGeneratorRunner.GetGeneratedMemberNames("""
             using System;
-            using WindowsRuntime;
+            using WindowsRuntime.InteropServices;
             namespace Component;
             public interface IContract
             {
@@ -223,7 +244,7 @@ public sealed class Test_MetadataExclusions
     {
         (_, Dictionary<string, string[]> interfaces) = WinMDGeneratorRunner.GetGeneratedApiSurface("""
             namespace Component;
-            [WindowsRuntime.ExcludeFromWindowsMetadata]
+            [WindowsRuntime.InteropServices.ExcludeFromWindowsMetadata]
             public interface IManaged;
             public sealed class Visible : System.ComponentModel.Component, IManaged;
             """);
@@ -244,8 +265,8 @@ public sealed class Test_MetadataExclusions
     {
         string count = explicitImplementation && member == "Count" ? $"int {ancestor}.Count" : "public int Count";
         string add = explicitImplementation && member == "Add" ? $"void {ancestor}.Add" : "public void Add";
-        string countAttribute = member == "Count" ? "[WindowsRuntime.ExcludeFromWindowsMetadata]" : "";
-        string addAttribute = member == "Add" ? "[WindowsRuntime.ExcludeFromWindowsMetadata]" : "";
+        string countAttribute = member == "Count" ? "[WindowsRuntime.InteropServices.ExcludeFromWindowsMetadata]" : "";
+        string addAttribute = member == "Add" ? "[WindowsRuntime.InteropServices.ExcludeFromWindowsMetadata]" : "";
 
         WinMDGeneratorRunner.AssertFailure($$"""
             using System.Collections;
@@ -280,7 +301,7 @@ public sealed class Test_MetadataExclusions
             public enum Value
             {
                 Visible,
-                [WindowsRuntime.ExcludeFromWindowsMetadata]
+                [WindowsRuntime.InteropServices.ExcludeFromWindowsMetadata]
                 [System.Obsolete]
                 Hidden
             }
@@ -298,7 +319,7 @@ public sealed class Test_MetadataExclusions
             namespace Component;
             public sealed class Items : IReadOnlyCollection<int>
             {
-                [WindowsRuntime.ExcludeFromWindowsMetadata]
+                [WindowsRuntime.InteropServices.ExcludeFromWindowsMetadata]
                 public int Count => 0;
                 public IEnumerator<int> GetEnumerator() => throw new System.NotSupportedException();
                 IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
@@ -316,7 +337,7 @@ public sealed class Test_MetadataExclusions
     {
         WinMDGeneratorRunner.AssertFailure($$"""
             namespace Component;
-            [WindowsRuntime.ExcludeFromWindowsMetadata]
+            [WindowsRuntime.InteropServices.ExcludeFromWindowsMetadata]
             public sealed class Hidden;
             public interface IContract { {{type}} Method(); }
             """, error: "CSWINRTWINMDGEN0016");
@@ -332,7 +353,7 @@ public sealed class Test_MetadataExclusions
     {
         WinMDGeneratorRunner.AssertFailure($$"""
             namespace Component;
-            [WindowsRuntime.ExcludeFromWindowsMetadata]
+            [WindowsRuntime.InteropServices.ExcludeFromWindowsMetadata]
             public sealed class Hidden;
             public interface IContract { void Method({{parameter}}); }
             """, error: "CSWINRTWINMDGEN0016");
@@ -351,7 +372,7 @@ public sealed class Test_MetadataExclusions
 
         Dictionary<string, string?> bases = WinMDGeneratorRunner.GetGeneratedBaseTypes($$"""
             namespace Component;
-            [WindowsRuntime.ExcludeFromWindowsMetadata]
+            [WindowsRuntime.InteropServices.ExcludeFromWindowsMetadata]
             public {{modifier}}class {{declaration}};
             public sealed class Visible : {{baseType}};
             """);
@@ -369,7 +390,7 @@ public sealed class Test_MetadataExclusions
 
         WinMDGeneratorRunner.AssertFailure($$"""
             namespace Component;
-            [WindowsRuntime.ExcludeFromWindowsMetadata]
+            [WindowsRuntime.InteropServices.ExcludeFromWindowsMetadata]
             public {{modifier}}class Hidden;
             public sealed class Visible : Hidden
             {
@@ -383,7 +404,7 @@ public sealed class Test_MetadataExclusions
     {
         const string source = """
             using System.Collections.Generic;
-            using WindowsRuntime;
+            using WindowsRuntime.InteropServices;
             namespace Component;
             public interface IContract { int FromInterface(int value); }
             [ExcludeFromWindowsMetadata]
@@ -438,7 +459,7 @@ public sealed class Test_MetadataExclusions
             WinMDGeneratorRunner.GetGeneratedApiSurface($$"""
                 namespace Component;
                 public interface IContract { void Work(); }
-                [WindowsRuntime.ExcludeFromWindowsMetadata]
+                [WindowsRuntime.InteropServices.ExcludeFromWindowsMetadata]
                 public {{modifier}}class Hidden<T> : System.IDisposable, IContract
                 {
                     public void Dispose() { }
@@ -465,7 +486,7 @@ public sealed class Test_MetadataExclusions
             WinMDGeneratorRunner.GetGeneratedApiSurface($$"""
                 namespace Component;
                 public interface IContract { void Work(); }
-                [WindowsRuntime.ExcludeFromWindowsMetadata]
+                [WindowsRuntime.InteropServices.ExcludeFromWindowsMetadata]
                 public class Hidden : {{contract}}
                 {
                     public virtual void {{method}}() { }
@@ -490,9 +511,9 @@ public sealed class Test_MetadataExclusions
             using System.Collections;
             using System.Collections.Generic;
             namespace Component;
-            [WindowsRuntime.ExcludeFromWindowsMetadata]
+            [WindowsRuntime.InteropServices.ExcludeFromWindowsMetadata]
             public sealed class HiddenValue;
-            [WindowsRuntime.ExcludeFromWindowsMetadata]
+            [WindowsRuntime.InteropServices.ExcludeFromWindowsMetadata]
             public class Hidden<T> : IEnumerable<T>
             {
                 public IEnumerator<T> GetEnumerator() => null;
@@ -522,7 +543,7 @@ public sealed class Test_MetadataExclusions
             using System.Collections;
             using System.Collections.Generic;
             namespace Component;
-            [WindowsRuntime.ExcludeFromWindowsMetadata]
+            [WindowsRuntime.InteropServices.ExcludeFromWindowsMetadata]
             public class Hidden : IReadOnlyList<int>
             {
                 public virtual int Count => 0;
@@ -532,7 +553,7 @@ public sealed class Test_MetadataExclusions
             }
             public sealed class Visible : Hidden{{interfaces}}
             {
-                [WindowsRuntime.ExcludeFromWindowsMetadata]
+                [WindowsRuntime.InteropServices.ExcludeFromWindowsMetadata]
                 public override int Count => 0;
             }
             """;
@@ -567,7 +588,7 @@ public sealed class Test_MetadataExclusions
     {
         WinMDGeneratorRunner.AssertFailure("""
             namespace Component;
-            [WindowsRuntime.ExcludeFromWindowsMetadata]
+            [WindowsRuntime.InteropServices.ExcludeFromWindowsMetadata]
             public sealed class Hidden;
             [System.Runtime.Serialization.KnownType(typeof(Hidden))]
             public sealed class Visible;
@@ -579,7 +600,7 @@ public sealed class Test_MetadataExclusions
     {
         WinMDGeneratorRunner.AssertSuccess("""
             namespace Component;
-            [WindowsRuntime.ExcludeFromWindowsMetadata]
+            [WindowsRuntime.InteropServices.ExcludeFromWindowsMetadata]
             public sealed class Hidden;
             public struct Value
             {
@@ -596,40 +617,40 @@ public sealed class Test_MetadataExclusions
     {
         WinMDGeneratorRunner.AssertFailure($$"""
             namespace Component;
-            [WindowsRuntime.ExcludeFromWindowsMetadata] public interface IHidden;
-            [WindowsRuntime.ExcludeFromWindowsMetadata] public struct HiddenValue { public int Value; }
+            [WindowsRuntime.InteropServices.ExcludeFromWindowsMetadata] public interface IHidden;
+            [WindowsRuntime.InteropServices.ExcludeFromWindowsMetadata] public struct HiddenValue { public int Value; }
             {{declaration}}
             """, error: "CSWINRTWINMDGEN0016");
     }
 
     [TestMethod]
-    [DataRow("public struct Value { [WindowsRuntime.ExcludeFromWindowsMetadata] public int Field; }")]
-    [DataRow("public sealed class Value { public int Property { [WindowsRuntime.ExcludeFromWindowsMetadata] get => 0; } }")]
+    [DataRow("public struct Value { [WindowsRuntime.InteropServices.ExcludeFromWindowsMetadata] public int Field; }")]
+    [DataRow("public sealed class Value { public int Property { [WindowsRuntime.InteropServices.ExcludeFromWindowsMetadata] get => 0; } }")]
     [DataRow("""
         public interface IContract { void Work(); }
         public sealed class Value : IContract
         {
-            [WindowsRuntime.ExcludeFromWindowsMetadata] public void Work() { }
+            [WindowsRuntime.InteropServices.ExcludeFromWindowsMetadata] public void Work() { }
         }
         """)]
     [DataRow("""
         public interface IContract { int Property { get; } }
         public sealed class Value : IContract
         {
-            [WindowsRuntime.ExcludeFromWindowsMetadata] public int Property => 0;
+            [WindowsRuntime.InteropServices.ExcludeFromWindowsMetadata] public int Property => 0;
         }
         """)]
     [DataRow("""
         public interface IContract { void Work(); }
         public sealed class Value : IContract
         {
-            [WindowsRuntime.ExcludeFromWindowsMetadata] void IContract.Work() { }
+            [WindowsRuntime.InteropServices.ExcludeFromWindowsMetadata] void IContract.Work() { }
         }
         """)]
     [DataRow("""
         public sealed class Value : System.IDisposable
         {
-            [WindowsRuntime.ExcludeFromWindowsMetadata] public void Dispose() { }
+            [WindowsRuntime.InteropServices.ExcludeFromWindowsMetadata] public void Dispose() { }
         }
         """)]
     public void InvalidExclusions_AreRejectedByTheTool(string declaration)

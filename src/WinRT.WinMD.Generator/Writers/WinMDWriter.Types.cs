@@ -463,6 +463,7 @@ internal sealed partial class WinMDWriter
             if (method.IsExcludedFromWindowsMetadata())
             {
                 hasNonExportedConstructor |= method.IsConstructor;
+
                 continue;
             }
 
@@ -471,6 +472,7 @@ internal sealed partial class WinMDWriter
                 if (!method.IsPublic)
                 {
                     hasNonExportedConstructor = true;
+
                     continue;
                 }
 

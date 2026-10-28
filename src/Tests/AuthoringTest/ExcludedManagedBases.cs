@@ -4,7 +4,7 @@
 using System;
 using System.Collections.Generic;
 using Windows.Foundation;
-using WindowsRuntime;
+using WindowsRuntime.InteropServices;
 
 namespace AuthoringTest.ExcludedBases;
 

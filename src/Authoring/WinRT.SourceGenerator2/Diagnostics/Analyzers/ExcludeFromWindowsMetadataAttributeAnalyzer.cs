@@ -6,6 +6,8 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Diagnostics;
 
 namespace WindowsRuntime.SourceGenerator.Diagnostics;
@@ -42,6 +44,33 @@ public sealed class ExcludeFromWindowsMetadataAttributeAnalyzer : DiagnosticAnal
                 context.Options.AnalyzerConfigOptionsProvider.GlobalOptions.GetCsWinRTUseWindowsUIXamlProjections());
             INamedTypeSymbol? excludeAttributeType = validation.ExcludeAttributeType;
 
+            // Validate accessor-level applications at the attribute syntax rather than scanning every member's attributes
+            if (excludeAttributeType is not null)
+            {
+                context.RegisterSyntaxNodeAction(context =>
+                {
+                    AttributeSyntax attribute = (AttributeSyntax)context.Node;
+
+                    // Filter by the target first, then bind the attribute constructor to recognize qualified names and aliases
+                    if (attribute.Parent?.Parent is not AccessorDeclarationSyntax accessor ||
+                        context.SemanticModel.GetSymbolInfo(attribute, context.CancellationToken).Symbol is not IMethodSymbol constructor ||
+                        !SymbolEqualityComparer.Default.Equals(constructor.ContainingType, excludeAttributeType))
+                    {
+                        return;
+                    }
+
+                    // The guard above identified an accessor; report its invalid annotation only if the containing type is exported
+                    // Excluding the whole property or event does not make an accessor-level annotation valid
+                    if (context.SemanticModel.GetDeclaredSymbol(accessor, context.CancellationToken) is IMethodSymbol method &&
+                        validation.IsExported(method.ContainingType))
+                    {
+                        context.ReportDiagnostic(CreateInvalidExclusionDiagnostic(
+                            method, "apply the attribute to the whole property or event, not an accessor"));
+                    }
+                }, SyntaxKind.Attribute);
+            }
+
+            // Exported signatures and implicit fields also need validation when they have no attribute syntax to inspect
             context.RegisterSymbolAction(context =>
             {
                 INamedTypeSymbol type = (INamedTypeSymbol)context.Symbol;
@@ -55,7 +84,7 @@ public sealed class ExcludeFromWindowsMetadataAttributeAnalyzer : DiagnosticAnal
 
                 if (type is { TypeKind: TypeKind.Delegate, DelegateInvokeMethod: { } invoke })
                 {
-                    // Validate the delegate's declared return type and parameters through its Invoke method
+                    // Validate the delegate's declared return type and parameters through its 'Invoke' method
                     CheckSignature(context, type, invoke.ReturnType, validation);
 
                     foreach (IParameterSymbol parameter in invoke.Parameters)
@@ -66,7 +95,7 @@ public sealed class ExcludeFromWindowsMetadataAttributeAnalyzer : DiagnosticAnal
                     return;
                 }
 
-                // Abstract and excluded managed bases are replaced with System.Object during WinMD emission
+                // Abstract and excluded managed bases are replaced with 'System.Object' during WinMD emission
                 if (type.BaseType is { IsAbstract: false } baseType &&
                     !baseType.IsExcludedFromWindowsMetadata(excludeAttributeType))
                 {
@@ -98,17 +127,13 @@ public sealed class ExcludeFromWindowsMetadataAttributeAnalyzer : DiagnosticAnal
                 {
                     context.CancellationToken.ThrowIfCancellationRequested();
 
-                    if (member is IMethodSymbol { AssociatedSymbol: not null } accessor &&
-                        excludeAttributeType is not null &&
-                        accessor.HasAttributeWithType(excludeAttributeType))
+                    // Inspect the field symbols so field-targeted attributes on generated backing fields are covered too
+                    if (member is IFieldSymbol { IsStatic: false } structField &&
+                        type.TypeKind is TypeKind.Struct &&
+                        structField.IsExcludedFromWindowsMetadata(excludeAttributeType))
                     {
-                        ReportInvalid(context, accessor, "apply the attribute to the whole property or event, not an accessor");
-                    }
-                    else if (member is IFieldSymbol { IsStatic: false } field &&
-                             type.TypeKind is TypeKind.Struct &&
-                             field.IsExcludedFromWindowsMetadata(excludeAttributeType))
-                    {
-                        ReportInvalid(context, field, "instance fields of exported structs define the Windows Runtime layout");
+                        context.ReportDiagnostic(CreateInvalidExclusionDiagnostic(
+                            structField, "instance fields of exported structs define the Windows Runtime layout"));
                     }
 
                     if (member.IsExcludedFromWindowsMetadata(excludeAttributeType))
@@ -269,7 +294,7 @@ public sealed class ExcludeFromWindowsMetadataAttributeAnalyzer : DiagnosticAnal
         foreach (INamedTypeSymbol iface in projectedInterfaces)
         {
             // An omitted base interface can still supply required members of a mapped contract
-            // For example, ICollection<T>.Count remains required by an exported IList<T>
+            // For example, 'ICollection<T>.Count' remains required by an exported 'IList<T>'
             if (!iface.IsPubliclyAccessible ||
                 iface.IsExcludedFromWindowsMetadata(validation.ExcludeAttributeType) ||
                 (AuthoringTypeValidation.IsOmittedInterface(iface) &&
@@ -285,24 +310,25 @@ public sealed class ExcludeFromWindowsMetadataAttributeAnalyzer : DiagnosticAnal
                 !contract.IsExcludedFromWindowsMetadata(validation.ExcludeAttributeType) &&
                 SymbolEqualityComparer.Default.Equals(type.FindImplementationForInterfaceMember(contract), member)))
             {
-                ReportInvalid(context, member, $"the member is required by retained interface '{iface}'");
+                context.ReportDiagnostic(CreateInvalidExclusionDiagnostic(
+                    member, $"the member is required by retained interface '{iface}'"));
+
                 return;
             }
         }
     }
 
     /// <summary>
-    /// Reports an exclusion that cannot be represented without breaking a contract.
+    /// Creates a diagnostic for an exclusion that cannot be represented without breaking a contract.
     /// </summary>
-    private static void ReportInvalid(
-        SymbolAnalysisContext context,
+    private static Diagnostic CreateInvalidExclusionDiagnostic(
         ISymbol declaration,
         string reason)
     {
-        context.ReportDiagnostic(Diagnostic.Create(
+        return Diagnostic.Create(
             DiagnosticDescriptors.InvalidExcludeFromWindowsMetadata,
             declaration.Locations.FirstOrDefault(),
             declaration,
-            reason));
+            reason);
     }
 }

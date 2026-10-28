@@ -29,7 +29,7 @@ internal static partial class WinMDGeneratorRunner
     /// <summary>
     /// The runtime assembly containing the supported component-authoring attributes.
     /// </summary>
-    private static readonly string RuntimeAssemblyPath = typeof(WindowsRuntime.ExcludeFromWindowsMetadataAttribute).Assembly.Location;
+    private static readonly string RuntimeAssemblyPath = typeof(WindowsRuntime.InteropServices.ExcludeFromWindowsMetadataAttribute).Assembly.Location;
 
     /// <summary>
     /// Asserts that the generator succeeds (exit code <c>0</c>) for the given component source.

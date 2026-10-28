@@ -237,7 +237,7 @@ internal static class ActivationFactoryValidation
             return "is not declared in this project, so it is not a Windows Runtime class authored by this component.";
         }
 
-        INamedTypeSymbol? excludeAttributeType = compilation.GetTypeByMetadataName("WindowsRuntime.ExcludeFromWindowsMetadataAttribute");
+        INamedTypeSymbol? excludeAttributeType = compilation.GetTypeByMetadataName("WindowsRuntime.InteropServices.ExcludeFromWindowsMetadataAttribute");
 
         // These mirror the types the WinMD generator exports as authored Windows Runtime classes
         if (runtimeClassType.TypeKind is not TypeKind.Class ||

@@ -126,7 +126,7 @@ public sealed class ComponentAuthoringAnalyzer : DiagnosticAnalyzer
                     Report(context, DiagnosticDescriptors.AuthoredClassRequiresSealed, type, type);
                 }
 
-                // The WinMD generator replaces abstract and excluded managed bases with System.Object, so allow them
+                // The WinMD generator replaces abstract and excluded managed bases with 'System.Object', so allow them
                 if (type.BaseType is { SpecialType: not SpecialType.System_Object, TypeKind: not TypeKind.Error } baseType &&
                     !baseType.IsAbstract &&
                     validation.FindIgnoredType(baseType) is null &&
@@ -249,7 +249,9 @@ public sealed class ComponentAuthoringAnalyzer : DiagnosticAnalyzer
 
             if (field.IsExcludedFromWindowsMetadata(validation.ExcludeAttributeType))
             {
+                // Excluding an instance field is invalid and reported separately; do not also report the struct as empty
                 hasPublicField |= !field.IsStatic && field.DeclaredAccessibility is Accessibility.Public;
+
                 continue;
             }
 

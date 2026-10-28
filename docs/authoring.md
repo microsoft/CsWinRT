@@ -83,10 +83,10 @@ Pass spans by value. `ref T[]`, `in T[]`, by-reference spans, jagged arrays, and
 
 ### Excluding managed-only API from component metadata
 
-Use `[WindowsRuntime.ExcludeFromWindowsMetadata]` on a public type or member to keep it available to managed callers without including it in the component's `.winmd` or generated projections:
+Use `[WindowsRuntime.InteropServices.ExcludeFromWindowsMetadata]` on a public type or member to keep it available to managed callers without including it in the component's `.winmd` or generated projections:
 
 ```csharp
-using WindowsRuntime;
+using WindowsRuntime.InteropServices;
 using Windows.Foundation.Metadata;
 
 namespace MyComponent;

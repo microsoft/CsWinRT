@@ -43,7 +43,7 @@ public sealed class ApiContractTypeRequiresContractVersionAnalyzer : DiagnosticA
                 return;
             }
 
-            INamedTypeSymbol? excludeAttributeType = context.Compilation.GetTypeByMetadataName("WindowsRuntime.ExcludeFromWindowsMetadataAttribute");
+            INamedTypeSymbol? excludeAttributeType = context.Compilation.GetTypeByMetadataName("WindowsRuntime.InteropServices.ExcludeFromWindowsMetadataAttribute");
 
             context.RegisterSymbolAction(context =>
             {

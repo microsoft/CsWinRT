@@ -51,7 +51,7 @@ internal sealed class AuthoringTypeValidation(
     /// Gets the metadata exclusion marker for the compilation, if available.
     /// </summary>
     public INamedTypeSymbol? ExcludeAttributeType { get; } =
-        compilation.GetTypeByMetadataName("WindowsRuntime.ExcludeFromWindowsMetadataAttribute");
+        compilation.GetTypeByMetadataName("WindowsRuntime.InteropServices.ExcludeFromWindowsMetadataAttribute");
 
     /// <summary>
     /// Gets whether a type is exported as a new declaration in the component's WinMD.

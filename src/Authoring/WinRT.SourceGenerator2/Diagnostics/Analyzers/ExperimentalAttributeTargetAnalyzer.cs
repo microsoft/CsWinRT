@@ -54,7 +54,7 @@ public sealed class ExperimentalAttributeTargetAnalyzer : DiagnosticAnalyzer
                 return;
             }
 
-            INamedTypeSymbol? excludeAttributeType = context.Compilation.GetTypeByMetadataName("WindowsRuntime.ExcludeFromWindowsMetadataAttribute");
+            INamedTypeSymbol? excludeAttributeType = context.Compilation.GetTypeByMetadataName("WindowsRuntime.InteropServices.ExcludeFromWindowsMetadataAttribute");
 
             context.RegisterSyntaxNodeAction(context =>
             {

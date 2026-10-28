@@ -22,14 +22,16 @@ internal sealed partial class WinMDWriter
             ? CollectCustomMappedMemberNames(type)
             : [];
 
-        // Abstract and excluded managed bases become System.Object in WinMD
-        // Their original references are not exported and do not need signature validation
+        // Abstract and excluded managed bases become 'System.Object' in WinMD, so their original types need not be exported
         if (type.BaseType is { } baseType &&
             !IsErasedBaseType(baseType))
         {
             ValidateExportedTypeReference(baseType, type.FullName);
         }
 
+        // A class can implement an excluded interface without publishing it in WinMD
+        // An exported interface must include its base interfaces in WinMD, so report an error if a base interface
+        // or any of its generic type arguments is excluded
         foreach (InterfaceImplementation implementation in type.Interfaces)
         {
             if (implementation.Interface is not { } iface ||
@@ -44,6 +46,7 @@ internal sealed partial class WinMDWriter
             ValidateExportedTypeReference(iface, type.FullName);
         }
 
+        // Mapped contracts can also come from managed bases; validate their type arguments unless an excluded base hides them
         foreach (InterfaceImplementation implementation in GatherAllInterfaces(type))
         {
             if (implementation.Interface is { } iface && _mapper.HasMappingForType(GetInterfaceFullName(iface)))
@@ -52,6 +55,7 @@ internal sealed partial class WinMDWriter
             }
         }
 
+        // Excluding a struct field would change its native layout; retained fields must also have valid exported types
         foreach (FieldDefinition field in type.Fields)
         {
             if (type.IsValueType && !type.IsEnum && !field.IsStatic && field.HasExcludeFromWindowsMetadata())
@@ -66,10 +70,10 @@ internal sealed partial class WinMDWriter
             }
         }
 
+        // Reject accessor-level exclusions before filtering out methods that do not contribute to the exported API
         foreach (MethodDefinition method in type.Methods)
         {
-            bool isAccessor = type.Properties.Any(property => property.GetMethod == method || property.SetMethod == method) ||
-                              type.Events.Any(@event => @event.AddMethod == method || @event.RemoveMethod == method);
+            bool isAccessor = method.IsAccessorMethod;
 
             if (isAccessor && method.HasExcludeFromWindowsMetadata())
             {
@@ -89,6 +93,7 @@ internal sealed partial class WinMDWriter
                 continue;
             }
 
+            // Properties and events expose their types through accessor signatures; delegates expose theirs through 'Invoke'
             ValidateExportedTypeSignature(method.Signature!.ReturnType, method.FullName);
 
             foreach (TypeSignature parameter in method.Signature.ParameterTypes)
@@ -97,6 +102,7 @@ internal sealed partial class WinMDWriter
             }
         }
 
+        // Omitting a class member must not leave a published interface without its required implementation
         if (type.IsClass && !type.IsValueType && !type.IsDelegate)
         {
             ValidateRequiredInterfaceMembers(type);
@@ -122,7 +128,8 @@ internal sealed partial class WinMDWriter
         List<InterfaceImplementation> interfaces = GatherAllInterfaces(type);
         HashSet<string> mappedAncestors = [];
 
-        // Keep ancestors that still supply required members of an exported mapped interface
+        // Some managed base interfaces are omitted from WinMD but still supply members of a mapped contract
+        // For example, 'ICollection<T>.Count' is needed to implement the projected 'IList<T>'
         foreach (InterfaceImplementation implementation in interfaces)
         {
             if (implementation.Interface is not { } iface ||
@@ -145,7 +152,7 @@ internal sealed partial class WinMDWriter
             }
         }
 
-        // Check retained contracts against their explicit or inherited managed implementations
+        // Check published interfaces and the managed base interfaces needed to implement their mapped members
         foreach (InterfaceImplementation implementation in interfaces)
         {
             if (implementation.Interface is not { } iface ||
@@ -173,7 +180,8 @@ internal sealed partial class WinMDWriter
                     ResolveGenericArg(contractMethod.Signature!.ReturnType, arguments),
                     [.. contractMethod.Signature.ParameterTypes.Select(parameter => ResolveGenericArg(parameter, arguments))]);
 
-                // MemberRefs on constructed interfaces can retain generic parameters in their signatures
+                // Explicit 'MethodImpl' declarations can use open or substituted signatures for a constructed interface
+                // Accept either form before falling back to a matching public method, including inherited implementations
                 MethodDefinition? method = type.MethodImplementations
                     .Where(entry => entry.Declaration is { DeclaringType: { } declaringType } declaration &&
                                     declaringType.FullName == iface.FullName &&

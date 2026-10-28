@@ -3,7 +3,7 @@
 
 using System;
 
-namespace WindowsRuntime;
+namespace WindowsRuntime.InteropServices;
 
 /// <summary>
 /// Excludes a type or member from the Windows Runtime metadata generated for a component.
@@ -14,7 +14,7 @@ namespace WindowsRuntime;
 /// managed accessibility or suppress COM interface exposure.
 /// </para>
 /// <para>
-/// Excluding a type also excludes its members. Excluding a base class does not automatically exclude
+/// Excluding a type also excludes its members and nested types. Excluding a base class does not automatically exclude
 /// classes that inherit from it. An exported derived class uses <see cref="object"/> as its base in
 /// the generated metadata; inherited members are omitted from metadata unless re-exposed by the derived class
 /// or a retained interface. Windows Runtime and custom-mapped interfaces inherited only through the
@@ -25,6 +25,9 @@ namespace WindowsRuntime;
 /// interface cannot be excluded independently. Apply the attribute to a whole property or event,
 /// not an accessor. Instance fields of exported structs cannot be excluded because they define
 /// the Windows Runtime layout.
+/// </para>
+/// <para>
+/// This attribute only affects projects built as Windows Runtime components.
 /// </para>
 /// </remarks>
 [AttributeUsage(

@@ -603,15 +603,15 @@ public sealed class Test_WindowsRuntimeActivationFactoryAttributeAnalyzer
             {
                 internal sealed class InternalGreeter;
 
-                [WindowsRuntime.ExcludeFromWindowsMetadata]
+                [WindowsRuntime.InteropServices.ExcludeFromWindowsMetadata]
                 public sealed class IgnoredGreeter;
 
                 public sealed class FilteredGreeter
                 {
-                    [WindowsRuntime.ExcludeFromWindowsMetadata]
+                    [WindowsRuntime.InteropServices.ExcludeFromWindowsMetadata]
                     public FilteredGreeter() { }
 
-                    [WindowsRuntime.ExcludeFromWindowsMetadata]
+                    [WindowsRuntime.InteropServices.ExcludeFromWindowsMetadata]
                     public static void Helper() { }
                 }
 

@@ -513,7 +513,7 @@ internal sealed partial class WinMDWriter
         if (attributeTypeName is
             "System.Runtime.InteropServices.GuidAttribute" or
             "WindowsRuntime.Xaml.GeneratedCustomPropertyProviderAttribute" or
-            "WindowsRuntime.ExcludeFromWindowsMetadataAttribute" or
+            "WindowsRuntime.InteropServices.ExcludeFromWindowsMetadataAttribute" or
             "Windows.Foundation.Metadata.VersionAttribute" or
             "Windows.Foundation.Metadata.OverloadAttribute" or
             "System.Reflection.DefaultMemberAttribute")

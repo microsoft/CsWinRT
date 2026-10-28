@@ -18,8 +18,7 @@ internal static class ExcludeFromWindowsMetadataExtensions
         /// </summary>
         public bool HasExcludeFromWindowsMetadata()
         {
-            return declaration.CustomAttributes.Any(static attribute =>
-                attribute.Constructor?.DeclaringType?.FullName == "WindowsRuntime.ExcludeFromWindowsMetadataAttribute");
+            return declaration.FindCustomAttributes("WindowsRuntime.InteropServices", "ExcludeFromWindowsMetadataAttribute").Any();
         }
 
         /// <summary>
@@ -42,15 +41,17 @@ internal static class ExcludeFromWindowsMetadataExtensions
                 _ => null
             };
 
-            return type?.IsExcludedFromWindowsMetadata() == true ||
-                   (declaration is MethodDefinition accessor &&
-                    type is not null &&
-                   (type.Properties.Any(property =>
-                        (property.GetMethod == accessor || property.SetMethod == accessor) &&
-                        property.IsExcludedFromWindowsMetadata()) ||
-                    type.Events.Any(@event =>
-                        (@event.AddMethod == accessor || @event.RemoveMethod == accessor) &&
-                        @event.IsExcludedFromWindowsMetadata())));
+            // Nested types and members follow exclusions on their containing type
+            if (type?.IsExcludedFromWindowsMetadata() == true)
+            {
+                return true;
+            }
+
+            // Accessors also follow the property or event identified by their method semantics
+            return declaration is MethodDefinition accessor &&
+                   accessor.IsAccessorMethod &&
+                   accessor.Semantics?.Association is IHasCustomAttribute associated &&
+                   associated.IsExcludedFromWindowsMetadata();
         }
     }
 }

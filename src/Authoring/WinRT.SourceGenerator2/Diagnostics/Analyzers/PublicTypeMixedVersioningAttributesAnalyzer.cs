@@ -47,7 +47,7 @@ public sealed class PublicTypeMixedVersioningAttributesAnalyzer : DiagnosticAnal
 
             // Get the '[ApiContract]' symbol (used to skip API contract types, which are validated by a different analyzer)
             INamedTypeSymbol? apiContractAttributeType = context.Compilation.GetTypeByMetadataName("Windows.Foundation.Metadata.ApiContractAttribute");
-            INamedTypeSymbol? excludeAttributeType = context.Compilation.GetTypeByMetadataName("WindowsRuntime.ExcludeFromWindowsMetadataAttribute");
+            INamedTypeSymbol? excludeAttributeType = context.Compilation.GetTypeByMetadataName("WindowsRuntime.InteropServices.ExcludeFromWindowsMetadataAttribute");
 
             context.RegisterSymbolAction(context =>
             {

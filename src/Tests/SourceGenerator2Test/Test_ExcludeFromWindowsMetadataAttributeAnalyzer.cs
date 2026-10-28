@@ -19,7 +19,7 @@ public sealed class Test_ExcludeFromWindowsMetadataAttributeAnalyzer
         await CSharpAnalyzerTest<ComponentAuthoringAnalyzer>.VerifyAnalyzerAsync("""
             using System;
             using System.Collections.Generic;
-            using WindowsRuntime;
+            using WindowsRuntime.InteropServices;
             namespace Component;
 
             [ExcludeFromWindowsMetadata]
@@ -58,7 +58,7 @@ public sealed class Test_ExcludeFromWindowsMetadataAttributeAnalyzer
     public async Task ExportedSignatureReferencingIgnoredType_ReportsDiagnostic(string type)
     {
         await VerifyAsync($$"""
-            using WindowsRuntime;
+            using WindowsRuntime.InteropServices;
             namespace Component;
             [ExcludeFromWindowsMetadata]
             public sealed class Hidden;
@@ -73,7 +73,7 @@ public sealed class Test_ExcludeFromWindowsMetadataAttributeAnalyzer
     public async Task IgnoredTypeInStructFieldAndInterfaceContracts_ReportsDiagnostic()
     {
         await VerifyAsync("""
-            using WindowsRuntime;
+            using WindowsRuntime.InteropServices;
             namespace Component;
             [ExcludeFromWindowsMetadata]
             public struct HiddenValue { public int Value; }
@@ -96,7 +96,7 @@ public sealed class Test_ExcludeFromWindowsMetadataAttributeAnalyzer
         string baseType = genericBase ? "Hidden<int>" : "Hidden";
 
         await VerifyAsync($$"""
-            using WindowsRuntime;
+            using WindowsRuntime.InteropServices;
             namespace Component;
             [ExcludeFromWindowsMetadata]
             public {{modifier}}class {{declaration}};
@@ -112,7 +112,7 @@ public sealed class Test_ExcludeFromWindowsMetadataAttributeAnalyzer
         string modifier = abstractBase ? "abstract " : "";
 
         await VerifyAsync($$"""
-            using WindowsRuntime;
+            using WindowsRuntime.InteropServices;
             namespace Component;
             [ExcludeFromWindowsMetadata]
             public {{modifier}}class Hidden;
@@ -128,7 +128,7 @@ public sealed class Test_ExcludeFromWindowsMetadataAttributeAnalyzer
     {
         await VerifyAsync("""
             namespace Component;
-            [WindowsRuntime.ExcludeFromWindowsMetadata]
+            [WindowsRuntime.InteropServices.ExcludeFromWindowsMetadata]
             public sealed class Hidden;
             [System.Runtime.Serialization.KnownType(typeof(Hidden))]
             public sealed class {|CSWINRT2049:Visible|};
@@ -140,7 +140,7 @@ public sealed class Test_ExcludeFromWindowsMetadataAttributeAnalyzer
     {
         await VerifyAsync("""
             namespace Component;
-            [WindowsRuntime.ExcludeFromWindowsMetadata]
+            [WindowsRuntime.InteropServices.ExcludeFromWindowsMetadata]
             public sealed class Hidden;
             public struct Value
             {
@@ -159,7 +159,7 @@ public sealed class Test_ExcludeFromWindowsMetadataAttributeAnalyzer
     {
         await VerifyAsync("""
             using System;
-            using WindowsRuntime;
+            using WindowsRuntime.InteropServices;
             namespace Component;
             public interface IContract
             {
@@ -185,7 +185,7 @@ public sealed class Test_ExcludeFromWindowsMetadataAttributeAnalyzer
     public async Task AccessorsAndInstanceStructFields_CannotBeIgnored()
     {
         await VerifyAsync("""
-            using WindowsRuntime;
+            using WindowsRuntime.InteropServices;
             namespace Component;
             public sealed class Component
             {
@@ -195,6 +195,46 @@ public sealed class Test_ExcludeFromWindowsMetadataAttributeAnalyzer
             {
                 [ExcludeFromWindowsMetadata]
                 public int {|CSWINRT2048:Field|};
+            }
+            """);
+    }
+
+    [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    public async Task AliasedExclusionOnEventAccessor_ReportsDiagnostic(bool generated)
+    {
+        const string source = """
+            using Exclude = WindowsRuntime.InteropServices.ExcludeFromWindowsMetadataAttribute;
+            namespace Component;
+            public sealed class Component
+            {
+                public event System.EventHandler Changed
+                {
+                    [Exclude]
+                    {|CSWINRT2048:add|} { }
+                    remove { }
+                }
+            }
+            """;
+
+        await CSharpAnalyzerTest<ExcludeFromWindowsMetadataAttributeAnalyzer>.VerifyAnalyzerAsync(
+            generated ? "" : source,
+            isCsWinRTComponent: true,
+            generatedSource: generated ? source : null,
+            assemblyName: "Component");
+    }
+
+    [TestMethod]
+    public async Task ExcludedStructBackingField_ReportsDiagnostic()
+    {
+        await VerifyAsync("""
+            using WindowsRuntime.InteropServices;
+            namespace Component;
+            public struct Value
+            {
+                [field: ExcludeFromWindowsMetadata]
+                public int {|CSWINRT2048:Property|} { get; set; }
             }
             """);
     }
@@ -213,8 +253,8 @@ public sealed class Test_ExcludeFromWindowsMetadataAttributeAnalyzer
         string addName = member == "Add" ? "{|CSWINRT2048:Add|}" : "Add";
         string count = explicitImplementation && member == "Count" ? $"int {ancestor}.{countName}" : $"public int {countName}";
         string add = explicitImplementation && member == "Add" ? $"void {ancestor}.{addName}" : $"public void {addName}";
-        string countAttribute = member == "Count" ? "[WindowsRuntime.ExcludeFromWindowsMetadata]" : "";
-        string addAttribute = member == "Add" ? "[WindowsRuntime.ExcludeFromWindowsMetadata]" : "";
+        string countAttribute = member == "Count" ? "[WindowsRuntime.InteropServices.ExcludeFromWindowsMetadata]" : "";
+        string addAttribute = member == "Add" ? "[WindowsRuntime.InteropServices.ExcludeFromWindowsMetadata]" : "";
 
         await VerifyAsync($$"""
             using System.Collections;
@@ -245,7 +285,7 @@ public sealed class Test_ExcludeFromWindowsMetadataAttributeAnalyzer
     public async Task IgnoredInterfacesAndTheirMembers_DoNotRequireImplementationsInMetadata()
     {
         await VerifyAsync("""
-            using WindowsRuntime;
+            using WindowsRuntime.InteropServices;
             namespace Component;
             [ExcludeFromWindowsMetadata]
             public interface IManaged { void Method(); }
@@ -269,7 +309,7 @@ public sealed class Test_ExcludeFromWindowsMetadataAttributeAnalyzer
             namespace Component;
             public sealed class Items : IReadOnlyCollection<int>
             {
-                [WindowsRuntime.ExcludeFromWindowsMetadata]
+                [WindowsRuntime.InteropServices.ExcludeFromWindowsMetadata]
                 public int Count => 0;
                 public IEnumerator<int> GetEnumerator() => throw new System.NotSupportedException();
                 IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
@@ -281,10 +321,19 @@ public sealed class Test_ExcludeFromWindowsMetadataAttributeAnalyzer
     public async Task OrdinaryLibrary_DoesNotReportComponentExclusions()
     {
         await CSharpAnalyzerTest<ExcludeFromWindowsMetadataAttributeAnalyzer>.VerifyAnalyzerAsync("""
-            using WindowsRuntime;
+            using WindowsRuntime.InteropServices;
             [ExcludeFromWindowsMetadata]
             public sealed class Hidden;
             public interface IContract { Hidden Method(); }
+            public sealed class Visible
+            {
+                public int Value { [ExcludeFromWindowsMetadata] get => 0; }
+            }
+            public struct Value
+            {
+                [ExcludeFromWindowsMetadata]
+                public int Field;
+            }
             """);
     }
 
@@ -293,7 +342,7 @@ public sealed class Test_ExcludeFromWindowsMetadataAttributeAnalyzer
     {
         await CSharpAnalyzerTest<ExcludeFromWindowsMetadataAttributeAnalyzer>.VerifyAnalyzerAsync("",
             isCsWinRTComponent: true, assemblyName: "Component", generatedSource: """
-            using WindowsRuntime;
+            using WindowsRuntime.InteropServices;
             namespace Component;
             [ExcludeFromWindowsMetadata]
             public sealed class Hidden;
@@ -305,7 +354,7 @@ public sealed class Test_ExcludeFromWindowsMetadataAttributeAnalyzer
     public async Task IgnoredTypes_DoNotRequireVersioningOrDeprecatedMetadata()
     {
         const string source = """
-            using WindowsRuntime;
+            using WindowsRuntime.InteropServices;
             [ExcludeFromWindowsMetadata]
             [System.Obsolete]
             public sealed class Managed
@@ -318,17 +367,17 @@ public sealed class Test_ExcludeFromWindowsMetadataAttributeAnalyzer
         await CSharpAnalyzerTest<PublicTypeRequiresVersioningAnalyzer>.VerifyAnalyzerAsync(source, isCsWinRTComponent: true);
         await CSharpAnalyzerTest<ObsoleteWithoutDeprecatedAnalyzer>.VerifyAnalyzerAsync(source, isCsWinRTComponent: true);
         await CSharpAnalyzerTest<ValidContractVersionAttributeAnalyzer>.VerifyAnalyzerAsync("""
-            [WindowsRuntime.ExcludeFromWindowsMetadata]
+            [WindowsRuntime.InteropServices.ExcludeFromWindowsMetadata]
             [Windows.Foundation.Metadata.ContractVersion(1)]
             public sealed class Managed;
             """, isCsWinRTComponent: true);
         await CSharpAnalyzerTest<ApiContractTypeRequiresContractVersionAnalyzer>.VerifyAnalyzerAsync("""
-            [WindowsRuntime.ExcludeFromWindowsMetadata]
+            [WindowsRuntime.InteropServices.ExcludeFromWindowsMetadata]
             [Windows.Foundation.Metadata.ApiContract]
             public enum ManagedContract { }
             """, isCsWinRTComponent: true);
         await CSharpAnalyzerTest<ValidApiContractEnumTypeAnalyzer>.VerifyAnalyzerAsync("""
-            [WindowsRuntime.ExcludeFromWindowsMetadata]
+            [WindowsRuntime.InteropServices.ExcludeFromWindowsMetadata]
             [Windows.Foundation.Metadata.ApiContract]
             public enum ManagedContract : long { Value = 1 }
             """, isCsWinRTComponent: true);
@@ -340,7 +389,7 @@ public sealed class Test_ExcludeFromWindowsMetadataAttributeAnalyzer
         await CSharpAnalyzerTest<ExperimentalAttributeTargetAnalyzer>.VerifyAnalyzerAsync("""
             public sealed class Component
             {
-                [WindowsRuntime.ExcludeFromWindowsMetadata]
+                [WindowsRuntime.InteropServices.ExcludeFromWindowsMetadata]
                 [System.Diagnostics.CodeAnalysis.Experimental("TEST0001")]
                 public Component() { }
             }
@@ -354,7 +403,7 @@ public sealed class Test_ExcludeFromWindowsMetadataAttributeAnalyzer
             using Windows.Foundation.Metadata;
             [ApiContract, ContractVersion(1)]
             public enum Contract { }
-            [WindowsRuntime.ExcludeFromWindowsMetadata]
+            [WindowsRuntime.InteropServices.ExcludeFromWindowsMetadata]
             [ContractVersion(typeof(Contract), 1), Version(1)]
             public sealed class Managed;
             [Version(1)]
@@ -376,7 +425,7 @@ public sealed class Test_ExcludeFromWindowsMetadataAttributeAnalyzer
         await VerifyAsync($$"""
             using System.Collections;
             using System.Collections.Generic;
-            using WindowsRuntime;
+            using WindowsRuntime.InteropServices;
             namespace Component;
             [ExcludeFromWindowsMetadata]
             public sealed class HiddenValue;
@@ -401,7 +450,7 @@ public sealed class Test_ExcludeFromWindowsMetadataAttributeAnalyzer
         await VerifyAsync($$"""
             using System.Collections;
             using System.Collections.Generic;
-            using WindowsRuntime;
+            using WindowsRuntime.InteropServices;
             namespace Component;
             [ExcludeFromWindowsMetadata]
             public class Hidden : IReadOnlyList<int>
@@ -425,7 +474,7 @@ public sealed class Test_ExcludeFromWindowsMetadataAttributeAnalyzer
         await VerifyAsync("""
             using System.Collections;
             using System.Collections.Generic;
-            using WindowsRuntime;
+            using WindowsRuntime.InteropServices;
             namespace Component;
             [ExcludeFromWindowsMetadata]
             public sealed class HiddenValue;
@@ -448,7 +497,7 @@ public sealed class Test_ExcludeFromWindowsMetadataAttributeAnalyzer
         await CSharpAnalyzerTest<ComponentAuthoringAnalyzer>.VerifyAnalyzerAsync("""
             using System.Collections;
             using System.Collections.Generic;
-            using WindowsRuntime;
+            using WindowsRuntime.InteropServices;
             namespace Component;
             [ExcludeFromWindowsMetadata]
             public class Hidden : IEnumerable<List<int>>

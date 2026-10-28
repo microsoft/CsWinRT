@@ -46,7 +46,7 @@ public sealed class ValidContractVersionAttributeAnalyzer : DiagnosticAnalyzer
                 return;
             }
 
-            INamedTypeSymbol? excludeAttributeType = context.Compilation.GetTypeByMetadataName("WindowsRuntime.ExcludeFromWindowsMetadataAttribute");
+            INamedTypeSymbol? excludeAttributeType = context.Compilation.GetTypeByMetadataName("WindowsRuntime.InteropServices.ExcludeFromWindowsMetadataAttribute");
 
             context.RegisterSymbolAction(context =>
             {
