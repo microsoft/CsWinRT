@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Linq;
+using AsmResolver;
 using AsmResolver.DotNet;
 
 namespace WindowsRuntime.WinMDGenerator;
@@ -18,7 +18,7 @@ internal static class ExcludeFromWindowsMetadataExtensions
         /// </summary>
         public bool HasExcludeFromWindowsMetadata()
         {
-            return declaration.FindCustomAttributes("WindowsRuntime.InteropServices", "ExcludeFromWindowsMetadataAttribute").Any();
+            return declaration.HasCustomAttribute(WellKnownMetadataNames.WindowsRuntimeInteropServices, WellKnownMetadataNames.ExcludeFromWindowsMetadataAttribute);
         }
 
         /// <summary>
@@ -54,4 +54,20 @@ internal static class ExcludeFromWindowsMetadataExtensions
                    associated.IsExcludedFromWindowsMetadata();
         }
     }
+}
+
+/// <summary>
+/// Cached, well-known metadata names.
+/// </summary>
+file static class WellKnownMetadataNames
+{
+    /// <summary>
+    /// The <c>"WindowsRuntime.InteropServices"</c> text.
+    /// </summary>
+    public static readonly Utf8String WindowsRuntimeInteropServices = "WindowsRuntime.InteropServices"u8;
+
+    /// <summary>
+    /// The <c>"ExcludeFromWindowsMetadataAttribute"</c> text.
+    /// </summary>
+    public static readonly Utf8String ExcludeFromWindowsMetadataAttribute = "ExcludeFromWindowsMetadataAttribute"u8;
 }
