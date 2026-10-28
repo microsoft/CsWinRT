@@ -6,19 +6,22 @@ using System;
 namespace WindowsRuntime.Generator.References;
 
 /// <summary>
-/// Definition IIDs shared by compiler-symbol and assembly-metadata consumers.
-/// Callers must validate type identity before using this name-based table.
+/// IIDs of the Windows Runtime interface and delegate definitions that are custom-mapped to, or manually projected
+/// as, well-known managed types, keyed by the fully qualified metadata names of those managed types.
 /// </summary>
+/// <remarks>
+/// Lookups only match names, so callers must validate the exact identity of each type before using this table.
+/// </remarks>
 internal static class WellKnownWindowsRuntimeIids
 {
     /// <summary>
-    /// Gets a known interface or delegate definition IID, including custom-mapped framework types.
+    /// Tries to get the IID of a well-known Windows Runtime interface or delegate definition.
     /// </summary>
-    /// <param name="name">The fully qualified metadata name of the validated definition.</param>
-    /// <param name="useWindowsUIXaml">Whether to use UWP XAML mappings.</param>
-    /// <param name="iid">The definition IID, if known.</param>
-    /// <returns>Whether a definition IID is available.</returns>
-    public static bool TryGetIid(string name, bool useWindowsUIXaml, out Guid iid)
+    /// <param name="name">The fully qualified metadata name of the validated managed type definition.</param>
+    /// <param name="useWindowsUIXamlProjections">Whether to use <c>Windows.UI.Xaml</c> projections.</param>
+    /// <param name="iid">The resulting IID, if found.</param>
+    /// <returns>Whether <paramref name="iid"/> was retrieved successfully.</returns>
+    public static bool TryGetIid(string name, bool useWindowsUIXamlProjections, out Guid iid)
     {
         iid = name switch
         {
@@ -67,18 +70,18 @@ internal static class WellKnownWindowsRuntimeIids
             "System.Collections.IList" => new Guid("393DE7DE-6FD0-4C0D-BB71-47244A113E93"),
 
             // XAML interfaces (data binding and commands)
-            "System.ComponentModel.INotifyPropertyChanged" when useWindowsUIXaml => new Guid("CF75D69C-F2F4-486B-B302-BB4C09BAEBFA"),
+            "System.ComponentModel.INotifyPropertyChanged" when useWindowsUIXamlProjections => new Guid("CF75D69C-F2F4-486B-B302-BB4C09BAEBFA"),
             "System.ComponentModel.INotifyPropertyChanged" => new Guid("90B17601-B065-586E-83D9-9ADC3A695284"),
             "System.ComponentModel.INotifyDataErrorInfo" => new Guid("0EE6C2CC-273E-567D-BC0A-1DD87EE51EBA"),
-            "System.Collections.Specialized.INotifyCollectionChanged" when useWindowsUIXaml => new Guid("28B167D5-1A31-465B-9B25-D5C3AE686C40"),
+            "System.Collections.Specialized.INotifyCollectionChanged" when useWindowsUIXamlProjections => new Guid("28B167D5-1A31-465B-9B25-D5C3AE686C40"),
             "System.Collections.Specialized.INotifyCollectionChanged" => new Guid("530155E1-28A5-5693-87CE-30724D95A06D"),
             "System.Windows.Input.ICommand" => new Guid("E5AF3542-CA67-4081-995B-709DD13792DF"),
             "System.IServiceProvider" => new Guid("68B3A2DF-8173-539F-B524-C8A2348F5AFB"),
 
             // XAML delegates
-            "System.ComponentModel.PropertyChangedEventHandler" when useWindowsUIXaml => new Guid("50F19C16-0A22-4D8E-A089-1EA9951657D2"),
+            "System.ComponentModel.PropertyChangedEventHandler" when useWindowsUIXamlProjections => new Guid("50F19C16-0A22-4D8E-A089-1EA9951657D2"),
             "System.ComponentModel.PropertyChangedEventHandler" => new Guid("E3DE52F6-1E32-5DA6-BB2D-B5B6096C962D"),
-            "System.Collections.Specialized.NotifyCollectionChangedEventHandler" when useWindowsUIXaml => new Guid("CA10B37C-F382-4591-8557-5E24965279B0"),
+            "System.Collections.Specialized.NotifyCollectionChangedEventHandler" when useWindowsUIXamlProjections => new Guid("CA10B37C-F382-4591-8557-5E24965279B0"),
             "System.Collections.Specialized.NotifyCollectionChangedEventHandler" => new Guid("8B0909DC-2005-5D93-BF8A-725F017BAA8D"),
             _ => Guid.Empty
         };

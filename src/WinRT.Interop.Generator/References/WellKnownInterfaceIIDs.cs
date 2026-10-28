@@ -202,6 +202,7 @@ internal static class WellKnownInterfaceIIDs
         }
 
         guid = default;
+
         return false;
     }
 }

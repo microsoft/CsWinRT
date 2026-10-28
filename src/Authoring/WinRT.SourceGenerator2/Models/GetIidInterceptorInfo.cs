@@ -11,4 +11,7 @@ namespace WindowsRuntime.SourceGenerator.Models;
 /// <param name="Iid">The precomputed IID.</param>
 /// <param name="Version">The compiler's location encoding version.</param>
 /// <param name="Data">The compiler's opaque location encoding.</param>
-internal sealed record GetIidInterceptorInfo(Guid Iid, int Version, string Data);
+internal sealed record GetIidInterceptorInfo(
+    Guid Iid,
+    int Version,
+    string Data);

@@ -37,11 +37,6 @@ internal sealed class ProjectionGeneratorRunState
     public ConcurrentDictionary<string, string> DefaultInterfaceEntries { get; } = [];
 
     /// <summary>
-    /// Gets the runtime-class default-interface signatures to preserve in reference-projection assembly metadata.
-    /// </summary>
-    public ConcurrentDictionary<string, string> DefaultInterfaceSignatures { get; } = [];
-
-    /// <summary>
     /// Gets the (interface-name, parent-class-name) pairs populated by namespace work items via
     /// <see cref="Factories.MetadataAttributeFactory.AddExclusiveToInterfaceEntries"/>.
     /// </summary>
@@ -71,6 +66,12 @@ internal sealed class ProjectionGeneratorRunState
     /// assembly metadata (see <see cref="Factories.AbiImplementableClassFactory.WriteImplementableBases"/>).
     /// </summary>
     public ConcurrentBag<string> ImplementableClasses { get; } = [];
+
+    /// <summary>
+    /// Gets the (class-name -> default-interface-signature) map to preserve in reference-projection assembly metadata,
+    /// populated by namespace work items via <see cref="Factories.MetadataAttributeFactory.AddDefaultInterfaceSignatureEntry"/>.
+    /// </summary>
+    public ConcurrentDictionary<string, string> DefaultInterfaceSignatureEntries { get; } = [];
 
     /// <summary>
     /// Tracked via <see cref="Interlocked"/> so any number of work items can mark "I wrote a

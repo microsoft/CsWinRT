@@ -58,12 +58,18 @@
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp" VersionOverride="5.0.0-2.final" PrivateAssets="all" />
   </ItemGroup>
 
+  <!--
+    The 'GetIid<T>()' interceptors compute the same IIDs as the build tools, so they reuse their authoritative
+    type mappings, IID tables, and signature hashing. These are linked as source rather than referenced, so that
+    the analyzer does not have to ship the build tool assemblies and their dependencies (e.g. 'AsmResolver').
+  -->
   <ItemGroup>
     <Compile Include="..\..\WinRT.Generator.Core\Helpers\WindowsRuntimeTypeMappings.cs" Link="Helpers\WindowsRuntimeTypeMappings.cs" />
     <Compile Include="..\..\WinRT.Interop.Generator\Helpers\TypeMapping.cs" Link="Helpers\TypeMapping.cs" />
-    <Compile Include="..\..\WinRT.Projection.Writer\Helpers\GuidGenerator.cs" Link="Helpers\GuidGenerator.cs" />
-    <Compile Include="..\..\WinRT.Generator.Core\References\WindowsRuntimeReferenceAssemblyMetadata.cs" Link="Helpers\WindowsRuntimeReferenceAssemblyMetadata.cs" />
+    <Compile Include="..\..\WinRT.Generator.Core\Helpers\GuidGenerator.cs" Link="Helpers\GuidGenerator.cs" />
+    <Compile Include="..\..\WinRT.Generator.Core\References\WellKnownPublicKeyTokens.cs" Link="Helpers\WellKnownPublicKeyTokens.cs" />
     <Compile Include="..\..\WinRT.Generator.Core\References\WellKnownWindowsRuntimeIids.cs" Link="Helpers\WellKnownWindowsRuntimeIids.cs" />
+    <Compile Include="..\..\WinRT.Generator.Core\References\WindowsRuntimeReferenceAssemblyMetadata.cs" Link="Helpers\WindowsRuntimeReferenceAssemblyMetadata.cs" />
   </ItemGroup>
 
 </Project>

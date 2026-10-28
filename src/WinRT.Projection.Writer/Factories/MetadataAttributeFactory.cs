@@ -517,23 +517,23 @@ internal static class MetadataAttributeFactory
     }
 
     /// <summary>
-    /// Records a runtime class's default-interface signature for reference-projection assembly metadata.
+    /// Adds an entry to the default-interface signature map for a class type, to preserve in reference-projection assembly metadata.
     /// </summary>
     /// <param name="context">The active emit context.</param>
-    /// <param name="type">The projected runtime class.</param>
-    /// <param name="entries">The class-name to default-interface-signature map.</param>
-    public static void AddReferenceDefaultInterfaceSignatureEntry(
+    /// <param name="type">The class type.</param>
+    /// <param name="entries">The (class-name -> default-interface-signature) map.</param>
+    public static void AddDefaultInterfaceSignatureEntry(
         ProjectionEmitContext context,
         TypeDefinition type,
         System.Collections.Concurrent.ConcurrentDictionary<string, string> entries)
     {
-        if (!context.Settings.ReferenceProjection || type.IsStatic ||
-            type.GetDefaultInterface() is not { } defaultInterface)
+        if (!context.Settings.ReferenceProjection || type.GetDefaultInterface() is not { } defaultInterface)
         {
             return;
         }
 
         string signature = SignatureGenerator.GetSignature(context, TypeSemanticsFactory.GetFromTypeDefOrRef(defaultInterface));
+
         _ = entries.TryAdd(type.FullName, signature);
     }
 

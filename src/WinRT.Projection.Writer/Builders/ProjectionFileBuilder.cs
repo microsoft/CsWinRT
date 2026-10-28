@@ -330,7 +330,7 @@ internal static class ProjectionFileBuilder
         IndentedTextWriterCallback metadataAttr = MetadataAttributeFactory.WriteWinRTMetadataAttribute(context, type);
         IndentedTextWriterCallback customAttrs = CustomAttributeFactory.WriteTypeCustomAttributes(context, type, false);
         IndentedTextWriterCallback comWrappersAttr = MetadataAttributeFactory.WriteComWrapperMarshallerAttribute(context, type);
-        string guidAttr = $"[Guid(\"{IidExpressionGenerator.FormatGuid(type, lowerCase: false)}\")]";
+        IndentedTextWriterCallback guidAttr = InterfaceFactory.WriteGuidAttribute(type);
         IndentedTextWriterCallback ret = MethodFactory.WriteProjectionReturnType(context, sig);
         IndentedTextWriterCallback typedefName = TypedefNameWriter.WriteTypedefName(context, type, TypedefNameType.Projected, false);
         IndentedTextWriterCallback typeParams = TypedefNameWriter.WriteTypeParams(type);

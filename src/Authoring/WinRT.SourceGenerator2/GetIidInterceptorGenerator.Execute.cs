@@ -42,10 +42,13 @@ public partial class GetIidInterceptorGenerator
         /// <param name="context">The syntax context.</param>
         /// <param name="token">The cancellation token.</param>
         /// <returns>Its precomputed IIDs and compiler-provided location, when interceptable.</returns>
-        public static GetIidCallInfo? GetCallInfo(GeneratorSyntaxContext context, CancellationToken token)
+        public static GetIidCallInfo? GetCallInfo(
+            GeneratorSyntaxContext context,
+            CancellationToken token)
         {
             InvocationExpressionSyntax invocation = (InvocationExpressionSyntax)context.Node;
             SemanticModel model = context.SemanticModel;
+            Compilation compilation = model.Compilation;
 
             if (model.GetSymbolInfo(invocation, token).Symbol is not IMethodSymbol
                 {
@@ -56,20 +59,21 @@ public partial class GetIidInterceptorGenerator
                     ReturnsByRefReadonly: false
                 } method ||
                 method.ContainingAssembly.Identity.Name != "WinRT.Runtime" ||
-                method.ContainingType is not { Name: "WindowsRuntimeMarshal", ContainingType: null } ||
-                method.ContainingNamespace.ToDisplayString() != "WindowsRuntime.InteropServices" ||
-                !SymbolEqualityComparer.Default.Equals(method.ReturnType, model.Compilation.GetTypeByMetadataName("System.Guid")) ||
-                IsInExpressionTree(model.GetOperation(invocation, token)))
+                !SymbolEqualityComparer.Default.Equals(method.ContainingType, compilation.GetTypeByMetadataName("WindowsRuntime.InteropServices.WindowsRuntimeMarshal")) ||
+                !SymbolEqualityComparer.Default.Equals(method.ReturnType, compilation.GetTypeByMetadataName("System.Guid")) ||
+                IsInExpressionTree(model.GetOperation(invocation, token), compilation))
             {
                 return null;
             }
 
-            Guid? winUIIid = WindowsRuntimeIidResolver.TryGetIid(method.TypeArguments[0], model.Compilation, false, token, out Guid first) ? first : null;
-            Guid? uwpIid = WindowsRuntimeIidResolver.TryGetIid(method.TypeArguments[0], model.Compilation, true, token, out Guid second) ? second : null;
+            WindowsRuntimeIidResolver resolver = new(compilation, method.ContainingAssembly, token);
+
+            Guid? winUIIid = resolver.TryGetIid(method.TypeArguments[0], false, out Guid winUIValue) ? winUIValue : null;
+            Guid? uwpIid = resolver.TryGetIid(method.TypeArguments[0], true, out Guid uwpValue) ? uwpValue : null;
 
             // A reusable library cannot bake in a mapping selected by its eventual publishing application's XAML mode
             if ((winUIIid is null && uwpIid is null) ||
-                (model.Compilation.Options.OutputKind == OutputKind.DynamicallyLinkedLibrary && winUIIid != uwpIid))
+                (compilation.Options.OutputKind == OutputKind.DynamicallyLinkedLibrary && winUIIid != uwpIid))
             {
                 return null;
             }
@@ -100,7 +104,9 @@ public partial class GetIidInterceptorGenerator
         /// <param name="token">The cancellation token.</param>
         /// <returns>The interceptor input, if the selected IID is available.</returns>
         [SuppressMessage("Style", "IDE0060", Justification = "The cancellation token is supplied by Roslyn.")]
-        public static GetIidInterceptorInfo? GetInterceptorInfo((GetIidCallInfo Call, bool UseWindowsUIXamlProjections) data, CancellationToken token)
+        public static GetIidInterceptorInfo? GetInterceptorInfo(
+            (GetIidCallInfo Call, bool UseWindowsUIXamlProjections) data,
+            CancellationToken token)
         {
             GetIidCallInfo call = data.Call;
             Guid? iid = data.UseWindowsUIXamlProjections ? call.UwpIid : call.WinUIIid;
@@ -115,7 +121,9 @@ public partial class GetIidInterceptorGenerator
         /// <param name="token">The cancellation token.</param>
         /// <returns>The value-equatable inputs.</returns>
         [SuppressMessage("Style", "IDE0060", Justification = "The cancellation token is supplied by Roslyn.")]
-        public static EquatableArray<GetIidInterceptorInfo> GetEquatableInterceptorInfo(ImmutableArray<GetIidInterceptorInfo> items, CancellationToken token)
+        public static EquatableArray<GetIidInterceptorInfo> GetEquatableInterceptorInfo(
+            ImmutableArray<GetIidInterceptorInfo> items,
+            CancellationToken token)
         {
             return items.AsEquatableArray();
         }
@@ -124,19 +132,16 @@ public partial class GetIidInterceptorGenerator
         /// Checks both explicit lambdas and compiler-translated query lambdas for expression-tree conversion.
         /// </summary>
         /// <param name="operation">The invocation operation.</param>
+        /// <param name="compilation">The consuming compilation.</param>
         /// <returns>Whether this call occurs within an expression tree.</returns>
-        private static bool IsInExpressionTree(IOperation? operation)
+        private static bool IsInExpressionTree(IOperation? operation, Compilation compilation)
         {
+            INamedTypeSymbol? expressionType = compilation.GetTypeByMetadataName("System.Linq.Expressions.Expression`1");
+
             for (; operation is not null; operation = operation.Parent)
             {
-                if (operation is IConversionOperation
-                    {
-                        Type: INamedTypeSymbol
-                        {
-                            OriginalDefinition.MetadataName: "Expression`1",
-                            ContainingNamespace: { Name: "Expressions", ContainingNamespace.Name: "Linq" }
-                        }
-                    })
+                if (operation is IConversionOperation { Type: INamedTypeSymbol type } &&
+                    SymbolEqualityComparer.Default.Equals(type.OriginalDefinition, expressionType))
                 {
                     return true;
                 }

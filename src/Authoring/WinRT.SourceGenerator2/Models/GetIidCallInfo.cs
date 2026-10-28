@@ -12,4 +12,8 @@ namespace WindowsRuntime.SourceGenerator.Models;
 /// <param name="UwpIid">The UWP IID, if available.</param>
 /// <param name="Version">The compiler's location encoding version.</param>
 /// <param name="Data">The compiler's opaque location encoding.</param>
-internal sealed record GetIidCallInfo(Guid? WinUIIid, Guid? UwpIid, int Version, string Data);
+internal sealed record GetIidCallInfo(
+    Guid? WinUIIid,
+    Guid? UwpIid,
+    int Version,
+    string Data);
