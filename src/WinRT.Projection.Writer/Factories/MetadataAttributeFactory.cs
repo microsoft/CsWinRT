@@ -81,7 +81,7 @@ internal static class MetadataAttributeFactory
 
     /// <summary>
     /// Writes reference-only key/value metadata, such as the effective exclusive-to IDIC selection and the
-    /// implementable bases the reference projection declares.
+    /// implementable bases and default-interface signatures the reference projection declares.
     /// </summary>
     /// <param name="writer">The writer to emit to.</param>
     /// <param name="entries">The (key, value) entries, in a deterministic order.</param>
@@ -514,6 +514,27 @@ internal static class MetadataAttributeFactory
         string interfaceName = TypedefNameWriter.WriteTypeName(context, TypeSemanticsFactory.GetFromTypeDefOrRef(capturedIface), TypedefNameType.CCW, true).Format();
 
         _ = entries.TryAdd(className, interfaceName);
+    }
+
+    /// <summary>
+    /// Records a runtime class's default-interface signature for reference-projection assembly metadata.
+    /// </summary>
+    /// <param name="context">The active emit context.</param>
+    /// <param name="type">The projected runtime class.</param>
+    /// <param name="entries">The class-name to default-interface-signature map.</param>
+    public static void AddReferenceDefaultInterfaceSignatureEntry(
+        ProjectionEmitContext context,
+        TypeDefinition type,
+        System.Collections.Concurrent.ConcurrentDictionary<string, string> entries)
+    {
+        if (!context.Settings.ReferenceProjection || type.IsStatic ||
+            type.GetDefaultInterface() is not { } defaultInterface)
+        {
+            return;
+        }
+
+        string signature = SignatureGenerator.GetSignature(context, TypeSemanticsFactory.GetFromTypeDefOrRef(defaultInterface));
+        _ = entries.TryAdd(type.FullName, signature);
     }
 
     /// <summary>

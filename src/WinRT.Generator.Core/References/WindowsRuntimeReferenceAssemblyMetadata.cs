@@ -31,6 +31,11 @@ internal static class WindowsRuntimeReferenceAssemblyMetadata
     public const string ImplementableClass = "CsWinRT.ImplementableClass.v1";
 
     /// <summary>
+    /// The prefix for a projected runtime class's default-interface signature, keyed by its metadata name.
+    /// </summary>
+    public const string DefaultInterfaceSignaturePrefix = "CsWinRT.DefaultInterfaceSignature.v1:";
+
+    /// <summary>
     /// Gets the full name of the instance base generated for an implementable Windows Runtime class.
     /// </summary>
     /// <param name="runtimeClassName">The fully qualified Windows Runtime class name.</param>

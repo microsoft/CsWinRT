@@ -117,6 +117,9 @@ public sealed class Test_IidTypeMap
 
         Assert.Contains("[Projection]" + ns + ".DependencyObjectCollection", source);
         Assert.Contains("[Projection]" + ns + ".Controls.ItemCollection", source);
+
+        string referenceSource = ProjectionWriterRunner.GetSources(referenceProjection: true, useWinUI);
+        Assert.Contains($"CsWinRT.DefaultInterfaceSignature.v1:{ns}.DependencyObjectCollection\", \"pinterface(", referenceSource);
     }
 
     [TestMethod]
@@ -170,6 +173,13 @@ public sealed class Test_IidTypeMap
                 Exclude = ["Contoso.UserProfile"]
             });
             Assert.IsFalse(File.Exists(Path.Combine(directory, "sources", "WindowsRuntimeIidTypeMap.cs")));
+            string assemblyAttributes = File.ReadAllText(Path.Combine(directory, "sources", "AssemblyAttributes.cs"));
+            Assert.Contains("CsWinRT.DefaultInterfaceSignature.v1:Contoso.User\", \"{a3dd8a5e-90c1-4e15-b3a8-95444c622501}", assemblyAttributes);
+            Assert.DoesNotContain("CsWinRT.DefaultInterfaceSignature.v1:", File.ReadAllText(Path.Combine(directory, "sources", "Contoso.cs")));
+            string source = string.Join("\n", Directory.GetFiles(Path.Combine(directory, "sources"), "*.cs").Select(File.ReadAllText));
+            Assert.Contains("CsWinRT.DefaultInterfaceSignature.v1:Contoso.User\", \"{a3dd8a5e-90c1-4e15-b3a8-95444c622501}", source);
+            Assert.Contains("[Guid(\"60A8E0C5-7371-4B96-AB04-B2CCFAFCE870\")]", source);
+            Assert.DoesNotContain("CsWinRT.DefaultInterfaceSignature.v1:Contoso.Statics", source);
         }
         finally
         {

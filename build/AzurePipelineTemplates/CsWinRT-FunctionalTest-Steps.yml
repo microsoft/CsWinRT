@@ -21,6 +21,8 @@ parameters:
     - ImplementWinMDTypes
     - UserDefinedTypeNames
     - ForwardedTypeIdentities
+    - GetIidInterceptors
+    - GetIidInterceptorsFallback
 
 steps:
   - ${{ each functionalTest in parameters.FunctionalTests }}:

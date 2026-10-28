@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>$(DotNetVersion)</TargetFramework>
     <Nullable>enable</Nullable>
@@ -60,6 +60,10 @@
 
   <ItemGroup>
     <Compile Include="..\..\WinRT.Generator.Core\Helpers\WindowsRuntimeTypeMappings.cs" Link="Helpers\WindowsRuntimeTypeMappings.cs" />
+    <Compile Include="..\..\WinRT.Interop.Generator\Helpers\TypeMapping.cs" Link="Helpers\TypeMapping.cs" />
+    <Compile Include="..\..\WinRT.Projection.Writer\Helpers\GuidGenerator.cs" Link="Helpers\GuidGenerator.cs" />
+    <Compile Include="..\..\WinRT.Generator.Core\References\WindowsRuntimeReferenceAssemblyMetadata.cs" Link="Helpers\WindowsRuntimeReferenceAssemblyMetadata.cs" />
+    <Compile Include="..\..\WinRT.Generator.Core\References\WellKnownWindowsRuntimeIids.cs" Link="Helpers\WellKnownWindowsRuntimeIids.cs" />
   </ItemGroup>
 
 </Project>

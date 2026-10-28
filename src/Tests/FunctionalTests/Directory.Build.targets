@@ -2,6 +2,11 @@
 
   <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.targets', '$(MSBuildThisFileDirectory)../../'))" />
 
+  <PropertyGroup Condition="'$(MSBuildProjectName)' == 'GetIidInterceptors' or '$(MSBuildProjectName)' == 'GetIidInterceptorsFallback'">
+    <!-- MSTAT/map verification needs every native method body to remain observable. -->
+    <StackTraceSupport>true</StackTraceSupport>
+  </PropertyGroup>
+
   <Target Name="CleanIntermediateDirs" Condition="'$(CleanIntermediateDirs)'=='true'" AfterTargets="Publish">
     <RemoveDir Directories="$(IntermediateOutputPath)" />
   </Target>

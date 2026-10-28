@@ -37,6 +37,11 @@ internal sealed class ProjectionGeneratorRunState
     public ConcurrentDictionary<string, string> DefaultInterfaceEntries { get; } = [];
 
     /// <summary>
+    /// Gets the runtime-class default-interface signatures to preserve in reference-projection assembly metadata.
+    /// </summary>
+    public ConcurrentDictionary<string, string> DefaultInterfaceSignatures { get; } = [];
+
+    /// <summary>
     /// Gets the (interface-name, parent-class-name) pairs populated by namespace work items via
     /// <see cref="Factories.MetadataAttributeFactory.AddExclusiveToInterfaceEntries"/>.
     /// </summary>

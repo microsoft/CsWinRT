@@ -343,12 +343,13 @@ A Roslyn incremental source generator and diagnostic analyzer package. Runs at *
 - **Assembly name**: `WinRT.SourceGenerator`
 - **Dependency**: `Microsoft.CodeAnalysis.CSharp` 5.0.0
 
-**Three source generators:**
+**Four source generators:**
 
 | Generator | What It Generates |
 |-----------|-------------------|
 | `AuthoringExportTypesGenerator` | Activation factory infrastructure for Windows Runtime component authoring. Emits `ManagedExports.g.cs` (with `GetActivationFactory()` method) and `NativeExports.g.cs` (with `DllGetActivationFactory()` entry point for Native AOT). Triggered when `CsWinRTComponent = true`. |
 | `CustomPropertyProviderGenerator` | `ICustomPropertyProvider` implementations for XAML data binding. Annotate types with `[GeneratedCustomPropertyProvider]` to auto-generate property accessors. Supports both UWP and WinUI XAML. |
+| `GetIidInterceptorGenerator` | RVA-backed IID constants for direct `WindowsRuntimeMarshal.GetIid<T>()` calls whose closed type arguments have statically computable Windows Runtime IIDs. Other calls retain the runtime lookup. Uses the `WindowsRuntime.Generated` interceptor namespace. |
 | `TypeMapAssemblyTargetGenerator` | `[TypeMapAssemblyTarget]` assembly attributes for runtime type mapping in AOT scenarios. Discovers referenced Windows Runtime assemblies and registers them with the three type map groups: `WindowsRuntimeComWrappersTypeMapGroup`, `WindowsRuntimeMetadataTypeMapGroup`, `DynamicInterfaceCastableImplementationTypeMapGroup`. |
 
 **Diagnostic analyzers** producing diagnostics with IDs `CSWINRT2000`–`CSWINRT2027` (the full list, with severities, is in `AnalyzerReleases.Shipped.md`). Some notable groups:

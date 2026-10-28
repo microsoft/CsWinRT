@@ -57,7 +57,7 @@ internal sealed partial class ProjectionGenerator
             }
 
             if (fileName == "AssemblyAttributes.cs" && _settings.ReferenceProjection &&
-                (!state.IdicExclusiveToTypes.IsEmpty || !state.ImplementableClasses.IsEmpty))
+                (!state.IdicExclusiveToTypes.IsEmpty || !state.ImplementableClasses.IsEmpty || !state.DefaultInterfaceSignatures.IsEmpty))
             {
                 IEnumerable<KeyValuePair<string, string>> idicEntries = state.IdicExclusiveToTypes
                     .Order(StringComparer.Ordinal)
@@ -67,8 +67,14 @@ internal sealed partial class ProjectionGenerator
                     .Order(StringComparer.Ordinal)
                     .Select(static name => new KeyValuePair<string, string>(WindowsRuntimeReferenceAssemblyMetadata.ImplementableClass, name));
 
+                IEnumerable<KeyValuePair<string, string>> defaultInterfaceEntries = state.DefaultInterfaceSignatures
+                    .OrderBy(static entry => entry.Key, StringComparer.Ordinal)
+                    .Select(static entry => new KeyValuePair<string, string>(
+                        $"{WindowsRuntimeReferenceAssemblyMetadata.DefaultInterfaceSignaturePrefix}{entry.Key}", entry.Value));
+
                 using IndentedTextWriterOwner writerOwner = IndentedTextWriterPool.GetOrCreate();
-                MetadataAttributeFactory.WriteReferenceAssemblyMetadata(writerOwner.Writer, idicEntries.Concat(implementableEntries));
+                MetadataAttributeFactory.WriteReferenceAssemblyMetadata(writerOwner.Writer,
+                    idicEntries.Concat(implementableEntries).Concat(defaultInterfaceEntries));
                 content = writerOwner.Writer.ToString() + content;
             }
 
