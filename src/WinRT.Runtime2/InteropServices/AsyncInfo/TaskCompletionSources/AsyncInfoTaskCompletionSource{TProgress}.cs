@@ -25,11 +25,6 @@ internal sealed class AsyncInfoTaskCompletionSource<TProgress> : TaskCompletionS
     private readonly CancellationToken _cancellationToken;
 
     /// <summary>
-    /// The <see cref="IAsyncInfo"/> instance to cancel when <see cref="_cancellationToken"/> is canceled.
-    /// </summary>
-    private readonly IAsyncInfo? _asyncInfo;
-
-    /// <summary>
     /// The cancellation registration that handles cancellation of <see cref="_cancellationToken"/>.
     /// </summary>
     private readonly CancellationTokenRegistration _registration;
@@ -40,24 +35,28 @@ internal sealed class AsyncInfoTaskCompletionSource<TProgress> : TaskCompletionS
     /// <param name="asyncInfo">The <see cref="IAsyncInfo"/> instance to wrap.</param>
     /// <param name="cancellationToken">The input <see cref="CancellationToken"/> value.</param>
     public AsyncInfoTaskCompletionSource(IAsyncInfo asyncInfo, CancellationToken cancellationToken)
+        // Keeping only the task alive must also keep the native operation and its completion callbacks alive
+        // Store the operation in 'Task.AsyncState' for the task's full lifetime, even without cancellation support
+        : base(asyncInfo)
     {
         _cancellationToken = cancellationToken;
 
         if (_cancellationToken.CanBeCanceled)
         {
-            _asyncInfo = asyncInfo;
-
-            // Register a single callback that cancels the underlying 'IAsyncInfo' and then
-            // completes the task. We handle both responsibilities (forwarding the cancellation
-            // to native and completing the task) inside one callback so that any exception
-            // thrown by 'IAsyncInfo.Cancel()' (e.g. 'RPC_E_DISCONNECTED' if the backing COM
-            // server has died) is observed and used to fault the task, rather than escaping
-            // out of the cancellation callback. If the exception escaped, it would be re-thrown
-            // from 'CancellationTokenSource.Cancel()' on whichever thread invoked it (often a
-            // thread pool thread), potentially crashing the process.
-            _registration = _cancellationToken.Register(
-                callback: static @this => Unsafe.As<AsyncInfoTaskCompletionSource<TProgress>>(@this!).OnCancellation(),
-                state: this);
+            // Use one callback so task completion does not depend on another registration
+            // running after native cancellation, which could throw or never report completion
+            try
+            {
+                _registration = _cancellationToken.Register(
+                    callback: static @this => Unsafe.As<AsyncInfoTaskCompletionSource<TProgress>>(@this!).OnCancellation(),
+                    state: this);
+            }
+            catch (Exception e)
+            {
+                // An already-canceled token runs the callback during registration; its 'finally'
+                // has already made the task terminal, so 'TrySetException' preserves that outcome
+                _ = TrySetException(e);
+            }
         }
 
         // If we're already completed, unregister everything again.
@@ -73,34 +72,29 @@ internal sealed class AsyncInfoTaskCompletionSource<TProgress> : TaskCompletionS
     /// </summary>
     private void OnCancellation()
     {
-        Debug.Assert(_asyncInfo is not null);
-
-        // Mark the task as canceled first, so that the 'Canceled' status wins over any
-        // failure from the native 'Cancel' call below. This matches the original ordering
-        // (where the cancellation registration ran before the 'IAsyncInfo.Cancel' one).
-        _ = TrySetCanceled(_cancellationToken);
-
         try
         {
-            _asyncInfo.Cancel();
+            ((IAsyncInfo)Task.AsyncState!).Cancel();
         }
         catch (Exception e) when (e is COMException { HResult:
             WellKnownErrorCodes.RPC_E_DISCONNECTED or
             WellKnownErrorCodes.RPC_S_SERVER_UNAVAILABLE or
             WellKnownErrorCodes.JSCRIPT_E_CANTEXECUTE })
         {
-            // The native 'Cancel' call failed (e.g. the COM server hosting the async
-            // operation has been disconnected). Swallow the exception here so it doesn't
-            // propagate out of the cancellation callback, which would otherwise be
-            // re-thrown by 'CancellationTokenSource.Cancel()' on whichever thread invoked
-            // it (often a thread pool thread), potentially crashing the process. The task
-            // has already been marked as canceled above, so awaiters will observe the
-            // cancellation as expected.
+            // A disconnected COM server cannot deliver completion. Swallow these expected failures
+            // so they do not escape from 'CancellationTokenSource.Cancel()' on the calling thread
+            // (potentially a thread pool thread), where an unhandled exception could terminate the process.
             //
             // Note that we're intentionally only handling well-known exceptions due to "valid"
             // infrastructure issues that can happen normally (e.g. a COM server disconnecting).
             // We are not handling all exceptions, as that could hide legitimate bugs. The set of
             // 'HRESULT'-s should be kept in sync with 'ExceptionDispatchInfoExtensions.ThrowAsync'.
+        }
+        finally
+        {
+            // Complete even if native cancellation never reports completion or throws and causes
+            // 'CancellationTokenSource.Cancel(throwOnFirstException: true)' to stop invoking callbacks
+            _ = TrySetCanceled(_cancellationToken);
         }
     }
 

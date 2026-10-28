@@ -824,6 +824,11 @@ internal sealed class InteropReferences
     public TypeReference IPropertyValueImpl => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "IPropertyValueImpl"u8);
 
     /// <summary>
+    /// Gets the type reference for the shared <c>IReferenceArray&lt;Object&gt;</c> implementation.
+    /// </summary>
+    public TypeReference IReferenceArrayObjectImpl => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "IReferenceArrayObjectImpl"u8);
+
+    /// <summary>
     /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.InteropServices.IStringableImpl</c>.
     /// </summary>
     public TypeReference IStringableImpl => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "IStringableImpl"u8);

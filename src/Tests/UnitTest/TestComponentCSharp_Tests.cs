@@ -4073,6 +4073,64 @@ namespace UnitTest
         }
 
         [TestMethod]
+        public void TestReferenceArrayBoxing()
+        {
+            object[] objectArray = [new Class(), new Class()];
+            Class[] classArray = [new Class(), new Class()];
+            IProperties1[] interfaceArray = [new Class(), new Class()];
+            ManagedType[] nonProjectedArray = [new ManagedType(), new ManagedType()];
+
+            Assert.AreEqual((int)PropertyType.InspectableArray, Class.GetPropertyType(objectArray));
+            Assert.AreEqual((int)PropertyType.InspectableArray, Class.GetPropertyType(classArray));
+            Assert.AreEqual((int)PropertyType.InspectableArray, Class.GetPropertyType(interfaceArray));
+            Assert.AreEqual((int)PropertyType.InspectableArray, Class.GetPropertyType(nonProjectedArray));
+
+            Assert.AreEqual("Windows.Foundation.IReferenceArray`1<Object>", Class.GetName(objectArray));
+            Assert.AreEqual("Windows.Foundation.IReferenceArray`1<TestComponentCSharp.Class>", Class.GetName(classArray));
+            Assert.AreEqual("Windows.Foundation.IReferenceArray`1<TestComponentCSharp.IProperties1>", Class.GetName(interfaceArray));
+            Assert.AreEqual("Windows.Foundation.IReferenceArray`1<Object>", Class.GetName(nonProjectedArray));
+
+            string[] stringArray = ["a", "b"];
+            Assert.AreEqual((int)PropertyType.StringArray, Class.GetPropertyType(stringArray));
+            Assert.AreEqual("Windows.Foundation.IReferenceArray`1<String>", Class.GetName(stringArray));
+        }
+
+        [TestMethod]
+        public void TestReferenceArrayValueRoundTrip()
+        {
+            var element0 = new Class { IntProperty = 42 };
+            var element1 = new Class { IntProperty = 123 };
+            object[][] arrays =
+            [
+                new object[] { element0, element1 },
+                new Class[] { element0, element1 },
+                new IProperties1[] { element0, element1 }
+            ];
+
+            foreach (object[] array in arrays)
+            {
+                object[] unboxed = Class.UnboxObjectArray(array);
+                Assert.HasCount(2, unboxed);
+                Assert.AreSame(element0, unboxed[0]);
+                Assert.AreSame(element1, unboxed[1]);
+                Assert.AreEqual(42, ((Class)unboxed[0]).IntProperty);
+                Assert.AreEqual(123, ((Class)unboxed[1]).IntProperty);
+
+                object[] propertyValues = Class.UnboxObjectArrayUsingPropertyValue(array);
+                Assert.HasCount(2, propertyValues);
+                Assert.AreSame(element0, propertyValues[0]);
+                Assert.AreSame(element1, propertyValues[1]);
+            }
+
+            ManagedProperties managed = new(42);
+            ManagedProperties[] managedArray = [managed];
+            Assert.AreSame(managed, Class.UnboxObjectArray(managedArray)[0]);
+            Assert.AreSame(managed, Class.UnboxObjectArrayUsingPropertyValue(managedArray)[0]);
+            Assert.IsEmpty(Class.UnboxObjectArray(Array.Empty<Class>()));
+            Assert.IsEmpty(Class.UnboxObjectArrayUsingPropertyValue(Array.Empty<Class>()));
+        }
+
+        [TestMethod]
         public void TestValueBoxing()
         {
             int i = 42;

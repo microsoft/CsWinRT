@@ -28,7 +28,7 @@ public unsafe partial class IPropertyValueImpl
 /// <summary>
 /// The <c>IPropertyValue</c> implementation returning <see cref="PropertyType.InspectableArray"/>.
 /// </summary>
-file static unsafe class InspectableArrayPropertyValueImpl
+internal static unsafe class InspectableArrayPropertyValueImpl
 {
     /// <summary>
     /// The <see cref="IPropertyValueVftbl"/> value for the managed <c>IPropertyValue</c> implementation.

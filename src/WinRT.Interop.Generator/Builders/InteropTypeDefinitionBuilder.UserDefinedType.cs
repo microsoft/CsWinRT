@@ -64,6 +64,17 @@ internal partial class InteropTypeDefinitionBuilder
             // It's not guaranteed that the list is empty, so we must always reset it first
             entriesList.Clear();
 
+            // Non-WinRT reference arrays are handled as user-defined types, but still need
+            // 'IReferenceArray<Object>' and 'IPropertyValue' to support native array unboxing
+            if (userDefinedType is SzArrayTypeSignature { BaseType.IsValueType: false })
+            {
+                (IMethodDefOrRef arrayIid, IMethodDefOrRef arrayVtable) = InteropImplTypeResolver.GetInspectableArrayTypeImpl(interopReferences);
+                (IMethodDefOrRef propertyValueIid, IMethodDefOrRef propertyValueVtable) = InteropImplTypeResolver.GetSzArrayTypeImpl(interopReferences.Object.MakeSzArrayType(), interopReferences);
+
+                entriesList.Add(InteropInterfaceEntriesResolver.Create(arrayIid, arrayVtable));
+                entriesList.Add(InteropInterfaceEntriesResolver.Create(propertyValueIid, propertyValueVtable));
+            }
+
             // Add the default 'ICustomPropertyProvider' unless it is disabled or explicitly implemented
             entriesList.AddRange(InteropInterfaceEntriesResolver.EnumerateDefaultCustomPropertyProviderInterfaceEntries(
                 vtableTypes: vtableTypes,
@@ -217,11 +228,28 @@ internal partial class InteropTypeDefinitionBuilder
                 _ = userDefinedType.Resolve(module.RuntimeContext);
             }
 
-            // If the user-defined type has '[WindowsRuntimeClassName]', then it means it's using a custom runtime
-            // class name, which we want to preserve. In this case, just emit '[WindowsRuntimeMappedType]' on the
-            // proxy, so the runtime lookup will find the original type and read the name from the attribute on it.
-            if (userDefinedTypeDefinition?.HasCustomAttribute(interopReferences.WindowsRuntimeClassNameAttribute, interopReferences.SignatureComparer) is true)
+            // Use the boxed inspectable-array name so RCW lookup unboxes these arrays
+            // instead of treating them as ordinary collection objects
+            if (userDefinedType is SzArrayTypeSignature { BaseType.IsValueType: false })
             {
+                InteropTypeDefinitionBuilder.Proxy(
+                    ns: InteropUtf8NameFactory.TypeNamespace(userDefinedType, interopReferences.RuntimeContext),
+                    name: InteropUtf8NameFactory.TypeName(userDefinedType, interopDefinitions),
+                    mappedMetadata: null,
+                    runtimeClassName: "Windows.Foundation.IReferenceArray`1<Object>",
+                    metadataTypeName: null,
+                    mappedType: null,
+                    referenceType: null,
+                    comWrappersMarshallerAttributeType: comWrappersMarshallerAttributeType,
+                    interopReferences: interopReferences,
+                    module: module,
+                    out proxyType);
+            }
+            else if (userDefinedTypeDefinition?.HasCustomAttribute(interopReferences.WindowsRuntimeClassNameAttribute, interopReferences.SignatureComparer) is true)
+            {
+                // The user-defined type has '[WindowsRuntimeClassName]', which specifies a custom runtime class
+                // name that we want to preserve. Emit '[WindowsRuntimeMappedType]' on the proxy, so runtime lookup
+                // finds the original type and reads the name from its '[WindowsRuntimeClassName]' attribute.
                 InteropTypeDefinitionBuilder.Proxy(
                     ns: InteropUtf8NameFactory.TypeNamespace(userDefinedType, interopReferences.RuntimeContext),
                     name: InteropUtf8NameFactory.TypeName(userDefinedType, interopDefinitions),

@@ -187,6 +187,9 @@ internal static class InteropImplTypeResolver
             _ when interopReferences.SignatureComparer.Equals(type.BaseType, interopReferences.Point) => "Point",
             _ when interopReferences.SignatureComparer.Equals(type.BaseType, interopReferences.Size) => "Size",
             _ when interopReferences.SignatureComparer.Equals(type.BaseType, interopReferences.Rect) => "Rect",
+            _ when !type.BaseType.IsValueType &&
+                !type.BaseType.IsTypeOfType(interopReferences) &&
+                !type.BaseType.IsTypeOfException(interopReferences) => "Inspectable",
             _ => "OtherType"
         };
 
@@ -199,5 +202,19 @@ internal static class InteropImplTypeResolver
 
         // Return the pair of methods from the ABI type in 'WinRT.Runtime.dll'
         return (get_IIDMethod, get_VtableMethod);
+    }
+
+    /// <summary>
+    /// Gets the shared <c>IReferenceArray&lt;Object&gt;</c> implementation for covariant arrays.
+    /// </summary>
+    /// <param name="interopReferences">The references for this invocation.</param>
+    /// <returns>The IID and vtable getters.</returns>
+    public static (IMethodDefOrRef get_IID, IMethodDefOrRef get_Vtable) GetInspectableArrayTypeImpl(InteropReferences interopReferences)
+    {
+        return (
+            interopReferences.IReferenceArrayObjectImpl.CreateMemberReference(
+                "get_IID"u8, MethodSignature.CreateStatic(WellKnownTypeSignatureFactory.InGuid(interopReferences))),
+            interopReferences.IReferenceArrayObjectImpl.CreateMemberReference(
+                "get_Vtable"u8, MethodSignature.CreateStatic(interopReferences.IntPtr)));
     }
 }

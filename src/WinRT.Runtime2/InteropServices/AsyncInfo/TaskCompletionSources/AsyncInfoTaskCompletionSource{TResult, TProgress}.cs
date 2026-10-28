@@ -23,9 +23,6 @@ internal sealed class AsyncInfoTaskCompletionSource<TResult, TProgress> : TaskCo
     /// <inheritdoc cref="AsyncInfoTaskCompletionSource{TProgress}._cancellationToken"/>
     private readonly CancellationToken _cancellationToken;
 
-    /// <inheritdoc cref="AsyncInfoTaskCompletionSource{TProgress}._asyncInfo"/>
-    private readonly IAsyncInfo? _asyncInfo;
-
     /// <inheritdoc cref="AsyncInfoTaskCompletionSource{TProgress}._registration"/>
     private readonly CancellationTokenRegistration _registration;
 
@@ -35,17 +32,26 @@ internal sealed class AsyncInfoTaskCompletionSource<TResult, TProgress> : TaskCo
     /// <param name="asyncInfo">The <see cref="IAsyncInfo"/> instance to wrap.</param>
     /// <param name="cancellationToken">The input <see cref="CancellationToken"/> value.</param>
     public AsyncInfoTaskCompletionSource(IAsyncInfo asyncInfo, CancellationToken cancellationToken)
+        // Retain the operation through 'Task.AsyncState', just as in the constructor without 'TResult'
+        // The task must preserve native completion callbacks even when cancellation is unavailable
+        : base(asyncInfo)
     {
         _cancellationToken = cancellationToken;
 
         // The logic for this constructor should be kept in sync with the one without 'TResult'
         if (_cancellationToken.CanBeCanceled)
         {
-            _asyncInfo = asyncInfo;
-
-            _registration = _cancellationToken.Register(
-                callback: static @this => Unsafe.As<AsyncInfoTaskCompletionSource<TResult, TProgress>>(@this!).OnCancellation(),
-                state: this);
+            try
+            {
+                _registration = _cancellationToken.Register(
+                    callback: static @this => Unsafe.As<AsyncInfoTaskCompletionSource<TResult, TProgress>>(@this!).OnCancellation(),
+                    state: this);
+            }
+            catch (Exception e)
+            {
+                // If registration ran the callback synchronously, preserve the terminal state it already set
+                _ = TrySetException(e);
+            }
         }
 
         // If we're already completed, unregister everything again
@@ -58,21 +64,21 @@ internal sealed class AsyncInfoTaskCompletionSource<TResult, TProgress> : TaskCo
     /// <inheritdoc cref="AsyncInfoTaskCompletionSource{TProgress}.OnCancellation"/>
     private void OnCancellation()
     {
-        Debug.Assert(_asyncInfo is not null);
-
-        _ = TrySetCanceled(_cancellationToken);
-
-        // Cancelling the underlying operation is a best-effort attempt, so ignore exceptions.
+        // Keep cancellation ordering and exception handling in sync with the implementation without 'TResult'.
         // See more details about this in 'AsyncInfoTaskCompletionSource<TProgress>.OnCancellation'.
         try
         {
-            _asyncInfo.Cancel();
+            ((IAsyncInfo)Task.AsyncState!).Cancel();
         }
         catch (Exception e) when (e is COMException { HResult:
             WellKnownErrorCodes.RPC_E_DISCONNECTED or
             WellKnownErrorCodes.RPC_S_SERVER_UNAVAILABLE or
             WellKnownErrorCodes.JSCRIPT_E_CANTEXECUTE })
         {
+        }
+        finally
+        {
+            _ = TrySetCanceled(_cancellationToken);
         }
     }
 

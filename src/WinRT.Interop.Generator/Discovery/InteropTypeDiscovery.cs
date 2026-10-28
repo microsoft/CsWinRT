@@ -456,9 +456,20 @@ internal static partial class InteropTypeDiscovery
         }
         else
         {
-            // Track the array as a user-defined type. Note that for SZ arrays that don't have an element type
-            // that is a Windows Runtime type, they're effectively just like any other normal user-defined type.
-            // That is, some 'Foo[]' type will behave conceptually the same as some 'List<Foo>' instantiation.
+            // Non-WinRT reference arrays are boxed as 'IReferenceArray<Object>', so also discover 'object[]'
+            // to provide the runtime class name lookup and marshalling code needed to unbox them on return
+            if (!typeSignature.BaseType.IsValueType)
+            {
+                TryTrackSzArrayType(
+                    typeSignature: interopReferences.Object.MakeSzArrayType(),
+                    args: args,
+                    discoveryState: discoveryState,
+                    interopDefinitions: interopDefinitions,
+                    interopReferences: interopReferences,
+                    module: module);
+            }
+
+            // Non-WinRT arrays use user-defined marshalling, with inspectable-array boxing for reference elements
             discoveryState.TrackUserDefinedType(typeSignature, interfaces.ToEquatableSet());
         }
 
