@@ -192,7 +192,7 @@ internal static partial class DiagnosticDescriptors
     /// Gets a <see cref="DiagnosticDescriptor"/> for an exclusion that would break a metadata contract.
     /// </summary>
     public static readonly DiagnosticDescriptor InvalidExcludeFromWindowsMetadata = CreateAuthoringRule(
-        id: "CSWINRT2048",
+        id: "CSWINRT2049",
         title: "Invalid Windows Runtime metadata exclusion",
         message: "The declaration '{0}' cannot use '[ExcludeFromWindowsMetadata]': {1}",
         description: "ExcludeFromWindowsMetadata can only be applied to declarations whose omission leaves the exported Windows Runtime metadata valid.");
@@ -201,7 +201,7 @@ internal static partial class DiagnosticDescriptors
     /// Gets a <see cref="DiagnosticDescriptor"/> for an exported signature referencing an excluded type.
     /// </summary>
     public static readonly DiagnosticDescriptor IgnoredTypeInExportedSignature = CreateAuthoringRule(
-        id: "CSWINRT2049",
+        id: "CSWINRT2050",
         title: "Ignored type in exported Windows Runtime signature",
         message: "The exported declaration '{0}' references ignored type '{1}'; exclude the declaration too or use an exported Windows Runtime type",
         description: "Exported declarations must not reference types excluded from Windows Runtime metadata.");

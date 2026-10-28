@@ -2,15 +2,13 @@
 // Licensed under the MIT License.
 
 using System;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using AsmResolver.DotNet;
-using Basic.Reference.Assemblies;
-using Microsoft.CodeAnalysis;
 using ProjectionWriterTest.Helpers;
-using WindowsRuntime;
+using Fixture = ProjectionWriterTest.Helpers.NativeProjectionFixture;
+using static ProjectionWriterTest.Helpers.NativeProjectionFixture;
 
 namespace ProjectionWriterTest;
 
@@ -118,7 +116,7 @@ public class Test_GenericMarshallerNames
     [TestMethod]
     [TestCategory("NativeAOT")]
 #if !CSWINRT_GENERIC_MARSHALLERS_AOT
-    [Ignore("Build with CSWINRT_TEST_GENERIC_MARSHALLERS_AOT=1 to publish and run the same consumer with Native AOT.")]
+    [Ignore("Run in x64 Release, or build with CSWINRT_TEST_GENERIC_MARSHALLERS_AOT=1, to publish and run the same consumer with Native AOT.")]
 #endif
     public void NativeBackedAccessors_NativeAot()
     {
@@ -166,121 +164,6 @@ public class Test_GenericMarshallerNames
 
     private static Fixture CreateFixture(string fileStem)
     {
-        Fixture fixture = new();
-        string directory = fixture.DirectoryPath;
-        try
-        {
-            string input = GenericMarshallerMetadata.Create(directory, fileStem);
-            string projection = CompileProjection(input, Path.Combine(directory, "projection"), Path.Combine(directory, "WinRT.Projection.dll"));
-            string referenceDirectory = Directory.CreateDirectory(Path.Combine(directory, "reference")).FullName;
-
-            // Reuse the small SDK fixture: 'cswinrtinteropgen' requires an SDK reference and a nontrivial class hierarchy.
-            string sdkDirectory = Directory.CreateDirectory(Path.Combine(directory, "sdk")).FullName;
-            string sdkInput = ArrayPropertyMetadata.Create(sdkDirectory, exclusiveTo: true, includeArrayProperties: false);
-            string sdkProjection = CompileProjection(sdkInput, Path.Combine(directory, "sdk-sources"),
-                Path.Combine(directory, "WinRT.Sdk.Projection.dll"));
-            string sdkReference = CompileProjection(sdkInput, Path.Combine(directory, "sdk-reference-sources"),
-                Path.Combine(referenceDirectory, "Microsoft.Windows.SDK.NET.dll"), referenceProjection: true);
-
-            using Stream resource = typeof(Test_GenericMarshallerNames).Assembly.GetManifestResourceStream(
-                "ProjectionWriterTest.Resources.GenericMarshallerTests.cs")!;
-            using StreamReader reader = new(resource);
-            string consumer = reader.ReadToEnd();
-            File.WriteAllText(Path.Combine(directory, "GenericMarshallerTests.cs"), consumer);
-            string app = ProjectionWriterRunner.CompileSources([consumer], Path.Combine(directory, "GenericMarshallerTests.dll"),
-                outputKind: OutputKind.ConsoleApplication, additionalReferences: [projection]);
-
-            // Use the same BCL reference images as 'CompileSources', not implementation assemblies with forwarded corelib scopes.
-            string[] frameworkReferences = Net100.ReferenceInfos.All.Select(info =>
-            {
-                string path = Path.Combine(referenceDirectory, info.FileName);
-                File.WriteAllBytes(path, info.ImageBytes);
-                return path;
-            }).ToArray();
-            string runtime = typeof(WindowsRuntimeObject).Assembly.Location;
-            string response = Path.Combine(directory, "interop.rsp");
-            File.WriteAllLines(response,
-            [
-                $"--reference-assembly-paths {string.Join(",", new[] { sdkReference, projection, sdkProjection, runtime }.Concat(frameworkReferences))}",
-                $"--implementation-assembly-paths {app},{runtime},{string.Join(",", frameworkReferences)}",
-                $"--output-assembly-path {app}",
-                $"--winrt-sdk-projection-assembly-path {sdkProjection}",
-                $"--winrt-projection-assembly-path {projection}",
-                $"--generated-assembly-directory {directory}",
-                "--use-windows-ui-xaml-projections false",
-                "--validate-winrt-runtime-assembly-version true",
-                "--validate-winrt-runtime-dll-version-2-references true",
-                "--enable-incremental-generation false",
-                "--treat-warnings-as-errors true",
-                "--max-degrees-of-parallelism 1"
-            ]);
-            (int exitCode, string log) = ProjectionWriterRunner.Run(
-                ProjectionWriterRunner.GetRequiredFilePath("InteropGeneratorAssemblyPath"), $"@{response}");
-            Assert.AreEqual(0, exitCode, log);
-            Assert.IsTrue(File.Exists(Path.Combine(directory, "WinRT.Interop.dll")));
-            File.Copy(runtime, Path.Combine(directory, "WinRT.Runtime.dll"));
-            File.WriteAllText(Path.Combine(directory, "GenericMarshallerTests.runtimeconfig.json"), """
-                {"runtimeOptions":{"tfm":"net10.0","framework":{"name":"Microsoft.NETCore.App","version":"10.0.0"}}}
-                """);
-            return fixture;
-        }
-        catch
-        {
-            fixture.Dispose();
-            throw;
-        }
-    }
-
-    private sealed class Fixture : IDisposable
-    {
-        public string DirectoryPath { get; } = Directory.CreateDirectory(
-            Path.Combine("TestResults", $"GenericMarshallerNames_{Guid.NewGuid():N}")).FullName;
-
-        public void Dispose() => Directory.Delete(DirectoryPath, recursive: true);
-    }
-
-    private static string CompileProjection(string input, string output, string assembly, bool referenceProjection = false)
-    {
-        GenerateProjection(input, output, referenceProjection);
-        return ProjectionWriterRunner.CompileSources(Directory.GetFiles(output, "*.cs").Select(File.ReadAllText),
-            assembly, referenceProjection);
-    }
-
-    private static void GenerateProjection(string input, string output, bool referenceProjection)
-    {
-        Directory.CreateDirectory(output);
-        string response = Path.Combine(output, "projection.rsp");
-        File.WriteAllLines(response,
-        [
-            $"--input-paths {input}",
-            $"--output-directory {output}",
-            "--target-framework net10.0",
-            "--include-namespaces Contoso",
-            $"--reference-projection {referenceProjection.ToString().ToLowerInvariant()}"
-        ]);
-        // Allows red/green verification against a preserved tool build, without changing product sources.
-        string tool = Environment.GetEnvironmentVariable("CSWINRT_TEST_PROJECTION_REFGEN")
-            ?? ProjectionWriterRunner.GetRequiredFilePath("ProjectionRefGeneratorAssemblyPath");
-        (int exitCode, string log) = ProjectionWriterRunner.Run(tool, $"@{response}");
-        Assert.AreEqual(0, exitCode, log);
-    }
-
-    private static (int ExitCode, string Output) Run(string command, string[] arguments)
-    {
-        ProcessStartInfo start = new(command)
-        {
-            RedirectStandardOutput = true,
-            RedirectStandardError = true,
-            UseShellExecute = false
-        };
-        foreach (string argument in arguments)
-        {
-            start.ArgumentList.Add(argument);
-        }
-        using Process process = Process.Start(start)!;
-        var stdout = process.StandardOutput.ReadToEndAsync();
-        var stderr = process.StandardError.ReadToEndAsync();
-        process.WaitForExit();
-        return (process.ExitCode, stdout.GetAwaiter().GetResult() + stderr.GetAwaiter().GetResult());
+        return Fixture.Create(fileStem, "GenericMarshallerTests", GenericMarshallerMetadata.Create);
     }
 }

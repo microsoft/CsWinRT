@@ -46,11 +46,15 @@ internal static class AbiInterfaceIDicFactory
         string nameStripped = type.GetStrippedName();
         IndentedTextWriterCallback parent = TypedefNameWriter.WriteTypedefNameWithTypeParams(context, type, TypedefNameType.Projected, true);
         IndentedTextWriterCallback guidAttr = InterfaceFactory.WriteGuidAttribute(type);
+        string? enumerableElement = EnumerableInterfaceHelpers.GetUnambiguousElementType(context, type);
+        string enumerableAttributeName = nameStripped + "EnumerableAttribute";
+        string? enumerableAttr = enumerableElement is not null ? $"[{enumerableAttributeName}]" : null;
 
         writer.WriteLine();
         writer.WriteLine(isMultiline: true, $$"""
             [DynamicInterfaceCastableImplementation]
             {{guidAttr}}
+            {{enumerableAttr}}
             file interface {{nameStripped}} : {{parent}}
             """);
         using (writer.WriteBlock())
@@ -58,6 +62,28 @@ internal static class AbiInterfaceIDicFactory
             // Emit DIM bodies that dispatch through the static ABI Methods class.
             WriteInterfaceIdicImplMembers(writer, context, type);
             writer.WriteLine();
+        }
+
+        // Preserve the required interface's element type so non-generic enumeration can dispatch
+        // through IEnumerable<T> even when only this projected interface has been cached on the RCW.
+        if (enumerableElement is not null)
+        {
+            writer.WriteLine();
+            writer.WriteLine(isMultiline: true, $$"""
+                file sealed class {{enumerableAttributeName}} : global::WindowsRuntime.InteropServices.DynamicInterfaceCastableEnumerableAttribute
+                {
+                    public override bool TryGetEnumerator(WindowsRuntimeObject thisObject, out global::System.Collections.IEnumerator enumerator)
+                    {
+                        if (thisObject is global::System.Collections.Generic.IEnumerable<{{enumerableElement}}> enumerable)
+                        {
+                            enumerator = enumerable.GetEnumerator();
+                            return true;
+                        }
+                        enumerator = null;
+                        return false;
+                    }
+                }
+                """);
         }
     }
 

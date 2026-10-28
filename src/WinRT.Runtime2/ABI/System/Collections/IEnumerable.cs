@@ -177,19 +177,15 @@ file interface IEnumerableInterfaceImpl : IEnumerable
     {
         WindowsRuntimeObject thisObject = (WindowsRuntimeObject)this;
 
-        // First, try to lookup for the actual 'IEnumerable' interface being implemented
-        if (thisObject.TryGetObjectReferenceForInterface(
+        // First, prefer the actual non-generic 'IEnumerable' interface ('IBindableIterable' at the ABI).
+        // Otherwise, use generated support for a previously queried generic collection to enumerate through
+        // 'IEnumerable<T>'. This must preserve the element type: native 'IIterator<T>' objects need not expose
+        // a runtime class name, so marshalling the iterator without type information cannot reliably produce
+        // an 'IEnumerator' implementation.
+        return thisObject.TryGetObjectReferenceForInterface(
             interfaceType: typeof(IEnumerable).TypeHandle,
-            interfaceReference: out WindowsRuntimeObjectReference? interfaceReference))
-        {
-            return IEnumerableMethods.GetEnumerator(interfaceReference);
-        }
-
-        // If that fails, try to get an object reference to some 'IEnumerable<T>' instance
-        interfaceReference = thisObject.GetObjectReferenceForIEnumerableInterfaceInstance();
-
-        // Return an enumerator through that. We don't know the 'T', so we need to marshal without type info.
-        // However, this in practice is fine, as the RCW would also always implement 'IEnumerable' in metadata.
-        return global::WindowsRuntime.InteropServices.IEnumerableMethods.GetEnumerator(interfaceReference);
+            interfaceReference: out WindowsRuntimeObjectReference? interfaceReference)
+            ? IEnumerableMethods.GetEnumerator(interfaceReference)
+            : thisObject.GetEnumeratorForIEnumerableInterfaceInstance();
     }
 }

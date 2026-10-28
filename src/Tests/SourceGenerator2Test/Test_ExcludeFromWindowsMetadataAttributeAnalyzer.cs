@@ -64,7 +64,7 @@ public sealed class Test_ExcludeFromWindowsMetadataAttributeAnalyzer
             public sealed class Hidden;
             public interface IContract
             {
-                {{type}} {|CSWINRT2049:Method|}({{type}} {|CSWINRT2049:value|});
+                {{type}} {|CSWINRT2050:Method|}({{type}} {|CSWINRT2050:value|});
             }
             """);
     }
@@ -79,8 +79,8 @@ public sealed class Test_ExcludeFromWindowsMetadataAttributeAnalyzer
             public struct HiddenValue { public int Value; }
             [ExcludeFromWindowsMetadata]
             public interface IHidden;
-            public interface {|CSWINRT2049:IContract|} : IHidden;
-            public struct Value { public HiddenValue {|CSWINRT2049:Field|}; }
+            public interface {|CSWINRT2050:IContract|} : IHidden;
+            public struct Value { public HiddenValue {|CSWINRT2050:Field|}; }
             """);
     }
 
@@ -118,7 +118,7 @@ public sealed class Test_ExcludeFromWindowsMetadataAttributeAnalyzer
             public {{modifier}}class Hidden;
             public sealed class Visible : Hidden
             {
-                public Hidden {|CSWINRT2049:GetBase|}() => this;
+                public Hidden {|CSWINRT2050:GetBase|}() => this;
             }
             """);
     }
@@ -131,7 +131,7 @@ public sealed class Test_ExcludeFromWindowsMetadataAttributeAnalyzer
             [WindowsRuntime.InteropServices.ExcludeFromWindowsMetadata]
             public sealed class Hidden;
             [System.Runtime.Serialization.KnownType(typeof(Hidden))]
-            public sealed class {|CSWINRT2049:Visible|};
+            public sealed class {|CSWINRT2050:Visible|};
             """);
     }
 
@@ -170,13 +170,13 @@ public sealed class Test_ExcludeFromWindowsMetadataAttributeAnalyzer
             public sealed class Component : IContract, IDisposable
             {
                 [ExcludeFromWindowsMetadata]
-                public void {|CSWINRT2048:Method|}() { }
+                public void {|CSWINRT2049:Method|}() { }
                 [ExcludeFromWindowsMetadata]
-                public int {|CSWINRT2048:Value|} => 0;
+                public int {|CSWINRT2049:Value|} => 0;
                 [ExcludeFromWindowsMetadata]
-                public event EventHandler {|CSWINRT2048:Changed|} { add { } remove { } }
+                public event EventHandler {|CSWINRT2049:Changed|} { add { } remove { } }
                 [ExcludeFromWindowsMetadata]
-                public void {|CSWINRT2048:Dispose|}() { }
+                public void {|CSWINRT2049:Dispose|}() { }
             }
             """);
     }
@@ -189,12 +189,12 @@ public sealed class Test_ExcludeFromWindowsMetadataAttributeAnalyzer
             namespace Component;
             public sealed class Component
             {
-                public int Value { [ExcludeFromWindowsMetadata] {|CSWINRT2048:get|} => 0; }
+                public int Value { [ExcludeFromWindowsMetadata] {|CSWINRT2049:get|} => 0; }
             }
             public struct Value
             {
                 [ExcludeFromWindowsMetadata]
-                public int {|CSWINRT2048:Field|};
+                public int {|CSWINRT2049:Field|};
             }
             """);
     }
@@ -212,7 +212,7 @@ public sealed class Test_ExcludeFromWindowsMetadataAttributeAnalyzer
                 public event System.EventHandler Changed
                 {
                     [Exclude]
-                    {|CSWINRT2048:add|} { }
+                    {|CSWINRT2049:add|} { }
                     remove { }
                 }
             }
@@ -234,7 +234,7 @@ public sealed class Test_ExcludeFromWindowsMetadataAttributeAnalyzer
             public struct Value
             {
                 [field: ExcludeFromWindowsMetadata]
-                public int {|CSWINRT2048:Property|} { get; set; }
+                public int {|CSWINRT2049:Property|} { get; set; }
             }
             """);
     }
@@ -249,8 +249,8 @@ public sealed class Test_ExcludeFromWindowsMetadataAttributeAnalyzer
     public async Task MappedCollectionAncestorMembers_CannotBeIgnored(
         string contract, string ancestor, bool explicitImplementation, string member)
     {
-        string countName = member == "Count" ? "{|CSWINRT2048:Count|}" : "Count";
-        string addName = member == "Add" ? "{|CSWINRT2048:Add|}" : "Add";
+        string countName = member == "Count" ? "{|CSWINRT2049:Count|}" : "Count";
+        string addName = member == "Add" ? "{|CSWINRT2049:Add|}" : "Add";
         string count = explicitImplementation && member == "Count" ? $"int {ancestor}.{countName}" : $"public int {countName}";
         string add = explicitImplementation && member == "Add" ? $"void {ancestor}.{addName}" : $"public void {addName}";
         string countAttribute = member == "Count" ? "[WindowsRuntime.InteropServices.ExcludeFromWindowsMetadata]" : "";
@@ -346,7 +346,7 @@ public sealed class Test_ExcludeFromWindowsMetadataAttributeAnalyzer
             namespace Component;
             [ExcludeFromWindowsMetadata]
             public sealed class Hidden;
-            public interface IContract { Hidden {|CSWINRT2049:Method|}(); }
+            public interface IContract { Hidden {|CSWINRT2050:Method|}(); }
             """);
     }
 
@@ -420,7 +420,7 @@ public sealed class Test_ExcludeFromWindowsMetadataAttributeAnalyzer
     public async Task IgnoredBase_GenericInterfaceArgumentsAreValidatedOnlyWhenRedeclared(bool redeclare)
     {
         string interfaces = redeclare ? ", IEnumerable<HiddenValue>" : "";
-        string name = redeclare ? "{|CSWINRT2049:Visible|}" : "Visible";
+        string name = redeclare ? "{|CSWINRT2050:Visible|}" : "Visible";
 
         await VerifyAsync($$"""
             using System.Collections;
@@ -445,7 +445,7 @@ public sealed class Test_ExcludeFromWindowsMetadataAttributeAnalyzer
     public async Task IgnoredBase_RequiredMappedAncestorMembersDependOnRedeclaration(bool redeclare)
     {
         string interfaces = redeclare ? ", IReadOnlyList<int>" : "";
-        string name = redeclare ? "{|CSWINRT2048:Count|}" : "Count";
+        string name = redeclare ? "{|CSWINRT2049:Count|}" : "Count";
 
         await VerifyAsync($$"""
             using System.Collections;
@@ -486,7 +486,7 @@ public sealed class Test_ExcludeFromWindowsMetadataAttributeAnalyzer
             }
             public sealed class Visible : Hidden
             {
-                public override IEnumerator<HiddenValue> {|CSWINRT2049:GetEnumerator|}() => null;
+                public override IEnumerator<HiddenValue> {|CSWINRT2050:GetEnumerator|}() => null;
             }
             """);
     }

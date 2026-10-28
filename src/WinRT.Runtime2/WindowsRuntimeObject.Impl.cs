@@ -401,107 +401,128 @@ public unsafe partial class WindowsRuntimeObject
     }
 
     /// <summary>
-    /// Retrieves a <see cref="WindowsRuntimeObjectReference"/> object for the <see cref="IEnumerable"/> interface.
+    /// Retrieves a typed enumerator through a previously queried generic collection interface.
     /// </summary>
-    /// <returns>The resulting <see cref="WindowsRuntimeObjectReference"/> object.</returns>
-    /// <exception cref="Exception">Thrown if the <see cref="IEnumerable"/> interface is not implemented.</exception>
-    internal WindowsRuntimeObjectReference GetObjectReferenceForIEnumerableInterfaceInstance()
+    /// <returns>The resulting enumerator.</returns>
+    /// <exception cref="NotSupportedException">Thrown if dynamic interface casting is disabled.</exception>
+    /// <exception cref="ArgumentException">Thrown if the wrapper's cached enumeration decision is a failure or the required generic enumerable is not supported.</exception>
+    /// <remarks>
+    /// Used when the native object does not expose bindable enumeration. An implicit conversion from
+    /// <see cref="IList{T}"/> to <see cref="IEnumerable"/> does not query <see cref="IEnumerable{T}"/>,
+    /// so the successful list cast must also be usable as the source of the element-type context.
+    /// The first published provider or failure is retained for this wrapper; subsequent collection casts
+    /// do not change that decision.
+    /// </remarks>
+    internal IEnumerator GetEnumeratorForIEnumerableInterfaceInstance()
     {
-        // Throw an exception if we couldn't resolve the 'IEnumerable' interface reference
-        if (!TryGetObjectReferenceForIEnumerableInterfaceInstance(out WindowsRuntimeObjectReference? interfaceReference))
+        // Keep the fallback unavailable and trimmable when dynamic interface casting is disabled
+        if (!WindowsRuntimeFeatureSwitches.EnableIDynamicInterfaceCastableSupport)
         {
-            [DoesNotReturn]
-            [StackTraceHidden]
-            static void ThrowArgumentException()
-            {
-                throw new ArgumentException(
-                    $"The type '{typeof(IEnumerable)}' cannot be used to retrieve an object reference for the current object.");
-            }
-
-            ThrowArgumentException();
+            throw WindowsRuntimeObjectExceptions.GetNotSupportedException();
         }
 
-        return interfaceReference;
-    }
-
-    /// <summary>
-    /// Tries to retrieve a <see cref="WindowsRuntimeObjectReference"/> object for the <see cref="IEnumerable"/> interface.
-    /// </summary>
-    /// <param name="interfaceReference">The resulting <see cref="WindowsRuntimeObjectReference"/> object, if the interface could be retrieved.</param>
-    /// <returns>Whether <paramref name="interfaceReference"/> could be retrieved successfully.</returns>
-    internal bool TryGetObjectReferenceForIEnumerableInterfaceInstance([NotNullWhen(true)] out WindowsRuntimeObjectReference? interfaceReference)
-    {
         ConcurrentDictionary<RuntimeTypeHandle, object> typeHandleCache = TypeHandleCache;
 
-        // If we have a cached value, return it immediately to skip further lookups. We use
-        // the 'IEnumerableInstance' type to cache the specialized object reference in this
-        // scenario. The only thing that matters is no other code will try this same lookup.
+        // Reuse this wrapper's selected provider or cached failure to avoid rescanning its cached casts.
+        // 'IEnumerableInstance' is a private marker key, keeping this entry separate from interface cast results.
+        // Cache the provider, not an enumerator: each call must obtain a fresh iterator.
         if (typeHandleCache.TryGetValue(typeof(IEnumerableInstance).TypeHandle, out object? value))
         {
-            switch (value)
+            if (value is DynamicInterfaceCastableEnumerableAttribute cachedEnumerable)
             {
-                case DynamicInterfaceCastableResult castResult:
-                    interfaceReference = castResult.InterfaceObjectReference;
-                    return true;
-                default:
-                    interfaceReference = null;
-                    return false;
+                return GetEnumerator(cachedEnumerable, this);
             }
+
+            return ThrowArgumentException();
         }
 
-        // Go through the cached object references for dynamic casts to try to find a compatible one
-        foreach (KeyValuePair<RuntimeTypeHandle, object> typeHandleEntry in TypeHandleCache)
+        // Even an exact iterable needs typed marshalling when its native iterator has no runtime class name.
+        // Pass 0 considers only successful 'IEnumerable<T>' casts, preserving the preference for an enumerable
+        // the caller has already queried. Pass 1 considers other successful collection casts (e.g. 'IList<T>')
+        // whose providers can query their inherited 'IEnumerable<T>' interface.
+        // Separate passes avoid letting dictionary iteration order favor another collection's element type
+        // over an observed exact enumerable, without allocating a snapshot. Concurrent casts need not be
+        // included in either traversal.
+        for (int pass = 0; pass < 2; pass++)
         {
-            // Resolve the interface type (this can never be 'null', as we're the only ones adding elements)
-            Type interfaceType = Type.GetTypeFromHandle(typeHandleEntry.Key)!;
+            bool preferExactEnumerable = pass == 0;
 
-            // Scan the cached entries, and skip all the ones that are not some 'IEnumerable<T>' instantiation
-            if (!(interfaceType.IsGenericType && interfaceType.GetGenericTypeDefinition() == typeof(IEnumerable<>)))
+            foreach (KeyValuePair<RuntimeTypeHandle, object> entry in typeHandleCache)
             {
-                continue;
-            }
+                // Failed casts and non-cast cache entries cannot supply an implementation
+                if (entry.Value is not DynamicInterfaceCastableResult result)
+                {
+                    continue;
+                }
 
-            // Also skip all 'IEnumerable<T>' instantiations that are not actually implemented by the native object
-            if (typeHandleEntry.Value is not DynamicInterfaceCastableResult result)
-            {
-                continue;
-            }
+                // These handles are non-null: all entries are added by this wrapper's cast infrastructure
+                Type interfaceType = Type.GetTypeFromHandle(entry.Key)!;
+                bool isExactEnumerable = interfaceType.IsGenericType && interfaceType.GetGenericTypeDefinition() == typeof(IEnumerable<>);
 
-            // Try to cache the cast result that we retrieved, but we can't assume we'll win the race here.
-            // If we lost and the result is different, that's fine, we'll just use that one instead. This
-            // also guarantees that even if we have race conditions, the same implementation is always used.
-            object cachedResult = typeHandleCache.GetOrAdd(typeof(IEnumerableInstance).TypeHandle, result);
+                // The first pass only considers exact 'IEnumerable<T>' casts
+                if (preferExactEnumerable && !isExactEnumerable)
+                {
+                    continue;
+                }
 
-            // Return the resulting object reference from the cached result. Note that in the event of a lost
-            // race, this might possibly result in us reporting a failure even though this thread had actually
-            // found an object reference. This is intentional, as we want to make sure that we don't return
-            // different implementations at different callsites, as that could lead to hard to debug problems.
-            // In practice, this doesn't matter, as we always expect 'IEnumerable' casts to be done after some
-            // other cast to 'IEnumerable<T>'. The main scenario where this happens is within LINQ operations.
-            switch (cachedResult)
-            {
-                case DynamicInterfaceCastableResult castResult:
-                    interfaceReference = castResult.InterfaceObjectReference;
-                    return true;
-                default:
-                    interfaceReference = null;
-                    return false;
+                // The fallback pass considers other interfaces; exact enumerables were already tried
+                if (!preferExactEnumerable && isExactEnumerable)
+                {
+                    continue;
+                }
+
+                // The generated implementation carries the typed provider, not the requested interface itself.
+                // Load and share this metadata lazily; unrelated interface implementations have no provider.
+                if (!DynamicInterfaceCastableEnumerableInfo.TryGetInfo(
+                    implementationType: result.ImplementationType,
+                    enumerable: out DynamicInterfaceCastableEnumerableAttribute? enumerable))
+                {
+                    continue;
+                }
+
+                // A successful collection cast guarantees its required 'IIterable<T>' by the WinRT contract.
+                // Publish without probing; only the winner will query/cache the actual iterable pointer,
+                // rather than reinterpreting the cached vector or map pointer. Another search may already
+                // have published a provider or failure; honor that winner even if our candidate differs.
+                object selected = typeHandleCache.GetOrAdd(
+                    key: typeof(IEnumerableInstance).TypeHandle,
+                    value: enumerable);
+
+                if (selected is not DynamicInterfaceCastableEnumerableAttribute selectedEnumerable)
+                {
+                    return ThrowArgumentException();
+                }
+
+                // Invoke only the published winner, after selection, so races cannot create discarded iterators.
+                // Errors or a missing required iterable do not cause a retry through another provider.
+                return GetEnumerator(selectedEnumerable, this);
             }
         }
 
-        // Cache the failed cast, but still validate the return in case of an unlikely race against an 'IEnumerable<T>' cast
-        object cachedFailure = typeHandleCache.GetOrAdd(typeof(IEnumerableInstance).TypeHandle, DynamicInterfaceCastFailure.Instance);
+        // Retain the original per-wrapper negative cache: missing context at the time of selection is a
+        // permanent decision, even if a later collection cast would otherwise make enumeration possible.
+        object cachedFailure = typeHandleCache.GetOrAdd(
+            key: typeof(IEnumerableInstance).TypeHandle,
+            value: DynamicInterfaceCastFailure.Instance);
 
-        // Switch on the cached failure as above, just in case we somehow still got a valid result on another thread first
-        switch (cachedFailure)
+        // If a racing search published a provider first, use it rather than reporting a conflicting failure
+        if (cachedFailure is DynamicInterfaceCastableEnumerableAttribute racingEnumerable)
         {
-            case DynamicInterfaceCastableResult castResult:
-                interfaceReference = castResult.InterfaceObjectReference;
-                return true;
-            default:
-                interfaceReference = null;
-                return false;
+            return GetEnumerator(racingEnumerable, this);
         }
+
+        // Keep acquisition and adapter unwrapping consistent across cached and racing winners
+        static IEnumerator GetEnumerator(DynamicInterfaceCastableEnumerableAttribute enumerable, WindowsRuntimeObject thisObject)
+            => enumerable.TryGetEnumerator(thisObject, out IEnumerator? enumerator)
+                ? IEnumeratorAdapter.TryUnwrap(enumerator)
+                : ThrowArgumentException();
+
+        [DoesNotReturn]
+        [StackTraceHidden]
+        static IEnumerator ThrowArgumentException()
+            => throw new ArgumentException($"The type '{typeof(IEnumerable)}' cannot be used to enumerate the current object.");
+
+        return ThrowArgumentException();
     }
 
     /// <inheritdoc cref="IDynamicInterfaceCastable.GetInterfaceImplementation"/>
@@ -912,7 +933,7 @@ public unsafe partial class WindowsRuntimeObject
     }
 
     /// <summary>
-    /// A dummy type to use for caching adaptive <see cref="IEnumerable"/> object references in <see cref="TryGetObjectReferenceForIEnumerableInterfaceInstance"/>.
+    /// A dummy type to use for caching adaptive <see cref="IEnumerable"/> callbacks.
     /// </summary>
     private static class IEnumerableInstance;
 }

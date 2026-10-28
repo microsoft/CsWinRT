@@ -83,7 +83,8 @@ internal partial class InteropTypeDefinitionBuilder
                 CustomAttributes =
                 {
                     new CustomAttribute(interopReferences.DynamicInterfaceCastableImplementationAttribute_ctor),
-                    new CustomAttribute(forwarderAttributeType.GetMethod(".ctor"u8))
+                    new CustomAttribute(forwarderAttributeType.GetMethod(".ctor"u8)),
+                    InteropCustomAttributeFactory.DynamicInterfaceCastableEnumerable(keyValuePairType, emitState)
                 },
                 Interfaces =
                 {
