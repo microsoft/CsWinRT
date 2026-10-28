@@ -46,8 +46,8 @@ public sealed class Test_CcwInterfaceOrdering
             .Append("GroupingInput.ExplicitStringable")
             .Order(StringComparer.Ordinal)
             .ToArray();
-        CollectionAssert.AreEqual(expectedOrder, marshallers.Keys.ToArray(),
-            "Proxy associations must retain global type order rather than being emitted in vtable-group order.");
+        CollectionAssert.AreEquivalent(expectedOrder, marshallers.Keys.ToArray(),
+            "Final metadata ordering must retain every proxy association, independently of vtable-group order.");
     }
 
     [TestMethod]

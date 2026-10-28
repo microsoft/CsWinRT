@@ -15,7 +15,7 @@ using WindowsRuntime.InteropGenerator.References;
 namespace WindowsRuntime.InteropGenerator.Generation;
 
 /// <summary>
-/// Provides ordered, output-bound signatures for the emit phase. Discovery may retain
+/// Provides output-bound signatures for the emit phase. Discovery may retain
 /// any of several forwarded spellings of the same type, so they must be resolved before creating metadata.
 /// User-defined types and their groups are prepared lazily once, sharing group state between emission passes.
 /// </summary>
@@ -42,6 +42,10 @@ internal sealed class InteropGeneratorEmitInputs
     /// <summary>The shared, lazily prepared groups and globally ordered proxy inputs.</summary>
     private UserDefinedTypeInputs UserDefinedTypes => field ??= CreateUserDefinedTypeInputs();
 
+    /// <summary>The canonicalized array inputs, prepared before concurrent emission.</summary>
+    private (SzArrayTypeSignature Type, TypeSignatureEquatableSet VtableTypes)[] SzArrayTypes =>
+        field ??= [.. CanonicalizeTypesAndVtables(_discoveryState.SzArrayAndVtableTypes)];
+
     /// <summary>
     /// Creates an output-bound view of the completed discovery state without materializing its signatures.
     /// </summary>
@@ -62,91 +66,100 @@ internal sealed class InteropGeneratorEmitInputs
         _token = token;
     }
 
-    /// <summary>Enumerates the ordered generic delegate instantiations.</summary>
+    /// <summary>
+    /// Finishes shared interface-set canonicalization before independent emit families start.
+    /// </summary>
+    public void PrepareForConcurrentEmission()
+    {
+        _ = UserDefinedTypes;
+        _ = SzArrayTypes;
+    }
+
+    /// <summary>Enumerates the generic delegate instantiations.</summary>
     public IEnumerable<GenericInstanceTypeSignature> EnumerateGenericDelegateTypes()
     {
         return CanonicalizeTypes(_discoveryState.GenericDelegateTypes);
     }
 
-    /// <summary>Enumerates the ordered <see cref="IEnumerator{T}"/> instantiations.</summary>
+    /// <summary>Enumerates the <see cref="IEnumerator{T}"/> instantiations.</summary>
     public IEnumerable<GenericInstanceTypeSignature> EnumerateIEnumerator1Types()
     {
         return CanonicalizeTypes(_discoveryState.IEnumerator1Types);
     }
 
-    /// <summary>Enumerates the ordered <see cref="IEnumerable{T}"/> instantiations.</summary>
+    /// <summary>Enumerates the <see cref="IEnumerable{T}"/> instantiations.</summary>
     public IEnumerable<GenericInstanceTypeSignature> EnumerateIEnumerable1Types()
     {
         return CanonicalizeTypes(_discoveryState.IEnumerable1Types);
     }
 
-    /// <summary>Enumerates the ordered <see cref="IReadOnlyList{T}"/> instantiations.</summary>
+    /// <summary>Enumerates the <see cref="IReadOnlyList{T}"/> instantiations.</summary>
     public IEnumerable<GenericInstanceTypeSignature> EnumerateIReadOnlyList1Types()
     {
         return CanonicalizeTypes(_discoveryState.IReadOnlyList1Types);
     }
 
-    /// <summary>Enumerates the ordered <see cref="IList{T}"/> instantiations.</summary>
+    /// <summary>Enumerates the <see cref="IList{T}"/> instantiations.</summary>
     public IEnumerable<GenericInstanceTypeSignature> EnumerateIList1Types()
     {
         return CanonicalizeTypes(_discoveryState.IList1Types);
     }
 
-    /// <summary>Enumerates the ordered <see cref="IReadOnlyDictionary{TKey, TValue}"/> instantiations.</summary>
+    /// <summary>Enumerates the <see cref="IReadOnlyDictionary{TKey, TValue}"/> instantiations.</summary>
     public IEnumerable<GenericInstanceTypeSignature> EnumerateIReadOnlyDictionary2Types()
     {
         return CanonicalizeTypes(_discoveryState.IReadOnlyDictionary2Types);
     }
 
-    /// <summary>Enumerates the ordered <see cref="IDictionary{TKey, TValue}"/> instantiations.</summary>
+    /// <summary>Enumerates the <see cref="IDictionary{TKey, TValue}"/> instantiations.</summary>
     public IEnumerable<GenericInstanceTypeSignature> EnumerateIDictionary2Types()
     {
         return CanonicalizeTypes(_discoveryState.IDictionary2Types);
     }
 
-    /// <summary>Enumerates the ordered <see cref="KeyValuePair{TKey, TValue}"/> instantiations.</summary>
+    /// <summary>Enumerates the <see cref="KeyValuePair{TKey, TValue}"/> instantiations.</summary>
     public IEnumerable<GenericInstanceTypeSignature> EnumerateKeyValuePairTypes()
     {
         return CanonicalizeTypes(_discoveryState.KeyValuePairTypes);
     }
 
-    /// <summary>Enumerates the ordered <c>IMapChangedEventArgs&lt;TKey&gt;</c> instantiations.</summary>
+    /// <summary>Enumerates the <c>IMapChangedEventArgs&lt;TKey&gt;</c> instantiations.</summary>
     public IEnumerable<GenericInstanceTypeSignature> EnumerateIMapChangedEventArgs1Types()
     {
         return CanonicalizeTypes(_discoveryState.IMapChangedEventArgs1Types);
     }
 
-    /// <summary>Enumerates the ordered <c>IObservableVector&lt;T&gt;</c> instantiations.</summary>
+    /// <summary>Enumerates the <c>IObservableVector&lt;T&gt;</c> instantiations.</summary>
     public IEnumerable<GenericInstanceTypeSignature> EnumerateIObservableVector1Types()
     {
         return CanonicalizeTypes(_discoveryState.IObservableVector1Types);
     }
 
-    /// <summary>Enumerates the ordered <c>IObservableMap&lt;TKey, TValue&gt;</c> instantiations.</summary>
+    /// <summary>Enumerates the <c>IObservableMap&lt;TKey, TValue&gt;</c> instantiations.</summary>
     public IEnumerable<GenericInstanceTypeSignature> EnumerateIObservableMap2Types()
     {
         return CanonicalizeTypes(_discoveryState.IObservableMap2Types);
     }
 
-    /// <summary>Enumerates the ordered <c>IAsyncActionWithProgress&lt;TProgress&gt;</c> instantiations.</summary>
+    /// <summary>Enumerates the <c>IAsyncActionWithProgress&lt;TProgress&gt;</c> instantiations.</summary>
     public IEnumerable<GenericInstanceTypeSignature> EnumerateIAsyncActionWithProgress1Types()
     {
         return CanonicalizeTypes(_discoveryState.IAsyncActionWithProgress1Types);
     }
 
-    /// <summary>Enumerates the ordered <c>IAsyncOperation&lt;TResult&gt;</c> instantiations.</summary>
+    /// <summary>Enumerates the <c>IAsyncOperation&lt;TResult&gt;</c> instantiations.</summary>
     public IEnumerable<GenericInstanceTypeSignature> EnumerateIAsyncOperation1Types()
     {
         return CanonicalizeTypes(_discoveryState.IAsyncOperation1Types);
     }
 
-    /// <summary>Enumerates the ordered <c>IAsyncOperationWithProgress&lt;TResult, TProgress&gt;</c> instantiations.</summary>
+    /// <summary>Enumerates the <c>IAsyncOperationWithProgress&lt;TResult, TProgress&gt;</c> instantiations.</summary>
     public IEnumerable<GenericInstanceTypeSignature> EnumerateIAsyncOperationWithProgress2Types()
     {
         return CanonicalizeTypes(_discoveryState.IAsyncOperationWithProgress2Types);
     }
 
-    /// <summary>Enumerates the ordered <see cref="IReadOnlyList{T}"/> instantiations of <see cref="KeyValuePair{TKey, TValue}"/> used for collection forwarders.</summary>
+    /// <summary>Enumerates the <see cref="IReadOnlyList{T}"/> instantiations of <see cref="KeyValuePair{TKey, TValue}"/> used for collection forwarders.</summary>
     public IEnumerable<GenericInstanceTypeSignature> EnumerateIReadOnlyCollectionKeyValuePair2Types()
     {
         IEnumerable<GenericInstanceTypeSignature> keyValuePairTypes = _discoveryState.IReadOnlyList1Types
@@ -155,7 +168,7 @@ internal sealed class InteropGeneratorEmitInputs
         return CanonicalizeTypes(keyValuePairTypes);
     }
 
-    /// <summary>Enumerates the ordered <see cref="IList{T}"/> instantiations of <see cref="KeyValuePair{TKey, TValue}"/> used for collection forwarders.</summary>
+    /// <summary>Enumerates the <see cref="IList{T}"/> instantiations of <see cref="KeyValuePair{TKey, TValue}"/> used for collection forwarders.</summary>
     public IEnumerable<GenericInstanceTypeSignature> EnumerateICollectionKeyValuePair2Types()
     {
         IEnumerable<GenericInstanceTypeSignature> keyValuePairTypes = _discoveryState.IList1Types
@@ -164,14 +177,14 @@ internal sealed class InteropGeneratorEmitInputs
         return CanonicalizeTypes(keyValuePairTypes);
     }
 
-    /// <summary>Enumerates the ordered Windows Runtime SZ arrays and their canonicalized interface sets.</summary>
+    /// <summary>Enumerates Windows Runtime SZ arrays and their canonicalized interface sets.</summary>
     public IEnumerable<(SzArrayTypeSignature Type, TypeSignatureEquatableSet VtableTypes)> EnumerateSzArrayAndVtableTypes()
     {
-        return CanonicalizeTypesAndVtables(_discoveryState.SzArrayAndVtableTypes);
+        return SzArrayTypes;
     }
 
-    /// <summary>Gets the shared user-defined vtable groups in their emission order.</summary>
-    /// <returns>The groups ordered by their prepared interface sets.</returns>
+    /// <summary>Gets the shared user-defined vtable groups.</summary>
+    /// <returns>The groups with stable representatives and ordered interface layouts.</returns>
     public IReadOnlyList<UserDefinedVtableGroup> GetUserDefinedVtableGroups()
     {
         return UserDefinedTypes.VtableGroups;
@@ -249,8 +262,8 @@ internal sealed class InteropGeneratorEmitInputs
             types[index++] = new(type, vtableTypes, identityGroup);
         }
 
-        // 'OrderBy' keeps interface-set ties stable, while proxies independently keep global type order
-        return new([.. groups.OrderBy(static group => group.OrderedTypes)], types);
+        // Representatives are stable; independent groups need no ordering before parallel emission
+        return new(groups, types);
     }
 
     /// <summary>
@@ -288,10 +301,10 @@ internal sealed class InteropGeneratorEmitInputs
         return CanonicalizeTypes(types);
     }
 
-    /// <summary>Resolves aliases and orders signatures by fully qualified type name.</summary>
+    /// <summary>Resolves aliases without imposing an emission order.</summary>
     /// <typeparam name="TSignature">The type of signature to enumerate.</typeparam>
     /// <param name="signatures">The discovered signatures.</param>
-    /// <returns>The canonicalized signatures in stable order.</returns>
+    /// <returns>The canonicalized signatures.</returns>
     private IEnumerable<TSignature> CanonicalizeTypes<TSignature>(IEnumerable<TSignature> signatures)
         where TSignature : TypeSignature
     {
@@ -301,8 +314,7 @@ internal sealed class InteropGeneratorEmitInputs
                 _token.ThrowIfCancellationRequested();
 
                 return (TSignature)_importer.ImportTypeSignature(signature);
-            })
-            .OrderByFullyQualifiedTypeName(_runtimeContext);
+            });
     }
 
     /// <summary>Reuses canonicalized interface sets by their original instance identity.</summary>
@@ -320,10 +332,10 @@ internal sealed class InteropGeneratorEmitInputs
         return canonical;
     }
 
-    /// <summary>Resolves aliases in discovered types and their interface sets, then orders the types.</summary>
+    /// <summary>Resolves aliases in discovered types and their interface sets.</summary>
     /// <typeparam name="TSignature">The type of signature to enumerate.</typeparam>
     /// <param name="types">The discovered types and interface sets.</param>
-    /// <returns>The canonicalized types and interface sets in stable order.</returns>
+    /// <returns>The canonicalized types and interface sets.</returns>
     private IEnumerable<(TSignature Type, TypeSignatureEquatableSet VtableTypes)> CanonicalizeTypesAndVtables<TSignature>(
         IReadOnlyDictionary<TSignature, TypeSignatureEquatableSet> types)
         where TSignature : TypeSignature
@@ -336,20 +348,19 @@ internal sealed class InteropGeneratorEmitInputs
                 return (
                     Type: (TSignature)_importer.ImportTypeSignature(pair.Key),
                     VtableTypes: CanonicalizeVtableSet(pair.Value));
-            })
-            .OrderByFullyQualifiedTypeName(static pair => pair.Type, _runtimeContext);
+            });
     }
 
     /// <summary>
     /// Shares the prepared groups and proxy associations between both user-defined type emission passes.
     /// </summary>
-    /// <param name="vtableGroups">The shared groups in interface-set order.</param>
+    /// <param name="vtableGroups">The shared groups with stable representatives and interface layouts.</param>
     /// <param name="types">The globally ordered proxy inputs, retaining each type's own interface set.</param>
     private sealed class UserDefinedTypeInputs(
         IReadOnlyList<UserDefinedVtableGroup> vtableGroups,
         IReadOnlyList<UserDefinedTypeInput> types)
     {
-        /// <summary>Gets the shared groups in interface-set order.</summary>
+        /// <summary>Gets the shared groups with stable representatives and interface layouts.</summary>
         public IReadOnlyList<UserDefinedVtableGroup> VtableGroups { get; } = vtableGroups;
 
         /// <summary>Gets the globally ordered types, their own canonical interface sets, and their shared groups.</summary>

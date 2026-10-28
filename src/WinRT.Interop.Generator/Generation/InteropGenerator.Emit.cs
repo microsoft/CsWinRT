@@ -18,6 +18,7 @@ using WindowsRuntime.InteropGenerator.Fixups;
 using WindowsRuntime.InteropGenerator.Models;
 using WindowsRuntime.InteropGenerator.References;
 using WindowsRuntime.InteropGenerator.Rewriters;
+using WindowsRuntime.InteropGenerator.Writers;
 
 namespace WindowsRuntime.InteropGenerator.Generation;
 
@@ -82,155 +83,32 @@ internal partial class InteropGenerator
 
         args.Token.ThrowIfCancellationRequested();
 
-        // Emit the type hierarchy lookup
-        WindowsRuntimeTypeHierarchyBuilder.Lookup(
-            discoveryState.TypeHierarchyEntries,
-            interopDefinitions,
-            interopReferences,
-            module,
-            args.Token,
-            out _);
-
-        args.Token.ThrowIfCancellationRequested();
-
         // Add all default top level internal types to the interop module
         DefineDefaultImplementationDetailTypes(interopDefinitions, module);
 
         args.Token.ThrowIfCancellationRequested();
 
-        // Emit interop types for generic delegates
-        DefineGenericDelegateTypes(args, inputs, emitState, interopDefinitions, interopReferences, module);
+        InteropGeneratorEmissionContext context = new(args, discoveryState, inputs, emitState, interopDefinitions, interopReferences, module);
+
+        // Emit interop code as dependencies complete, then join all workers before applying IL fixups
+        RunEmission(context);
 
         args.Token.ThrowIfCancellationRequested();
 
-        // Emit interop types for 'IEnumerator<T>' types
-        DefineIEnumeratorTypes(args, inputs, emitState, interopDefinitions, interopReferences, module);
+        // Share serialized assembly attribute payloads between ordering and writing to avoid serializing them twice
+        CustomAttributePayloadCache payloads = new(module);
+
+        // Sort independently emitted metadata before token assignment so worker completion order cannot affect the binary
+        OrderGeneratedMetadata(args, module, interopDefinitions, payloads);
 
         args.Token.ThrowIfCancellationRequested();
 
-        // Emit interop types for 'IEnumerable<T>' types
-        DefineIEnumerableTypes(args, inputs, emitState, interopDefinitions, interopReferences, module);
+        // Write the finalized module, publishing the incremental cache when a fingerprint is available
+        WriteInteropModuleToDisk(args, module, fingerprint, payloads);
 
         args.Token.ThrowIfCancellationRequested();
 
-        // Emit interop types for 'IReadOnlyList<T>' types
-        DefineIReadOnlyListTypes(args, inputs, emitState, interopDefinitions, interopReferences, module);
-
-        args.Token.ThrowIfCancellationRequested();
-
-        // Emit interop types for 'IList<T>' types
-        DefineIListTypes(args, inputs, emitState, interopDefinitions, interopReferences, module);
-
-        args.Token.ThrowIfCancellationRequested();
-
-        // Emit interop types for 'IReadOnlyDictionary<TKey, TValue>' types
-        DefineIReadOnlyDictionaryTypes(args, inputs, emitState, interopDefinitions, interopReferences, module);
-
-        args.Token.ThrowIfCancellationRequested();
-
-        // Emit interop types for 'IDictionary<TKey, TValue>' types
-        DefineIDictionaryTypes(args, inputs, emitState, interopDefinitions, interopReferences, module);
-
-        args.Token.ThrowIfCancellationRequested();
-
-        // Emit interop types for 'KeyValuePair<TKey, TValue>' types
-        DefineKeyValuePairTypes(args, inputs, emitState, interopDefinitions, interopReferences, module);
-
-        args.Token.ThrowIfCancellationRequested();
-
-        // Emit interop types for 'IMapChangedEventArgs<K, V>' types
-        DefineIMapChangedEventArgsTypes(args, inputs, emitState, interopDefinitions, interopReferences, module);
-
-        args.Token.ThrowIfCancellationRequested();
-
-        // Emit interop types for 'IObservableVector<T>' types
-        DefineIObservableVectorTypes(args, inputs, emitState, interopDefinitions, interopReferences, module);
-
-        args.Token.ThrowIfCancellationRequested();
-
-        // Emit interop types for 'IObservableMap<K, V>' types
-        DefineIObservableMapTypes(args, inputs, emitState, interopDefinitions, interopReferences, module);
-
-        args.Token.ThrowIfCancellationRequested();
-
-        // Emit interop types for 'IAsyncActionWithProgress<TProgress>' types
-        DefineIAsyncActionWithProgressTypes(args, inputs, emitState, interopDefinitions, interopReferences, module);
-
-        args.Token.ThrowIfCancellationRequested();
-
-        // Emit interop types for 'IAsyncOperation<TResult>' types
-        DefineIAsyncOperationTypes(args, inputs, emitState, interopDefinitions, interopReferences, module);
-
-        args.Token.ThrowIfCancellationRequested();
-
-        // Emit interop types for 'IAsyncOperationWithProgress<TResult, TProgress>' types
-        DefineIAsyncOperationWithProgressTypes(args, inputs, emitState, interopDefinitions, interopReferences, module);
-
-        args.Token.ThrowIfCancellationRequested();
-
-        // Emit interop types for 'IReadOnlyCollection<KeyValuePair<TKey, TValue>>' types
-        DefineIReadOnlyCollectionKeyValuePair2Types(args, inputs, emitState, interopDefinitions, interopReferences, module);
-
-        args.Token.ThrowIfCancellationRequested();
-
-        // Emit interop types for 'ICollection<KeyValuePair<TKey, TValue>>' types
-        DefineICollectionKeyValuePair2Types(args, inputs, emitState, interopDefinitions, interopReferences, module);
-
-        args.Token.ThrowIfCancellationRequested();
-
-        // Emit interop types for SZ array types
-        DefineSzArrayTypes(args, inputs, emitState, interopDefinitions, interopReferences, module);
-
-        args.Token.ThrowIfCancellationRequested();
-
-        // Rewrite the IL methods of marshalling stubs needing two-pass generation
-        RewriteMethodDefinitions(args, emitState, interopReferences);
-
-        args.Token.ThrowIfCancellationRequested();
-
-        // Apply fixups to all generated interop methods
-        FixupMethodDefinitions(args, module);
-
-        args.Token.ThrowIfCancellationRequested();
-
-        // Emit interop types for user-defined array types
-        DefineUserDefinedTypes(args, inputs, emitState, interopDefinitions, interopReferences, module);
-
-        args.Token.ThrowIfCancellationRequested();
-
-        // Add all dynamic top level internal types to the interop module
-        DefineDynamicImplementationDetailTypes(interopDefinitions, module);
-
-        args.Token.ThrowIfCancellationRequested();
-
-        // Add all dynamic type map entries for custom-mapped types
-        DefineDynamicCustomMappedTypeMapEntries(args, interopDefinitions, interopReferences, module);
-
-        args.Token.ThrowIfCancellationRequested();
-
-        // Emit the IID lookup map only when 'GetIid<T>' is referenced, avoiding unused generation work
-        if (discoveryState.HasIidLookupReferences)
-        {
-            DefineWindowsRuntimeIidTypeMapEntries(args, inputs, interopDefinitions, interopReferences, module);
-
-            args.Token.ThrowIfCancellationRequested();
-        }
-
-        // Add all '[IgnoresAccessChecksTo]' attributes
-        DefineIgnoresAccessChecksToAttributes(discoveryState, interopDefinitions, interopReferences, module);
-
-        args.Token.ThrowIfCancellationRequested();
-
-        EmitMetadataAssemblyAttributes(interopReferences, module);
-
-        args.Token.ThrowIfCancellationRequested();
-
-        // Emit the interop .dll to disk
-        WriteInteropModuleToDisk(args, module, fingerprint);
-
-        args.Token.ThrowIfCancellationRequested();
-
-        // Write the optional interop generation report
+        // Write the optional diagnostic report with discovery results and final output statistics
         WriteLog(args, discoveryState, module);
     }
 
@@ -438,22 +316,33 @@ internal partial class InteropGenerator
     }
 
     /// <summary>
+    /// Defines the Windows Runtime type hierarchy lookup.
+    /// </summary>
+    /// <param name="context">The shared emission context.</param>
+    private static void DefineTypeHierarchyLookup(InteropGeneratorEmissionContext context)
+    {
+        WindowsRuntimeTypeHierarchyBuilder.Lookup(
+            context.DiscoveryState.TypeHierarchyEntries,
+            context.Definitions,
+            context.References,
+            context.Module,
+            context.Args.Token,
+            out _);
+    }
+
+    /// <summary>
     /// Defines the interop types for generic delegates.
     /// </summary>
-    /// <param name="args"><inheritdoc cref="Emit" path="/param[@name='args']/node()"/></param>
-    /// <param name="inputs">The canonicalized discovery inputs for emission.</param>
-    /// <param name="emitState">The emit state for this invocation.</param>
-    /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
-    /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-    /// <param name="module">The interop module being built.</param>
-    private static void DefineGenericDelegateTypes(
-        InteropGeneratorArgs args,
-        InteropGeneratorEmitInputs inputs,
-        InteropGeneratorEmitState emitState,
-        InteropDefinitions interopDefinitions,
-        InteropReferences interopReferences,
-        ModuleDefinition module)
+    /// <param name="context">The shared emission context.</param>
+    private static void DefineGenericDelegateTypes(InteropGeneratorEmissionContext context)
     {
+        InteropGeneratorArgs args = context.Args;
+        InteropGeneratorEmitInputs inputs = context.Inputs;
+        InteropGeneratorEmitState emitState = context.EmitState;
+        InteropDefinitions interopDefinitions = context.Definitions;
+        InteropReferences interopReferences = context.References;
+        ModuleDefinition module = context.Module;
+
         foreach (GenericInstanceTypeSignature typeSignature in inputs.EnumerateGenericDelegateTypes())
         {
             args.Token.ThrowIfCancellationRequested();
@@ -612,20 +501,16 @@ internal partial class InteropGenerator
     /// <summary>
     /// Defines the interop types for <see cref="IEnumerator{T}"/> types.
     /// </summary>
-    /// <param name="args"><inheritdoc cref="Emit" path="/param[@name='args']/node()"/></param>
-    /// <param name="inputs">The canonicalized discovery inputs for emission.</param>
-    /// <param name="emitState">The emit state for this invocation.</param>
-    /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
-    /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-    /// <param name="module">The interop module being built.</param>
-    private static void DefineIEnumeratorTypes(
-        InteropGeneratorArgs args,
-        InteropGeneratorEmitInputs inputs,
-        InteropGeneratorEmitState emitState,
-        InteropDefinitions interopDefinitions,
-        InteropReferences interopReferences,
-        ModuleDefinition module)
+    /// <param name="context">The shared emission context.</param>
+    private static void DefineIEnumeratorTypes(InteropGeneratorEmissionContext context)
     {
+        InteropGeneratorArgs args = context.Args;
+        InteropGeneratorEmitInputs inputs = context.Inputs;
+        InteropGeneratorEmitState emitState = context.EmitState;
+        InteropDefinitions interopDefinitions = context.Definitions;
+        InteropReferences interopReferences = context.References;
+        ModuleDefinition module = context.Module;
+
         foreach (GenericInstanceTypeSignature typeSignature in inputs.EnumerateIEnumerator1Types())
         {
             args.Token.ThrowIfCancellationRequested();
@@ -745,20 +630,16 @@ internal partial class InteropGenerator
     /// <summary>
     /// Defines the interop types for <see cref="IEnumerable{T}"/> types.
     /// </summary>
-    /// <param name="args"><inheritdoc cref="Emit" path="/param[@name='args']/node()"/></param>
-    /// <param name="inputs">The canonicalized discovery inputs for emission.</param>
-    /// <param name="emitState">The emit state for this invocation.</param>
-    /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
-    /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-    /// <param name="module">The interop module being built.</param>
-    private static void DefineIEnumerableTypes(
-        InteropGeneratorArgs args,
-        InteropGeneratorEmitInputs inputs,
-        InteropGeneratorEmitState emitState,
-        InteropDefinitions interopDefinitions,
-        InteropReferences interopReferences,
-        ModuleDefinition module)
+    /// <param name="context">The shared emission context.</param>
+    private static void DefineIEnumerableTypes(InteropGeneratorEmissionContext context)
     {
+        InteropGeneratorArgs args = context.Args;
+        InteropGeneratorEmitInputs inputs = context.Inputs;
+        InteropGeneratorEmitState emitState = context.EmitState;
+        InteropDefinitions interopDefinitions = context.Definitions;
+        InteropReferences interopReferences = context.References;
+        ModuleDefinition module = context.Module;
+
         foreach (GenericInstanceTypeSignature typeSignature in inputs.EnumerateIEnumerable1Types())
         {
             args.Token.ThrowIfCancellationRequested();
@@ -887,20 +768,16 @@ internal partial class InteropGenerator
     /// <summary>
     /// Defines the interop types for <see cref="IReadOnlyList{T}"/> types.
     /// </summary>
-    /// <param name="args"><inheritdoc cref="Emit" path="/param[@name='args']/node()"/></param>
-    /// <param name="inputs">The canonicalized discovery inputs for emission.</param>
-    /// <param name="emitState">The emit state for this invocation.</param>
-    /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
-    /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-    /// <param name="module">The interop module being built.</param>
-    private static void DefineIReadOnlyListTypes(
-        InteropGeneratorArgs args,
-        InteropGeneratorEmitInputs inputs,
-        InteropGeneratorEmitState emitState,
-        InteropDefinitions interopDefinitions,
-        InteropReferences interopReferences,
-        ModuleDefinition module)
+    /// <param name="context">The shared emission context.</param>
+    private static void DefineIReadOnlyListTypes(InteropGeneratorEmissionContext context)
     {
+        InteropGeneratorArgs args = context.Args;
+        InteropGeneratorEmitInputs inputs = context.Inputs;
+        InteropGeneratorEmitState emitState = context.EmitState;
+        InteropDefinitions interopDefinitions = context.Definitions;
+        InteropReferences interopReferences = context.References;
+        ModuleDefinition module = context.Module;
+
         foreach (GenericInstanceTypeSignature typeSignature in inputs.EnumerateIReadOnlyList1Types())
         {
             args.Token.ThrowIfCancellationRequested();
@@ -1023,20 +900,16 @@ internal partial class InteropGenerator
     /// <summary>
     /// Defines the interop types for <see cref="IList{T}"/> types.
     /// </summary>
-    /// <param name="args"><inheritdoc cref="Emit" path="/param[@name='args']/node()"/></param>
-    /// <param name="inputs">The canonicalized discovery inputs for emission.</param>
-    /// <param name="emitState">The emit state for this invocation.</param>
-    /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
-    /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-    /// <param name="module">The interop module being built.</param>
-    private static void DefineIListTypes(
-        InteropGeneratorArgs args,
-        InteropGeneratorEmitInputs inputs,
-        InteropGeneratorEmitState emitState,
-        InteropDefinitions interopDefinitions,
-        InteropReferences interopReferences,
-        ModuleDefinition module)
+    /// <param name="context">The shared emission context.</param>
+    private static void DefineIListTypes(InteropGeneratorEmissionContext context)
     {
+        InteropGeneratorArgs args = context.Args;
+        InteropGeneratorEmitInputs inputs = context.Inputs;
+        InteropGeneratorEmitState emitState = context.EmitState;
+        InteropDefinitions interopDefinitions = context.Definitions;
+        InteropReferences interopReferences = context.References;
+        ModuleDefinition module = context.Module;
+
         foreach (GenericInstanceTypeSignature typeSignature in inputs.EnumerateIList1Types())
         {
             args.Token.ThrowIfCancellationRequested();
@@ -1168,20 +1041,16 @@ internal partial class InteropGenerator
     /// <summary>
     /// Defines the interop types for <see cref="IReadOnlyDictionary{TKey, TValue}"/> types.
     /// </summary>
-    /// <param name="args"><inheritdoc cref="Emit" path="/param[@name='args']/node()"/></param>
-    /// <param name="inputs">The canonicalized discovery inputs for emission.</param>
-    /// <param name="emitState">The emit state for this invocation.</param>
-    /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
-    /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-    /// <param name="module">The interop module being built.</param>
-    private static void DefineIReadOnlyDictionaryTypes(
-        InteropGeneratorArgs args,
-        InteropGeneratorEmitInputs inputs,
-        InteropGeneratorEmitState emitState,
-        InteropDefinitions interopDefinitions,
-        InteropReferences interopReferences,
-        ModuleDefinition module)
+    /// <param name="context">The shared emission context.</param>
+    private static void DefineIReadOnlyDictionaryTypes(InteropGeneratorEmissionContext context)
     {
+        InteropGeneratorArgs args = context.Args;
+        InteropGeneratorEmitInputs inputs = context.Inputs;
+        InteropGeneratorEmitState emitState = context.EmitState;
+        InteropDefinitions interopDefinitions = context.Definitions;
+        InteropReferences interopReferences = context.References;
+        ModuleDefinition module = context.Module;
+
         foreach (GenericInstanceTypeSignature typeSignature in inputs.EnumerateIReadOnlyDictionary2Types())
         {
             args.Token.ThrowIfCancellationRequested();
@@ -1305,20 +1174,16 @@ internal partial class InteropGenerator
     /// <summary>
     /// Defines the interop types for <see cref="IDictionary{TKey, TValue}"/> types.
     /// </summary>
-    /// <param name="args"><inheritdoc cref="Emit" path="/param[@name='args']/node()"/></param>
-    /// <param name="inputs">The canonicalized discovery inputs for emission.</param>
-    /// <param name="emitState">The emit state for this invocation.</param>
-    /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
-    /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-    /// <param name="module">The interop module being built.</param>
-    private static void DefineIDictionaryTypes(
-        InteropGeneratorArgs args,
-        InteropGeneratorEmitInputs inputs,
-        InteropGeneratorEmitState emitState,
-        InteropDefinitions interopDefinitions,
-        InteropReferences interopReferences,
-        ModuleDefinition module)
+    /// <param name="context">The shared emission context.</param>
+    private static void DefineIDictionaryTypes(InteropGeneratorEmissionContext context)
     {
+        InteropGeneratorArgs args = context.Args;
+        InteropGeneratorEmitInputs inputs = context.Inputs;
+        InteropGeneratorEmitState emitState = context.EmitState;
+        InteropDefinitions interopDefinitions = context.Definitions;
+        InteropReferences interopReferences = context.References;
+        ModuleDefinition module = context.Module;
+
         foreach (GenericInstanceTypeSignature typeSignature in inputs.EnumerateIDictionary2Types())
         {
             args.Token.ThrowIfCancellationRequested();
@@ -1451,30 +1316,20 @@ internal partial class InteropGenerator
     /// <summary>
     /// Defines the interop types for <see cref="KeyValuePair{TKey, TValue}"/> types.
     /// </summary>
-    /// <param name="args"><inheritdoc cref="Emit" path="/param[@name='args']/node()"/></param>
-    /// <param name="inputs">The canonicalized discovery inputs for emission.</param>
-    /// <param name="emitState">The emit state for this invocation.</param>
-    /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
-    /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-    /// <param name="module">The interop module being built.</param>
-    private static void DefineKeyValuePairTypes(
-        InteropGeneratorArgs args,
-        InteropGeneratorEmitInputs inputs,
-        InteropGeneratorEmitState emitState,
-        InteropDefinitions interopDefinitions,
-        InteropReferences interopReferences,
-        ModuleDefinition module)
+    /// <param name="context">The shared emission context.</param>
+    private static void DefineKeyValuePairTypes(InteropGeneratorEmissionContext context)
     {
-        TypeDefinition? methodsType = null;
+        InteropGeneratorArgs args = context.Args;
+        InteropGeneratorEmitInputs inputs = context.Inputs;
+        InteropGeneratorEmitState emitState = context.EmitState;
+        InteropDefinitions interopDefinitions = context.Definitions;
+        InteropReferences interopReferences = context.References;
+        ModuleDefinition module = context.Module;
 
         // Generate shared code for helpers needed by instantiated 'KeyValuePair<,>' types
         try
         {
-            InteropTypeDefinitionBuilder.KeyValuePair.Methods(
-                interopDefinitions: interopDefinitions,
-                interopReferences: interopReferences,
-                module: module,
-                methodsType: out methodsType);
+            module.TopLevelTypes.Add(interopDefinitions.KeyValuePairMethods);
         }
         catch (Exception e)
         {
@@ -1514,7 +1369,6 @@ internal partial class InteropGenerator
 
                 InteropTypeDefinitionBuilder.KeyValuePair.Accessors(
                     keyValuePairType: typeSignature,
-                    methodsType: methodsType,
                     interopDefinitions: interopDefinitions,
                     interopReferences: interopReferences,
                     emitState: emitState,
@@ -1563,25 +1417,22 @@ internal partial class InteropGenerator
                 WellKnownInteropExceptions.KeyValuePairTypeCodeGenerationError(typeSignature.Name, e).ThrowOrAttach(e);
             }
         }
+
     }
 
     /// <summary>
     /// Defines the interop types for <c>Windows.Foundation.Collections.IMapChangedEventArgs&lt;K&gt;</c> types.
     /// </summary>
-    /// <param name="args"><inheritdoc cref="Emit" path="/param[@name='args']/node()"/></param>
-    /// <param name="inputs">The canonicalized discovery inputs for emission.</param>
-    /// <param name="emitState">The emit state for this invocation.</param>
-    /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
-    /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-    /// <param name="module">The interop module being built.</param>
-    private static void DefineIMapChangedEventArgsTypes(
-        InteropGeneratorArgs args,
-        InteropGeneratorEmitInputs inputs,
-        InteropGeneratorEmitState emitState,
-        InteropDefinitions interopDefinitions,
-        InteropReferences interopReferences,
-        ModuleDefinition module)
+    /// <param name="context">The shared emission context.</param>
+    private static void DefineIMapChangedEventArgsTypes(InteropGeneratorEmissionContext context)
     {
+        InteropGeneratorArgs args = context.Args;
+        InteropGeneratorEmitInputs inputs = context.Inputs;
+        InteropGeneratorEmitState emitState = context.EmitState;
+        InteropDefinitions interopDefinitions = context.Definitions;
+        InteropReferences interopReferences = context.References;
+        ModuleDefinition module = context.Module;
+
         foreach (GenericInstanceTypeSignature typeSignature in inputs.EnumerateIMapChangedEventArgs1Types())
         {
             args.Token.ThrowIfCancellationRequested();
@@ -1684,20 +1535,16 @@ internal partial class InteropGenerator
     /// <summary>
     /// Defines the interop types for <c>Windows.Foundation.Collections.IObservableVector&lt;T&gt;</c> types.
     /// </summary>
-    /// <param name="args"><inheritdoc cref="Emit" path="/param[@name='args']/node()"/></param>
-    /// <param name="inputs">The canonicalized discovery inputs for emission.</param>
-    /// <param name="emitState">The emit state for this invocation.</param>
-    /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
-    /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-    /// <param name="module">The interop module being built.</param>
-    private static void DefineIObservableVectorTypes(
-        InteropGeneratorArgs args,
-        InteropGeneratorEmitInputs inputs,
-        InteropGeneratorEmitState emitState,
-        InteropDefinitions interopDefinitions,
-        InteropReferences interopReferences,
-        ModuleDefinition module)
+    /// <param name="context">The shared emission context.</param>
+    private static void DefineIObservableVectorTypes(InteropGeneratorEmissionContext context)
     {
+        InteropGeneratorArgs args = context.Args;
+        InteropGeneratorEmitInputs inputs = context.Inputs;
+        InteropGeneratorEmitState emitState = context.EmitState;
+        InteropDefinitions interopDefinitions = context.Definitions;
+        InteropReferences interopReferences = context.References;
+        ModuleDefinition module = context.Module;
+
         foreach (GenericInstanceTypeSignature typeSignature in inputs.EnumerateIObservableVector1Types())
         {
             args.Token.ThrowIfCancellationRequested();
@@ -1818,20 +1665,16 @@ internal partial class InteropGenerator
     /// <summary>
     /// Defines the interop types for <c>Windows.Foundation.Collections.IObservableMap&lt;K, V&gt;</c> types.
     /// </summary>
-    /// <param name="args"><inheritdoc cref="Emit" path="/param[@name='args']/node()"/></param>
-    /// <param name="inputs">The canonicalized discovery inputs for emission.</param>
-    /// <param name="emitState">The emit state for this invocation.</param>
-    /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
-    /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-    /// <param name="module">The interop module being built.</param>
-    private static void DefineIObservableMapTypes(
-        InteropGeneratorArgs args,
-        InteropGeneratorEmitInputs inputs,
-        InteropGeneratorEmitState emitState,
-        InteropDefinitions interopDefinitions,
-        InteropReferences interopReferences,
-        ModuleDefinition module)
+    /// <param name="context">The shared emission context.</param>
+    private static void DefineIObservableMapTypes(InteropGeneratorEmissionContext context)
     {
+        InteropGeneratorArgs args = context.Args;
+        InteropGeneratorEmitInputs inputs = context.Inputs;
+        InteropGeneratorEmitState emitState = context.EmitState;
+        InteropDefinitions interopDefinitions = context.Definitions;
+        InteropReferences interopReferences = context.References;
+        ModuleDefinition module = context.Module;
+
         foreach (GenericInstanceTypeSignature typeSignature in inputs.EnumerateIObservableMap2Types())
         {
             args.Token.ThrowIfCancellationRequested();
@@ -1952,20 +1795,16 @@ internal partial class InteropGenerator
     /// <summary>
     /// Defines the interop types for <c>Windows.Foundation.IAsyncActionWithProgress&lt;TProgress&gt;</c> types.
     /// </summary>
-    /// <param name="args"><inheritdoc cref="Emit" path="/param[@name='args']/node()"/></param>
-    /// <param name="inputs">The canonicalized discovery inputs for emission.</param>
-    /// <param name="emitState">The emit state for this invocation.</param>
-    /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
-    /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-    /// <param name="module">The interop module being built.</param>
-    private static void DefineIAsyncActionWithProgressTypes(
-        InteropGeneratorArgs args,
-        InteropGeneratorEmitInputs inputs,
-        InteropGeneratorEmitState emitState,
-        InteropDefinitions interopDefinitions,
-        InteropReferences interopReferences,
-        ModuleDefinition module)
+    /// <param name="context">The shared emission context.</param>
+    private static void DefineIAsyncActionWithProgressTypes(InteropGeneratorEmissionContext context)
     {
+        InteropGeneratorArgs args = context.Args;
+        InteropGeneratorEmitInputs inputs = context.Inputs;
+        InteropGeneratorEmitState emitState = context.EmitState;
+        InteropDefinitions interopDefinitions = context.Definitions;
+        InteropReferences interopReferences = context.References;
+        ModuleDefinition module = context.Module;
+
         foreach (GenericInstanceTypeSignature typeSignature in inputs.EnumerateIAsyncActionWithProgress1Types())
         {
             args.Token.ThrowIfCancellationRequested();
@@ -2068,20 +1907,16 @@ internal partial class InteropGenerator
     /// <summary>
     /// Defines the interop types for <c>Windows.Foundation.IAsyncOperation&lt;TResult&gt;</c> types.
     /// </summary>
-    /// <param name="args"><inheritdoc cref="Emit" path="/param[@name='args']/node()"/></param>
-    /// <param name="inputs">The canonicalized discovery inputs for emission.</param>
-    /// <param name="emitState">The emit state for this invocation.</param>
-    /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
-    /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-    /// <param name="module">The interop module being built.</param>
-    private static void DefineIAsyncOperationTypes(
-        InteropGeneratorArgs args,
-        InteropGeneratorEmitInputs inputs,
-        InteropGeneratorEmitState emitState,
-        InteropDefinitions interopDefinitions,
-        InteropReferences interopReferences,
-        ModuleDefinition module)
+    /// <param name="context">The shared emission context.</param>
+    private static void DefineIAsyncOperationTypes(InteropGeneratorEmissionContext context)
     {
+        InteropGeneratorArgs args = context.Args;
+        InteropGeneratorEmitInputs inputs = context.Inputs;
+        InteropGeneratorEmitState emitState = context.EmitState;
+        InteropDefinitions interopDefinitions = context.Definitions;
+        InteropReferences interopReferences = context.References;
+        ModuleDefinition module = context.Module;
+
         foreach (GenericInstanceTypeSignature typeSignature in inputs.EnumerateIAsyncOperation1Types())
         {
             args.Token.ThrowIfCancellationRequested();
@@ -2184,20 +2019,16 @@ internal partial class InteropGenerator
     /// <summary>
     /// Defines the interop types for <c>Windows.Foundation.IAsyncOperationWithProgress&lt;TResult, TProgress&gt;</c> types.
     /// </summary>
-    /// <param name="args"><inheritdoc cref="Emit" path="/param[@name='args']/node()"/></param>
-    /// <param name="inputs">The canonicalized discovery inputs for emission.</param>
-    /// <param name="emitState">The emit state for this invocation.</param>
-    /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
-    /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-    /// <param name="module">The interop module being built.</param>
-    private static void DefineIAsyncOperationWithProgressTypes(
-        InteropGeneratorArgs args,
-        InteropGeneratorEmitInputs inputs,
-        InteropGeneratorEmitState emitState,
-        InteropDefinitions interopDefinitions,
-        InteropReferences interopReferences,
-        ModuleDefinition module)
+    /// <param name="context">The shared emission context.</param>
+    private static void DefineIAsyncOperationWithProgressTypes(InteropGeneratorEmissionContext context)
     {
+        InteropGeneratorArgs args = context.Args;
+        InteropGeneratorEmitInputs inputs = context.Inputs;
+        InteropGeneratorEmitState emitState = context.EmitState;
+        InteropDefinitions interopDefinitions = context.Definitions;
+        InteropReferences interopReferences = context.References;
+        ModuleDefinition module = context.Module;
+
         foreach (GenericInstanceTypeSignature typeSignature in inputs.EnumerateIAsyncOperationWithProgress2Types())
         {
             args.Token.ThrowIfCancellationRequested();
@@ -2300,20 +2131,16 @@ internal partial class InteropGenerator
     /// <summary>
     /// Defines the interop types for <see cref="IReadOnlyCollection{T}"/> of <see cref="KeyValuePair{TKey, TValue}"/> types.
     /// </summary>
-    /// <param name="args"><inheritdoc cref="Emit" path="/param[@name='args']/node()"/></param>
-    /// <param name="inputs">The canonicalized discovery inputs for emission.</param>
-    /// <param name="emitState">The emit state for this invocation.</param>
-    /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
-    /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-    /// <param name="module">The interop module being built.</param>
-    private static void DefineIReadOnlyCollectionKeyValuePair2Types(
-        InteropGeneratorArgs args,
-        InteropGeneratorEmitInputs inputs,
-        InteropGeneratorEmitState emitState,
-        InteropDefinitions interopDefinitions,
-        InteropReferences interopReferences,
-        ModuleDefinition module)
+    /// <param name="context">The shared emission context.</param>
+    private static void DefineIReadOnlyCollectionKeyValuePair2Types(InteropGeneratorEmissionContext context)
     {
+        InteropGeneratorArgs args = context.Args;
+        InteropGeneratorEmitInputs inputs = context.Inputs;
+        InteropGeneratorEmitState emitState = context.EmitState;
+        InteropDefinitions interopDefinitions = context.Definitions;
+        InteropReferences interopReferences = context.References;
+        ModuleDefinition module = context.Module;
+
         foreach (GenericInstanceTypeSignature typeSignature in inputs.EnumerateIReadOnlyCollectionKeyValuePair2Types())
         {
             args.Token.ThrowIfCancellationRequested();
@@ -2355,20 +2182,16 @@ internal partial class InteropGenerator
     /// <summary>
     /// Defines the interop types for <see cref="ICollection{T}"/> of <see cref="KeyValuePair{TKey, TValue}"/> types.
     /// </summary>
-    /// <param name="args"><inheritdoc cref="Emit" path="/param[@name='args']/node()"/></param>
-    /// <param name="inputs">The canonicalized discovery inputs for emission.</param>
-    /// <param name="emitState">The emit state for this invocation.</param>
-    /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
-    /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-    /// <param name="module">The interop module being built.</param>
-    private static void DefineICollectionKeyValuePair2Types(
-        InteropGeneratorArgs args,
-        InteropGeneratorEmitInputs inputs,
-        InteropGeneratorEmitState emitState,
-        InteropDefinitions interopDefinitions,
-        InteropReferences interopReferences,
-        ModuleDefinition module)
+    /// <param name="context">The shared emission context.</param>
+    private static void DefineICollectionKeyValuePair2Types(InteropGeneratorEmissionContext context)
     {
+        InteropGeneratorArgs args = context.Args;
+        InteropGeneratorEmitInputs inputs = context.Inputs;
+        InteropGeneratorEmitState emitState = context.EmitState;
+        InteropDefinitions interopDefinitions = context.Definitions;
+        InteropReferences interopReferences = context.References;
+        ModuleDefinition module = context.Module;
+
         foreach (GenericInstanceTypeSignature typeSignature in inputs.EnumerateICollectionKeyValuePair2Types())
         {
             args.Token.ThrowIfCancellationRequested();
@@ -2410,20 +2233,16 @@ internal partial class InteropGenerator
     /// <summary>
     /// Defines the interop types for SZ array types.
     /// </summary>
-    /// <param name="args"><inheritdoc cref="Emit" path="/param[@name='args']/node()"/></param>
-    /// <param name="inputs">The canonicalized discovery inputs for emission.</param>
-    /// <param name="emitState">The emit state for this invocation.</param>
-    /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
-    /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-    /// <param name="module">The interop module being built.</param>
-    private static void DefineSzArrayTypes(
-        InteropGeneratorArgs args,
-        InteropGeneratorEmitInputs inputs,
-        InteropGeneratorEmitState emitState,
-        InteropDefinitions interopDefinitions,
-        InteropReferences interopReferences,
-        ModuleDefinition module)
+    /// <param name="context">The shared emission context.</param>
+    private static void DefineSzArrayTypes(InteropGeneratorEmissionContext context)
     {
+        InteropGeneratorArgs args = context.Args;
+        InteropGeneratorEmitInputs inputs = context.Inputs;
+        InteropGeneratorEmitState emitState = context.EmitState;
+        InteropDefinitions interopDefinitions = context.Definitions;
+        InteropReferences interopReferences = context.References;
+        ModuleDefinition module = context.Module;
+
         foreach ((SzArrayTypeSignature typeSignature, TypeSignatureEquatableSet vtableTypes) in inputs.EnumerateSzArrayAndVtableTypes())
         {
             args.Token.ThrowIfCancellationRequested();
@@ -2511,109 +2330,109 @@ internal partial class InteropGenerator
     /// <summary>
     /// Rewrites IL method bodies for marshalling stubs as part of two-pass IL generation.
     /// </summary>
-    /// <param name="args"><inheritdoc cref="Emit" path="/param[@name='args']/node()"/></param>
-    /// <param name="emitState">The emit state for this invocation.</param>
-    /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-    private static void RewriteMethodDefinitions(
-        InteropGeneratorArgs args,
-        InteropGeneratorEmitState emitState,
-        InteropReferences interopReferences)
+    /// <param name="context">The shared emission context.</param>
+    private static void RewriteMethodDefinitions(InteropGeneratorEmissionContext context)
     {
-        // We need to sort all items to a temporary list first, as the underlying items
-        // might otherwise change as we rewrite methods. This is because e.g. the target
-        // instructions will get replaced by marshalling code, meaning trying to compare
-        // different objects based on the index of those instructions in the target method
-        // would produce different results. This temporary list avoids that issue.
-        List<MethodRewriteInfo> rewriteInfos = [.. emitState.EnumerateMethodRewriteInfos().Order()];
+        InteropGeneratorArgs args = context.Args;
+        InteropGeneratorEmitState emitState = context.EmitState;
+        InteropReferences interopReferences = context.References;
 
-        foreach (MethodRewriteInfo rewriteInfo in rewriteInfos)
+        // Rewrites within a method retain their original ordering, including rewrite kind and marker position.
+        // Different methods can be rewritten independently without comparing their expensive metadata names.
+        IEnumerable<IGrouping<MethodDefinition, MethodRewriteInfo>> rewritesByMethod = emitState.EnumerateMethodRewriteInfos()
+            .GroupBy(static rewrite => rewrite.Method);
+
+        foreach (IGrouping<MethodDefinition, MethodRewriteInfo> rewriteInfos in rewritesByMethod)
         {
-            args.Token.ThrowIfCancellationRequested();
-
-            try
+            foreach (MethodRewriteInfo rewriteInfo in rewriteInfos.Order())
             {
-                switch (rewriteInfo)
+                args.Token.ThrowIfCancellationRequested();
+
+                try
                 {
-                    // Rewrite direct calls to 'ConvertToUnmanaged' (or 'BoxToUnmanaged')
-                    case MethodRewriteInfo.RawRetVal rawRetValInfo:
-                        InteropMethodRewriter.RawRetVal.RewriteMethod(
-                            parameterType: rawRetValInfo.Type,
-                            method: rawRetValInfo.Method,
-                            marker: rawRetValInfo.Marker,
-                            interopReferences: interopReferences,
-                            emitState: emitState);
-                        break;
+                    switch (rewriteInfo)
+                    {
+                        // Rewrite direct calls to 'ConvertToUnmanaged' (or 'BoxToUnmanaged')
+                        case MethodRewriteInfo.RawRetVal rawRetValInfo:
+                            InteropMethodRewriter.RawRetVal.RewriteMethod(
+                                parameterType: rawRetValInfo.Type,
+                                method: rawRetValInfo.Method,
+                                marker: rawRetValInfo.Marker,
+                                interopReferences: interopReferences,
+                                emitState: emitState);
+                            break;
 
-                    // Rewrite return values for managed types
-                    case MethodRewriteInfo.ReturnValue returnValueInfo:
-                        InteropMethodRewriter.ReturnValue.RewriteMethod(
-                            returnType: returnValueInfo.Type,
-                            method: returnValueInfo.Method,
-                            marker: returnValueInfo.Marker,
-                            source: returnValueInfo.Source,
-                            interopReferences: interopReferences,
-                            emitState: emitState);
-                        break;
+                        // Rewrite return values for managed types
+                        case MethodRewriteInfo.ReturnValue returnValueInfo:
+                            InteropMethodRewriter.ReturnValue.RewriteMethod(
+                                returnType: returnValueInfo.Type,
+                                method: returnValueInfo.Method,
+                                marker: returnValueInfo.Marker,
+                                source: returnValueInfo.Source,
+                                interopReferences: interopReferences,
+                                emitState: emitState);
+                            break;
 
-                    // Rewrite return values for native types
-                    case MethodRewriteInfo.RetVal retValInfo:
-                        InteropMethodRewriter.RetVal.RewriteMethod(
-                            retValType: retValInfo.Type,
-                            method: retValInfo.Method,
-                            marker: retValInfo.Marker,
-                            interopReferences: interopReferences,
-                            emitState: emitState);
-                        break;
+                        // Rewrite return values for native types
+                        case MethodRewriteInfo.RetVal retValInfo:
+                            InteropMethodRewriter.RetVal.RewriteMethod(
+                                retValType: retValInfo.Type,
+                                method: retValInfo.Method,
+                                marker: retValInfo.Marker,
+                                interopReferences: interopReferences,
+                                emitState: emitState);
+                            break;
 
-                    // Rewrite managed values
-                    case MethodRewriteInfo.ManagedValue managedValueInfo:
-                        InteropMethodRewriter.ManagedValue.RewriteMethod(
-                            parameterType: managedValueInfo.Type,
-                            method: managedValueInfo.Method,
-                            marker: managedValueInfo.Marker,
-                            interopReferences: interopReferences,
-                            emitState: emitState);
-                        break;
+                        // Rewrite managed values
+                        case MethodRewriteInfo.ManagedValue managedValueInfo:
+                            InteropMethodRewriter.ManagedValue.RewriteMethod(
+                                parameterType: managedValueInfo.Type,
+                                method: managedValueInfo.Method,
+                                marker: managedValueInfo.Marker,
+                                interopReferences: interopReferences,
+                                emitState: emitState);
+                            break;
 
-                    // Rewrite managed parameters
-                    case MethodRewriteInfo.ManagedParameter managedParameterInfo:
-                        InteropMethodRewriter.ManagedParameter.RewriteMethod(
-                            parameterType: managedParameterInfo.Type,
-                            method: managedParameterInfo.Method,
-                            marker: managedParameterInfo.Marker,
-                            parameterIndex: managedParameterInfo.ParameterIndex,
-                            interopReferences: interopReferences,
-                            emitState: emitState);
-                        break;
+                        // Rewrite managed parameters
+                        case MethodRewriteInfo.ManagedParameter managedParameterInfo:
+                            InteropMethodRewriter.ManagedParameter.RewriteMethod(
+                                parameterType: managedParameterInfo.Type,
+                                method: managedParameterInfo.Method,
+                                marker: managedParameterInfo.Marker,
+                                parameterIndex: managedParameterInfo.ParameterIndex,
+                                interopReferences: interopReferences,
+                                emitState: emitState);
+                            break;
 
-                    // Rewrite native parameters
-                    case MethodRewriteInfo.NativeParameter nativeParameterInfo:
-                        InteropMethodRewriter.NativeParameter.RewriteMethod(
-                            parameterType: nativeParameterInfo.Type,
-                            method: nativeParameterInfo.Method,
-                            tryMarker: nativeParameterInfo.TryMarker,
-                            loadMarker: nativeParameterInfo.Marker,
-                            finallyMarker: nativeParameterInfo.FinallyMarker,
-                            parameterIndex: nativeParameterInfo.ParameterIndex,
-                            interopReferences: interopReferences,
-                            emitState: emitState);
-                        break;
+                        // Rewrite native parameters
+                        case MethodRewriteInfo.NativeParameter nativeParameterInfo:
+                            InteropMethodRewriter.NativeParameter.RewriteMethod(
+                                parameterType: nativeParameterInfo.Type,
+                                method: nativeParameterInfo.Method,
+                                tryMarker: nativeParameterInfo.TryMarker,
+                                loadMarker: nativeParameterInfo.Marker,
+                                finallyMarker: nativeParameterInfo.FinallyMarker,
+                                parameterIndex: nativeParameterInfo.ParameterIndex,
+                                interopReferences: interopReferences,
+                                emitState: emitState);
+                            break;
 
-                    // Rewrite direct calls to 'Dispose' (or the appropriate 'Free' method)
-                    case MethodRewriteInfo.Dispose disposeInfo:
-                        InteropMethodRewriter.Dispose.RewriteMethod(
-                            parameterType: disposeInfo.Type,
-                            method: disposeInfo.Method,
-                            marker: disposeInfo.Marker,
-                            interopReferences: interopReferences,
-                            emitState: emitState);
-                        break;
-                    default: throw new UnreachableException();
+                        // Rewrite direct calls to 'Dispose' (or the appropriate 'Free' method)
+                        case MethodRewriteInfo.Dispose disposeInfo:
+                            InteropMethodRewriter.Dispose.RewriteMethod(
+                                parameterType: disposeInfo.Type,
+                                method: disposeInfo.Method,
+                                marker: disposeInfo.Marker,
+                                interopReferences: interopReferences,
+                                emitState: emitState);
+                            break;
+                        default: throw new UnreachableException();
+                    }
                 }
-            }
-            catch (Exception e)
-            {
-                WellKnownInteropExceptions.MethodRewriteError(rewriteInfo.Type, rewriteInfo.Method, e).ThrowOrAttach(e);
+                catch (Exception e)
+                {
+                    WellKnownInteropExceptions.MethodRewriteError(rewriteInfo.Type, rewriteInfo.Method, e).ThrowOrAttach(e);
+                }
             }
         }
     }
@@ -2625,7 +2444,7 @@ internal partial class InteropGenerator
     /// <param name="module">The interop module being built.</param>
     private static void FixupMethodDefinitions(InteropGeneratorArgs args, ModuleDefinition module)
     {
-        ReadOnlySpan<InteropMethodFixup> fixups =
+        InteropMethodFixup[] fixups =
         [
             InteropMethodFixup.RemoveLeftoverNopAfterLeave.Instance,
             InteropMethodFixup.RemoveUnnecessaryTryStartNop.Instance
@@ -2656,20 +2475,16 @@ internal partial class InteropGenerator
     /// <summary>
     /// Defines the interop types for user-defined types.
     /// </summary>
-    /// <param name="args"><inheritdoc cref="Emit" path="/param[@name='args']/node()"/></param>
-    /// <param name="inputs">The canonicalized discovery inputs for emission.</param>
-    /// <param name="emitState">The emit state for this invocation.</param>
-    /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
-    /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-    /// <param name="module">The interop module being built.</param>
-    private static void DefineUserDefinedTypes(
-        InteropGeneratorArgs args,
-        InteropGeneratorEmitInputs inputs,
-        InteropGeneratorEmitState emitState,
-        InteropDefinitions interopDefinitions,
-        InteropReferences interopReferences,
-        ModuleDefinition module)
+    /// <param name="context">The shared emission context.</param>
+    private static void DefineUserDefinedTypes(InteropGeneratorEmissionContext context)
     {
+        InteropGeneratorArgs args = context.Args;
+        InteropGeneratorEmitInputs inputs = context.Inputs;
+        InteropGeneratorEmitState emitState = context.EmitState;
+        InteropDefinitions interopDefinitions = context.Definitions;
+        InteropReferences interopReferences = context.References;
+        ModuleDefinition module = context.Module;
+
         IReadOnlyList<UserDefinedVtableGroup> groups = inputs.GetUserDefinedVtableGroups();
 
         // Share marshallers across types with the same explicitly implemented interfaces
@@ -2789,20 +2604,22 @@ internal partial class InteropGenerator
     /// <summary>
     /// Defines the dynamic implementation detail types.
     /// </summary>
-    /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
-    /// <param name="module">The interop module being built.</param>
-    private static void DefineDynamicImplementationDetailTypes(InteropDefinitions interopDefinitions, ModuleDefinition module)
+    /// <param name="context">The shared emission context.</param>
+    private static void DefineDynamicImplementationDetailTypes(InteropGeneratorEmissionContext context)
     {
+        InteropDefinitions interopDefinitions = context.Definitions;
+        ModuleDefinition module = context.Module;
+
         try
         {
             // Emit all shared COM interface entries types that are programmatically generated for user-defined types
-            foreach (TypeDefinition typeDefinition in interopDefinitions.EnumerateUserDefinedInterfaceEntriesTypes().OrderByFullyQualifiedTypeName(interopDefinitions.RuntimeContext))
+            foreach (TypeDefinition typeDefinition in interopDefinitions.EnumerateUserDefinedInterfaceEntriesTypes())
             {
                 module.TopLevelTypes.Add(typeDefinition);
             }
 
             // Also emit interface entries types for SZ arrays, same as for user-defined types above
-            foreach (TypeDefinition typeDefinition in interopDefinitions.EnumerateSzArrayInterfaceEntriesTypes().OrderByFullyQualifiedTypeName(interopDefinitions.RuntimeContext))
+            foreach (TypeDefinition typeDefinition in interopDefinitions.EnumerateSzArrayInterfaceEntriesTypes())
             {
                 module.TopLevelTypes.Add(typeDefinition);
             }
@@ -2816,16 +2633,14 @@ internal partial class InteropGenerator
     /// <summary>
     /// Defines the dynamic type map entries for custom-mapped types.
     /// </summary>
-    /// <param name="args"><inheritdoc cref="Emit" path="/param[@name='args']/node()"/></param>
-    /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
-    /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-    /// <param name="module">The interop module being built.</param>
-    private static void DefineDynamicCustomMappedTypeMapEntries(
-        InteropGeneratorArgs args,
-        InteropDefinitions interopDefinitions,
-        InteropReferences interopReferences,
-        ModuleDefinition module)
+    /// <param name="context">The shared emission context.</param>
+    private static void DefineDynamicCustomMappedTypeMapEntries(InteropGeneratorEmissionContext context)
     {
+        InteropGeneratorArgs args = context.Args;
+        InteropDefinitions interopDefinitions = context.Definitions;
+        InteropReferences interopReferences = context.References;
+        ModuleDefinition module = context.Module;
+
         try
         {
             DynamicCustomMappedTypeMapEntriesBuilder.AssemblyAttributes(
@@ -2843,18 +2658,22 @@ internal partial class InteropGenerator
     /// <summary>
     /// Defines the external type map entries for Windows Runtime IID lookups.
     /// </summary>
-    /// <param name="args">The arguments for this invocation.</param>
-    /// <param name="inputs">The canonicalized discovery inputs.</param>
-    /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
-    /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-    /// <param name="module">The interop module being built.</param>
-    private static void DefineWindowsRuntimeIidTypeMapEntries(
-        InteropGeneratorArgs args,
-        InteropGeneratorEmitInputs inputs,
-        InteropDefinitions interopDefinitions,
-        InteropReferences interopReferences,
-        ModuleDefinition module)
+    /// <param name="context">The shared emission context.</param>
+    private static void DefineWindowsRuntimeIidTypeMapEntries(InteropGeneratorEmissionContext context)
     {
+        InteropGeneratorArgs args = context.Args;
+        InteropGeneratorDiscoveryState discoveryState = context.DiscoveryState;
+        InteropGeneratorEmitInputs inputs = context.Inputs;
+        InteropDefinitions interopDefinitions = context.Definitions;
+        InteropReferences interopReferences = context.References;
+        ModuleDefinition module = context.Module;
+
+        // Skip the sidecar IID map when no input references 'GetIid<T>'
+        if (!discoveryState.HasIidLookupReferences)
+        {
+            return;
+        }
+
         try
         {
             WindowsRuntimeIidTypeMapBuilder.Build(
@@ -2873,16 +2692,14 @@ internal partial class InteropGenerator
     /// <summary>
     /// Defines the <c>[IgnoresAccessChecksTo]</c> attribute, and applies it to the assembly for each input reference.
     /// </summary>
-    /// <param name="discoveryState"><inheritdoc cref="Emit" path="/param[@name='state']/node()"/></param>
-    /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
-    /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-    /// <param name="module">The interop module being built.</param>
-    private static void DefineIgnoresAccessChecksToAttributes(
-        InteropGeneratorDiscoveryState discoveryState,
-        InteropDefinitions interopDefinitions,
-        InteropReferences interopReferences,
-        ModuleDefinition module)
+    /// <param name="context">The shared emission context.</param>
+    private static void DefineIgnoresAccessChecksToAttributes(InteropGeneratorEmissionContext context)
     {
+        InteropGeneratorDiscoveryState discoveryState = context.DiscoveryState;
+        InteropDefinitions interopDefinitions = context.Definitions;
+        InteropReferences interopReferences = context.References;
+        ModuleDefinition module = context.Module;
+
         try
         {
             // Emit the '[IgnoresAccessChecksTo]' type first
@@ -2893,7 +2710,7 @@ internal partial class InteropGenerator
                 winRTSdkXamlProjectionModule: discoveryState.WindowsRuntimeSdkXamlProjectionModule,
                 winRTProjectionModule: discoveryState.WindowsRuntimeSdkProjectionModule,
                 winRTComponentModule: discoveryState.WindowsRuntimeComponentModule,
-                referencePathModules: discoveryState.Modules.Values.OrderByFullyQualifiedName(),
+                referencePathModules: discoveryState.Modules.Values,
                 interopDefinitions: interopDefinitions,
                 interopReferences: interopReferences,
                 module: module);
@@ -2907,10 +2724,12 @@ internal partial class InteropGenerator
     /// <summary>
     /// Emits assembly attributes for the interop assembly being generated.
     /// </summary>
-    /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-    /// <param name="module">The interop module being built.</param>
-    private static void EmitMetadataAssemblyAttributes(InteropReferences interopReferences, ModuleDefinition module)
+    /// <param name="context">The shared emission context.</param>
+    private static void EmitMetadataAssemblyAttributes(InteropGeneratorEmissionContext context)
     {
+        InteropReferences interopReferences = context.References;
+        ModuleDefinition module = context.Module;
+
         try
         {
             MetadataAssemblyAttributesBuilder.AssemblyAttributes(interopReferences, module);
@@ -2927,7 +2746,12 @@ internal partial class InteropGenerator
     /// <param name="args"><inheritdoc cref="Emit" path="/param[@name='args']/node()"/></param>
     /// <param name="module">The module to write to disk.</param>
     /// <param name="fingerprint">The emission fingerprint to cache with the output, or an empty span to disable caching.</param>
-    private static void WriteInteropModuleToDisk(InteropGeneratorArgs args, ModuleDefinition module, ReadOnlySpan<byte> fingerprint)
+    /// <param name="payloads">The assembly attribute payloads serialized by the final ordering pass.</param>
+    private static void WriteInteropModuleToDisk(
+        InteropGeneratorArgs args,
+        ModuleDefinition module,
+        ReadOnlySpan<byte> fingerprint,
+        CustomAttributePayloadCache payloads)
     {
         string winRTInteropAssemblyPath = Path.Combine(args.GeneratedAssemblyDirectory, InteropNames.WindowsRuntimeInteropDllName);
 
@@ -2935,11 +2759,11 @@ internal partial class InteropGenerator
         {
             if (fingerprint.IsEmpty)
             {
-                module.Write(winRTInteropAssemblyPath);
+                InteropModuleWriter.Write(module, winRTInteropAssemblyPath, payloads);
             }
             else
             {
-                InteropGenerationCache.Write(args, module, fingerprint);
+                InteropGenerationCache.Write(args, module, fingerprint, payloads);
             }
         }
         catch (Exception e)
