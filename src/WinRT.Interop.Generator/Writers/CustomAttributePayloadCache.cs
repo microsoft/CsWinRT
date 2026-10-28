@@ -189,7 +189,9 @@ internal sealed class CustomAttributePayloadCache
         }
 
         /// <inheritdoc/>
-        protected override void Initialize(IList<CustomAttributeArgument> fixedArguments, IList<CustomAttributeNamedArgument> namedArguments)
+        protected override void Initialize(
+            IList<CustomAttributeArgument> fixedArguments,
+            IList<CustomAttributeNamedArgument> namedArguments)
         {
             foreach (CustomAttributeArgument argument in _payload.Signature.FixedArguments)
             {
