@@ -50,6 +50,8 @@ internal sealed class MemoizingMethodBodySerializer : IMethodBodySerializer
     {
         ArgumentNullException.ThrowIfNull(context);
 
+        // AsmResolver creates the build context after this serializer is constructed. The first method callback supplies
+        // its token and symbols providers, letting us create one memoizing context to reuse for the rest of the write.
         if (_context is null)
         {
             // Without observing errors, failed requests can't be told apart from successful ones
