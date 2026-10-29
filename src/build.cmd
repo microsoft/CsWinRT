@@ -591,6 +591,15 @@ copy /y "%~1" "%~2\" >nul
 exit /b %errorlevel%
 
 :buildunittest
+rem Restore TestWinRT's native NuGet dependencies into its solution-local packages directory
+call :exec %msbuild_path%msbuild.exe %cswinrt_build_params% ^
+  /t:Restore ^
+  /p:RestorePackagesConfig=true ^
+  /p:Platform=%cswinrt_platform% ^
+  /p:Configuration=%cswinrt_configuration% ^
+  "%this_dir%TestWinRT\Test.sln" ^
+  /bl:"%cswinrt_artifacts_dir%\logs\testwinrt-restore.binlog"
+if errorlevel 1 exit /b !errorlevel!
 set "cswinrt_test_params=/p:Platform=%cswinrt_platform%"
 set "cswinrt_test_params=%cswinrt_test_params% /p:Configuration=%cswinrt_configuration%"
 set "cswinrt_test_params=%cswinrt_test_params% /p:RuntimeIdentifier=win-%cswinrt_platform%"

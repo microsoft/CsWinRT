@@ -116,7 +116,7 @@ jobs:
 
   unit-test:
     name: UnitTest (${{ matrix.runtime }}, x64 Release)
-    if: inputs.unit_tests
+    if: github.event_name == 'pull_request' || inputs.unit_tests
     runs-on: windows-2025-vs2026
     timeout-minutes: 120
     strategy:
