@@ -167,6 +167,8 @@ internal sealed partial class WinMDWriter
     /// <returns>The imported <see cref="ITypeDefOrRef"/> for use in the output WinMD.</returns>
     private ITypeDefOrRef ImportTypeReference(ITypeDefOrRef type)
     {
+        ValidateExportedTypeReference(type, type.FullName);
+
         if (type is TypeDefinition typeDef)
         {
             string fullName = typeDef.FullName;

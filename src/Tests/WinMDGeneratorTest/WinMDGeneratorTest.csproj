@@ -37,6 +37,8 @@
     match the path published as assembly metadata below (leaving the tests running a stale tool).
   -->
   <ItemGroup>
+    <ProjectReference Include="..\..\WinRT.Runtime2\WinRT.Runtime.csproj"
+                      UndefineProperties="BuildToolArch;PublishBuildTool;RuntimeIdentifier;SelfContained" />
     <ProjectReference Include="..\..\WinRT.WinMD.Generator\WinRT.WinMD.Generator.csproj"
                       ReferenceOutputAssembly="false"
                       OutputItemType="_CsWinRTToolReference"

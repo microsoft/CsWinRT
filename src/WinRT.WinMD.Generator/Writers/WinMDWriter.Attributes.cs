@@ -504,12 +504,18 @@ internal sealed partial class WinMDWriter
             return false;
         }
 
+        if (attribute.Constructor?.DeclaringType is TypeDefinition definition && definition.IsExcludedFromWindowsMetadata())
+        {
+            return false;
+        }
+
         // Skip attributes already handled separately by the generator.
         // '[Overload]' is emitted by 'AddOverloadAttributesForType', which honors any author-specified
         // name (see 'RecordUserSpecifiedOverloadName'), so copying it here would produce duplicates.
         if (attributeTypeName is
             "System.Runtime.InteropServices.GuidAttribute" or
             "WindowsRuntime.Xaml.GeneratedCustomPropertyProviderAttribute" or
+            "WindowsRuntime.InteropServices.ExcludeFromWindowsMetadataAttribute" or
             "Windows.Foundation.Metadata.VersionAttribute" or
             "Windows.Foundation.Metadata.OverloadAttribute" or
             "System.Reflection.DefaultMemberAttribute")
@@ -529,9 +535,19 @@ internal sealed partial class WinMDWriter
             return false;
         }
 
+        // Referenced attribute types can also be explicitly excluded from component metadata
+        if (runtimeContext is not null &&
+            attribute.Constructor?.DeclaringType is { } attributeType &&
+            attributeType is not TypeDefinition &&
+            attributeType.Resolve(runtimeContext, out TypeDefinition? attributeTypeDefinition) == ResolutionStatus.Success &&
+            attributeTypeDefinition!.IsExcludedFromWindowsMetadata())
+        {
+            return false;
+        }
+
         // A public attribute type does not guarantee that its selected constructor is public
         if (runtimeContext is not null &&
-            attribute.Constructor.Resolve(runtimeContext, out MethodDefinition? constructor) == ResolutionStatus.Success &&
+            attribute.Constructor!.Resolve(runtimeContext, out MethodDefinition? constructor) == ResolutionStatus.Success &&
             !constructor!.IsPublic)
         {
             return false;

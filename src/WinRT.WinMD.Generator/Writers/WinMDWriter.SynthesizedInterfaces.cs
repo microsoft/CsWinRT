@@ -80,7 +80,8 @@ internal sealed partial class WinMDWriter
         // Collect members that come from interface implementations
         HashSet<string> membersFromInterfaces = [];
 
-        // Use all interfaces including inherited ones from the input type
+        // Include inherited interfaces without crossing an explicitly excluded base
+        // Hidden contracts must not suppress members explicitly exposed by this type
         List<InterfaceImplementation> allInterfaces = GatherAllInterfaces(inputType);
         foreach (InterfaceImplementation interfaceImplementation in allInterfaces)
         {
@@ -88,21 +89,30 @@ internal sealed partial class WinMDWriter
                 ? SafeResolve((typeSpecification.Signature as GenericInstanceTypeSignature)?.GenericType)
                 : SafeResolve(interfaceImplementation.Interface);
 
-            if (interfaceDef is not null)
+            if (interfaceDef is not null && !interfaceDef.IsExcludedFromWindowsMetadata())
             {
                 foreach (MethodDefinition interfaceMethod in interfaceDef.Methods)
                 {
-                    _ = membersFromInterfaces.Add(interfaceMethod.Name?.Value ?? "");
+                    if (!interfaceMethod.IsExcludedFromWindowsMetadata())
+                    {
+                        _ = membersFromInterfaces.Add(interfaceMethod.Name?.Value ?? "");
+                    }
                 }
 
                 foreach (PropertyDefinition prop in interfaceDef.Properties)
                 {
-                    _ = membersFromInterfaces.Add(prop.Name?.Value ?? "");
+                    if (!prop.IsExcludedFromWindowsMetadata())
+                    {
+                        _ = membersFromInterfaces.Add(prop.Name?.Value ?? "");
+                    }
                 }
 
                 foreach (EventDefinition @event in interfaceDef.Events)
                 {
-                    _ = membersFromInterfaces.Add(@event.Name?.Value ?? "");
+                    if (!@event.IsExcludedFromWindowsMetadata())
+                    {
+                        _ = membersFromInterfaces.Add(@event.Name?.Value ?? "");
+                    }
                 }
             }
         }
@@ -115,7 +125,7 @@ internal sealed partial class WinMDWriter
         // (private methods with dots in their names like "AuthoringTest.IDouble.GetDouble")
         foreach (MethodDefinition method in inputType.Methods)
         {
-            if (!method.IsPublic && method.Name?.Value?.Contains('.') == true)
+            if (!method.IsPublic && method.Name?.Value?.Contains('.') == true && !IsIgnoredInterfaceImplementation(inputType, method))
             {
                 // Extract the method name after the last dot
                 string fullName = method.Name.Value;
@@ -133,7 +143,9 @@ internal sealed partial class WinMDWriter
         // generates 'MethodImpl' entries that tell us which methods come from interfaces.
         foreach (MethodImplementation methodImpl in inputType.MethodImplementations)
         {
-            if (methodImpl.Body is MethodDefinition bodyMethod && bodyMethod.IsPublic)
+            if (methodImpl.Body is MethodDefinition bodyMethod &&
+                bodyMethod.IsPublic &&
+                !IsIgnoredInterfaceImplementation(methodImpl))
             {
                 _ = membersFromInterfaces.Add(bodyMethod.Name?.Value ?? "");
             }
@@ -186,7 +198,7 @@ internal sealed partial class WinMDWriter
         // Add members to the synthesized interface
         foreach (MethodDefinition method in inputType.Methods)
         {
-            if (!method.IsPublic)
+            if (!method.IsPublic || method.IsExcludedFromWindowsMetadata())
             {
                 continue;
             }
@@ -221,7 +233,7 @@ internal sealed partial class WinMDWriter
             bool isStatic = property.GetMethod?.IsStatic == true || property.SetMethod?.IsStatic == true;
             bool isPublic = property.GetMethod?.IsPublic == true || property.SetMethod?.IsPublic == true;
 
-            if (!isPublic)
+            if (!isPublic || property.IsExcludedFromWindowsMetadata())
             {
                 continue;
             }
@@ -271,7 +283,7 @@ internal sealed partial class WinMDWriter
             bool isStatic = @event.AddMethod?.IsStatic == true;
             bool isPublic = @event.AddMethod?.IsPublic == true || @event.RemoveMethod?.IsPublic == true;
 
-            if (!isPublic)
+            if (!isPublic || @event.IsExcludedFromWindowsMetadata())
             {
                 continue;
             }
@@ -295,7 +307,7 @@ internal sealed partial class WinMDWriter
         }
 
         // Only emit the interface if it has members, or if it's the default and the class has no other interfaces
-        if (hasMembers || (interfaceType == SynthesizedInterfaceType.Default && inputType.Interfaces.Count == 0))
+        if (hasMembers || (interfaceType == SynthesizedInterfaceType.Default && classOutputType.Interfaces.Count == 0))
         {
             _outputModule.TopLevelTypes.Add(synthesizedInterface);
 

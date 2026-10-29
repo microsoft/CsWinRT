@@ -592,6 +592,8 @@ public sealed class Test_WindowsRuntimeActivationFactoryAttributeAnalyzer
     [DataRow("typeof(IGreeter)")]
     [DataRow("typeof(Outer.NestedGreeter)")]
     [DataRow("typeof(NonActivatableGreeter)")]
+    [DataRow("typeof(IgnoredGreeter)")]
+    [DataRow("typeof(FilteredGreeter)")]
     public async Task FactoryExtension_ForNonActivatableAuthoredClass_Warns(string runtimeClassType)
     {
         string source = $$"""
@@ -600,6 +602,18 @@ public sealed class Test_WindowsRuntimeActivationFactoryAttributeAnalyzer
             namespace MyComponent
             {
                 internal sealed class InternalGreeter;
+
+                [WindowsRuntime.InteropServices.ExcludeFromWindowsMetadata]
+                public sealed class IgnoredGreeter;
+
+                public sealed class FilteredGreeter
+                {
+                    [WindowsRuntime.InteropServices.ExcludeFromWindowsMetadata]
+                    public FilteredGreeter() { }
+
+                    [WindowsRuntime.InteropServices.ExcludeFromWindowsMetadata]
+                    public static void Helper() { }
+                }
 
                 public interface IGreeter;
 

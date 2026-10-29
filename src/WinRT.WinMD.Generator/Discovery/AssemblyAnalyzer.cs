@@ -51,7 +51,7 @@ internal sealed class AssemblyAnalyzer
 
         foreach (TypeDefinition type in _inputModule.TopLevelTypes)
         {
-            if (!type.IsPublic)
+            if (!type.IsPublic || type.IsExcludedFromWindowsMetadata())
             {
                 continue;
             }

@@ -126,6 +126,24 @@ internal sealed class WellKnownWinMDExceptions : IGeneratorErrorFactory, IWindow
     }
 
     /// <summary>
+    /// An exclusion marker cannot be applied without breaking a Windows Runtime contract.
+    /// </summary>
+    public static Exception InvalidMetadataExclusion(string declaration, string reason)
+    {
+        return Exception(15, $"Declaration '{declaration}' cannot use '[ExcludeFromWindowsMetadata]': {reason}");
+    }
+
+    /// <summary>
+    /// An exported declaration references a type excluded from component metadata.
+    /// </summary>
+    public static Exception IgnoredTypeInExportedSignature(string declaration, string type)
+    {
+        return Exception(16,
+            $"Exported declaration '{declaration}' references ignored type '{type}'. " +
+            "Exclude the declaration too, or use an exported Windows Runtime type.");
+    }
+
+    /// <summary>
     /// Creates a new exception with the specified id and message.
     /// </summary>
     private static Exception Exception(int id, string message, Exception? innerException = null)

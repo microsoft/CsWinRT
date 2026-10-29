@@ -55,3 +55,5 @@ CSWINRT2045 | WindowsRuntime.SourceGenerator | Error | Invalid by-reference auth
 CSWINRT2046 | WindowsRuntime.SourceGenerator | Error | Invalid by-reference authored span
 CSWINRT2047 | WindowsRuntime.SourceGenerator | Error | Authored parameter name conflicts with generated code
 CSWINRT2048 | WindowsRuntime.SourceGenerator | Warning | Reading from a write-only 'Span<T>' parameter
+CSWINRT2049 | WindowsRuntime.SourceGenerator | Error | Invalid Windows Runtime metadata exclusion
+CSWINRT2050 | WindowsRuntime.SourceGenerator | Error | Ignored type in exported Windows Runtime signature

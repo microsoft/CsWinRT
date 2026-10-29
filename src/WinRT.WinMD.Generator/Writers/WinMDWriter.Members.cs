@@ -264,6 +264,11 @@ internal sealed partial class WinMDWriter
     /// <param name="isInterfaceParent">Whether the parent type is an interface (forces instance signatures).</param>
     private void AddPropertyToType(TypeDefinition outputType, PropertyDefinition inputProperty, bool isInterfaceParent)
     {
+        if (inputProperty.IsExcludedFromWindowsMetadata())
+        {
+            return;
+        }
+
         TypeSignature propertyType = MapTypeSignatureToOutput(inputProperty.Signature!.ReturnType);
 
         // For interface parents (synthesized interfaces), always use instance signatures
@@ -401,6 +406,11 @@ internal sealed partial class WinMDWriter
     /// <param name="isInterfaceParent">Whether the parent type is an interface (forces instance signatures).</param>
     private void AddEventToType(TypeDefinition outputType, EventDefinition inputEvent, bool isInterfaceParent)
     {
+        if (inputEvent.IsExcludedFromWindowsMetadata())
+        {
+            return;
+        }
+
         ITypeDefOrRef eventType = ImportTypeReference(inputEvent.EventType!);
 
         TypeReference eventRegistrationTokenType = GetOrCreateTypeReference(

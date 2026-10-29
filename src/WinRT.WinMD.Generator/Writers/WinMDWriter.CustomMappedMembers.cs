@@ -37,7 +37,8 @@ internal sealed partial class WinMDWriter
     /// <param name="outputType">The output class <see cref="TypeDefinition"/> in the WinMD.</param>
     private void ProcessCustomMappedInterfaces(TypeDefinition inputType, TypeDefinition outputType)
     {
-        // Gather all interfaces from the type and its base types (matching old generator's 'GetInterfaces')
+        // Gather interfaces from this type and its base types, stopping before an explicitly excluded base
+        // Contracts inherited only through that base must be redeclared on this type to be projected
         List<InterfaceImplementation> allInterfaces = GatherAllInterfaces(inputType);
 
         // Collect all mapped interfaces and determine if they are publicly or explicitly implemented
@@ -605,8 +606,8 @@ internal sealed partial class WinMDWriter
     }
 
     /// <summary>
-    /// Gathers all interfaces from a type and its base type chain, including interfaces
-    /// inherited from interfaces.
+    /// Gathers interface candidates from a type and its base class chain without crossing an
+    /// explicitly excluded base, including interfaces inherited from other interfaces.
     /// </summary>
     /// <remarks>
     /// <para>
@@ -614,13 +615,17 @@ internal sealed partial class WinMDWriter
     /// by fully-qualified name. Only publicly accessible interfaces are included in the result.
     /// </para>
     /// <para>
-    /// This is equivalent to the old generator's <c>GetInterfaces</c> method and ensures all
-    /// transitive interface implementations are discovered.
+    /// This follows the old generator's <c>GetInterfaces</c> traversal for transitive interface
+    /// implementations, but stops at explicitly excluded base classes. Redeclaring an interface
+    /// on the derived class includes that contract and its required interfaces.
     /// </para>
     /// </remarks>
     /// <param name="type">The <see cref="TypeDefinition"/> to gather interfaces from.</param>
+    /// <param name="typeArguments">The constructed type arguments, if the starting type is generic.</param>
     /// <returns>A list of all <see cref="InterfaceImplementation"/> entries found.</returns>
-    private List<InterfaceImplementation> GatherAllInterfaces(TypeDefinition type)
+    private List<InterfaceImplementation> GatherAllInterfaces(
+        TypeDefinition type,
+        TypeSignature[]? typeArguments = null)
     {
         HashSet<string> seen = new(StringComparer.Ordinal);
         List<InterfaceImplementation> result = [];
@@ -680,28 +685,30 @@ internal sealed partial class WinMDWriter
         }
 
         // Collect from the type itself
-        CollectFromType(type, null);
+        CollectFromType(type, typeArguments);
 
-        // Walk base types, resolving generic arguments
+        // Walk base types without crossing an explicitly excluded base, resolving generic arguments
         ITypeDefOrRef? baseTypeRef = type.BaseType;
 
         while (baseTypeRef is not null)
         {
             TypeDefinition? baseDef = SafeResolve(baseTypeRef);
-            if (baseDef is null)
+            if (baseDef is null || baseDef.IsExcludedFromWindowsMetadata())
             {
                 break;
             }
 
-            // Get generic arguments from the base type reference
+            // Resolve the next base's arguments in the current constructed type's context
             TypeSignature[]? baseGenericArgs = baseTypeRef is TypeSpecification baseTypeSpecification &&
                 baseTypeSpecification.Signature is GenericInstanceTypeSignature baseGenericInstanceSignature
-                ? [.. baseGenericInstanceSignature.TypeArguments]
+                ? [.. baseGenericInstanceSignature.TypeArguments.Select(argument =>
+                    typeArguments is null ? argument : ResolveGenericArg(argument, typeArguments))]
                 : null;
 
             CollectFromType(baseDef, baseGenericArgs);
 
             baseTypeRef = baseDef.BaseType;
+            typeArguments = baseGenericArgs;
         }
 
         return result;
