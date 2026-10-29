@@ -2,6 +2,7 @@
 
 #include "Class.g.h"
 #include "winrt/Windows.Foundation.Collections.h"
+#include <functional>
 
 namespace winrt::TestComponentCSharp::implementation
 {
@@ -74,6 +75,7 @@ namespace winrt::TestComponentCSharp::implementation
         std::atomic<int32_t> _asyncResult;
         std::atomic<int32_t> _asyncProgress;
         std::atomic<bool> _failingCompletedHandlerInvoked{ false };
+        std::function<bool(int32_t)> _completeWrlAsync;
         Windows::Foundation::Point _point{};
         Windows::Foundation::Rect _rect{};
         Windows::Foundation::Size _size{};
@@ -373,6 +375,10 @@ namespace winrt::TestComponentCSharp::implementation
         Windows::Foundation::IAsyncActionWithProgress<int32_t> DoitAsyncWithProgress();
         Windows::Foundation::IAsyncOperation<int32_t> AddAsync(int32_t lhs, int32_t rhs);
         Windows::Foundation::IAsyncOperationWithProgress<int32_t, int32_t> AddAsyncWithProgress(int32_t lhs, int32_t rhs);
+        Windows::Foundation::IAsyncOperationWithProgress<uint32_t, uint32_t> WrlAddAsyncWithProgress(uint32_t lhs, uint32_t rhs);
+        Windows::Foundation::IAsyncOperationWithProgress<uint32_t, uint32_t> WrlAddAsyncWithProgress(uint32_t lhs, uint32_t rhs,
+            Windows::Foundation::AsyncOperationWithProgressCompletedHandler<uint32_t, uint32_t> const& observer);
+        bool TryCompleteWrlAsync(int32_t hr);
 
         void SetFailingCompletedHandler(Windows::Foundation::IAsyncAction const& action, int32_t hr);
         bool FailingCompletedHandlerInvoked();
@@ -438,6 +444,7 @@ namespace winrt::TestComponentCSharp::implementation
         static com_array<int32_t> UnboxInt32Array(IInspectable const& obj);
         static com_array<bool> UnboxBooleanArray(IInspectable const& obj);
         static com_array<hstring> UnboxStringArray(IInspectable const& obj);
+        static com_array<Windows::Foundation::IInspectable> UnboxObjectArray(IInspectable const& obj);
 
         static int32_t UnboxInt32UsingPropertyValue(IInspectable const& obj);
         static hstring UnboxStringUsingPropertyValue(IInspectable const& obj);
@@ -445,6 +452,7 @@ namespace winrt::TestComponentCSharp::implementation
         static com_array<int32_t> UnboxInt32ArrayUsingPropertyValue(IInspectable const& obj);
         static com_array<bool> UnboxBooleanArrayUsingPropertyValue(IInspectable const& obj);
         static com_array<Windows::Foundation::Point> UnboxPointArrayUsingPropertyValue(IInspectable const& obj);
+        static com_array<Windows::Foundation::IInspectable> UnboxObjectArrayUsingPropertyValue(IInspectable const& obj);
  
         static void UnboxAndCallProgressHandler(IInspectable const& httpProgressHandler);
         double Calculate(winrt::Windows::Foundation::Collections::IVector<winrt::Windows::Foundation::IReference<double>> const& values);

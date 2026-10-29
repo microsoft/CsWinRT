@@ -263,6 +263,28 @@ internal static class InteropCustomAttributeFactory
     }
 
     /// <summary>
+    /// Creates an external IID type map entry, conditional on the public type being retained.
+    /// </summary>
+    /// <param name="value">The assembly-qualified structural name used to locate the provider.</param>
+    /// <param name="target">The IID provider type.</param>
+    /// <param name="trimTarget">The public type controlling retention.</param>
+    /// <param name="interopReferences">The references for this invocation.</param>
+    /// <returns>The external type map entry.</returns>
+    public static CustomAttribute TypeMapWindowsRuntimeIidTypeMapGroup(
+        string value,
+        TypeSignature target,
+        TypeSignature trimTarget,
+        InteropReferences interopReferences)
+    {
+        // '[TypeMap<WindowsRuntimeIidTypeMapGroup>(<VALUE>, <TARGET>, <TRIM_TARGET>)]'
+        return new(interopReferences.TypeMapAttributeWindowsRuntimeIidTypeMapGroup_ctor_TrimTarget, new CustomAttributeSignature(
+            fixedArguments: [
+                new CustomAttributeArgument(interopReferences.String, value),
+                TypeArgument(target, interopReferences),
+                TypeArgument(trimTarget, interopReferences)]));
+    }
+
+    /// <summary>
     /// Creates a new custom attribute value for <see cref="TypeMapAttribute{TTypeMapGroup}"/> (and imports all metadata elements for it).
     /// </summary>
     /// <param name="source"><inheritdoc cref="TypeMapAssociationAttribute{TTypeMapGroup}.TypeMapAssociationAttribute(Type, Type)" path="/param[@name='source']/node()"/></param>

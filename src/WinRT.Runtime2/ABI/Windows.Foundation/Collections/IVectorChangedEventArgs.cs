@@ -11,20 +11,29 @@ using WindowsRuntime.InteropServices;
 using WindowsRuntime.InteropServices.Marshalling;
 using static System.Runtime.InteropServices.ComWrappers;
 
-#pragma warning disable IDE0008, IDE1006
+#pragma warning disable IL2026, IDE0008, IDE1006
 
-#pragma warning disable IL2026 // Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code
 [assembly: TypeMap<WindowsRuntimeMetadataTypeMapGroup>(
     value: "Windows.Foundation.Collections.IVectorChangedEventArgs",
     target: typeof(IVectorChangedEventArgs),
     trimTarget: typeof(IVectorChangedEventArgs))]
-#pragma warning restore IL2026 // Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code
+
+[assembly: TypeMap<WindowsRuntimeIidTypeMapGroup>(
+    value: "[WinRT.Runtime]Windows.Foundation.Collections.IVectorChangedEventArgs",
+    target: typeof(ABI.Windows.Foundation.Collections.IVectorChangedEventArgsIidProvider),
+    trimTarget: typeof(IVectorChangedEventArgs))]
 
 [assembly: TypeMapAssociation<DynamicInterfaceCastableImplementationTypeMapGroup>(
     source: typeof(IVectorChangedEventArgs),
     proxy: typeof(ABI.Windows.Foundation.Collections.IVectorChangedEventArgsInterfaceImpl))]
 
 namespace ABI.Windows.Foundation.Collections;
+
+/// <summary>
+/// IID metadata for <see cref="global::Windows.Foundation.Collections.IVectorChangedEventArgs"/>.
+/// </summary>
+[Guid("575933DF-34FE-4480-AF15-07691F3D5D9B")]
+file static class IVectorChangedEventArgsIidProvider;
 
 /// <summary>
 /// Marshaller for <see cref="IVectorChangedEventArgs"/>.

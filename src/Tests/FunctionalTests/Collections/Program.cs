@@ -684,6 +684,33 @@ instance2.Collection6Call((IReadOnlyList<string> a, out IReadOnlyList<string> b)
     return [.. a];
 });
 
+// Dictionary collection types must be discovered even though callers only name their interfaces
+var readOnlyDictionary = CustomClass.DictionaryInstance;
+instance.BindableIterableProperty = readOnlyDictionary.Values;
+if (readOnlyDictionary.Values != instance.BindableIterableProperty)
+{
+    return 113;
+}
+
+instance.BindableIterableProperty = readOnlyDictionary.Keys;
+if (readOnlyDictionary.Keys != instance.BindableIterableProperty)
+{
+    return 114;
+}
+
+var dictionary = CustomClass.DictionaryInstance3;
+instance.BindableIterableProperty = dictionary.Values;
+if (dictionary.Values != instance.BindableIterableProperty)
+{
+    return 115;
+}
+
+instance.BindableIterableProperty = dictionary.Keys;
+if (dictionary.Keys != instance.BindableIterableProperty)
+{
+    return 116;
+}
+
 return 100;
 
 static bool SequencesEqual<T>(IEnumerable<T> x, params IEnumerable<T>[] list) => list.All((y) => x.SequenceEqual(y));
@@ -748,6 +775,8 @@ sealed partial class CustomClass : INotifyPropertyChanged
     public static IReadOnlyList<CustomClass> Instances { get; } = new CustomClass[] { };
 
     public static IReadOnlyDictionary<string, CustomClass> DictionaryInstance => new Dictionary<string, CustomClass>();
+
+    public static IDictionary<string, CustomClass> DictionaryInstance3 { get; } = new Dictionary<string, CustomClass>();
 
     public static IReadOnlyDictionary<int, CustomClass> DictionaryInstance2
     {

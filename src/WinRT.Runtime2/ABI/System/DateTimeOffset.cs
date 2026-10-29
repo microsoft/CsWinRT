@@ -10,9 +10,8 @@ using WindowsRuntime.InteropServices;
 using WindowsRuntime.InteropServices.Marshalling;
 using static System.Runtime.InteropServices.ComWrappers;
 
-#pragma warning disable IDE1006, CA1416
+#pragma warning disable IL2026, IDE1006, CA1416
 
-#pragma warning disable IL2026 // Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code
 [assembly: TypeMap<WindowsRuntimeMetadataTypeMapGroup>(
     value: "Windows.Foundation.DateTime",
     target: typeof(ABI.System.DateTimeOffset),
@@ -22,11 +21,21 @@ using static System.Runtime.InteropServices.ComWrappers;
     value: "Windows.Foundation.IReference`1<Windows.Foundation.DateTime>",
     target: typeof(ABI.System.DateTimeOffset),
     trimTarget: typeof(DateTimeOffset))]
-#pragma warning restore IL2026 // Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code
+
+[assembly: TypeMap<WindowsRuntimeIidTypeMapGroup>(
+    value: "[#System]System.Nullable`1[[#System]System.DateTimeOffset]",
+    target: typeof(ABI.System.DateTimeOffsetIidProvider),
+    trimTarget: typeof(DateTimeOffset))]
 
 [assembly: TypeMapAssociation<WindowsRuntimeComWrappersTypeMapGroup>(typeof(DateTimeOffset), typeof(ABI.System.DateTimeOffset))]
 
 namespace ABI.System;
+
+/// <summary>
+/// IID metadata for the nullable projection of <see cref="global::System.DateTimeOffset"/>.
+/// </summary>
+[Guid("5541D8A7-497C-5AA4-86FC-7713ADBF2A2C")]
+file static class DateTimeOffsetIidProvider;
 
 /// <summary>
 /// ABI type for <see cref="global::System.DateTimeOffset"/>.

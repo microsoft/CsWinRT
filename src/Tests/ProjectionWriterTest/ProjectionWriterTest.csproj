@@ -76,8 +76,10 @@
     <EmbeddedResource Include="Resources\NonGenericEnumerableNativeObjects.cs" />
   </ItemGroup>
 
-  <!-- Pass the built tool and the pinned WinUI metadata paths to the tests via assembly metadata. -->
+  <!-- Pass the built tool, pinned WinUI metadata and repository NuGet configuration paths to the tests via assembly metadata. -->
   <ItemGroup>
+    <AssemblyMetadata Include="RepositoryNuGetConfigPath"
+                      Value="$(MSBuildThisFileDirectory)..\..\..\nuget.config" />
     <AssemblyMetadata Include="ProjectionRefGeneratorAssemblyPath"
                       Value="$(MSBuildThisFileDirectory)..\..\WinRT.Projection.Ref.Generator\bin\$(Configuration)\net10.0\cswinrtprojectionrefgen.dll" />
     <AssemblyMetadata Include="ProjectionGeneratorAssemblyPath"

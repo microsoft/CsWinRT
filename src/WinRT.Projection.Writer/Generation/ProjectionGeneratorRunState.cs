@@ -5,6 +5,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading;
 using AsmResolver.DotNet;
+using WindowsRuntime.ProjectionWriter.Metadata;
 
 namespace WindowsRuntime.ProjectionWriter.Generation;
 
@@ -48,12 +49,12 @@ internal sealed class ProjectionGeneratorRunState
     public ConcurrentDictionary<string, string> AuthoredTypeNameToMetadataMap { get; } = [];
 
     /// <summary>
-    /// Gets the (projected-type-name -> source <c>.winmd</c> stem) map populated when emitting projected
+    /// Gets the (projected-type-name -> source metadata) map populated when emitting projected
     /// types and recording exported authored types (see
     /// <see cref="Factories.MetadataAttributeFactory.AddWindowsRuntimeMetadataTypeEntry"/>). It is emitted at the
-    /// end of generation as the centralized, trimmable <c>ABI.WindowsRuntimeMetadataTypes</c> lookup type.
+    /// end of generation as the centralized contract lookup and conditional IID map.
     /// </summary>
-    public ConcurrentDictionary<string, string> WindowsRuntimeMetadataTypeEntries { get; } = [];
+    public ConcurrentDictionary<string, WindowsRuntimeMetadataTypeEntry> WindowsRuntimeMetadataTypeEntries { get; } = [];
 
     /// <summary>
     /// Gets the effective exclusive-to IDIC selection to preserve in reference-projection assembly metadata.

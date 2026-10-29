@@ -87,6 +87,7 @@ public class Test_SetterOnlyProperties
         {
             InputPaths = [inputPath],
             OutputFolder = outputFolder,
+            OutputAssemblyName = "Projection",
             Include = ["Contoso"],
 
             // Emits the explicit interface implementations the forwarding getter lives in.

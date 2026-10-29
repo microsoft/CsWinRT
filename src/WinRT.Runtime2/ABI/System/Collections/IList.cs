@@ -11,7 +11,7 @@ using WindowsRuntime.InteropServices;
 using WindowsRuntime.InteropServices.Marshalling;
 using static System.Runtime.InteropServices.ComWrappers;
 
-#pragma warning disable CA2256, IDE0008, IDE1006
+#pragma warning disable IL2026, IDE0008, IDE1006, CA2256
 
 [assembly: TypeMapAssociation<DynamicInterfaceCastableImplementationTypeMapGroup>(
     typeof(IList),
@@ -21,7 +21,18 @@ using static System.Runtime.InteropServices.ComWrappers;
     typeof(ICollection),
     typeof(ABI.System.Collections.IListInterfaceImpl))]
 
+[assembly: TypeMap<WindowsRuntimeIidTypeMapGroup>(
+    value: "[#System]System.Collections.IList",
+    target: typeof(ABI.System.Collections.IListIidProvider),
+    trimTarget: typeof(global::System.Collections.IList))]
+
 namespace ABI.System.Collections;
+
+/// <summary>
+/// IID metadata for <see cref="global::System.Collections.IList"/>.
+/// </summary>
+[Guid("393DE7DE-6FD0-4C0D-BB71-47244A113E93")]
+file static class IListIidProvider;
 
 /// <summary>
 /// Marshaller for <see cref="IList"/>.

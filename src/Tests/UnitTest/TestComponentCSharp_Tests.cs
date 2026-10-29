@@ -41,6 +41,7 @@ using Windows.UI.Notifications;
 using WindowsRuntime;
 using WindowsRuntime.InteropServices;
 using WindowsRuntime.InteropServices.Marshalling;
+using ApiContractAttribute = Windows.Foundation.Metadata.ApiContractAttribute;
 using static UnitTest.UnitTestHelper;
 
 // Test SupportedOSPlatform warnings for APIs targeting 10.0.19041.0:
@@ -65,6 +66,99 @@ namespace UnitTest
         public struct Estruct
         {
             public E value;
+        }
+
+        [TestMethod]
+        public unsafe void TestGetIidQueryInterface()
+        {
+            Check<Class>(TestObject);
+            Check<EventHandler0>(new EventHandler0(() => { }));
+            Check<int?>(42);
+            Check<Point?>(new Point(1, 2));
+            Check<BlittableStruct?>(default(BlittableStruct));
+            Check<EnumValue?>(EnumValue.One);
+            Check<CornerRadius?>(new CornerRadius(1));
+            Check<int[]>(new[] { 1, 2, 3 });
+            Check<IList<int>>(new List<int>());
+            Check<KeyValuePair<string, int>>(new KeyValuePair<string, int>("key", 42));
+            Check<EventHandler<int>>(new EventHandler<int>((sender, value) => { }));
+
+            static void Check<T>(object value)
+            {
+                void* pointer = WindowsRuntimeMarshal.ConvertToUnmanaged(value);
+                try
+                {
+                    Guid iid = WindowsRuntimeMarshal.GetIid<T>();
+                    Marshal.ThrowExceptionForHR(Marshal.QueryInterface((nint)pointer, in iid, out nint result));
+                    WindowsRuntimeMarshal.Free((void*)result);
+                }
+                finally
+                {
+                    WindowsRuntimeMarshal.Free(pointer);
+                }
+            }
+        }
+
+        [TestMethod]
+        public void TestGetIidMappedTypes()
+        {
+            Assert.AreEqual(WellKnownInterfaceIIDs.IID_IInspectable, WindowsRuntimeMarshal.GetIid<object>());
+            Assert.AreEqual(WellKnownInterfaceIIDs.IID_IStringable, WindowsRuntimeMarshal.GetIid<IStringable>());
+            Assert.AreEqual(new Guid("30d5a829-7fa4-4026-83bb-d75bae4ea99e"), WindowsRuntimeMarshal.GetIid<IDisposable>());
+            Assert.AreEqual(new Guid("9e365e57-48b2-4160-956f-c7385120bbfc"), WindowsRuntimeMarshal.GetIid<Uri>());
+            Assert.AreEqual(new Guid("e5af3542-ca67-4081-995b-709dd13792df"), WindowsRuntimeMarshal.GetIid<ICommand>());
+            Assert.AreEqual(new Guid("90b17601-b065-586e-83d9-9adc3a695284"), WindowsRuntimeMarshal.GetIid<INotifyPropertyChanged>());
+        }
+
+        [TestMethod]
+        public void TestGetIidUnsupportedTypes()
+        {
+            Assert.ThrowsExactly<NotSupportedException>(() => WindowsRuntimeMarshal.GetIid<int>());
+            Assert.ThrowsExactly<NotSupportedException>(() => WindowsRuntimeMarshal.GetIid<int>());
+            Assert.ThrowsExactly<NotSupportedException>(() => WindowsRuntimeMarshal.GetIid<string>());
+            Assert.ThrowsExactly<NotSupportedException>(() => WindowsRuntimeMarshal.GetIid<Guid>());
+            Assert.ThrowsExactly<NotSupportedException>(() => WindowsRuntimeMarshal.GetIid<Exception>());
+            Assert.ThrowsExactly<NotSupportedException>(() => WindowsRuntimeMarshal.GetIid<ArgumentException>());
+            Assert.ThrowsExactly<NotSupportedException>(() => WindowsRuntimeMarshal.GetIid<Type>());
+            Assert.ThrowsExactly<NotSupportedException>(() => WindowsRuntimeMarshal.GetIid<BlittableStruct>());
+            Assert.ThrowsExactly<NotSupportedException>(() => WindowsRuntimeMarshal.GetIid<EnumValue>());
+            Assert.ThrowsExactly<NotSupportedException>(() => WindowsRuntimeMarshal.GetIid<KeyValuePair<string, int>?>());
+            Assert.ThrowsExactly<NotSupportedException>(() => WindowsRuntimeMarshal.GetIid<sbyte?>());
+            Assert.ThrowsExactly<NotSupportedException>(() => WindowsRuntimeMarshal.GetIid<nint>());
+            Assert.ThrowsExactly<NotSupportedException>(() => WindowsRuntimeMarshal.GetIid<UnitTestCSharp>());
+            Assert.ThrowsExactly<NotSupportedException>(() => WindowsRuntimeMarshal.GetIid<Estruct?>());
+            Assert.ThrowsExactly<NotSupportedException>(() => WindowsRuntimeMarshal.GetIid<IStringableInterop>());
+            Assert.ThrowsExactly<NotSupportedException>(() => WindowsRuntimeMarshal.GetIid<IList<UnitTestCSharp>>());
+            Assert.ThrowsExactly<NotSupportedException>(() => WindowsRuntimeMarshal.GetIid<EventHandler>());
+            Assert.ThrowsExactly<NotSupportedException>(() => WindowsRuntimeMarshal.GetIid<ICollection<KeyValuePair<string, int>>>());
+            Assert.ThrowsExactly<NotSupportedException>(() => WindowsRuntimeMarshal.GetIid<int[,]>());
+            Assert.ThrowsExactly<NotSupportedException>(() => WindowsRuntimeMarshal.GetIid<int[][]>());
+            Assert.ThrowsExactly<NotSupportedException>(() => WindowsRuntimeMarshal.GetIid<ApiContractAttribute>());
+        }
+
+        [TestMethod]
+        public void TestGetIidGenericContexts()
+        {
+            Assert.AreEqual(new Guid("b939af5b-b45d-5489-9149-61442c1905fe"), ListIid<int>());
+            Assert.AreEqual(new Guid("548cefbd-bc8a-5fa0-8df2-957440fc8bf4"), ReferenceIid<int>());
+
+            IIidQueries queries = new IidQueries();
+            Assert.AreEqual(new Guid("0d82bd8d-fe62-5d67-a7b9-7886dd75bc4e"), queries.List<Uri>());
+            Assert.AreEqual(new Guid("3766c9f9-c6ae-5bd6-aca3-19efd66f89ae"), queries.List<InputStreamOptions>());
+
+            static Guid ListIid<T>() => WindowsRuntimeMarshal.GetIid<IList<T>>();
+            static Guid ReferenceIid<T>() where T : struct => WindowsRuntimeMarshal.GetIid<T?>();
+        }
+
+        private interface IIidQueries
+        {
+            Guid List<T>();
+        }
+
+        private sealed class IidQueries : IIidQueries
+        {
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            public Guid List<T>() => WindowsRuntimeMarshal.GetIid<IList<T>>();
         }
 
         [TestMethod]
@@ -4070,6 +4164,64 @@ namespace UnitTest
             {
                 WindowsRuntimeMarshal.Free(ptr);
             }
+        }
+
+        [TestMethod]
+        public void TestReferenceArrayBoxing()
+        {
+            object[] objectArray = [new Class(), new Class()];
+            Class[] classArray = [new Class(), new Class()];
+            IProperties1[] interfaceArray = [new Class(), new Class()];
+            ManagedType[] nonProjectedArray = [new ManagedType(), new ManagedType()];
+
+            Assert.AreEqual((int)PropertyType.InspectableArray, Class.GetPropertyType(objectArray));
+            Assert.AreEqual((int)PropertyType.InspectableArray, Class.GetPropertyType(classArray));
+            Assert.AreEqual((int)PropertyType.InspectableArray, Class.GetPropertyType(interfaceArray));
+            Assert.AreEqual((int)PropertyType.InspectableArray, Class.GetPropertyType(nonProjectedArray));
+
+            Assert.AreEqual("Windows.Foundation.IReferenceArray`1<Object>", Class.GetName(objectArray));
+            Assert.AreEqual("Windows.Foundation.IReferenceArray`1<TestComponentCSharp.Class>", Class.GetName(classArray));
+            Assert.AreEqual("Windows.Foundation.IReferenceArray`1<TestComponentCSharp.IProperties1>", Class.GetName(interfaceArray));
+            Assert.AreEqual("Windows.Foundation.IReferenceArray`1<Object>", Class.GetName(nonProjectedArray));
+
+            string[] stringArray = ["a", "b"];
+            Assert.AreEqual((int)PropertyType.StringArray, Class.GetPropertyType(stringArray));
+            Assert.AreEqual("Windows.Foundation.IReferenceArray`1<String>", Class.GetName(stringArray));
+        }
+
+        [TestMethod]
+        public void TestReferenceArrayValueRoundTrip()
+        {
+            var element0 = new Class { IntProperty = 42 };
+            var element1 = new Class { IntProperty = 123 };
+            object[][] arrays =
+            [
+                new object[] { element0, element1 },
+                new Class[] { element0, element1 },
+                new IProperties1[] { element0, element1 }
+            ];
+
+            foreach (object[] array in arrays)
+            {
+                object[] unboxed = Class.UnboxObjectArray(array);
+                Assert.HasCount(2, unboxed);
+                Assert.AreSame(element0, unboxed[0]);
+                Assert.AreSame(element1, unboxed[1]);
+                Assert.AreEqual(42, ((Class)unboxed[0]).IntProperty);
+                Assert.AreEqual(123, ((Class)unboxed[1]).IntProperty);
+
+                object[] propertyValues = Class.UnboxObjectArrayUsingPropertyValue(array);
+                Assert.HasCount(2, propertyValues);
+                Assert.AreSame(element0, propertyValues[0]);
+                Assert.AreSame(element1, propertyValues[1]);
+            }
+
+            ManagedProperties managed = new(42);
+            ManagedProperties[] managedArray = [managed];
+            Assert.AreSame(managed, Class.UnboxObjectArray(managedArray)[0]);
+            Assert.AreSame(managed, Class.UnboxObjectArrayUsingPropertyValue(managedArray)[0]);
+            Assert.IsEmpty(Class.UnboxObjectArray(Array.Empty<Class>()));
+            Assert.IsEmpty(Class.UnboxObjectArrayUsingPropertyValue(Array.Empty<Class>()));
         }
 
         [TestMethod]

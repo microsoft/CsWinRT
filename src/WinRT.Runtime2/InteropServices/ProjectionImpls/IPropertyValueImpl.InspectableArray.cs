@@ -5,8 +5,6 @@ using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Windows.Foundation;
-using WindowsRuntime.InteropServices.Marshalling;
-using static System.Runtime.InteropServices.ComWrappers;
 
 #pragma warning disable IDE1006, CA1416
 
@@ -75,7 +73,7 @@ file static unsafe class InspectableArrayPropertyValueImpl
         Vftbl.GetChar16Array = (delegate* unmanaged[MemberFunction]<void*, uint*, char**, HRESULT>)(delegate* unmanaged[MemberFunction]<void*, uint*, void**, HRESULT>)&IPropertyValueImpl.ThrowStubForGetArrayOverloads;
         Vftbl.GetBooleanArray = (delegate* unmanaged[MemberFunction]<void*, uint*, bool**, HRESULT>)(delegate* unmanaged[MemberFunction]<void*, uint*, void**, HRESULT>)&IPropertyValueImpl.ThrowStubForGetArrayOverloads;
         Vftbl.GetStringArray = (delegate* unmanaged[MemberFunction]<void*, uint*, HSTRING**, HRESULT>)(delegate* unmanaged[MemberFunction]<void*, uint*, void**, HRESULT>)&IPropertyValueImpl.ThrowStubForGetArrayOverloads;
-        Vftbl.GetInspectableArray = &GetInspectableArray;
+        Vftbl.GetInspectableArray = &IReferenceArrayObjectImpl.get_Value;
         Vftbl.GetGuidArray = (delegate* unmanaged[MemberFunction]<void*, uint*, Guid**, HRESULT>)(delegate* unmanaged[MemberFunction]<void*, uint*, void**, HRESULT>)&IPropertyValueImpl.ThrowStubForGetArrayOverloads;
         Vftbl.GetDateTimeArray = (delegate* unmanaged[MemberFunction]<void*, uint*, ABI.System.DateTimeOffset**, HRESULT>)(delegate* unmanaged[MemberFunction]<void*, uint*, void**, HRESULT>)&IPropertyValueImpl.ThrowStubForGetArrayOverloads;
         Vftbl.GetTimeSpanArray = (delegate* unmanaged[MemberFunction]<void*, uint*, ABI.System.TimeSpan**, HRESULT>)(delegate* unmanaged[MemberFunction]<void*, uint*, void**, HRESULT>)&IPropertyValueImpl.ThrowStubForGetArrayOverloads;
@@ -96,28 +94,5 @@ file static unsafe class InspectableArrayPropertyValueImpl
         *value = PropertyType.InspectableArray;
 
         return WellKnownErrorCodes.S_OK;
-    }
-
-    /// <seealso href="https://learn.microsoft.com/uwp/api/windows.foundation.ipropertyvalue.getinspectablearray"/>
-    [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
-    internal static HRESULT GetInspectableArray(void* thisPtr, uint* size, void*** value)
-    {
-        if (size is null || value is null)
-        {
-            return WellKnownErrorCodes.E_POINTER;
-        }
-
-        try
-        {
-            object[] thisObject = ComInterfaceDispatch.GetInstance<object[]>((ComInterfaceDispatch*)thisPtr);
-
-            WindowsRuntimeObjectArrayMarshaller.ConvertToUnmanaged(thisObject, out *size, out *value);
-
-            return WellKnownErrorCodes.S_OK;
-        }
-        catch (Exception e)
-        {
-            return RestrictedErrorInfoExceptionMarshaller.ConvertToUnmanaged(e);
-        }
     }
 }

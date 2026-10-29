@@ -170,8 +170,9 @@ internal static class ProjectionWriterRunner
     /// <param name="referenceProjection">Whether to generate a reference projection.</param>
     /// <param name="inputPaths">The comma-separated metadata input paths or SDK tokens.</param>
     /// <param name="includeNamespaces">The comma-separated namespace or type filters.</param>
+    /// <param name="outputAssemblyName">The simple name of the assembly compiling the generated sources.</param>
     /// <returns>The contents of each generated source file.</returns>
-    public static string[] GenerateSources(bool referenceProjection, string inputPaths, string includeNamespaces)
+    public static string[] GenerateSources(bool referenceProjection, string inputPaths, string includeNamespaces, string outputAssemblyName = "Projection")
     {
         string toolPath = GetRequiredFilePath("ProjectionRefGeneratorAssemblyPath");
         string workingDirectory = Path.Combine(Path.GetTempPath(), $"ProjectionWriterTest_{Guid.NewGuid():N}");
@@ -189,6 +190,7 @@ internal static class ProjectionWriterRunner
             [
                 $"--input-paths {inputPaths}",
                 $"--output-directory {outputDirectory}",
+                $"--assembly-name {outputAssemblyName}",
                 "--target-framework net10.0",
                 $"--include-namespaces {includeNamespaces}",
                 $"--reference-projection {(referenceProjection ? "true" : "false")}"

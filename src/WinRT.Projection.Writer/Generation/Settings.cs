@@ -38,6 +38,9 @@ internal sealed class Settings
     /// </summary>
     public string OutputFolder { get; init; } = string.Empty;
 
+    /// <inheritdoc cref="ProjectionWriterOptions.OutputAssemblyName"/>
+    public string OutputAssemblyName { get; init; } = string.Empty;
+
     /// <summary>
     /// Gets or sets a value indicating whether verbose progress is logged to the console.
     /// </summary>

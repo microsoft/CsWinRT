@@ -181,7 +181,7 @@ internal static class MetadataAttributeFactory
     {
         if (!context.Settings.ReferenceProjection && context.WindowsRuntimeMetadataTypeEntries is { } entries)
         {
-            _ = entries.TryAdd(projectedTypeName, context.Cache.GetSourceStem(type));
+            _ = entries.TryAdd(projectedTypeName, new WindowsRuntimeMetadataTypeEntry(type, context.Cache.GetSourceStem(type)));
         }
     }
 
@@ -599,7 +599,7 @@ internal static class MetadataAttributeFactory
     /// </summary>
     /// <param name="settings">The active projection settings.</param>
     /// <param name="sortedEntries">The (projected-type-name -> <c>.winmd</c> stem) entries, sorted for determinism.</param>
-    public static void WriteWindowsRuntimeMetadataTypesClass(Settings settings, IReadOnlyList<KeyValuePair<string, string>> sortedEntries)
+    public static void WriteWindowsRuntimeMetadataTypesClass(Settings settings, IReadOnlyList<KeyValuePair<string, WindowsRuntimeMetadataTypeEntry>> sortedEntries)
     {
         if (sortedEntries.Count == 0)
         {
@@ -609,9 +609,9 @@ internal static class MetadataAttributeFactory
         // Writes all the entries for the metadata mappings
         void WriteMetadataEntries(IndentedTextWriter writer)
         {
-            foreach (KeyValuePair<string, string> kv in sortedEntries)
+            foreach (KeyValuePair<string, WindowsRuntimeMetadataTypeEntry> kv in sortedEntries)
             {
-                writer.WriteLine($"[WindowsRuntimeMetadata(typeof({kv.Key}), \"{kv.Value}\")]");
+                writer.WriteLine($"[WindowsRuntimeMetadata(typeof({kv.Key}), \"{kv.Value.SourceStem}\")]");
             }
         }
 

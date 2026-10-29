@@ -7,16 +7,27 @@ using WindowsRuntime;
 using WindowsRuntime.InteropServices;
 using static System.Runtime.InteropServices.ComWrappers;
 
-#pragma warning disable IL2026 // Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code
+#pragma warning disable IL2026
+
 [assembly: TypeMap<WindowsRuntimeMetadataTypeMapGroup>(
     value: "Object",
     target: typeof(ABI.System.Object),
     trimTarget: typeof(object))]
-#pragma warning restore IL2026 // Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code
+
+[assembly: TypeMap<WindowsRuntimeIidTypeMapGroup>(
+    value: "[#System]System.Object",
+    target: typeof(ABI.System.ObjectIidProvider),
+    trimTarget: typeof(object))]
 
 [assembly: TypeMapAssociation<WindowsRuntimeComWrappersTypeMapGroup>(typeof(object), typeof(ABI.System.Object))]
 
 namespace ABI.System;
+
+/// <summary>
+/// IID metadata for <see cref="global::System.Object"/>.
+/// </summary>
+[Guid("AF86E2E0-B12D-4C6A-9C5A-D7AA65101E90")]
+file static class ObjectIidProvider;
 
 /// <summary>
 /// ABI type for <see cref="object"/>.

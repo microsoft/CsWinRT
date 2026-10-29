@@ -28,6 +28,15 @@ public sealed class Test_NonGenericEnumeration
     }
 
     [TestMethod]
+    public void NativeFixture_PreservesRepositoryNuGetConfiguration()
+    {
+        using NativeProjectionFixture fixture = new();
+        CollectionAssert.AreEqual(
+            File.ReadAllBytes(ProjectionWriterRunner.GetRequiredFilePath("RepositoryNuGetConfigPath")),
+            File.ReadAllBytes(Path.Combine(fixture.DirectoryPath, "nuget.config")));
+    }
+
+    [TestMethod]
     public void RequiredInterfaces_EmitOnlyUnambiguousNonBindableProviders()
     {
         using NativeProjectionFixture fixture = new();
@@ -200,6 +209,7 @@ public sealed class Test_NonGenericEnumeration
         {
             InputPaths = [metadata],
             OutputFolder = output,
+            OutputAssemblyName = "WinRT.Projection",
             Include = ["Contoso"]
         });
     }

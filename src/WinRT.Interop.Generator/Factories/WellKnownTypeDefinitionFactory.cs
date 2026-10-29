@@ -1357,4 +1357,19 @@ internal static partial class WellKnownTypeDefinitionFactory
             attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
             baseType: interopReferences.Object.ToTypeDefOrRef());
     }
+
+    /// <summary>
+    /// Creates the container type for shared key-value-pair accessor methods.
+    /// </summary>
+    /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
+    /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+    /// <returns>The resulting key-value-pair accessor holder.</returns>
+    public static TypeDefinition KeyValuePairMethods(InteropDefinitions interopDefinitions, InteropReferences interopReferences)
+    {
+        return new(
+            ns: InteropUtf8NameFactory.TypeNamespace(interopReferences.KeyValuePair.ToReferenceTypeSignature(), interopReferences.RuntimeContext),
+            name: InteropUtf8NameFactory.TypeName(interopReferences.KeyValuePair.ToReferenceTypeSignature(), interopDefinitions, "Methods"),
+            attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
+            baseType: interopReferences.Object.ToTypeDefOrRef());
+    }
 }

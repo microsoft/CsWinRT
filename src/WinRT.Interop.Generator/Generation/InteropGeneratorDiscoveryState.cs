@@ -125,6 +125,9 @@ internal sealed class InteropGeneratorDiscoveryState(RuntimeContext runtimeConte
     /// </summary>
     private volatile bool _hasWinRTRuntimeDllVersion2References;
 
+    /// <summary>Whether any input module references the IID lookup API.</summary>
+    private volatile bool _hasIidLookupReferences;
+
     /// <summary>
     /// Gets the runtime context to use for the current invocation.
     /// </summary>
@@ -317,6 +320,19 @@ internal sealed class InteropGeneratorDiscoveryState(RuntimeContext runtimeConte
     /// Gets whether any of the loaded modules reference the WinRT runtime .dll version 2.
     /// </summary>
     public bool HasWinRTRuntimeDllVersion2References => _hasWinRTRuntimeDllVersion2References;
+
+    /// <summary>Gets whether IID lookup metadata is required by compiled input references.</summary>
+    public bool HasIidLookupReferences => _hasIidLookupReferences;
+
+    /// <summary>
+    /// Records an input reference to the IID lookup API.
+    /// </summary>
+    public void MarkIidLookupReferences()
+    {
+        ThrowIfReadOnly();
+
+        _hasIidLookupReferences = true;
+    }
 
     /// <summary>
     /// Rents an interface-set builder using this invocation's comparer.

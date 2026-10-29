@@ -11,9 +11,8 @@ using WindowsRuntime.InteropServices;
 using WindowsRuntime.InteropServices.Marshalling;
 using static System.Runtime.InteropServices.ComWrappers;
 
-#pragma warning disable IDE1006
+#pragma warning disable IL2026, IDE1006
 
-#pragma warning disable IL2026 // Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code
 [assembly: TypeMap<WindowsRuntimeMetadataTypeMapGroup>(
     value: "Windows.Foundation.Numerics.Plane",
     target: typeof(ABI.System.Numerics.Plane),
@@ -23,11 +22,21 @@ using static System.Runtime.InteropServices.ComWrappers;
     value: "Windows.Foundation.IReference`1<Windows.Foundation.Numerics.Plane>",
     target: typeof(ABI.System.Numerics.Plane),
     trimTarget: typeof(Plane))]
-#pragma warning restore IL2026 // Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code
+
+[assembly: TypeMap<WindowsRuntimeIidTypeMapGroup>(
+    value: "[#System]System.Nullable`1[[#System]System.Numerics.Plane]",
+    target: typeof(ABI.System.Numerics.PlaneIidProvider),
+    trimTarget: typeof(Plane))]
 
 [assembly: TypeMapAssociation<WindowsRuntimeComWrappersTypeMapGroup>(typeof(Plane), typeof(ABI.System.Numerics.Plane))]
 
 namespace ABI.System.Numerics;
+
+/// <summary>
+/// IID metadata for the nullable projection of <see cref="global::System.Numerics.Plane"/>.
+/// </summary>
+[Guid("46D542A1-52F7-58E7-ACFC-9A6D364DA022")]
+file static class PlaneIidProvider;
 
 /// <summary>
 /// ABI type for <see cref="global::System.Numerics.Plane"/>.

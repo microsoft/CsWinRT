@@ -17,8 +17,13 @@ namespace ProjectionWriterTest.Helpers;
 /// </summary>
 internal sealed class NativeProjectionFixture : IDisposable
 {
-    public string DirectoryPath { get; } = Directory.CreateDirectory(
-        Path.Combine("TestResults", $"NativeProjection_{Guid.NewGuid():N}")).FullName;
+    public string DirectoryPath { get; } = Directory.CreateTempSubdirectory("NativeProjection_").FullName;
+
+    public NativeProjectionFixture()
+    {
+        // Preserve repository restore sources when publishing projects outside the checkout
+        File.Copy(ProjectionWriterRunner.GetRequiredFilePath("RepositoryNuGetConfigPath"), Path.Combine(DirectoryPath, "nuget.config"));
+    }
 
     public static NativeProjectionFixture Create(
         string fileStem,
@@ -102,12 +107,12 @@ internal sealed class NativeProjectionFixture : IDisposable
 
     public static string CompileProjection(string input, string output, string assembly, bool referenceProjection = false)
     {
-        GenerateProjection(input, output, referenceProjection);
+        GenerateProjection(input, output, referenceProjection, Path.GetFileNameWithoutExtension(assembly));
         return ProjectionWriterRunner.CompileSources(Directory.GetFiles(output, "*.cs").Select(File.ReadAllText),
             assembly, referenceProjection);
     }
 
-    public static void GenerateProjection(string input, string output, bool referenceProjection)
+    public static void GenerateProjection(string input, string output, bool referenceProjection, string outputAssemblyName = "WinRT.Sdk.Projection")
     {
         Directory.CreateDirectory(output);
         string response = Path.Combine(output, "projection.rsp");
@@ -115,6 +120,7 @@ internal sealed class NativeProjectionFixture : IDisposable
         [
             $"--input-paths {input}",
             $"--output-directory {output}",
+            $"--assembly-name {outputAssemblyName}",
             "--target-framework net10.0",
             "--include-namespaces Contoso",
             $"--reference-projection {referenceProjection.ToString().ToLowerInvariant()}"
