@@ -130,6 +130,8 @@ namespace UnitTest
             Assert.ThrowsExactly<NotSupportedException>(() => WindowsRuntimeMarshal.GetIid<IStringableInterop>());
             Assert.ThrowsExactly<NotSupportedException>(() => WindowsRuntimeMarshal.GetIid<IList<UnitTestCSharp>>());
             Assert.ThrowsExactly<NotSupportedException>(() => WindowsRuntimeMarshal.GetIid<EventHandler>());
+            Assert.ThrowsExactly<NotSupportedException>(() => WindowsRuntimeMarshal.GetIid<EventHandler[]>());
+            Assert.ThrowsExactly<NotSupportedException>(() => WindowsRuntimeMarshal.GetIid<IList<EventHandler>>());
             Assert.ThrowsExactly<NotSupportedException>(() => WindowsRuntimeMarshal.GetIid<ICollection<KeyValuePair<string, int>>>());
             Assert.ThrowsExactly<NotSupportedException>(() => WindowsRuntimeMarshal.GetIid<int[,]>());
             Assert.ThrowsExactly<NotSupportedException>(() => WindowsRuntimeMarshal.GetIid<int[][]>());

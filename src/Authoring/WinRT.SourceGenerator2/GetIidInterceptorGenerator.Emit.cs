@@ -96,8 +96,9 @@ public partial class GetIidInterceptorGenerator
                 .ToArray();
 
             string types = string.Join(", ", typeCrefs);
+            string iid = state.Interceptors.Key.ToString("D").ToUpperInvariant();
 
-            writer.WriteLine($"""/// <summary>Provides the IID for {types} (<c>{state.Interceptors.Key.ToString("D").ToUpperInvariant()}</c>).</summary>""");
+            writer.WriteLine($"""/// <summary>Provides the IID for {types} (<c>{iid}</c>).</summary>""");
 
             // Emit one '[InterceptsLocation]' attribute for each detected callsite, as they all share this method
             foreach (GetIidInterceptorInfo info in state.Interceptors)

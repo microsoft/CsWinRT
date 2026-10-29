@@ -16,12 +16,12 @@ public sealed partial class GetIidInterceptorGenerator : IIncrementalGenerator
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
         // Allow projects to opt out of interception entirely
-        IncrementalValueProvider<bool> generateInterceptors =
-            context.AnalyzerConfigOptionsProvider.Select(Execute.GetGenerateInterceptors);
+        IncrementalValueProvider<bool> generateInterceptors = context.AnalyzerConfigOptionsProvider
+            .Select(Execute.GetGenerateInterceptors);
 
         // Analyze candidate calls without retaining compiler objects in the pipeline
-        IncrementalValuesProvider<GetIidCallInfo> calls =
-            context.SyntaxProvider.CreateSyntaxProvider(
+        IncrementalValuesProvider<GetIidCallInfo> calls = context.SyntaxProvider
+            .CreateSyntaxProvider(
                 predicate: Execute.IsTargetNodeValid,
                 transform: Execute.GetCallInfo)
             .SkipNullValues()
@@ -30,8 +30,8 @@ public sealed partial class GetIidInterceptorGenerator : IIncrementalGenerator
             .Select(static (data, _) => data.Left);
 
         // Select the IID for the project's XAML mode
-        IncrementalValueProvider<bool> useWindowsUIXamlProjections =
-            context.AnalyzerConfigOptionsProvider.Select(Execute.GetUseWindowsUIXamlProjections);
+        IncrementalValueProvider<bool> useWindowsUIXamlProjections = context.AnalyzerConfigOptionsProvider
+            .Select(Execute.GetUseWindowsUIXamlProjections);
 
         IncrementalValuesProvider<GetIidInterceptorInfo> interceptors = calls
             .Combine(useWindowsUIXamlProjections)

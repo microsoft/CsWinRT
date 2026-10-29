@@ -236,17 +236,6 @@ public partial class Test_GetIidInterceptorGenerator
         AssertInterceptedIids(cases, useUwp);
     }
 
-    [TestMethod]
-    public void NonGenericEventHandlerArgument_MatchesExistingInteropSignature()
-    {
-        // Keep parity with the existing interop generator's special non-generic EventHandler signature
-        AssertInterceptedIids(
-        [
-            ("System.Collections.Generic.IList<System.EventHandler>", CreateExpectedParameterizedIid("pinterface({913337e9-11a1-4345-a3a2-4e7f956e222d};delegate({c50898f6-c536-5f47-8583-8b2c2438a13b}))")),
-            ("System.EventHandler[]", CreateExpectedParameterizedIid("pinterface({61c17707-2d65-11e0-9ae8-d48564015472};delegate({c50898f6-c536-5f47-8583-8b2c2438a13b}))"))
-        ], useUwp: false);
-    }
-
     private static CoverageType[] GetCoverageTypes(bool useUwp) =>
     [
         new("System.IDisposable", "{30d5a829-7fa4-4026-83bb-d75bae4ea99e}"),

@@ -11,7 +11,7 @@ using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.CodeAnalysis.Operations;
 using WindowsRuntime.SourceGenerator.Models;
 
-#pragma warning disable RSEXPERIMENTAL002
+#pragma warning disable RSEXPERIMENTAL002, IDE0046
 
 namespace WindowsRuntime.SourceGenerator;
 
@@ -53,7 +53,7 @@ public partial class GetIidInterceptorGenerator
             Compilation compilation = model.Compilation;
 
             // Only intercept the real 'WindowsRuntimeMarshal.GetIid<T>()' method from 'WinRT.Runtime' (not any same-named method
-            // or a type of the same name from another assembly), and skip calls in expression trees, which can't be intercepted
+            // or a type of the same name from another assembly), and skip calls in expression trees, which can't be intercepted.
             if (model.GetSymbolInfo(invocation, token).Symbol is not IMethodSymbol
                 {
                     IsStatic: true,
@@ -74,7 +74,7 @@ public partial class GetIidInterceptorGenerator
 
             // The XAML mode comes from the analyzer options, which a syntax transform can't read. Computing both IIDs here (they
             // share the resolver's cached metadata) lets the pipeline pick the right one later, in a cheap step that doesn't rerun
-            // this analysis when the mode changes. It's also needed to tell whether the IID depends on the mode at all (see below)
+            // this analysis when the mode changes. It's also needed to tell whether the IID depends on the mode at all (see below).
             Guid? winUIIid = resolver.TryGetIid(method.TypeArguments[0], false, out Guid winUIValue) ? winUIValue : null;
             Guid? uwpIid = resolver.TryGetIid(method.TypeArguments[0], true, out Guid uwpValue) ? uwpValue : null;
 
@@ -85,22 +85,14 @@ public partial class GetIidInterceptorGenerator
                 return null;
             }
 
-            InterceptableLocation? location = model.GetInterceptableLocation(invocation, token);
+            // Roslyn can't always provide a location to intercept (e.g. if the call isn't in a source file with a usable path,
+            // or if its syntax can't be targeted), in which case the call can't be intercepted, so we bail and leave it alone.
+            if (model.GetInterceptableLocation(invocation, token) is not InterceptableLocation location)
+            {
+                return null;
+            }
 
-            return location is null ? null : new GetIidCallInfo(winUIIid, uwpIid, location.Version, location.Data, GetCrefTypeName(method.TypeArguments[0]));
-        }
-
-        /// <summary>
-        /// Formats a type to be used in an XML documentation <c>cref</c> attribute.
-        /// </summary>
-        /// <param name="type">The type to format.</param>
-        /// <returns>The formatted type name, with generic arguments in <c>{}</c> instead of <c>&lt;&gt;</c>.</returns>
-        private static string GetCrefTypeName(ITypeSymbol type)
-        {
-            // Nullable value types are expanded (e.g. 'Nullable{int}'), as 'int?' is not valid in a 'cref'
-            SymbolDisplayFormat format = SymbolDisplayFormat.FullyQualifiedFormat.AddMiscellaneousOptions(SymbolDisplayMiscellaneousOptions.ExpandNullable);
-
-            return type.ToDisplayString(format).Replace('<', '{').Replace('>', '}');
+            return new(winUIIid, uwpIid, location.Version, location.Data, method.TypeArguments[0].GetCrefTypeName());
         }
 
         /// <summary>

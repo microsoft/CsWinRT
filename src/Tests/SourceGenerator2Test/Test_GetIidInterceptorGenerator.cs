@@ -92,6 +92,9 @@ public partial class Test_GetIidInterceptorGenerator
     [DataRow("string")]
     [DataRow("System.Guid")]
     [DataRow("System.EventHandler")]
+    [DataRow("System.EventHandler[]")]
+    [DataRow("System.Collections.Generic.IList<System.EventHandler>")]
+    [DataRow("System.Collections.Generic.KeyValuePair<string, System.EventHandler>")]
     [DataRow("System.Collections.Generic.List<int>")]
     [DataRow("System.Collections.Generic.IList<int[]>")]
     [DataRow("System.Collections.Generic.IList<System.Version>")]
@@ -401,7 +404,7 @@ public partial class Test_GetIidInterceptorGenerator
                 public static System.Guid B() => WindowsRuntimeMarshal.GetIid<IDictionary<string, IList<int>>>();
                 public static System.Guid C() => WindowsRuntimeMarshal.GetIid<KeyValuePair<string, int>>();
                 public static System.Guid D() => WindowsRuntimeMarshal.GetIid<Windows.Foundation.IAsyncOperation<int>>();
-                public static System.Guid E() => WindowsRuntimeMarshal.GetIid<System.Collections.Generic.IList<System.EventHandler>>();
+                public static System.Guid E() => WindowsRuntimeMarshal.GetIid<System.Collections.Generic.IList<System.EventHandler<object>>>();
                 public static System.Guid F() => WindowsRuntimeMarshal.GetIid<KeyValuePair<int, int>>();
             }
             """);

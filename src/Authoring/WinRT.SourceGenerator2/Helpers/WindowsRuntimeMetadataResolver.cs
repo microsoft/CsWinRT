@@ -4,14 +4,23 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Threading;
 using Microsoft.CodeAnalysis;
 using WindowsRuntime.Generator.References;
 using WindowsRuntime.InteropGenerator.Helpers;
 
 namespace WindowsRuntime.SourceGenerator;
 
-/// <inheritdoc cref="WindowsRuntimeIidResolver"/>
-internal sealed partial class WindowsRuntimeIidResolver
+/// <summary>
+/// Validates the identity of types and reads Windows Runtime metadata from the consuming compilation, without loading implementation assemblies.
+/// </summary>
+/// <param name="compilation">The consuming compilation.</param>
+/// <param name="windowsRuntimeAssembly">The assembly containing the intercepted marshalling API.</param>
+/// <param name="token">The cancellation token.</param>
+internal sealed class WindowsRuntimeMetadataResolver(
+    Compilation compilation,
+    IAssemblySymbol windowsRuntimeAssembly,
+    CancellationToken token)
 {
     /// <summary>
     /// Projection metadata shared by both XAML modes within one semantic transform.
@@ -35,7 +44,7 @@ internal sealed partial class WindowsRuntimeIidResolver
     /// <param name="definition">Its original definition.</param>
     /// <param name="name">The definition's metadata name.</param>
     /// <returns>Whether the type has a supported Windows Runtime definition.</returns>
-    private bool TryGetDefinition(
+    public bool TryGetDefinition(
         ITypeSymbol type,
         [NotNullWhen(true)] out INamedTypeSymbol? definition,
         [NotNullWhen(true)] out string? name)
@@ -57,6 +66,87 @@ internal sealed partial class WindowsRuntimeIidResolver
     }
 
     /// <summary>
+    /// Checks a definition against the types provided by the runtime assembly or the framework, rather than a same-named type.
+    /// </summary>
+    /// <param name="type">The definition to check.</param>
+    /// <param name="name">Its metadata name.</param>
+    /// <returns>Whether this is a runtime or framework definition.</returns>
+    public bool IsRuntimeOrFrameworkDefinition(INamedTypeSymbol type, string name)
+    {
+        return SymbolEqualityComparer.Default.Equals(type.ContainingAssembly, windowsRuntimeAssembly) ||
+            IsFrameworkDefinition(type, name);
+    }
+
+    /// <summary>
+    /// Resolves definition IIDs for mapped types or compiler-visible projected metadata.
+    /// </summary>
+    /// <param name="type">The validated definition.</param>
+    /// <param name="name">Its metadata name.</param>
+    /// <param name="useWindowsUIXamlProjections">Whether to use UWP XAML mappings.</param>
+    /// <param name="iid">The IID.</param>
+    /// <returns>Whether a definition IID is available.</returns>
+    public bool TryGetDefinitionIid(
+        INamedTypeSymbol type,
+        string name,
+        bool useWindowsUIXamlProjections,
+        out Guid iid)
+    {
+        // Well-known types (e.g. custom-mapped and manually projected ones) have their IIDs in a shared table
+        if (WellKnownWindowsRuntimeIids.TryGetIid(name, useWindowsUIXamlProjections, out iid))
+        {
+            return true;
+        }
+
+        // Projected types declare their IID with a '[Guid]' attribute. The attribute type is resolved through the
+        // framework facades, so that a same-named attribute from another assembly can't supply an IID.
+        if (GetFrameworkDefinition("System.Runtime.InteropServices.GuidAttribute") is not INamedTypeSymbol guidAttribute ||
+            !type.TryGetAttributeWithType(guidAttribute, out AttributeData? attribute))
+        {
+            iid = default;
+
+            return false;
+        }
+
+        // The IID is the single string argument of the attribute
+        if (attribute.ConstructorArguments is not [{ Value: string text }])
+        {
+            iid = default;
+
+            return false;
+        }
+
+        return Guid.TryParse(text, out iid);
+    }
+
+    /// <summary>
+    /// Decodes a reference projection's default-interface metadata at the input boundary.
+    /// </summary>
+    /// <param name="type">The runtime class definition.</param>
+    /// <param name="name">Its metadata name.</param>
+    /// <param name="defaultInterface">The recorded default interface.</param>
+    /// <returns>Whether a supported default interface was recorded.</returns>
+    public bool TryGetDefaultInterface(
+        INamedTypeSymbol type,
+        string name,
+        [NotNullWhen(true)] out INamedTypeSymbol? defaultInterface)
+    {
+        if (!_defaultInterfaces.TryGetValue(type, out defaultInterface))
+        {
+            // Look up the recorded name, then resolve it and make sure it's actually an interface (not a class or struct)
+            if (GetProjectionInfo(type.ContainingAssembly).DefaultInterfaces.TryGetValue(name, out string? interfaceName) &&
+                WindowsRuntimeTypeNameParser.TryParse(interfaceName, compilation, type.ContainingAssembly, token, out INamedTypeSymbol? resolved) &&
+                resolved.TypeKind == TypeKind.Interface)
+            {
+                defaultInterface = resolved;
+            }
+
+            _defaultInterfaces.Add(type, defaultInterface);
+        }
+
+        return defaultInterface is not null;
+    }
+
+    /// <summary>
     /// Checks identity before applying name-based mappings or trusting projected metadata.
     /// </summary>
     /// <param name="type">The type definition.</param>
@@ -72,7 +162,7 @@ internal sealed partial class WindowsRuntimeIidResolver
         }
 
         if (name.StartsWith("System.", StringComparison.Ordinal) &&
-            (TypeMapping.TryFindMappedTypeName(name, false, out _) || name is "System.Guid" or "System.EventHandler"))
+            (TypeMapping.TryFindMappedTypeName(name, false, out _) || name == "System.Guid"))
         {
             return name is not ("System.AttributeTargets" or "System.AttributeUsageAttribute") &&
                 IsFrameworkDefinition(type, name);
@@ -181,55 +271,6 @@ internal sealed partial class WindowsRuntimeIidResolver
         }
 
         return false;
-    }
-
-    /// <summary>
-    /// Resolves definition IIDs for mapped types or compiler-visible projected metadata.
-    /// </summary>
-    /// <param name="type">The validated definition.</param>
-    /// <param name="name">Its metadata name.</param>
-    /// <param name="useWindowsUIXamlProjections">Whether to use UWP XAML mappings.</param>
-    /// <param name="iid">The IID.</param>
-    /// <returns>Whether a definition IID is available.</returns>
-    private bool TryGetDefinitionIid(
-        INamedTypeSymbol type,
-        string name,
-        bool useWindowsUIXamlProjections,
-        out Guid iid)
-    {
-        return WellKnownWindowsRuntimeIids.TryGetIid(name, useWindowsUIXamlProjections, out iid) ||
-            (GetFrameworkDefinition("System.Runtime.InteropServices.GuidAttribute") is INamedTypeSymbol guidAttribute &&
-             type.TryGetAttributeWithType(guidAttribute, out AttributeData? attribute) &&
-             attribute.ConstructorArguments is [{ Value: string text }] &&
-             Guid.TryParse(text, out iid));
-    }
-
-    /// <summary>
-    /// Decodes a reference projection's default-interface metadata at the input boundary.
-    /// </summary>
-    /// <param name="type">The runtime class definition.</param>
-    /// <param name="name">Its metadata name.</param>
-    /// <param name="defaultInterface">The recorded default interface.</param>
-    /// <returns>Whether a supported default interface was recorded.</returns>
-    private bool TryGetDefaultInterface(
-        INamedTypeSymbol type,
-        string name,
-        [NotNullWhen(true)] out INamedTypeSymbol? defaultInterface)
-    {
-        if (!_defaultInterfaces.TryGetValue(type, out defaultInterface))
-        {
-            // Look up the recorded name, then resolve it and make sure it's actually an interface (not a class or struct)
-            if (GetProjectionInfo(type.ContainingAssembly).DefaultInterfaces.TryGetValue(name, out string? interfaceName) &&
-                WindowsRuntimeTypeNameParser.TryParse(interfaceName, compilation, type.ContainingAssembly, token, out INamedTypeSymbol? resolved) &&
-                resolved.TypeKind == TypeKind.Interface)
-            {
-                defaultInterface = resolved;
-            }
-
-            _defaultInterfaces.Add(type, defaultInterface);
-        }
-
-        return defaultInterface is not null;
     }
 
     /// <summary>

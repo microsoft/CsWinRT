@@ -90,6 +90,18 @@ internal static class ITypeSymbolExtensions
         }
 
         /// <summary>
+        /// Gets the name of a given <see cref="ITypeSymbol"/> instance, formatted to be used in an XML documentation <c>cref</c> attribute.
+        /// </summary>
+        /// <returns>The formatted type name for <paramref name="symbol"/>, with generic arguments in <c>{}</c> instead of <c>&lt;&gt;</c>.</returns>
+        public string GetCrefTypeName()
+        {
+            // Nullable value types are expanded (e.g. 'Nullable{int}'), as 'int?' is not valid in a 'cref'
+            SymbolDisplayFormat format = SymbolDisplayFormat.FullyQualifiedFormat.AddMiscellaneousOptions(SymbolDisplayMiscellaneousOptions.ExpandNullable);
+
+            return symbol.ToDisplayString(format).Replace('<', '{').Replace('>', '}');
+        }
+
+        /// <summary>
         /// Gets the fully qualified metadata name for a given <see cref="ITypeSymbol"/> instance.
         /// </summary>
         /// <returns>The fully qualified metadata name for <paramref name="symbol"/>.</returns>
