@@ -41,6 +41,24 @@ internal static class ITypeSymbolExtensions
         }
 
         /// <summary>
+        /// Checks whether a type inherits from a specified base type (not including the type itself).
+        /// </summary>
+        /// <param name="baseType">The <see cref="ITypeSymbol"/> instance for the base type to look for.</param>
+        /// <returns>Whether <paramref name="symbol"/> has <paramref name="baseType"/> in its base type chain.</returns>
+        public bool InheritsFromType(ITypeSymbol baseType)
+        {
+            for (INamedTypeSymbol? current = symbol.BaseType; current is not null; current = current.BaseType)
+            {
+                if (SymbolEqualityComparer.Default.Equals(current, baseType))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        /// <summary>
         /// Enumerates all members of a given <see cref="ITypeSymbol"/> instance, including inherited ones.
         /// </summary>
         /// <returns>The sequence of all member symbols for <paramref name="symbol"/>.</returns>

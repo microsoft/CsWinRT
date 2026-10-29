@@ -52,9 +52,16 @@ internal sealed class WindowsRuntimeMetadataResolver(
         definition = null;
         name = null;
 
-        if (type is not INamedTypeSymbol { IsUnboundGenericType: false, IsStatic: false, IsNativeIntegerType: false } named ||
-            named.TypeKind == TypeKind.Error ||
-            named.IsTupleType)
+        // Only closed, concrete, named types can be Windows Runtime types. Unbound generics, static classes, native integers, tuples
+        // (which are just 'ValueTuple<...>' with no Windows Runtime equivalent) and unresolved error types have no valid IID.
+        if (type is not INamedTypeSymbol
+            {
+                IsUnboundGenericType: false,
+                IsStatic: false,
+                IsNativeIntegerType: false,
+                IsTupleType: false,
+                TypeKind: not TypeKind.Error
+            } named)
         {
             return false;
         }
@@ -130,6 +137,7 @@ internal sealed class WindowsRuntimeMetadataResolver(
         string name,
         [NotNullWhen(true)] out INamedTypeSymbol? defaultInterface)
     {
+        // Resolving the default interface involves parsing a type name, so cache the result (including misses) per class
         if (!_defaultInterfaces.TryGetValue(type, out defaultInterface))
         {
             // Look up the recorded name, then resolve it and make sure it's actually an interface (not a class or struct)
@@ -154,13 +162,19 @@ internal sealed class WindowsRuntimeMetadataResolver(
     /// <returns>Whether this is a supported framework or projected definition.</returns>
     private bool IsKnownDefinition(INamedTypeSymbol type, string name)
     {
+        INamedTypeSymbol? apiContractAttribute = windowsRuntimeAssembly.GetTypeByMetadataName("Windows.Foundation.Metadata.ApiContractAttribute");
+
+        // Types from the current assembly can't be trusted (they could just be authored to look like Windows Runtime types), nested
+        // types are not valid Windows Runtime types, and API contracts are metadata-only types that are never marshalled as values.
         if (SymbolEqualityComparer.Default.Equals(type.ContainingAssembly, compilation.Assembly) ||
             type.ContainingType is not null ||
-            HasWindowsRuntimeAttribute(type, "Windows.Foundation.Metadata.ApiContractAttribute"))
+            (apiContractAttribute is not null && type.HasAttributeWithType(apiContractAttribute)))
         {
             return false;
         }
 
+        // Custom-mapped .NET types (and 'Guid') are only valid if they're the actual framework definition, not a same-named type.
+        // The two attribute types are excluded because they map to Windows Runtime metadata attributes, which are not marshalled.
         if (name.StartsWith("System.", StringComparison.Ordinal) &&
             (TypeMapping.TryFindMappedTypeName(name, false, out _) || name == "System.Guid"))
         {
@@ -168,16 +182,27 @@ internal sealed class WindowsRuntimeMetadataResolver(
                 IsFrameworkDefinition(type, name);
         }
 
+        // Attribute types are metadata-only and never marshalled as values, so they're excluded from the checks below
+        INamedTypeSymbol? attributeType = GetFrameworkDefinition("System.Attribute");
+        bool isAttribute = attributeType is not null && type.InheritsFromType(attributeType);
+
+        // Manually projected types in the runtime assembly must carry the Windows Runtime metadata markers, which excludes
+        // runtime-only helper types. Attributes are excluded too, as they're metadata-only and never marshalled as values.
         if (SymbolEqualityComparer.Default.Equals(type.ContainingAssembly, windowsRuntimeAssembly))
         {
-            return (HasWindowsRuntimeAttribute(type, "Windows.Foundation.Metadata.ContractVersionAttribute") ||
-                    HasWindowsRuntimeAttribute(type, "WindowsRuntime.WindowsRuntimeTypeAttribute")) &&
-                !InheritsAttribute(type);
+            INamedTypeSymbol? contractVersionAttribute = windowsRuntimeAssembly.GetTypeByMetadataName("Windows.Foundation.Metadata.ContractVersionAttribute");
+            INamedTypeSymbol? windowsRuntimeTypeAttribute = windowsRuntimeAssembly.GetTypeByMetadataName("WindowsRuntime.WindowsRuntimeTypeAttribute");
+
+            return ((contractVersionAttribute is not null && type.HasAttributeWithType(contractVersionAttribute)) ||
+                    (windowsRuntimeTypeAttribute is not null && type.HasAttributeWithType(windowsRuntimeTypeAttribute))) &&
+                !isAttribute;
         }
 
         ProjectionInfo metadata = GetProjectionInfo(type.ContainingAssembly);
 
-        return metadata.IsProjection && !metadata.IsComponent && !InheritsAttribute(type);
+        // Everything else needs to come from a reference projection assembly. Components are excluded because their types are
+        // authored in managed code and not projected, and attributes are excluded for the same reason as above.
+        return metadata.IsProjection && !metadata.IsComponent && !isAttribute;
     }
 
     /// <summary>
@@ -198,21 +223,26 @@ internal sealed class WindowsRuntimeMetadataResolver(
     /// <returns>The framework definition, if available.</returns>
     private INamedTypeSymbol? GetFrameworkDefinition(string name)
     {
+        // Framework definitions are resolved repeatedly for the same names, so cache the results (including misses)
         if (_frameworkDefinitions.TryGetValue(name, out INamedTypeSymbol? type))
         {
             return type;
         }
 
+        // Most framework types live directly in the core library, so check there first
         IAssemblySymbol coreLibrary = compilation.GetSpecialType(SpecialType.System_Object).ContainingAssembly;
 
         type = coreLibrary.GetTypeByMetadataName(name);
 
+        // Reference assemblies split types across facade assemblies, which forward to the actual definitions. If the type
+        // wasn't found in the core library, look through the referenced facades that we know and trust.
         if (type is null)
         {
             foreach (IAssemblySymbol assembly in compilation.SourceModule.ReferencedAssemblySymbols)
             {
                 token.ThrowIfCancellationRequested();
 
+                // Only consider well-known framework assemblies, so that a same-named assembly can't provide the type
                 byte[]? publicKeyToken = assembly.Identity.Name switch
                 {
                     "System.Runtime" => WellKnownPublicKeyTokens.SystemRuntime,
@@ -223,6 +253,7 @@ internal sealed class WindowsRuntimeMetadataResolver(
                     _ => null
                 };
 
+                // The assembly also needs to be signed with the expected key, and then the type is either defined there or forwarded
                 if (publicKeyToken is not null &&
                     assembly.Identity.PublicKeyToken.AsSpan().SequenceEqual(publicKeyToken))
                 {
@@ -242,44 +273,13 @@ internal sealed class WindowsRuntimeMetadataResolver(
     }
 
     /// <summary>
-    /// Checks an attribute against its definition in the referenced runtime assembly.
-    /// </summary>
-    /// <param name="type">The type to inspect.</param>
-    /// <param name="name">The attribute's metadata name.</param>
-    /// <returns>Whether the type carries that runtime attribute.</returns>
-    private bool HasWindowsRuntimeAttribute(INamedTypeSymbol type, string name)
-    {
-        return windowsRuntimeAssembly.GetTypeByMetadataName(name) is INamedTypeSymbol attributeType &&
-            type.HasAttributeWithType(attributeType);
-    }
-
-    /// <summary>
-    /// Rejects metadata-only Windows Runtime attributes.
-    /// </summary>
-    /// <param name="type">The type to inspect.</param>
-    /// <returns>Whether this is an attribute type.</returns>
-    private bool InheritsAttribute(INamedTypeSymbol type)
-    {
-        INamedTypeSymbol? attributeType = GetFrameworkDefinition("System.Attribute");
-
-        for (INamedTypeSymbol? parent = type.BaseType; parent is not null; parent = parent.BaseType)
-        {
-            if (SymbolEqualityComparer.Default.Equals(parent, attributeType))
-            {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    /// <summary>
     /// Indexes reference-only projection metadata without retaining symbols beyond this semantic transform.
     /// </summary>
     /// <param name="assembly">The input assembly.</param>
     /// <returns>The indexed projection metadata.</returns>
     private ProjectionInfo GetProjectionInfo(IAssemblySymbol assembly)
     {
+        // The same assembly is queried for every type it defines, so cache the indexed metadata
         if (_projectionMetadata.TryGetValue(assembly, out ProjectionInfo? info))
         {
             return info;
@@ -289,36 +289,28 @@ internal sealed class WindowsRuntimeMetadataResolver(
         INamedTypeSymbol? componentAssemblyAttribute = windowsRuntimeAssembly.GetTypeByMetadataName("WindowsRuntime.InteropServices.WindowsRuntimeComponentAssemblyAttribute");
         INamedTypeSymbol? referenceMetadataAttribute = windowsRuntimeAssembly.GetTypeByMetadataName(WindowsRuntimeReferenceAssemblyMetadata.AttributeTypeName);
 
-        bool isProjection = false;
-        bool isComponent = false;
+        // Check whether this is a reference projection or an authored component, using the marker attributes from the runtime assembly
+        bool isProjection = referenceAssemblyAttribute is not null && assembly.HasAttributeWithType(referenceAssemblyAttribute);
+        bool isComponent = componentAssemblyAttribute is not null && assembly.HasAttributeWithType(componentAssemblyAttribute);
         Dictionary<string, string> defaultInterfaces = new(StringComparer.Ordinal);
 
-        foreach (AttributeData attribute in assembly.GetAttributes())
+        // Reference projections record the default interface of each runtime class as a metadata entry. Each entry is a key
+        // with a known prefix followed by the class name, and the value is the name of its default interface.
+        if (referenceMetadataAttribute is not null)
         {
-            token.ThrowIfCancellationRequested();
+            foreach (AttributeData attribute in assembly.GetAttributes(referenceMetadataAttribute))
+            {
+                token.ThrowIfCancellationRequested();
 
-            if (attribute.AttributeClass is not INamedTypeSymbol attributeType)
-            {
-                continue;
-            }
-
-            if (SymbolEqualityComparer.Default.Equals(attributeType, referenceAssemblyAttribute))
-            {
-                isProjection = true;
-            }
-            else if (SymbolEqualityComparer.Default.Equals(attributeType, componentAssemblyAttribute))
-            {
-                isComponent = true;
-            }
-            else if (SymbolEqualityComparer.Default.Equals(attributeType, referenceMetadataAttribute) &&
-                     attribute.ConstructorArguments is [{ Value: string key }, { Value: string value }] &&
-                     key.StartsWith(WindowsRuntimeReferenceAssemblyMetadata.DefaultInterfacePrefix, StringComparison.Ordinal))
-            {
-                defaultInterfaces[key[WindowsRuntimeReferenceAssemblyMetadata.DefaultInterfacePrefix.Length..]] = value;
+                if (attribute.ConstructorArguments is [{ Value: string key }, { Value: string value }] &&
+                    key.StartsWith(WindowsRuntimeReferenceAssemblyMetadata.DefaultInterfacePrefix, StringComparison.Ordinal))
+                {
+                    defaultInterfaces[key[WindowsRuntimeReferenceAssemblyMetadata.DefaultInterfacePrefix.Length..]] = value;
+                }
             }
         }
 
-        info = new(isProjection, isComponent, defaultInterfaces);
+        info = new ProjectionInfo(isProjection, isComponent, defaultInterfaces);
 
         _projectionMetadata.Add(assembly, info);
 

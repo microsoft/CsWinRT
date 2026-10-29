@@ -91,6 +91,7 @@ internal sealed class WindowsRuntimeSignatureGenerator(
         bool useWindowsUIXamlProjections,
         [NotNullWhen(true)] out string? signature)
     {
+        // 'dynamic' is not a statically-visible type that we can resolve, so it has no signature (it would otherwise look like 'object')
         if (type.TypeKind == TypeKind.Dynamic)
         {
             signature = null;
@@ -98,11 +99,13 @@ internal sealed class WindowsRuntimeSignatureGenerator(
             return false;
         }
 
+        // Primitives, 'string' and 'object' have fixed signatures
         if (TryGetFundamentalTypeSignature(type, out signature))
         {
             return true;
         }
 
+        // Single-dimensional arrays are 'IReferenceArray<T>' (nested arrays are not supported)
         if (type is IArrayTypeSymbol { IsSZArray: true, ElementType: not IArrayTypeSymbol } array &&
             TryGetSignature(array.ElementType, useWindowsUIXamlProjections, out string? elementSignature))
         {
@@ -111,11 +114,13 @@ internal sealed class WindowsRuntimeSignatureGenerator(
             return true;
         }
 
+        // Anything else needs a type with Windows Runtime metadata, which also gives us its metadata name
         if (!metadata.TryGetDefinition(type, out INamedTypeSymbol? definition, out string? name))
         {
             return false;
         }
 
+        // 'Guid' is a fundamental type in Windows Runtime signatures, but it's a struct in managed code
         if (name == "System.Guid")
         {
             signature = "g16";
@@ -123,16 +128,19 @@ internal sealed class WindowsRuntimeSignatureGenerator(
             return true;
         }
 
+        // Custom-mapped types (e.g. 'Uri' or 'DateTimeOffset') use the signature of their Windows Runtime counterpart
         if (TypeMapping.TryFindMappedTypeSignature(name, useWindowsUIXamlProjections, out signature))
         {
             return true;
         }
 
+        // Closed generic types are parameterized, so their signature is built from the definition and all type arguments
         if (type is INamedTypeSymbol { IsGenericType: true } genericType)
         {
             return TryGetGenericSignature(genericType, name, useWindowsUIXamlProjections, out signature);
         }
 
+        // Interfaces and delegates are identified by their IID, with a 'delegate(...)' wrapper for the latter
         if (metadata.TryGetDefinitionIid(definition, name, useWindowsUIXamlProjections, out Guid iid))
         {
             signature = definition.TypeKind == TypeKind.Delegate ? $"delegate({{{iid}}})" : $"{{{iid}}}";
@@ -150,15 +158,26 @@ internal sealed class WindowsRuntimeSignatureGenerator(
             return true;
         }
 
+        // Enums are identified by name and underlying type, which is either 'int' (the default) or 'uint' (flags)
         if (definition.TypeKind == TypeKind.Enum)
         {
-            signature = $"enum({name};{(definition.EnumUnderlyingType?.SpecialType == SpecialType.System_UInt32 ? "u4" : "i4")})";
+            string underlyingTypeSignature = definition.EnumUnderlyingType?.SpecialType == SpecialType.System_UInt32 ? "u4" : "i4";
+
+            signature = $"enum({name};{underlyingTypeSignature})";
 
             return true;
         }
 
-        return definition.TypeKind == TypeKind.Struct &&
-            TryGetStructSignature(definition, name, useWindowsUIXamlProjections, out signature);
+        // Structs have a signature built from the signatures of all their fields, if they are all supported
+        if (definition.TypeKind == TypeKind.Struct &&
+            TryGetStructSignature(definition, name, useWindowsUIXamlProjections, out signature))
+        {
+            return true;
+        }
+
+        signature = null;
+
+        return false;
     }
 
     /// <summary>
@@ -240,6 +259,7 @@ internal sealed class WindowsRuntimeSignatureGenerator(
 
         using PooledArrayBuilder<string> fields = new();
 
+        // The signature of a struct is the concatenation of the signatures of each of its fields, in layout order
         foreach (ISymbol member in type.GetMembers())
         {
             if (member is not IFieldSymbol { IsStatic: false } field)
@@ -255,6 +275,7 @@ internal sealed class WindowsRuntimeSignatureGenerator(
             fields.Add(fieldSignature);
         }
 
+        // Windows Runtime structs can't be empty, so a struct with no instance fields is invalid
         if (fields.Count == 0)
         {
             return false;
