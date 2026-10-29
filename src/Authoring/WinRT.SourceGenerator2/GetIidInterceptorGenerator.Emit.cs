@@ -129,7 +129,7 @@ public partial class GetIidInterceptorGenerator
                         0x{{iidBytes[15]:X2}}
                     ];
 
-                    return Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
+                    return Unsafe.ReadUnaligned<Guid>(in MemoryMarshal.GetReference(data));
                 }
                 """, isMultiline: true);
         }
