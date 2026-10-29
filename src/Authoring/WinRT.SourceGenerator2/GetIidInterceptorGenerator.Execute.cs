@@ -33,9 +33,18 @@ public partial class GetIidInterceptorGenerator
         {
             token.ThrowIfCancellationRequested();
 
-            return node is InvocationExpressionSyntax { ArgumentList.Arguments.Count: 0 } invocation &&
-                (invocation.Expression is SimpleNameSyntax { Identifier.ValueText: "GetIid" } ||
-                 invocation.Expression is MemberAccessExpressionSyntax { Name.Identifier.ValueText: "GetIid" });
+            // Check the shape of the call first, as that's the cheapest test
+            if (node is not InvocationExpressionSyntax { ArgumentList.Arguments.Count: 0 } invocation ||
+                !(invocation.Expression is SimpleNameSyntax { Identifier.ValueText: "GetIid" } ||
+                  invocation.Expression is MemberAccessExpressionSyntax { Name.Identifier.ValueText: "GetIid" }))
+            {
+                return false;
+            }
+
+            // Interceptors can only be declared in namespaces enabled via 'InterceptorsNamespaces', or the compiler reports an error.
+            // The targets only enable ours when the project hasn't opted out. The analyzer config options can't be read from here, so
+            // checking this lets us skip all the semantic analysis below (which is the expensive part) for projects that opted out.
+            return node.SyntaxTree.Options.IsInterceptorsNamespaceEnabled(GeneratedNamespace);
         }
 
         /// <summary>

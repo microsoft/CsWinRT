@@ -9,6 +9,8 @@ using Microsoft.CodeAnalysis;
 using WindowsRuntime.Generator.References;
 using WindowsRuntime.InteropGenerator.Helpers;
 
+#pragma warning disable IDE0046
+
 namespace WindowsRuntime.SourceGenerator;
 
 /// <summary>
@@ -23,19 +25,9 @@ internal sealed class WindowsRuntimeMetadataResolver(
     CancellationToken token)
 {
     /// <summary>
-    /// Projection metadata shared by both XAML modes within one semantic transform.
+    /// The metadata shared by all the calls analyzed against the same compilation.
     /// </summary>
-    private readonly Dictionary<IAssemblySymbol, ProjectionInfo> _projectionMetadata = new(SymbolEqualityComparer.Default);
-
-    /// <summary>
-    /// Framework definitions resolved within the consuming compilation, including type forwards.
-    /// </summary>
-    private readonly Dictionary<string, INamedTypeSymbol?> _frameworkDefinitions = new(StringComparer.Ordinal);
-
-    /// <summary>
-    /// Default interfaces decoded only for classes used by the current call.
-    /// </summary>
-    private readonly Dictionary<INamedTypeSymbol, INamedTypeSymbol?> _defaultInterfaces = new(SymbolEqualityComparer.Default);
+    private readonly WindowsRuntimeMetadataCache _cache = WindowsRuntimeMetadataCache.GetOrCreate(compilation);
 
     /// <summary>
     /// Gets the validated definition and metadata name for a supported type.
@@ -137,19 +129,34 @@ internal sealed class WindowsRuntimeMetadataResolver(
         string name,
         [NotNullWhen(true)] out INamedTypeSymbol? defaultInterface)
     {
-        // Resolving the default interface involves parsing a type name, so cache the result (including misses) per class
-        if (!_defaultInterfaces.TryGetValue(type, out defaultInterface))
+        // Resolves the recorded default interface of a runtime class (cached below, as this involves parsing a type name)
+        static INamedTypeSymbol? ResolveDefaultInterface(
+            INamedTypeSymbol type,
+            (WindowsRuntimeMetadataResolver Resolver, Compilation Compilation, CancellationToken Token, string Name) state)
         {
-            // Look up the recorded name, then resolve it and make sure it's actually an interface (not a class or struct)
-            if (GetProjectionInfo(type.ContainingAssembly).DefaultInterfaces.TryGetValue(name, out string? interfaceName) &&
-                WindowsRuntimeTypeNameParser.TryParse(interfaceName, compilation, type.ContainingAssembly, token, out INamedTypeSymbol? resolved) &&
-                resolved.TypeKind == TypeKind.Interface)
+            // Look up the recorded name for this class
+            if (!state.Resolver.GetDefaultInterfaceNames(type.ContainingAssembly).TryGetValue(state.Name, out string? interfaceName))
             {
-                defaultInterface = resolved;
+                return null;
             }
 
-            _defaultInterfaces.Add(type, defaultInterface);
+            // Resolve the recorded name to a type
+            if (!WindowsRuntimeTypeNameParser.TryParse(interfaceName, state.Compilation, type.ContainingAssembly, state.Token, out INamedTypeSymbol? resolved))
+            {
+                return null;
+            }
+
+            // Make sure it's actually an interface (not a class or struct)
+            if (resolved.TypeKind != TypeKind.Interface)
+            {
+                return null;
+            }
+
+            return resolved;
         }
+
+        // Resolving the default interface involves parsing a type name, so cache the result (including misses) per class
+        defaultInterface = _cache.DefaultInterfaces.GetOrAdd(type, ResolveDefaultInterface, (Resolver: this, Compilation: compilation, Token: token, Name: name));
 
         return defaultInterface is not null;
     }
@@ -198,7 +205,7 @@ internal sealed class WindowsRuntimeMetadataResolver(
                 !isAttribute;
         }
 
-        ProjectionInfo metadata = GetProjectionInfo(type.ContainingAssembly);
+        WindowsRuntimeMetadataCache.ProjectionInfo metadata = GetProjectionInfo(type.ContainingAssembly);
 
         // Everything else needs to come from a reference projection assembly. Components are excluded because their types are
         // authored in managed code and not projected, and attributes are excluded for the same reason as above.
@@ -223,24 +230,24 @@ internal sealed class WindowsRuntimeMetadataResolver(
     /// <returns>The framework definition, if available.</returns>
     private INamedTypeSymbol? GetFrameworkDefinition(string name)
     {
-        // Framework definitions are resolved repeatedly for the same names, so cache the results (including misses)
-        if (_frameworkDefinitions.TryGetValue(name, out INamedTypeSymbol? type))
+        // Looks up the definition in the core library first, and then in the trusted facade assemblies that forward to it
+        static INamedTypeSymbol? ResolveFrameworkDefinition(string name, (Compilation Compilation, CancellationToken Token) state)
         {
-            return type;
-        }
+            // Most framework types live directly in the core library, so check there first
+            IAssemblySymbol coreLibrary = state.Compilation.GetSpecialType(SpecialType.System_Object).ContainingAssembly;
 
-        // Most framework types live directly in the core library, so check there first
-        IAssemblySymbol coreLibrary = compilation.GetSpecialType(SpecialType.System_Object).ContainingAssembly;
+            INamedTypeSymbol? type = coreLibrary.GetTypeByMetadataName(name);
 
-        type = coreLibrary.GetTypeByMetadataName(name);
-
-        // Reference assemblies split types across facade assemblies, which forward to the actual definitions. If the type
-        // wasn't found in the core library, look through the referenced facades that we know and trust.
-        if (type is null)
-        {
-            foreach (IAssemblySymbol assembly in compilation.SourceModule.ReferencedAssemblySymbols)
+            if (type is not null)
             {
-                token.ThrowIfCancellationRequested();
+                return type;
+            }
+
+            // Reference assemblies split types across facade assemblies, which forward to the actual definitions. If the type
+            // wasn't found in the core library, look through the referenced facades that we know and trust.
+            foreach (IAssemblySymbol assembly in state.Compilation.SourceModule.ReferencedAssemblySymbols)
+            {
+                state.Token.ThrowIfCancellationRequested();
 
                 // Only consider well-known framework assemblies, so that a same-named assembly can't provide the type
                 byte[]? publicKeyToken = assembly.Identity.Name switch
@@ -254,77 +261,91 @@ internal sealed class WindowsRuntimeMetadataResolver(
                 };
 
                 // The assembly also needs to be signed with the expected key, and then the type is either defined there or forwarded
-                if (publicKeyToken is not null &&
-                    assembly.Identity.PublicKeyToken.AsSpan().SequenceEqual(publicKeyToken))
+                if (publicKeyToken is null ||
+                    !assembly.Identity.PublicKeyToken.AsSpan().SequenceEqual(publicKeyToken))
                 {
-                    type = assembly.GetTypeByMetadataName(name) ?? assembly.ResolveForwardedType(name);
+                    continue;
+                }
 
-                    if (type is not null)
-                    {
-                        break;
-                    }
+                type = assembly.GetTypeByMetadataName(name) ?? assembly.ResolveForwardedType(name);
+
+                if (type is not null)
+                {
+                    return type;
                 }
             }
+
+            return null;
         }
 
-        _frameworkDefinitions.Add(name, type);
-
-        return type;
+        // Framework definitions are resolved repeatedly for the same names, so cache the results (including misses)
+        return _cache.FrameworkDefinitions.GetOrAdd(name, ResolveFrameworkDefinition, (Compilation: compilation, Token: token));
     }
 
     /// <summary>
-    /// Indexes reference-only projection metadata without retaining symbols beyond this semantic transform.
+    /// Gets whether an assembly is a reference projection or an authored component.
     /// </summary>
     /// <param name="assembly">The input assembly.</param>
-    /// <returns>The indexed projection metadata.</returns>
-    private ProjectionInfo GetProjectionInfo(IAssemblySymbol assembly)
+    /// <returns>The kind of the assembly.</returns>
+    private WindowsRuntimeMetadataCache.ProjectionInfo GetProjectionInfo(IAssemblySymbol assembly)
     {
-        // The same assembly is queried for every type it defines, so cache the indexed metadata
-        if (_projectionMetadata.TryGetValue(assembly, out ProjectionInfo? info))
+        // Checks the marker attributes from the runtime assembly, to tell whether this is a reference projection or an authored component
+        static WindowsRuntimeMetadataCache.ProjectionInfo ComputeProjectionInfo(IAssemblySymbol assembly, IAssemblySymbol windowsRuntimeAssembly)
         {
-            return info;
+            INamedTypeSymbol? referenceAssemblyAttribute = windowsRuntimeAssembly.GetTypeByMetadataName("WindowsRuntime.InteropServices.WindowsRuntimeReferenceAssemblyAttribute");
+            INamedTypeSymbol? componentAssemblyAttribute = windowsRuntimeAssembly.GetTypeByMetadataName("WindowsRuntime.InteropServices.WindowsRuntimeComponentAssemblyAttribute");
+
+            bool isProjection = referenceAssemblyAttribute is not null && assembly.HasAttributeWithType(referenceAssemblyAttribute);
+            bool isComponent = componentAssemblyAttribute is not null && assembly.HasAttributeWithType(componentAssemblyAttribute);
+
+            return new WindowsRuntimeMetadataCache.ProjectionInfo(isProjection, isComponent);
         }
 
-        INamedTypeSymbol? referenceAssemblyAttribute = windowsRuntimeAssembly.GetTypeByMetadataName("WindowsRuntime.InteropServices.WindowsRuntimeReferenceAssemblyAttribute");
-        INamedTypeSymbol? componentAssemblyAttribute = windowsRuntimeAssembly.GetTypeByMetadataName("WindowsRuntime.InteropServices.WindowsRuntimeComponentAssemblyAttribute");
-        INamedTypeSymbol? referenceMetadataAttribute = windowsRuntimeAssembly.GetTypeByMetadataName(WindowsRuntimeReferenceAssemblyMetadata.AttributeTypeName);
+        // The same assembly is queried for every type it defines, so cache the result
+        return _cache.ProjectionInfos.GetOrAdd(assembly, ComputeProjectionInfo, windowsRuntimeAssembly);
+    }
 
-        // Check whether this is a reference projection or an authored component, using the marker attributes from the runtime assembly
-        bool isProjection = referenceAssemblyAttribute is not null && assembly.HasAttributeWithType(referenceAssemblyAttribute);
-        bool isComponent = componentAssemblyAttribute is not null && assembly.HasAttributeWithType(componentAssemblyAttribute);
-        Dictionary<string, string> defaultInterfaces = new(StringComparer.Ordinal);
-
-        // Reference projections record the default interface of each runtime class as a metadata entry. Each entry is a key
-        // with a known prefix followed by the class name, and the value is the name of its default interface.
-        if (referenceMetadataAttribute is not null)
+    /// <summary>
+    /// Indexes the default interface names recorded by a reference projection.
+    /// </summary>
+    /// <param name="assembly">The input assembly.</param>
+    /// <returns>The recorded default interface names, by runtime class name.</returns>
+    /// <remarks>
+    /// This is separate from <see cref="GetProjectionInfo"/> because a projection can record thousands of entries, which
+    /// are only needed to resolve runtime classes. Calls that only deal with interfaces and delegates never pay for them.
+    /// </remarks>
+    private IReadOnlyDictionary<string, string> GetDefaultInterfaceNames(IAssemblySymbol assembly)
+    {
+        // Reads the default interface entries recorded by the reference projection, which can be thousands of them
+        static IReadOnlyDictionary<string, string> IndexDefaultInterfaceNames(
+            IAssemblySymbol assembly,
+            (IAssemblySymbol WindowsRuntimeAssembly, CancellationToken Token) state)
         {
+            INamedTypeSymbol? referenceMetadataAttribute = state.WindowsRuntimeAssembly.GetTypeByMetadataName(WindowsRuntimeReferenceAssemblyMetadata.AttributeTypeName);
+            Dictionary<string, string> names = new(StringComparer.Ordinal);
+
+            if (referenceMetadataAttribute is null)
+            {
+                return names;
+            }
+
+            // Reference projections record the default interface of each runtime class as a metadata entry. Each entry is a key
+            // with a known prefix followed by the class name, and the value is the name of its default interface.
             foreach (AttributeData attribute in assembly.GetAttributes(referenceMetadataAttribute))
             {
-                token.ThrowIfCancellationRequested();
+                state.Token.ThrowIfCancellationRequested();
 
                 if (attribute.ConstructorArguments is [{ Value: string key }, { Value: string value }] &&
                     key.StartsWith(WindowsRuntimeReferenceAssemblyMetadata.DefaultInterfacePrefix, StringComparison.Ordinal))
                 {
-                    defaultInterfaces[key[WindowsRuntimeReferenceAssemblyMetadata.DefaultInterfacePrefix.Length..]] = value;
+                    names[key[WindowsRuntimeReferenceAssemblyMetadata.DefaultInterfacePrefix.Length..]] = value;
                 }
             }
+
+            return names;
         }
 
-        info = new ProjectionInfo(isProjection, isComponent, defaultInterfaces);
-
-        _projectionMetadata.Add(assembly, info);
-
-        return info;
+        // The same assembly is queried for every runtime class it defines, so cache the index
+        return _cache.DefaultInterfaceNames.GetOrAdd(assembly, IndexDefaultInterfaceNames, (WindowsRuntimeAssembly: windowsRuntimeAssembly, Token: token));
     }
-
-    /// <summary>
-    /// Reference-only metadata for one assembly.
-    /// </summary>
-    /// <param name="IsProjection">Whether the assembly contains reference projections.</param>
-    /// <param name="IsComponent">Whether the assembly is an authored component.</param>
-    /// <param name="DefaultInterfaces">The runtime classes' recorded default interface names.</param>
-    private sealed record ProjectionInfo(
-        bool IsProjection,
-        bool IsComponent,
-        IReadOnlyDictionary<string, string> DefaultInterfaces);
 }

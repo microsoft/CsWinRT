@@ -174,6 +174,128 @@ public partial class Test_GetIidInterceptorGenerator
     }
 
     [TestMethod]
+    [DataRow("WindowsRuntime.Generated", true)]
+    [DataRow("WindowsRuntime", true)]
+    [DataRow("Other.Namespace;WindowsRuntime.Generated", true)]
+    [DataRow("WindowsRuntime.Generated;Other.Namespace", true)]
+    [DataRow("global", true)]
+    [DataRow(null, false)]
+    [DataRow("", false)]
+    [DataRow(";", false)]
+    [DataRow("Windows", false)]
+    [DataRow("WindowsRuntimeX", false)]
+    [DataRow("WindowsRuntime.", false)]
+    [DataRow("WindowsRuntime.Generated.Nested", false)]
+    [DataRow(" WindowsRuntime.Generated", false)]
+    [DataRow("windowsruntime.generated", false)]
+    [DataRow("global.WindowsRuntime.Generated", false)]
+    [DataRow("Other.Namespace", false)]
+    public void Interceptor_RequiresInterceptorsNamespace(string? namespaces, bool expectIntercepted)
+    {
+        const string Source = """
+            public static class Test
+            {
+                public static System.Guid Run() => WindowsRuntime.InteropServices.WindowsRuntimeMarshal.GetIid<object>();
+            }
+            """;
+
+        CSharpParseOptions parseOptions = new(LanguageVersion.CSharp14);
+
+        if (namespaces is not null)
+        {
+            parseOptions = parseOptions.WithFeatures([new("InterceptorsNamespaces", namespaces)]);
+        }
+
+        (Compilation compilation, GeneratorDriverRunResult result) = Run(Source, parseOptions: parseOptions);
+
+        Assert.AreEqual(expectIntercepted, result.GeneratedTrees.Length != 0);
+        Assert.IsEmpty(compilation.GetDiagnostics().Where(static diagnostic => diagnostic.Severity == DiagnosticSeverity.Error).ToArray());
+
+        // Compare with the compiler itself: the interceptors (generated with the namespace enabled) must be accepted with these
+        // options exactly when we generate them (CS9137 is the error for an interceptor in a namespace that isn't enabled)
+        (_, GeneratorDriverRunResult enabled) = Run(Source);
+        CSharpCompilation oracle = CSharpCompilation.Create(
+            "Oracle",
+            [
+                CSharpSyntaxTree.ParseText(Source, parseOptions, path: @"C:\Tests\Input.cs"),
+                CSharpSyntaxTree.ParseText(enabled.GeneratedTrees.Single().ToString(), parseOptions)
+            ],
+            GetReferences(),
+            new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
+
+        Assert.AreEqual(expectIntercepted, !oracle.GetDiagnostics().Any(static diagnostic => diagnostic.Id == "CS9137"));
+    }
+
+    [TestMethod]
+    public void MetadataCache_DoesNotLeakAcrossCompilations()
+    {
+        // Both projections define the same type names, so a cache shared across compilations would return the wrong IID
+        foreach (Guid iid in new[] { Guid.NewGuid(), Guid.NewGuid() })
+        {
+            (Compilation compilation, GeneratorDriverRunResult result) = Run("""
+                using WindowsRuntime.InteropServices;
+                public static class Test
+                {
+                    public static System.Guid A() => WindowsRuntimeMarshal.GetIid<Projection.RuntimeClass>();
+                    public static System.Guid B() => WindowsRuntimeMarshal.GetIid<Projection.IRuntimeClass>();
+                    public static System.Guid C() => WindowsRuntimeMarshal.GetIid<Projection.RuntimeClass>();
+                    public static System.Guid D() => WindowsRuntimeMarshal.GetIid<System.Collections.Generic.IList<Projection.RuntimeClass>>();
+                    public static System.Guid E() => WindowsRuntimeMarshal.GetIid<System.Collections.Generic.IList<Projection.IRuntimeClass>>();
+                }
+                """, [CreateRuntimeClassProjection(iid)]);
+
+            string generated = result.GeneratedTrees.Single().ToString();
+
+            // The class and its default interface share one interceptor, while the two lists differ (a class has its own signature)
+            Assert.AreEqual(3, result.GeneratedTrees.Single().GetRoot().DescendantNodes().OfType<MethodDeclarationSyntax>().Count());
+            Assert.AreEqual(5, generated.Split("InterceptsLocationAttribute(").Length - 2);
+            Assert.Contains($"GetIid_{iid.ToString("N").ToUpperInvariant()}", generated);
+            Assert.IsEmpty(compilation.GetDiagnostics().Where(static diagnostic => diagnostic.Severity == DiagnosticSeverity.Error).ToArray());
+        }
+    }
+
+    [TestMethod]
+    public void MetadataCache_AfterEditAddingRuntimeClassCall_MatchesFreshRun()
+    {
+        MetadataReference reference = CreateRuntimeClassProjection(Guid.NewGuid());
+
+        const string Before = """
+            using WindowsRuntime.InteropServices;
+            public static class Test
+            {
+                public static System.Guid A() => WindowsRuntimeMarshal.GetIid<Projection.IRuntimeClass>();
+            }
+            """;
+
+        const string After = """
+            using WindowsRuntime.InteropServices;
+            public static class Test
+            {
+                public static System.Guid A() => WindowsRuntimeMarshal.GetIid<Projection.IRuntimeClass>();
+                public static System.Guid B() => WindowsRuntimeMarshal.GetIid<Projection.RuntimeClass>();
+            }
+            """;
+
+        CSharpCompilation compilation = CSharpCompilation.Create(
+            "Incremental",
+            [CSharpSyntaxTree.ParseText(Before, ParseOptions, path: @"C:\Tests\Input.cs")],
+            [.. GetReferences(), reference],
+            new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
+        GeneratorDriver driver = CSharpGeneratorDriver.Create(
+            [new GetIidInterceptorGenerator().AsSourceGenerator()], parseOptions: ParseOptions, optionsProvider: new OptionsProvider(false, null));
+
+        // The first run only deals with an interface, so nothing needs the default interface index yet. After the edit, the
+        // new compilation needs it for the first time, and the result must be the same as if it had been analyzed from scratch.
+        driver = driver.RunGenerators(compilation);
+        compilation = compilation.ReplaceSyntaxTree(compilation.SyntaxTrees.Single(), CSharpSyntaxTree.ParseText(After, ParseOptions, path: @"C:\Tests\Input.cs"));
+        driver = driver.RunGenerators(compilation);
+
+        (_, GeneratorDriverRunResult fresh) = Run(After, [reference]);
+
+        Assert.AreEqual(fresh.GeneratedTrees.Single().ToString(), driver.GetRunResult().GeneratedTrees.Single().ToString());
+    }
+
+    [TestMethod]
     public void Interceptor_EmbedsExactRvaBytesWithoutStaticConstructor()
     {
         (Compilation compilation, _) = Run("""
@@ -418,6 +540,19 @@ public partial class Test_GetIidInterceptorGenerator
         MetadataReference.CreateFromFile(typeof(WindowsRuntimeObject).Assembly.Location)
     ];
 
+    private static MetadataReference CreateRuntimeClassProjection(Guid iid) => CompileReference($$"""
+        using System.Runtime.InteropServices;
+        using WindowsRuntime.InteropServices;
+        [assembly: WindowsRuntimeReferenceAssembly]
+        [assembly: WindowsRuntimeReferenceAssemblyMetadata("CsWinRT.DefaultInterface.v1:Projection.RuntimeClass", "Projection.IRuntimeClass")]
+        namespace Projection
+        {
+            [Guid("{{iid}}")]
+            public interface IRuntimeClass { }
+            public sealed class RuntimeClass { }
+        }
+        """, "Projection");
+
     private static MetadataReference CompileReference(string source, string name)
     {
         CSharpCompilation compilation = CSharpCompilation.Create(name,
@@ -436,16 +571,19 @@ public partial class Test_GetIidInterceptorGenerator
         bool useUwp = false,
         string? assemblyName = null,
         bool? generateInterceptors = null,
-        string[]? suppressedDiagnostics = null)
+        string[]? suppressedDiagnostics = null,
+        CSharpParseOptions? parseOptions = null)
     {
+        parseOptions ??= ParseOptions;
+
         CSharpCompilation compilation = CSharpCompilation.Create(
             assemblyName ?? $"InterceptorTest_{Guid.NewGuid():N}",
-            [CSharpSyntaxTree.ParseText(source, ParseOptions, path: @"C:\Tests\Input.cs")],
+            [CSharpSyntaxTree.ParseText(source, parseOptions, path: @"C:\Tests\Input.cs")],
             [.. GetReferences(), .. additionalReferences ?? []],
             new CSharpCompilationOptions(outputKind).WithSpecificDiagnosticOptions(
                 (suppressedDiagnostics ?? []).ToDictionary(static id => id, static _ => ReportDiagnostic.Suppress)));
         GeneratorDriver driver = CSharpGeneratorDriver.Create(
-            [new GetIidInterceptorGenerator().AsSourceGenerator()], parseOptions: ParseOptions, optionsProvider: new OptionsProvider(useUwp, generateInterceptors));
+            [new GetIidInterceptorGenerator().AsSourceGenerator()], parseOptions: parseOptions, optionsProvider: new OptionsProvider(useUwp, generateInterceptors));
         driver = driver.RunGeneratorsAndUpdateCompilation(compilation, out Compilation output, out ImmutableArray<Diagnostic> diagnostics);
         Assert.IsEmpty(diagnostics, string.Join("\n", diagnostics));
         return (output, driver.GetRunResult());

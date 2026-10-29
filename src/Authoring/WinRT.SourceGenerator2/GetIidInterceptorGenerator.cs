@@ -12,6 +12,11 @@ namespace WindowsRuntime.SourceGenerator;
 [Generator]
 public sealed partial class GetIidInterceptorGenerator : IIncrementalGenerator
 {
+    /// <summary>
+    /// The namespace the interceptors are generated in, which projects must enable with <c>InterceptorsNamespaces</c>.
+    /// </summary>
+    private const string GeneratedNamespace = "WindowsRuntime.Generated";
+
     /// <inheritdoc/>
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
