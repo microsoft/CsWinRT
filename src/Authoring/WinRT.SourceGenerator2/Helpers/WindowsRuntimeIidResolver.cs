@@ -44,10 +44,10 @@ internal sealed partial class WindowsRuntimeIidResolver(
     {
         token.ThrowIfCancellationRequested();
 
-        iid = default;
-
         if (type.TypeKind == TypeKind.Dynamic)
         {
+            iid = default;
+
             return false;
         }
 
@@ -62,6 +62,8 @@ internal sealed partial class WindowsRuntimeIidResolver(
         {
             if (!TryGetSignature(type, useWindowsUIXamlProjections, out string? signature))
             {
+                iid = default;
+
                 return false;
             }
 
@@ -76,6 +78,8 @@ internal sealed partial class WindowsRuntimeIidResolver(
             !TryGetDefinition(type, out INamedTypeSymbol? definition, out string? name) ||
             name == "System.EventHandler")
         {
+            iid = default;
+
             return false;
         }
 
@@ -94,12 +98,16 @@ internal sealed partial class WindowsRuntimeIidResolver(
         // Only runtime classes can have an IID that comes from another type (their default interface)
         if (definition.TypeKind != TypeKind.Class)
         {
+            iid = default;
+
             return false;
         }
 
         // The default interface is recorded by name, as it's often exclusive-to and not declared by the class
         if (!TryGetDefaultInterface(definition, name, out INamedTypeSymbol? defaultInterface))
         {
+            iid = default;
+
             return false;
         }
 
