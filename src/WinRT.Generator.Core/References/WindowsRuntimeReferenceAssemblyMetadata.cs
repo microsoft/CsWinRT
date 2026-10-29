@@ -1,9 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System;
-using WindowsRuntime.Generator.Helpers;
-
 namespace WindowsRuntime.Generator.References;
 
 /// <summary>
@@ -34,14 +31,15 @@ internal static class WindowsRuntimeReferenceAssemblyMetadata
     public const string ImplementableClass = "CsWinRT.ImplementableClass.v1";
 
     /// <summary>
-    /// The key prefix for the default interface signature of one Windows Runtime class.
+    /// The key prefix for the default interface of one Windows Runtime class.
     /// </summary>
     /// <remarks>
-    /// The key is completed with the fully qualified class name, and the value is the Windows Runtime signature of the
-    /// class's default interface (see <see cref="TryGetDefaultInterfaceIid"/>). This lets consumers compute the class's
-    /// IID and signature even when its default interface is exclusive and therefore absent from the reference projection.
+    /// The key is completed with the fully qualified class name, and the value is the C# name of the class's default
+    /// interface (e.g. <c>Contoso.IWidget</c>, or <c>System.Collections.Generic.IList&lt;string&gt;</c>).
+    /// This lets consumers derive the class's IID and signature even when its default interface is exclusive-to, and
+    /// therefore not among the interfaces declared by the class in the reference projection.
     /// </remarks>
-    public const string DefaultInterfaceSignaturePrefix = "CsWinRT.DefaultInterfaceSignature.v1:";
+    public const string DefaultInterfacePrefix = "CsWinRT.DefaultInterface.v1:";
 
     /// <summary>
     /// Gets the full name of the instance base generated for an implementable Windows Runtime class.
@@ -61,24 +59,5 @@ internal static class WindowsRuntimeReferenceAssemblyMetadata
     public static string GetImplementableClassFactoryBaseTypeName(string runtimeClassName)
     {
         return $"ABI.{runtimeClassName}ActivationFactory";
-    }
-
-    /// <summary>
-    /// Gets the IID of a Windows Runtime class's default interface, from its <see cref="DefaultInterfaceSignaturePrefix"/> value.
-    /// </summary>
-    /// <param name="signature">The signature of the default interface.</param>
-    /// <param name="iid">The resulting IID, if <paramref name="signature"/> is valid.</param>
-    /// <returns>Whether <paramref name="iid"/> was retrieved successfully.</returns>
-    public static bool TryGetDefaultInterfaceIid(string signature, out Guid iid)
-    {
-        // Parameterized interfaces are identified by their signature hash, all other interfaces by their braced IID
-        if (signature.StartsWith("pinterface(", StringComparison.Ordinal) && signature.EndsWith(')'))
-        {
-            iid = GuidGenerator.Generate(signature);
-
-            return true;
-        }
-
-        return Guid.TryParseExact(signature, "B", out iid);
     }
 }

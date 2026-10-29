@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Reflection;
 using AsmResolver.DotNet;
@@ -15,6 +16,8 @@ using WindowsRuntime.ProjectionWriter.Metadata;
 using WindowsRuntime.ProjectionWriter.Models;
 using WindowsRuntime.ProjectionWriter.Resolvers;
 using WindowsRuntime.ProjectionWriter.Writers;
+using static WindowsRuntime.ProjectionWriter.References.WellKnownNamespaces;
+using static WindowsRuntime.ProjectionWriter.References.WellKnownTypeNames;
 
 namespace WindowsRuntime.ProjectionWriter.Factories;
 
@@ -81,7 +84,7 @@ internal static class MetadataAttributeFactory
 
     /// <summary>
     /// Writes reference-only key/value metadata, such as the effective exclusive-to IDIC selection and the
-    /// implementable bases and default-interface signatures the reference projection declares.
+    /// implementable bases and default interface names the reference projection declares.
     /// </summary>
     /// <param name="writer">The writer to emit to.</param>
     /// <param name="entries">The (key, value) entries, in a deterministic order.</param>
@@ -480,20 +483,58 @@ internal static class MetadataAttributeFactory
     /// </summary>
     public static void AddDefaultInterfaceEntry(ProjectionEmitContext context, TypeDefinition type, System.Collections.Concurrent.ConcurrentDictionary<string, string> entries)
     {
-        if (context.Settings.ReferenceProjection)
-        {
-            return;
-        }
-
-        ITypeDefOrRef? defaultIface = type.GetDefaultInterface();
-
-        if (defaultIface is null)
+        if (context.Settings.ReferenceProjection || !TryGetDefaultInterfaceName(context, type, out string? interfaceName))
         {
             return;
         }
 
         (string typeNs, string typeName) = type.Names();
         string className = TypedefNameWriter.BuildGlobalQualifiedName(typeNs, typeName);
+
+        _ = entries.TryAdd(className, interfaceName);
+    }
+
+    /// <summary>
+    /// Adds an entry to the default-interface map for a class type, to preserve in reference-projection assembly metadata.
+    /// </summary>
+    /// <param name="context">The active emit context.</param>
+    /// <param name="type">The class type.</param>
+    /// <param name="entries">The (class-name -> default-interface-name) map.</param>
+    /// <remarks>
+    /// The default interface of a class is often exclusive-to, so it is not part of the class's declared interfaces
+    /// in a reference projection. Recording its name lets consumers derive the class's IID and signature from it.
+    /// </remarks>
+    public static void AddReferenceDefaultInterfaceEntry(
+        ProjectionEmitContext context,
+        TypeDefinition type,
+        System.Collections.Concurrent.ConcurrentDictionary<string, string> entries)
+    {
+        if (!context.Settings.ReferenceProjection || !TryGetDefaultInterfaceName(context, type, out string? interfaceName))
+        {
+            return;
+        }
+
+        // The names are resolved by metadata name rather than compiled, so the 'global::' qualifier is not needed
+        _ = entries.TryAdd(type.FullName, interfaceName.Replace("global::", string.Empty, StringComparison.Ordinal));
+    }
+
+    /// <summary>
+    /// Gets the fully qualified name of the default interface of a class type.
+    /// </summary>
+    /// <param name="context">The active emit context.</param>
+    /// <param name="type">The class type.</param>
+    /// <param name="interfaceName">The resulting name, if <paramref name="type"/> has a default interface.</param>
+    /// <returns>Whether <paramref name="interfaceName"/> was retrieved successfully.</returns>
+    private static bool TryGetDefaultInterfaceName(ProjectionEmitContext context, TypeDefinition type, [NotNullWhen(true)] out string? interfaceName)
+    {
+        ITypeDefOrRef? defaultIface = type.GetDefaultInterface();
+
+        if (defaultIface is null)
+        {
+            interfaceName = null;
+
+            return false;
+        }
 
         // Resolve TypeReference -> TypeDefinition so WriteTypeName goes through the Definition
         // branch which knows about authored-type CCW namespacing (ABI.Impl. prefix).
@@ -509,32 +550,61 @@ internal static class MetadataAttributeFactory
             }
         }
 
+        TypeSemantics semantics = TypeSemanticsFactory.GetFromTypeDefOrRef(capturedIface);
+
+        // A name can't represent 'IReference<T>' where 'T' projects to a reference type, as the projection drops the wrapper
+        if (HasUnwrappedReference(semantics))
+        {
+            interfaceName = null;
+
+            return false;
+        }
+
         // Build the interface display name via TypeSemantics so generic instantiations
         // (e.g. IDictionary<string, BasicStruct>), TypeRefs and TypeDefs are all handled correctly.
-        string interfaceName = TypedefNameWriter.WriteTypeName(context, TypeSemanticsFactory.GetFromTypeDefOrRef(capturedIface), TypedefNameType.CCW, true).Format();
+        interfaceName = TypedefNameWriter.WriteTypeName(context, semantics, TypedefNameType.CCW, true).Format();
 
-        _ = entries.TryAdd(className, interfaceName);
+        return true;
     }
 
     /// <summary>
-    /// Adds an entry to the default-interface signature map for a class type, to preserve in reference-projection assembly metadata.
+    /// Checks whether any generic argument is an <c>IReference&lt;T&gt;</c> that is projected as just <c>T</c>.
     /// </summary>
-    /// <param name="context">The active emit context.</param>
-    /// <param name="type">The class type.</param>
-    /// <param name="entries">The (class-name -> default-interface-signature) map.</param>
-    public static void AddDefaultInterfaceSignatureEntry(
-        ProjectionEmitContext context,
-        TypeDefinition type,
-        System.Collections.Concurrent.ConcurrentDictionary<string, string> entries)
+    /// <param name="semantics">The type to check.</param>
+    /// <returns>Whether the projected name of <paramref name="semantics"/> loses an <c>IReference&lt;T&gt;</c> wrapper.</returns>
+    private static bool HasUnwrappedReference(TypeSemantics semantics)
     {
-        if (!context.Settings.ReferenceProjection || type.GetDefaultInterface() is not { } defaultInterface)
+        List<TypeSemantics>? arguments = semantics switch
         {
-            return;
+            TypeSemantics.GenericInstance gi => gi.GenericArgs,
+            TypeSemantics.GenericInstanceRef gir => gir.GenericArgs,
+            _ => null
+        };
+
+        if (arguments is null)
+        {
+            return false;
         }
 
-        string signature = SignatureGenerator.GetSignature(context, TypeSemanticsFactory.GetFromTypeDefOrRef(defaultInterface));
+        if (semantics is TypeSemantics.GenericInstanceRef { GenericType: { } genericType, GenericArgs: [{ } referencedType] })
+        {
+            (string ns, string name) = genericType.Names();
 
-        _ = entries.TryAdd(type.FullName, signature);
+            if (ns == WindowsFoundation && name == IReferenceGeneric && TypedefNameWriter.ProjectsToReferenceType(referencedType))
+            {
+                return true;
+            }
+        }
+
+        foreach (TypeSemantics argument in arguments)
+        {
+            if (HasUnwrappedReference(argument))
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /// <summary>

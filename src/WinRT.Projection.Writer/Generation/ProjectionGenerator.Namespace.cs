@@ -160,7 +160,7 @@ internal sealed partial class ProjectionGenerator
             if (kind == TypeKind.Class && !type.IsAttributeType)
             {
                 MetadataAttributeFactory.AddDefaultInterfaceEntry(context, type, defaultInterfaceEntries);
-                MetadataAttributeFactory.AddDefaultInterfaceSignatureEntry(context, type, state.DefaultInterfaceSignatureEntries);
+                MetadataAttributeFactory.AddReferenceDefaultInterfaceEntry(context, type, state.ReferenceDefaultInterfaceEntries);
                 MetadataAttributeFactory.AddExclusiveToInterfaceEntries(context, type, exclusiveToInterfaceEntries);
                 ComponentFactory.AddMetadataTypeEntry(context, type, authoredTypeNameToMetadataMap);
 

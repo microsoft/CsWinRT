@@ -155,6 +155,22 @@ public partial class Test_GetIidInterceptorGenerator
     }
 
     [TestMethod]
+    [DataRow(null, true)]
+    [DataRow(true, true)]
+    [DataRow(false, false)]
+    public void Interceptor_HonorsOptOutProperty(bool? generateInterceptors, bool expectIntercepted)
+    {
+        (_, GeneratorDriverRunResult result) = Run("""
+            public static class Test
+            {
+                public static System.Guid Run() => WindowsRuntime.InteropServices.WindowsRuntimeMarshal.GetIid<object>();
+            }
+            """, generateInterceptors: generateInterceptors);
+
+        Assert.AreEqual(expectIntercepted, result.GeneratedTrees.Length != 0);
+    }
+
+    [TestMethod]
     public void Interceptor_EmbedsExactRvaBytesWithoutStaticConstructor()
     {
         (Compilation compilation, _) = Run("""
@@ -243,7 +259,7 @@ public partial class Test_GetIidInterceptorGenerator
                     WindowsRuntime.InteropServices.WindowsRuntimeMarshal.GetIid<System.ComponentModel.INotifyPropertyChanged>();
             }
             """, outputKind: OutputKind.ConsoleApplication, useUwp: true);
-        Assert.Contains("Get_Iid_cf75d69cf2f4486bb302bb4c09baebfa", result.GeneratedTrees.Single().ToString());
+        Assert.Contains("GetIid_CF75D69CF2F4486BB302BB4C09BAEBFA", result.GeneratedTrees.Single().ToString());
         Assert.IsEmpty(compilation.GetDiagnostics().Where(static diagnostic => diagnostic.Severity == DiagnosticSeverity.Error).ToArray());
     }
 
@@ -261,19 +277,33 @@ public partial class Test_GetIidInterceptorGenerator
     }
 
     [TestMethod]
-    public void ReferenceShapedProjection_UsesDelegateGuidAndHiddenDefaultInterfaceSignature()
+    public void ReferenceShapedProjection_UsesDelegateGuidAndHiddenDefaultInterfaceName()
     {
         const string projection = """
             using System;
             using System.Runtime.InteropServices;
             using WindowsRuntime.InteropServices;
             [assembly: WindowsRuntimeReferenceAssembly]
-            [assembly: WindowsRuntimeReferenceAssemblyMetadata("CsWinRT.DefaultInterfaceSignature.v1:Projection.RuntimeClass", "{30d5a829-7fa4-4026-83bb-d75bae4ea99e}")]
-            [assembly: WindowsRuntimeReferenceAssemblyMetadata("CsWinRT.DefaultInterfaceSignature.v1:Projection.GenericDefaultClass", "pinterface({913337e9-11a1-4345-a3a2-4e7f956e222d};i4)")]
+            [assembly: WindowsRuntimeReferenceAssemblyMetadata("CsWinRT.DefaultInterface.v1:Projection.RuntimeClass", "Projection.IRuntimeClass")]
+            [assembly: WindowsRuntimeReferenceAssemblyMetadata("CsWinRT.DefaultInterface.v1:Projection.GenericDefaultClass", "System.Collections.Generic.IList<int>")]
+            [assembly: WindowsRuntimeReferenceAssemblyMetadata("CsWinRT.DefaultInterface.v1:Projection.MalformedDefaultClass", "System.Collections.Generic.IList<")]
+            [assembly: WindowsRuntimeReferenceAssemblyMetadata("CsWinRT.DefaultInterface.v1:Projection.MissingDefaultClass", "Projection.IMissing")]
+            [assembly: WindowsRuntimeReferenceAssemblyMetadata("CsWinRT.DefaultInterface.v1:Projection.ClassDefaultClass", "Projection.RuntimeClass")]
+            [assembly: WindowsRuntimeReferenceAssemblyMetadata("CsWinRT.DefaultInterface.v1:Projection.ShadowedDefaultClass", "Shadowed.IShadow")]
+            [assembly: WindowsRuntimeReferenceAssemblyMetadata("CsWinRT.DefaultInterface.v1:Projection.MappedDefaultClass", "System.IDisposable")]
+            [assembly: WindowsRuntimeReferenceAssemblyMetadata("CsWinRT.DefaultInterface.v1:Projection.NestedDefaultClass", "System.Collections.Generic.IList<Projection.RuntimeClass>")]
             namespace Projection
             {
+                [Guid("30D5A829-7FA4-4026-83BB-D75BAE4EA99E")]
+                internal interface IRuntimeClass { }
                 public sealed class RuntimeClass { }
                 public sealed class GenericDefaultClass { }
+                public sealed class MalformedDefaultClass { }
+                public sealed class MissingDefaultClass { }
+                public sealed class ClassDefaultClass { }
+                public sealed class ShadowedDefaultClass { }
+                public sealed class MappedDefaultClass { }
+                public sealed class NestedDefaultClass { }
                 [Guid("96369F54-8EB6-48F0-ABCE-C1B211E627C3")]
                 public delegate void Handler();
                 public struct Value { public int X; public string Y; }
@@ -287,6 +317,11 @@ public partial class Test_GetIidInterceptorGenerator
         MetadataReference reference = CompileReference(projection, "Projection");
         (Compilation compilation, GeneratorDriverRunResult result) = Run("""
             using WindowsRuntime.InteropServices;
+            namespace Shadowed
+            {
+                [System.Runtime.InteropServices.Guid("D7527847-57DA-4E15-914C-06806699A098")]
+                public interface IShadow { }
+            }
             public static class Test
             {
                 public static System.Guid A() => WindowsRuntimeMarshal.GetIid<Projection.RuntimeClass>();
@@ -298,10 +333,23 @@ public partial class Test_GetIidInterceptorGenerator
                 public static System.Guid G() => WindowsRuntimeMarshal.GetIid<Projection.GenericDefaultClass>();
                 public static System.Guid H() => WindowsRuntimeMarshal.GetIid<Projection.Contract?>();
                 public static System.Guid I() => WindowsRuntimeMarshal.GetIid<Projection.EnumValue?>();
+                public static System.Guid J() => WindowsRuntimeMarshal.GetIid<Projection.MalformedDefaultClass>();
+                public static System.Guid K() => WindowsRuntimeMarshal.GetIid<Projection.MissingDefaultClass>();
+                public static System.Guid L() => WindowsRuntimeMarshal.GetIid<Projection.ClassDefaultClass>();
+                public static System.Guid M() => WindowsRuntimeMarshal.GetIid<Projection.ShadowedDefaultClass>();
+                public static System.Guid N() => WindowsRuntimeMarshal.GetIid<Projection.MappedDefaultClass>();
+                public static System.Guid O() => WindowsRuntimeMarshal.GetIid<Projection.NestedDefaultClass>();
             }
             """, [reference]);
+        string generated = result.GeneratedTrees.Single().ToString();
+        Guid nestedIid = CreateExpectedParameterizedIid("pinterface({913337e9-11a1-4345-a3a2-4e7f956e222d};rc(Projection.RuntimeClass;{30d5a829-7fa4-4026-83bb-d75bae4ea99e}))");
+
+        // Class, consumer-declared, malformed, and missing default interfaces are not intercepted. Calls with
+        // the same IID share a method, so the mapped and nested cases add interceptors but no new methods.
         Assert.AreEqual(6, result.GeneratedTrees.Single().GetRoot().DescendantNodes().OfType<MethodDeclarationSyntax>().Count());
-        Assert.Contains("Get_Iid_b939af5bb45d5489914961442c1905fe", result.GeneratedTrees.Single().ToString());
+        Assert.AreEqual(8, generated.Split("InterceptsLocationAttribute(").Length - 2);
+        Assert.Contains("GetIid_B939AF5BB45D5489914961442C1905FE", generated);
+        Assert.Contains($"GetIid_{nestedIid.ToString("N").ToUpperInvariant()}", generated);
         Assert.IsEmpty(compilation.GetDiagnostics().Where(static diagnostic => diagnostic.Severity == DiagnosticSeverity.Error).ToArray());
     }
 
@@ -383,31 +431,41 @@ public partial class Test_GetIidInterceptorGenerator
         MetadataReference[]? additionalReferences = null,
         OutputKind outputKind = OutputKind.DynamicallyLinkedLibrary,
         bool useUwp = false,
-        string? assemblyName = null)
+        string? assemblyName = null,
+        bool? generateInterceptors = null,
+        string[]? suppressedDiagnostics = null)
     {
         CSharpCompilation compilation = CSharpCompilation.Create(
             assemblyName ?? $"InterceptorTest_{Guid.NewGuid():N}",
             [CSharpSyntaxTree.ParseText(source, ParseOptions, path: @"C:\Tests\Input.cs")],
             [.. GetReferences(), .. additionalReferences ?? []],
-            new CSharpCompilationOptions(outputKind));
+            new CSharpCompilationOptions(outputKind).WithSpecificDiagnosticOptions(
+                (suppressedDiagnostics ?? []).ToDictionary(static id => id, static _ => ReportDiagnostic.Suppress)));
         GeneratorDriver driver = CSharpGeneratorDriver.Create(
-            [new GetIidInterceptorGenerator().AsSourceGenerator()], parseOptions: ParseOptions, optionsProvider: new OptionsProvider(useUwp));
+            [new GetIidInterceptorGenerator().AsSourceGenerator()], parseOptions: ParseOptions, optionsProvider: new OptionsProvider(useUwp, generateInterceptors));
         driver = driver.RunGeneratorsAndUpdateCompilation(compilation, out Compilation output, out ImmutableArray<Diagnostic> diagnostics);
         Assert.IsEmpty(diagnostics, string.Join("\n", diagnostics));
         return (output, driver.GetRunResult());
     }
 
-    private sealed class OptionsProvider(bool useUwp) : AnalyzerConfigOptionsProvider
+    private sealed class OptionsProvider(bool useUwp, bool? generateInterceptors) : AnalyzerConfigOptionsProvider
     {
-        public override AnalyzerConfigOptions GlobalOptions { get; } = new Options(useUwp);
+        public override AnalyzerConfigOptions GlobalOptions { get; } = new Options(useUwp, generateInterceptors);
         public override AnalyzerConfigOptions GetOptions(SyntaxTree tree) => GlobalOptions;
         public override AnalyzerConfigOptions GetOptions(AdditionalText textFile) => GlobalOptions;
     }
 
-    private sealed class Options(bool useUwp) : AnalyzerConfigOptions
+    private sealed class Options(bool useUwp, bool? generateInterceptors) : AnalyzerConfigOptions
     {
         public override bool TryGetValue(string key, out string value)
         {
+            if (key == "build_property.CsWinRTGenerateGetIidInterceptors" && generateInterceptors is bool enabled)
+            {
+                value = enabled.ToString();
+
+                return true;
+            }
+
             value = useUwp.ToString();
             return key == "build_property.CsWinRTUseWindowsUIXamlProjections";
         }

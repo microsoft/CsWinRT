@@ -204,10 +204,10 @@ internal static class TypedefNameWriter
                 writer.Write("object");
                 break;
             case TypeSemantics.GuidType:
-                writer.Write("Guid");
+                writer.Write(forceWriteNamespace ? "global::System.Guid" : "Guid");
                 break;
             case TypeSemantics.SystemType:
-                writer.Write("Type");
+                writer.Write(forceWriteNamespace ? "global::System.Type" : "Type");
                 break;
             case TypeSemantics.Definition d:
                 WriteTypedefName(writer, context, d.Type, nameType, forceWriteNamespace);
@@ -339,7 +339,7 @@ internal static class TypedefNameWriter
     /// </summary>
     /// <param name="semantics">The semantic representation of the type argument.</param>
     /// <returns><see langword="true"/> if the projected type is a .NET reference type; otherwise <see langword="false"/>.</returns>
-    private static bool ProjectsToReferenceType(TypeSemantics semantics)
+    internal static bool ProjectsToReferenceType(TypeSemantics semantics)
     {
         // A literal 'System.Type' reference (e.g. from attribute-blob-encoded 'Type' arguments)
         if (semantics is TypeSemantics.SystemType)

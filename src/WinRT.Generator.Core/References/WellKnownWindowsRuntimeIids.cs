@@ -25,6 +25,9 @@ internal static class WellKnownWindowsRuntimeIids
     {
         iid = name switch
         {
+            // 'object' represents 'IInspectable' rather than a specific runtime class
+            "System.Object" => new Guid("AF86E2E0-B12D-4C6A-9C5A-D7AA65101E90"),
+
             // Windows.Foundation types
             "System.IDisposable" => new Guid("30D5A829-7FA4-4026-83BB-D75BAE4EA99E"),
             "System.Nullable`1" => new Guid("61C17706-2D65-11E0-9AE8-D48564015472"),

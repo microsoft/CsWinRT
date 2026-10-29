@@ -68,10 +68,10 @@ internal sealed class ProjectionGeneratorRunState
     public ConcurrentBag<string> ImplementableClasses { get; } = [];
 
     /// <summary>
-    /// Gets the (class-name -> default-interface-signature) map to preserve in reference-projection assembly metadata,
-    /// populated by namespace work items via <see cref="Factories.MetadataAttributeFactory.AddDefaultInterfaceSignatureEntry"/>.
+    /// Gets the (class-name -> default-interface-name) map to preserve in reference-projection assembly metadata,
+    /// populated by namespace work items via <see cref="Factories.MetadataAttributeFactory.AddReferenceDefaultInterfaceEntry"/>.
     /// </summary>
-    public ConcurrentDictionary<string, string> DefaultInterfaceSignatureEntries { get; } = [];
+    public ConcurrentDictionary<string, string> ReferenceDefaultInterfaceEntries { get; } = [];
 
     /// <summary>
     /// Tracked via <see cref="Interlocked"/> so any number of work items can mark "I wrote a

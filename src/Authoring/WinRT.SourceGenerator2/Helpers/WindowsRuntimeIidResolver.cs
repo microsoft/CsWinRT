@@ -7,10 +7,10 @@ using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 using Microsoft.CodeAnalysis;
 using WindowsRuntime.Generator.Helpers;
+using WindowsRuntime.Generator.References;
 using WindowsRuntime.InteropGenerator.Helpers;
-using WindowsRuntime.SourceGenerator.Models;
 
-#pragma warning disable IDE0072
+#pragma warning disable IDE0046, IDE0072
 
 namespace WindowsRuntime.SourceGenerator;
 
@@ -51,11 +51,10 @@ internal sealed partial class WindowsRuntimeIidResolver(
             return false;
         }
 
+        // 'object' represents 'IInspectable', whose IID is not derived from a signature
         if (type.SpecialType == SpecialType.System_Object)
         {
-            iid = new("AF86E2E0-B12D-4C6A-9C5A-D7AA65101E90");
-
-            return true;
+            return WellKnownWindowsRuntimeIids.TryGetIid("System.Object", useWindowsUIXamlProjections, out iid);
         }
 
         // Parameterized identities include nullable values, key/value pairs, and reference arrays
@@ -80,25 +79,32 @@ internal sealed partial class WindowsRuntimeIidResolver(
             return false;
         }
 
+        // Mapped types (e.g. 'System.IDisposable') carry their own IID in the mapping table
         if (TypeMapping.TryFindMappedTypeSignature(name, useWindowsUIXamlProjections, out _))
         {
             return TypeMapping.TryFindMappedTypeIID(name, useWindowsUIXamlProjections, out iid);
         }
 
+        // Interfaces and delegates declare their IID directly with a '[Guid]' attribute
         if (TryGetDefinitionIid(definition, name, useWindowsUIXamlProjections, out iid))
         {
             return true;
         }
 
-        if (definition.TypeKind == TypeKind.Class &&
-            TryGetDefaultInterface(definition, name, out WindowsRuntimeDefaultInterfaceInfo? defaultInterface))
+        // Only runtime classes can have an IID that comes from another type (their default interface)
+        if (definition.TypeKind != TypeKind.Class)
         {
-            iid = defaultInterface.Iid;
-
-            return true;
+            return false;
         }
 
-        return false;
+        // The default interface is recorded by name, as it's often exclusive-to and not declared by the class
+        if (!TryGetDefaultInterface(definition, name, out INamedTypeSymbol? defaultInterface))
+        {
+            return false;
+        }
+
+        // The IID of a runtime class is the IID of its default interface
+        return TryGetIid(defaultInterface, useWindowsUIXamlProjections, out iid);
     }
 
     /// <summary>
@@ -202,11 +208,12 @@ internal sealed partial class WindowsRuntimeIidResolver(
             return true;
         }
 
-        // Exclusive default interfaces may be absent from reference projections
+        // The default interface is often exclusive-to, so it is recorded by name and not among the class's interfaces
         if (definition.TypeKind == TypeKind.Class &&
-            TryGetDefaultInterface(definition, name, out WindowsRuntimeDefaultInterfaceInfo? defaultInterface))
+            TryGetDefaultInterface(definition, name, out INamedTypeSymbol? defaultInterface) &&
+            TryGetSignature(defaultInterface, useWindowsUIXamlProjections, out string? defaultInterfaceSignature))
         {
-            signature = $"rc({name};{defaultInterface.Signature})";
+            signature = $"rc({name};{defaultInterfaceSignature})";
 
             return true;
         }

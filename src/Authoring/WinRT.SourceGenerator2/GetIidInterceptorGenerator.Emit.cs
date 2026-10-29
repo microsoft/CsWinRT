@@ -7,6 +7,8 @@ using System.Threading;
 using Microsoft.CodeAnalysis;
 using WindowsRuntime.SourceGenerator.Models;
 
+#pragma warning disable IDE0305
+
 namespace WindowsRuntime.SourceGenerator;
 
 /// <inheritdoc cref="GetIidInterceptorGenerator"/>
@@ -29,10 +31,14 @@ public partial class GetIidInterceptorGenerator
                 return;
             }
 
-            // Calls for the same IID share a single interceptor, so that each IID is only embedded once
             CancellationToken token = context.CancellationToken;
-            (IGrouping<Guid, GetIidInterceptorInfo> Interceptors, CancellationToken Token)[] interceptorsByIid =
-                [.. interceptors.GroupBy(static info => info.Iid).OrderBy(static group => group.Key).Select(group => (group, token))];
+
+            // Calls for the same IID share a single interceptor, so that each IID is only embedded once
+            (IGrouping<Guid, GetIidInterceptorInfo> Interceptors, CancellationToken Token)[] interceptorsByIid = interceptors
+                .GroupBy(static info => info.Iid)
+                .OrderBy(static group => group.Key)
+                .Select(group => (group, token))
+                .ToArray();
 
             IndentedTextWriter writer = new(literalLength: 2048, formattedCount: 0);
 
@@ -42,6 +48,7 @@ public partial class GetIidInterceptorGenerator
 
                 namespace System.Runtime.CompilerServices
                 {
+                    /// <see href="https://github.com/dotnet/roslyn/blob/main/docs/features/interceptors.md"/>
                     [global::System.AttributeUsage(global::System.AttributeTargets.Method, AllowMultiple = true)]
                     file sealed class InterceptsLocationAttribute(int version, string data) : global::System.Attribute;
                 }
@@ -51,6 +58,14 @@ public partial class GetIidInterceptorGenerator
 
             using (writer.WriteBlock())
             {
+                writer.WriteLine("""
+                    using global::System;
+                    using global::System.Runtime.CompilerServices;
+                    using global::System.Runtime.InteropServices;
+
+                    """, isMultiline: true);
+
+                writer.WriteLine("""/// <summary>Interceptor methods for <see cref="global::WindowsRuntime.InteropServices.WindowsRuntimeMarshal.GetIid{T}()"/>.</summary>""");
                 writer.WriteGeneratedAttributes(nameof(GetIidInterceptorGenerator));
                 writer.WriteLine("file static class GetIidInterceptors");
 
@@ -72,22 +87,48 @@ public partial class GetIidInterceptorGenerator
         {
             state.Token.ThrowIfCancellationRequested();
 
+            // Calls with different types can share an IID (e.g. a runtime class and its default interface), so list all of them
+            string[] typeCrefs = state.Interceptors
+                .Select(static info => info.TypeName)
+                .Distinct()
+                .Order(StringComparer.Ordinal)
+                .Select(static name => $"<see cref=\"{name}\"/>")
+                .ToArray();
+
+            string types = string.Join(", ", typeCrefs);
+
+            writer.WriteLine($"""/// <summary>Provides the IID for {types} (<c>{state.Interceptors.Key.ToString("D").ToUpperInvariant()}</c>).</summary>""");
+
+            // Emit one '[InterceptsLocation]' attribute for each detected callsite, as they all share this method
             foreach (GetIidInterceptorInfo info in state.Interceptors)
             {
-                writer.WriteLine($"""[global::System.Runtime.CompilerServices.InterceptsLocationAttribute({info.Version}, "{info.Data}")]""");
+                writer.WriteLine($"""[InterceptsLocationAttribute({info.Version}, "{info.Data}")]""");
             }
 
-            string iidBytes = string.Join(", ", state.Interceptors.Key.ToByteArray().Select(static value => $"0x{value:X2}"));
+            string iidName = state.Interceptors.Key.ToString("N").ToUpperInvariant();
+            byte[] iidBytes = state.Interceptors.Key.ToByteArray();
 
             // Read the IID directly from its RVA data, so that it needs no initialization at runtime
             writer.WriteLine($$"""
-                [global::System.Runtime.CompilerServices.MethodImpl(global::System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
-                public static global::System.Guid Get_Iid_{{state.Interceptors.Key:N}}()
+                [MethodImpl(MethodImplOptions.AggressiveInlining)]
+                public static Guid GetIid_{{iidName}}()
                 {
-                    global::System.ReadOnlySpan<byte> data = [{{iidBytes}}];
+                    ReadOnlySpan<byte> data =
+                    [
+                        0x{{iidBytes[0]:X2}}, 0x{{iidBytes[1]:X2}}, 0x{{iidBytes[2]:X2}}, 0x{{iidBytes[3]:X2}},
+                        0x{{iidBytes[4]:X2}}, 0x{{iidBytes[5]:X2}},
+                        0x{{iidBytes[6]:X2}}, 0x{{iidBytes[7]:X2}},
+                        0x{{iidBytes[8]:X2}},
+                        0x{{iidBytes[9]:X2}},
+                        0x{{iidBytes[10]:X2}},
+                        0x{{iidBytes[11]:X2}},
+                        0x{{iidBytes[12]:X2}},
+                        0x{{iidBytes[13]:X2}},
+                        0x{{iidBytes[14]:X2}},
+                        0x{{iidBytes[15]:X2}}
+                    ];
 
-                    return global::System.Runtime.CompilerServices.Unsafe.As<byte, global::System.Guid>(
-                        ref global::System.Runtime.InteropServices.MemoryMarshal.GetReference(data));
+                    return Unsafe.As<byte, Guid>(ref MemoryMarshal.GetReference(data));
                 }
                 """, isMultiline: true);
         }

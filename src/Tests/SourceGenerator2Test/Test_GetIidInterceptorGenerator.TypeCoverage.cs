@@ -21,7 +21,7 @@ public partial class Test_GetIidInterceptorGenerator
 {
     private const string CoverageAssemblyName = "IidCoverageConsumer";
 
-    // Reference-shaped metadata intentionally omits implementation-only markers and the hidden default interface
+    // Reference-shaped metadata intentionally omits implementation-only markers, and records the (internal) default interface by name
     private const string CoverageProjection = """
         using System;
         using System.Runtime.CompilerServices;
@@ -30,13 +30,20 @@ public partial class Test_GetIidInterceptorGenerator
 
         [assembly: WindowsRuntimeReferenceAssembly]
         [assembly: InternalsVisibleTo("IidCoverageConsumer")]
-        [assembly: WindowsRuntimeReferenceAssemblyMetadata("CsWinRT.DefaultInterfaceSignature.v1:Projection.RuntimeClass", "{e2b50029-b4c1-4314-a4b8-fb813a2f275e}")]
-        [assembly: WindowsRuntimeReferenceAssemblyMetadata("CsWinRT.DefaultInterfaceSignature.v1:Projection.GenericDefaultClass", "pinterface({913337e9-11a1-4345-a3a2-4e7f956e222d};i4)")]
+        [assembly: WindowsRuntimeReferenceAssemblyMetadata("CsWinRT.DefaultInterface.v1:Projection.RuntimeClass", "Projection.IRuntimeClass")]
+        [assembly: WindowsRuntimeReferenceAssemblyMetadata("CsWinRT.DefaultInterface.v1:Projection.GenericDefaultClass", "System.Collections.Generic.IList<int>")]
+        [assembly: WindowsRuntimeReferenceAssemblyMetadata("CsWinRT.DefaultInterface.v1:Projection.MappedMapClass", "System.Collections.Generic.IDictionary<string, string>")]
+        [assembly: WindowsRuntimeReferenceAssemblyMetadata("CsWinRT.DefaultInterface.v1:Projection.MappedBindableClass", "System.Collections.IEnumerable")]
+        [assembly: WindowsRuntimeReferenceAssemblyMetadata("CsWinRT.DefaultInterface.v1:Projection.MappedXamlClass", "System.ComponentModel.INotifyPropertyChanged")]
+        [assembly: WindowsRuntimeReferenceAssemblyMetadata("CsWinRT.DefaultInterface.v1:Projection.MappedStructListClass", "System.Collections.Generic.IList<System.TimeSpan>")]
 
         namespace Projection
         {
             [Guid("97D098A5-3B99-4DE9-88A5-E11D2F50C795")]
             public interface IProjected { }
+
+            [Guid("E2B50029-B4C1-4314-A4B8-FB813A2F275E")]
+            internal interface IRuntimeClass { }
 
             [Guid("1D1A8B8B-FA66-414F-9CBD-B65FC99D17FA")]
             public delegate void Handler();
@@ -46,6 +53,12 @@ public partial class Test_GetIidInterceptorGenerator
 
             public sealed class RuntimeClass { }
             public sealed class GenericDefaultClass { }
+
+            // Runtime classes whose default interface is custom-mapped to a .NET type
+            public sealed class MappedMapClass { }
+            public sealed class MappedBindableClass { }
+            public sealed class MappedXamlClass { }
+            public sealed class MappedStructListClass { }
             public struct Value { public int Number; public string Text; }
             public enum EnumValue { Zero }
             [Flags]
@@ -97,6 +110,10 @@ public partial class Test_GetIidInterceptorGenerator
             ("Projection.Handler", new("1d1a8b8b-fa66-414f-9cbd-b65fc99d17fa")),
             ("Projection.RuntimeClass", new("e2b50029-b4c1-4314-a4b8-fb813a2f275e")),
             ("Projection.GenericDefaultClass", new("b939af5b-b45d-5489-9149-61442c1905fe")),
+            ("Projection.MappedMapClass", new("f6d1f700-49c2-52ae-8154-826f9908773c")),
+            ("Projection.MappedBindableClass", new("036d2c08-df29-41af-8aa2-d774be62ba6f")),
+            ("Projection.MappedXamlClass", new(useUwp ? "cf75d69c-f2f4-486b-b302-bb4c09baebfa" : "90b17601-b065-586e-83d9-9adc3a695284")),
+            ("Projection.MappedStructListClass", CreateExpectedParameterizedIid("pinterface({913337e9-11a1-4345-a3a2-4e7f956e222d};struct(Windows.Foundation.TimeSpan;i8))")),
             ("Projection.IExclusive", new("d7527847-57da-4e15-914c-06806699a098"))
         ];
 
@@ -240,6 +257,10 @@ public partial class Test_GetIidInterceptorGenerator
         new("Projection.Handler", "delegate({1d1a8b8b-fa66-414f-9cbd-b65fc99d17fa})"),
         new("Projection.RuntimeClass", "rc(Projection.RuntimeClass;{e2b50029-b4c1-4314-a4b8-fb813a2f275e})"),
         new("Projection.GenericDefaultClass", "rc(Projection.GenericDefaultClass;pinterface({913337e9-11a1-4345-a3a2-4e7f956e222d};i4))"),
+        new("Projection.MappedMapClass", "rc(Projection.MappedMapClass;pinterface({3c2925fe-8519-45c1-aa79-197b6718c1c1};string;string))"),
+        new("Projection.MappedBindableClass", "rc(Projection.MappedBindableClass;{036d2c08-df29-41af-8aa2-d774be62ba6f})"),
+        new("Projection.MappedXamlClass", $"rc(Projection.MappedXamlClass;{{{(useUwp ? "cf75d69c-f2f4-486b-b302-bb4c09baebfa" : "90b17601-b065-586e-83d9-9adc3a695284")}}})"),
+        new("Projection.MappedStructListClass", "rc(Projection.MappedStructListClass;pinterface({913337e9-11a1-4345-a3a2-4e7f956e222d};struct(Windows.Foundation.TimeSpan;i8)))"),
         new("Projection.IExclusive", "{d7527847-57da-4e15-914c-06806699a098}"),
         new("int", "i4", IsValueType: true),
         new("string", "string"),

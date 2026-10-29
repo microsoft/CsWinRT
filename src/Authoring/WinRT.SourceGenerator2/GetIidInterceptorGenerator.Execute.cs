@@ -3,7 +3,6 @@
 
 using System;
 using System.Collections.Immutable;
-using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -11,6 +10,8 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.CodeAnalysis.Operations;
 using WindowsRuntime.SourceGenerator.Models;
+
+#pragma warning disable RSEXPERIMENTAL002
 
 namespace WindowsRuntime.SourceGenerator;
 
@@ -28,9 +29,10 @@ public partial class GetIidInterceptorGenerator
         /// <param name="node">The target node.</param>
         /// <param name="token">The cancellation token.</param>
         /// <returns>Whether the node could call <c>WindowsRuntimeMarshal.GetIid&lt;T&gt;()</c>.</returns>
-        [SuppressMessage("Style", "IDE0060", Justification = "The cancellation token is supplied by Roslyn.")]
         public static bool IsTargetNodeValid(SyntaxNode node, CancellationToken token)
         {
+            token.ThrowIfCancellationRequested();
+
             return node is InvocationExpressionSyntax { ArgumentList.Arguments.Count: 0 } invocation &&
                 (invocation.Expression is SimpleNameSyntax { Identifier.ValueText: "GetIid" } ||
                  invocation.Expression is MemberAccessExpressionSyntax { Name.Identifier.ValueText: "GetIid" });
@@ -50,6 +52,8 @@ public partial class GetIidInterceptorGenerator
             SemanticModel model = context.SemanticModel;
             Compilation compilation = model.Compilation;
 
+            // Only intercept the real 'WindowsRuntimeMarshal.GetIid<T>()' method from 'WinRT.Runtime' (not any same-named method
+            // or a type of the same name from another assembly), and skip calls in expression trees, which can't be intercepted
             if (model.GetSymbolInfo(invocation, token).Symbol is not IMethodSymbol
                 {
                     IsStatic: true,
@@ -68,6 +72,9 @@ public partial class GetIidInterceptorGenerator
 
             WindowsRuntimeIidResolver resolver = new(compilation, method.ContainingAssembly, token);
 
+            // The XAML mode comes from the analyzer options, which a syntax transform can't read. Computing both IIDs here (they
+            // share the resolver's cached metadata) lets the pipeline pick the right one later, in a cheap step that doesn't rerun
+            // this analysis when the mode changes. It's also needed to tell whether the IID depends on the mode at all (see below)
             Guid? winUIIid = resolver.TryGetIid(method.TypeArguments[0], false, out Guid winUIValue) ? winUIValue : null;
             Guid? uwpIid = resolver.TryGetIid(method.TypeArguments[0], true, out Guid uwpValue) ? uwpValue : null;
 
@@ -78,11 +85,35 @@ public partial class GetIidInterceptorGenerator
                 return null;
             }
 
-#pragma warning disable RSEXPERIMENTAL002
             InterceptableLocation? location = model.GetInterceptableLocation(invocation, token);
 
-            return location is null ? null : new GetIidCallInfo(winUIIid, uwpIid, location.Version, location.Data);
-#pragma warning restore RSEXPERIMENTAL002
+            return location is null ? null : new GetIidCallInfo(winUIIid, uwpIid, location.Version, location.Data, GetCrefTypeName(method.TypeArguments[0]));
+        }
+
+        /// <summary>
+        /// Formats a type to be used in an XML documentation <c>cref</c> attribute.
+        /// </summary>
+        /// <param name="type">The type to format.</param>
+        /// <returns>The formatted type name, with generic arguments in <c>{}</c> instead of <c>&lt;&gt;</c>.</returns>
+        private static string GetCrefTypeName(ITypeSymbol type)
+        {
+            // Nullable value types are expanded (e.g. 'Nullable{int}'), as 'int?' is not valid in a 'cref'
+            SymbolDisplayFormat format = SymbolDisplayFormat.FullyQualifiedFormat.AddMiscellaneousOptions(SymbolDisplayMiscellaneousOptions.ExpandNullable);
+
+            return type.ToDisplayString(format).Replace('<', '{').Replace('>', '}');
+        }
+
+        /// <summary>
+        /// Gets whether the project allows generating <c>GetIid&lt;T&gt;()</c> interceptors.
+        /// </summary>
+        /// <param name="options">The analyzer configuration.</param>
+        /// <param name="token">The cancellation token.</param>
+        /// <returns>Whether interceptors should be generated.</returns>
+        public static bool GetGenerateInterceptors(AnalyzerConfigOptionsProvider options, CancellationToken token)
+        {
+            token.ThrowIfCancellationRequested();
+
+            return options.GlobalOptions.GetCsWinRTGenerateGetIidInterceptors();
         }
 
         /// <summary>
@@ -91,9 +122,10 @@ public partial class GetIidInterceptorGenerator
         /// <param name="options">The analyzer configuration.</param>
         /// <param name="token">The cancellation token.</param>
         /// <returns>Whether the project uses UWP XAML mappings.</returns>
-        [SuppressMessage("Style", "IDE0060", Justification = "The cancellation token is supplied by Roslyn.")]
         public static bool GetUseWindowsUIXamlProjections(AnalyzerConfigOptionsProvider options, CancellationToken token)
         {
+            token.ThrowIfCancellationRequested();
+
             return options.GlobalOptions.GetCsWinRTUseWindowsUIXamlProjections();
         }
 
@@ -103,15 +135,16 @@ public partial class GetIidInterceptorGenerator
         /// <param name="data">The analyzed call and selected XAML mode.</param>
         /// <param name="token">The cancellation token.</param>
         /// <returns>The interceptor input, if the selected IID is available.</returns>
-        [SuppressMessage("Style", "IDE0060", Justification = "The cancellation token is supplied by Roslyn.")]
         public static GetIidInterceptorInfo? GetInterceptorInfo(
             (GetIidCallInfo Call, bool UseWindowsUIXamlProjections) data,
             CancellationToken token)
         {
+            token.ThrowIfCancellationRequested();
+
             GetIidCallInfo call = data.Call;
             Guid? iid = data.UseWindowsUIXamlProjections ? call.UwpIid : call.WinUIIid;
 
-            return iid is Guid value ? new GetIidInterceptorInfo(value, call.Version, call.Data) : null;
+            return iid is Guid value ? new GetIidInterceptorInfo(value, call.Version, call.Data, call.TypeName) : null;
         }
 
         /// <summary>
@@ -120,11 +153,12 @@ public partial class GetIidInterceptorGenerator
         /// <param name="items">The collected inputs.</param>
         /// <param name="token">The cancellation token.</param>
         /// <returns>The value-equatable inputs.</returns>
-        [SuppressMessage("Style", "IDE0060", Justification = "The cancellation token is supplied by Roslyn.")]
         public static EquatableArray<GetIidInterceptorInfo> GetEquatableInterceptorInfo(
             ImmutableArray<GetIidInterceptorInfo> items,
             CancellationToken token)
         {
+            token.ThrowIfCancellationRequested();
+
             return items.AsEquatableArray();
         }
 

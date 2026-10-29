@@ -7,7 +7,6 @@ using System.Diagnostics.CodeAnalysis;
 using Microsoft.CodeAnalysis;
 using WindowsRuntime.Generator.References;
 using WindowsRuntime.InteropGenerator.Helpers;
-using WindowsRuntime.SourceGenerator.Models;
 
 namespace WindowsRuntime.SourceGenerator;
 
@@ -25,9 +24,9 @@ internal sealed partial class WindowsRuntimeIidResolver
     private readonly Dictionary<string, INamedTypeSymbol?> _frameworkDefinitions = new(StringComparer.Ordinal);
 
     /// <summary>
-    /// Default-interface identities decoded only for classes used by the current call.
+    /// Default interfaces decoded only for classes used by the current call.
     /// </summary>
-    private readonly Dictionary<INamedTypeSymbol, WindowsRuntimeDefaultInterfaceInfo?> _defaultInterfaces = new(SymbolEqualityComparer.Default);
+    private readonly Dictionary<INamedTypeSymbol, INamedTypeSymbol?> _defaultInterfaces = new(SymbolEqualityComparer.Default);
 
     /// <summary>
     /// Gets the validated definition and metadata name for a supported type.
@@ -210,25 +209,27 @@ internal sealed partial class WindowsRuntimeIidResolver
     /// </summary>
     /// <param name="type">The runtime class definition.</param>
     /// <param name="name">Its metadata name.</param>
-    /// <param name="info">The recorded signature and its corresponding IID.</param>
-    /// <returns>Whether a supported default-interface identity was recorded.</returns>
+    /// <param name="defaultInterface">The recorded default interface.</param>
+    /// <returns>Whether a supported default interface was recorded.</returns>
     private bool TryGetDefaultInterface(
         INamedTypeSymbol type,
         string name,
-        [NotNullWhen(true)] out WindowsRuntimeDefaultInterfaceInfo? info)
+        [NotNullWhen(true)] out INamedTypeSymbol? defaultInterface)
     {
-        if (!_defaultInterfaces.TryGetValue(type, out info))
+        if (!_defaultInterfaces.TryGetValue(type, out defaultInterface))
         {
-            if (GetProjectionInfo(type.ContainingAssembly).DefaultInterfaceSignatures.TryGetValue(name, out string? signature) &&
-                WindowsRuntimeReferenceAssemblyMetadata.TryGetDefaultInterfaceIid(signature, out Guid iid))
+            // Look up the recorded name, then resolve it and make sure it's actually an interface (not a class or struct)
+            if (GetProjectionInfo(type.ContainingAssembly).DefaultInterfaces.TryGetValue(name, out string? interfaceName) &&
+                WindowsRuntimeTypeNameParser.TryParse(interfaceName, compilation, type.ContainingAssembly, token, out INamedTypeSymbol? resolved) &&
+                resolved.TypeKind == TypeKind.Interface)
             {
-                info = new(signature, iid);
+                defaultInterface = resolved;
             }
 
-            _defaultInterfaces.Add(type, info);
+            _defaultInterfaces.Add(type, defaultInterface);
         }
 
-        return info is not null;
+        return defaultInterface is not null;
     }
 
     /// <summary>
@@ -249,7 +250,7 @@ internal sealed partial class WindowsRuntimeIidResolver
 
         bool isProjection = false;
         bool isComponent = false;
-        Dictionary<string, string> defaultInterfaceSignatures = new(StringComparer.Ordinal);
+        Dictionary<string, string> defaultInterfaces = new(StringComparer.Ordinal);
 
         foreach (AttributeData attribute in assembly.GetAttributes())
         {
@@ -269,14 +270,14 @@ internal sealed partial class WindowsRuntimeIidResolver
                 isComponent = true;
             }
             else if (SymbolEqualityComparer.Default.Equals(attributeType, referenceMetadataAttribute) &&
-                     attribute.ConstructorArguments is [{ Value: string key }, { Value: string signature }] &&
-                     key.StartsWith(WindowsRuntimeReferenceAssemblyMetadata.DefaultInterfaceSignaturePrefix, StringComparison.Ordinal))
+                     attribute.ConstructorArguments is [{ Value: string key }, { Value: string value }] &&
+                     key.StartsWith(WindowsRuntimeReferenceAssemblyMetadata.DefaultInterfacePrefix, StringComparison.Ordinal))
             {
-                defaultInterfaceSignatures[key[WindowsRuntimeReferenceAssemblyMetadata.DefaultInterfaceSignaturePrefix.Length..]] = signature;
+                defaultInterfaces[key[WindowsRuntimeReferenceAssemblyMetadata.DefaultInterfacePrefix.Length..]] = value;
             }
         }
 
-        info = new(isProjection, isComponent, defaultInterfaceSignatures);
+        info = new(isProjection, isComponent, defaultInterfaces);
 
         _projectionMetadata.Add(assembly, info);
 
@@ -288,9 +289,9 @@ internal sealed partial class WindowsRuntimeIidResolver
     /// </summary>
     /// <param name="IsProjection">Whether the assembly contains reference projections.</param>
     /// <param name="IsComponent">Whether the assembly is an authored component.</param>
-    /// <param name="DefaultInterfaceSignatures">The runtime classes' recorded default-interface signatures.</param>
+    /// <param name="DefaultInterfaces">The runtime classes' recorded default interface names.</param>
     private sealed record ProjectionInfo(
         bool IsProjection,
         bool IsComponent,
-        IReadOnlyDictionary<string, string> DefaultInterfaceSignatures);
+        IReadOnlyDictionary<string, string> DefaultInterfaces);
 }
