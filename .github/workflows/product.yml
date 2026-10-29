@@ -23,6 +23,7 @@ env:
 jobs:
   build:
     name: CsWinRT (Release ${{ matrix.platform }})
+    if: github.event_name == 'workflow_dispatch' || github.event.pull_request.head.repo.full_name != github.repository
     runs-on: windows-2025-vs2026
     timeout-minutes: 180
     strategy:
@@ -116,7 +117,7 @@ jobs:
 
   unit-test:
     name: UnitTest (${{ matrix.runtime }}, x64 Release)
-    if: github.event_name == 'pull_request' || inputs.unit_tests
+    if: (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != github.repository) || inputs.unit_tests
     runs-on: windows-2025-vs2026
     timeout-minutes: 120
     strategy:
