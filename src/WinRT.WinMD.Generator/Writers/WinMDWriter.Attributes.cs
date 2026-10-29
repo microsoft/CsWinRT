@@ -10,6 +10,8 @@ using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 using WindowsRuntime.WinMDGenerator.Models;
 
+#pragma warning disable IDE0046
+
 namespace WindowsRuntime.WinMDGenerator.Writers;
 
 /// <inheritdoc cref="WinMDWriter"/>
@@ -521,18 +523,96 @@ internal sealed partial class WinMDWriter
             return false;
         }
 
-        // Skip non-public attribute types (if resolvable)
+        // Require an accessible attribute type, including any containing types
+        if (!IsAttributeTypeAccessible(attribute.Constructor!.DeclaringType!, runtimeContext))
+        {
+            return false;
+        }
+
+        // A public attribute type does not guarantee that its selected constructor is public
         if (runtimeContext is not null &&
-            attribute.Constructor?.DeclaringType is { } attributeType &&
-            attributeType is not TypeDefinition &&
-            attributeType.Resolve(runtimeContext, out TypeDefinition? attributeTypeDefinition) == ResolutionStatus.Success &&
-            !attributeTypeDefinition!.IsPublic && !attributeTypeDefinition.IsNestedPublic)
+            attribute.Constructor.Resolve(runtimeContext, out MethodDefinition? constructor) == ResolutionStatus.Success &&
+            !constructor!.IsPublic)
         {
             return false;
         }
 
         // Skip attributes with unreadable signatures
-        return attribute.Signature is not null;
+        if (attribute.Signature is not { } signature)
+        {
+            return false;
+        }
+
+        // Public attributes can still reference hidden types through positional or named arguments
+        return signature.FixedArguments.All(argument => IsAttributeArgumentAccessible(argument, runtimeContext)) &&
+            signature.NamedArguments.All(argument => IsAttributeArgumentAccessible(argument.Argument, runtimeContext));
+    }
+
+    /// <summary>
+    /// Checks the type-valued elements of an attribute argument, including arrays.
+    /// </summary>
+    /// <param name="argument">The argument to inspect.</param>
+    /// <param name="runtimeContext">The context used to resolve type accessibility.</param>
+    /// <returns>Whether all referenced types are publicly accessible.</returns>
+    private static bool IsAttributeArgumentAccessible(CustomAttributeArgument argument, RuntimeContext? runtimeContext)
+    {
+        return argument.Elements.All(IsAccessible);
+
+        bool IsAccessible(object? element)
+        {
+            // 'object' arguments can box typeof(...) values or arrays containing further type references
+            return element switch
+            {
+                TypeSignature type => IsAttributeTypeAccessible(type, runtimeContext),
+                BoxedArgument boxed => IsAccessible(boxed.Value),
+                CustomAttributeArgument nested => IsAttributeArgumentAccessible(nested, runtimeContext),
+                object?[] elements => elements.All(IsAccessible),
+                _ => true
+            };
+        }
+    }
+
+    /// <summary>
+    /// Checks accessibility through array elements and constructed generic arguments.
+    /// </summary>
+    /// <param name="type">The type signature to inspect.</param>
+    /// <param name="runtimeContext">The context used to resolve type accessibility.</param>
+    /// <returns>Whether the signature is publicly accessible.</returns>
+    private static bool IsAttributeTypeAccessible(TypeSignature type, RuntimeContext? runtimeContext)
+    {
+        // Public wrappers such as 'List<HiddenType>' or 'HiddenType[]' do not make their element types accessible
+        return type switch
+        {
+            TypeDefOrRefSignature namedType => IsAttributeTypeAccessible(namedType.Type, runtimeContext),
+            GenericInstanceTypeSignature genericType => IsAttributeTypeAccessible(genericType.GenericType, runtimeContext) &&
+                genericType.TypeArguments.All(argument => IsAttributeTypeAccessible(argument, runtimeContext)),
+            SzArrayTypeSignature arrayType => IsAttributeTypeAccessible(arrayType.BaseType, runtimeContext),
+            ArrayTypeSignature arrayType => IsAttributeTypeAccessible(arrayType.BaseType, runtimeContext),
+            PointerTypeSignature => false,
+            _ => true
+        };
+    }
+
+    /// <summary>
+    /// Checks the visibility of an attribute type and all its containing types.
+    /// </summary>
+    /// <param name="type">The type to inspect.</param>
+    /// <param name="runtimeContext">The context used to resolve type accessibility.</param>
+    /// <returns>Whether the type is publicly accessible, if resolvable.</returns>
+    private static bool IsAttributeTypeAccessible(ITypeDefOrRef type, RuntimeContext? runtimeContext)
+    {
+        TypeDefinition? definition = type as TypeDefinition;
+
+        // Preserve unresolved references; only reject types known to be inaccessible
+        if (definition is null &&
+            (runtimeContext is null || type.Resolve(runtimeContext, out definition) != ResolutionStatus.Success))
+        {
+            return true;
+        }
+
+        // A nested-public type can still be hidden by an internal containing type
+        return definition!.IsPublic ||
+            (definition.IsNestedPublic && IsAttributeTypeAccessible(definition.DeclaringType!, runtimeContext));
     }
 
     /// <summary>

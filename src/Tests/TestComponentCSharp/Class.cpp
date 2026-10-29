@@ -5,6 +5,7 @@
 #include "Class.h"
 #include "Class.g.cpp"
 #include "CustomEquals.h"
+#include "WrlAsyncOperation.h"
 
 using namespace std::chrono;
 
@@ -1531,6 +1532,27 @@ namespace winrt::TestComponentCSharp::implementation
         co_return lhs + rhs;
     }
 
+    IAsyncOperationWithProgress<uint32_t, uint32_t> Class::WrlAddAsyncWithProgress(uint32_t lhs, uint32_t rhs)
+    {
+        return CreateWrlAsyncAddition(lhs, rhs, _completeWrlAsync);
+    }
+
+    IAsyncOperationWithProgress<uint32_t, uint32_t> Class::WrlAddAsyncWithProgress(uint32_t lhs, uint32_t rhs,
+        AsyncOperationWithProgressCompletedHandler<uint32_t, uint32_t> const& observer)
+    {
+        return CreateWrlAsyncAddition(lhs, rhs, _completeWrlAsync, observer);
+    }
+
+    bool Class::TryCompleteWrlAsync(int32_t hr)
+    {
+        if (!_completeWrlAsync)
+        {
+            winrt::throw_hresult(E_ILLEGAL_METHOD_CALL);
+        }
+        auto complete = std::move(_completeWrlAsync);
+        return complete(hr);
+    }
+
     Point Class::PointProperty()
     {
         return _point;
@@ -2017,6 +2039,11 @@ namespace winrt::TestComponentCSharp::implementation
         return obj.as<IReferenceArray<hstring>>().Value();
     }
 
+    com_array<WF::IInspectable> Class::UnboxObjectArray(WF::IInspectable const& obj)
+    {
+        return obj.as<IReferenceArray<WF::IInspectable>>().Value();
+    }
+
     int32_t Class::UnboxInt32UsingPropertyValue(IInspectable const& obj)
     {
         if (auto ipv = obj.try_as<IPropertyValue>())
@@ -2074,6 +2101,17 @@ namespace winrt::TestComponentCSharp::implementation
         if (auto ipv = obj.try_as<IPropertyValue>())
         {
             ipv.GetPointArray(arr);
+        }
+
+        return arr;
+    }
+
+    com_array<WF::IInspectable> Class::UnboxObjectArrayUsingPropertyValue(IInspectable const& obj)
+    {
+        com_array<WF::IInspectable> arr;
+        if (auto ipv = obj.try_as<IPropertyValue>())
+        {
+            ipv.GetInspectableArray(arr);
         }
 
         return arr;

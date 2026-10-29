@@ -36,6 +36,33 @@ internal static class InteropInterfaceEntriesResolver
     }
 
     /// <summary>
+    /// Enumerates the <c>IReferenceArray&lt;Object&gt;</c> and <c>IPropertyValue</c> entries for a covariant SZ array type
+    /// handled as a user-defined type (needed to support native array unboxing), if applicable.
+    /// </summary>
+    /// <param name="type">The type to analyze.</param>
+    /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+    /// <remarks>
+    /// If <paramref name="type"/> is not a covariant SZ array type, this method will just return an empty set.
+    /// </remarks>
+    public static IEnumerable<InteropInterfaceEntryInfo> EnumerateCovariantSzArrayInterfaceEntries(
+        TypeSignature type,
+        InteropReferences interopReferences)
+    {
+        if (type is not SzArrayTypeSignature arrayType || !arrayType.IsCovariantSzArrayType(interopReferences))
+        {
+            yield break;
+        }
+
+        (IMethodDefOrRef arrayIid, IMethodDefOrRef arrayVtable) = InteropImplTypeResolver.GetInspectableArrayTypeImpl(interopReferences);
+
+        yield return Create(arrayIid, arrayVtable);
+
+        (IMethodDefOrRef propertyValueIid, IMethodDefOrRef propertyValueVtable) = InteropImplTypeResolver.GetSzArrayTypeImpl(arrayType, interopReferences);
+
+        yield return Create(propertyValueIid, propertyValueVtable);
+    }
+
+    /// <summary>
     /// Enumerates the default <c>ICustomPropertyProvider</c> entry, unless disabled or explicitly implemented.
     /// </summary>
     /// <param name="vtableTypes">The explicitly implemented interfaces, or <see langword="null"/> for types that cannot implement a custom provider.</param>

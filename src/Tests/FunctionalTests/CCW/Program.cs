@@ -9,6 +9,7 @@ using TestComponentCSharp;
 using WindowsRuntime;
 using WindowsRuntime.InteropServices;
 using WindowsRuntime.InteropServices.Marshalling;
+using WindowsRuntime.Xaml;
 
 var managedProperties = new ManagedProperties(42);
 var instance = new Class();
@@ -345,6 +346,91 @@ if (RunAndGetException(() => WindowsRuntimeObjectMarshaller.ConvertToUnmanaged(n
 }
 */
 
+// Probe the vector IID directly: 3.0 can choose a covariant interface for the runtime class name
+if (!CcwExposesInterface(BoxListViaTernary(true), new Guid("B939AF5B-B45D-5489-9149-61442C1905FE")))
+{
+    return 139;
+}
+
+if (!CcwExposesInterface(BoxListViaTernary(false), new Guid("98B9ACC1-4B56-532E-AC73-03D5291CCA90")))
+{
+    return 140;
+}
+
+if (!CcwExposesInterface(BoxListViaSwitch(0), new Guid("381832A4-3C25-53A4-9BB7-F33ECDCF044F")))
+{
+    return 141;
+}
+
+if (!CcwExposesInterface(BoxListViaSwitch(1), new Guid("61CF693F-DB4C-579F-B905-5DD3D23CFD4D")))
+{
+    return 142;
+}
+
+object[] boxedObjects = [new Class(), new Class()];
+if (!CheckObjectRuntimeClassName(boxedObjects, "Windows.Foundation.IReferenceArray`1<Object>"))
+{
+    return 143;
+}
+
+if (!ArrayExposesInspectableInterfaces(boxedObjects))
+{
+    return 144;
+}
+
+if (!ArrayExposesInspectableInterfaces(new IProperties1[] { new Class() }))
+{
+    return 145;
+}
+
+// Projected arrays retain their typed runtime names as well as supporting inspectable unboxing
+Class[] boxedClasses = [new Class()];
+if (!CheckObjectRuntimeClassName(boxedClasses, "Windows.Foundation.IReferenceArray`1<TestComponentCSharp.Class>") ||
+    !ArrayExposesInspectableInterfaces(boxedClasses))
+{
+    return 146;
+}
+
+ManagedProperties[] boxedManagedObjects = [new ManagedProperties(1)];
+if (!CheckObjectRuntimeClassName(boxedManagedObjects, "Windows.Foundation.IReferenceArray`1<Object>") ||
+    !ArrayExposesInspectableInterfaces(boxedManagedObjects))
+{
+    return 147;
+}
+
+// Round-trip a boxed array of projected objects through native and back, verifying each element marshals.
+var roundTripElement0 = new Class() { IntProperty = 42 };
+var roundTripElement1 = new Class() { IntProperty = 123 };
+object[] roundTripped = Class.UnboxObjectArray(new object[] { roundTripElement0, roundTripElement1 });
+if (roundTripped.Length != 2 ||
+    !ReferenceEquals(roundTripped[0], roundTripElement0) ||
+    !ReferenceEquals(roundTripped[1], roundTripElement1) ||
+    ((Class)roundTripped[0]).IntProperty != 42 ||
+    ((Class)roundTripped[1]).IntProperty != 123)
+{
+    return 148;
+}
+
+if (!CcwExposesInterface(BoxListViaCast(), new Guid("542F9937-560B-524F-B055-BB7E46D31DE0")))
+{
+    return 149;
+}
+
+var bindable = new BindableGenericProperties();
+foreach ((string name, Guid iid) in new (string, Guid)[]
+{
+    (nameof(BindableGenericProperties.Initializer), new("FE60584C-D4C8-544B-BC8E-53DC14F9A065")),
+    (nameof(BindableGenericProperties.Expression), new("534832ED-2A03-5604-890D-5A928CD427B9")),
+    (nameof(BindableGenericProperties.Body), new("CF4A637F-456A-5A47-A927-BCF07FC69901"))
+})
+{
+    if (!instance.ValidateBindableProperty(bindable, name, typeof(object), false, true, false, false,
+        typeof(object), null, null, out object value) || !CcwExposesInterface(value, in iid))
+    {
+        return 150;
+    }
+}
+
 return 100;
 
 
@@ -381,11 +467,90 @@ static unsafe bool CheckRuntimeClassName(void* ptr, string expected)
 
         uint length;
         char* buffer = WindowsGetStringRawBuffer((IntPtr)__retval, &length);
-        return expected == new string(buffer, 0, (int)length);
+        string actual = new string(buffer, 0, (int)length);
+        if (actual != expected)
+        {
+            Console.Error.WriteLine($"Expected runtime class name '{expected}', got '{actual}'.");
+        }
+
+        return expected == actual;
     }
     finally
     {
         WindowsDeleteString((IntPtr)__retval);
+        _ = Marshal.Release(inspectablePtr);
+    }
+}
+
+static unsafe bool CheckObjectRuntimeClassName(object value, string expected)
+{
+    void* ccw = WindowsRuntimeMarshal.ConvertToUnmanaged(value);
+    try
+    {
+        return CheckRuntimeClassName(ccw, expected);
+    }
+    finally
+    {
+        WindowsRuntimeMarshal.Free(ccw);
+    }
+}
+
+static bool ArrayExposesInspectableInterfaces(object value) =>
+    CcwExposesInterface(value, new Guid("9CD7A84F-0C80-59C5-B44E-977841BB43D9")) &&
+    CcwExposesInterface(value, new Guid("4BD682DD-7554-40E9-9A9B-82654EDE7E62"));
+
+static unsafe bool CcwExposesInterface(object value, in Guid iid)
+{
+    void* ccw = WindowsRuntimeMarshal.ConvertToUnmanaged(value);
+    try
+    {
+        if (Marshal.QueryInterface((nint)ccw, in iid, out nint result) != 0)
+        {
+            return false;
+        }
+
+        _ = Marshal.Release(result);
+
+        return true;
+    }
+    finally
+    {
+        WindowsRuntimeMarshal.Free(ccw);
+    }
+}
+
+static object BoxListViaCast() => (object)new List<short>();
+
+// Boxes a generic list through a conditional (ternary) expression, so the concrete element types are only
+// ever reachable through the ternary branches (see issue #1947).
+static object BoxListViaTernary(bool flag)
+{
+    object boxed = flag ? new List<int>() : (object)new List<string>();
+    return boxed;
+}
+
+// Same as 'BoxListViaTernary', but exercising a switch expression instead of a conditional expression.
+static object BoxListViaSwitch(int selector)
+{
+    object boxed = selector switch
+    {
+        0 => new List<byte>(),
+        _ => (object)new List<float>()
+    };
+    return boxed;
+}
+
+[GeneratedCustomPropertyProvider]
+sealed partial class BindableGenericProperties
+{
+    public object Initializer { get; } = new List<ushort>();
+    public object Expression => new List<uint>();
+    public object Body
+    {
+        get
+        {
+            return new List<ulong>();
+        }
     }
 }
 

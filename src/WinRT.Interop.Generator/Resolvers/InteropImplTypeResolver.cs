@@ -187,6 +187,7 @@ internal static class InteropImplTypeResolver
             _ when interopReferences.SignatureComparer.Equals(type.BaseType, interopReferences.Point) => "Point",
             _ when interopReferences.SignatureComparer.Equals(type.BaseType, interopReferences.Size) => "Size",
             _ when interopReferences.SignatureComparer.Equals(type.BaseType, interopReferences.Rect) => "Rect",
+            _ when type.IsCovariantSzArrayType(interopReferences) => "Inspectable",
             _ => "OtherType"
         };
 
@@ -199,5 +200,15 @@ internal static class InteropImplTypeResolver
 
         // Return the pair of methods from the ABI type in 'WinRT.Runtime.dll'
         return (get_IIDMethod, get_VtableMethod);
+    }
+
+    /// <summary>
+    /// Gets the shared <c>IReferenceArray&lt;Object&gt;</c> implementation for covariant arrays.
+    /// </summary>
+    /// <param name="interopReferences">The references for this invocation.</param>
+    /// <returns>The IID and vtable getters.</returns>
+    public static (IMethodDefOrRef get_IID, IMethodDefOrRef get_Vtable) GetInspectableArrayTypeImpl(InteropReferences interopReferences)
+    {
+        return (interopReferences.IReferenceArrayObjectImplget_IID, interopReferences.IReferenceArrayObjectImplget_Vtable);
     }
 }

@@ -28,6 +28,7 @@
     <ClCompile Include="CustomIterableTest.cpp" />
     <ClCompile Include="CustomReadOnlyDictionaryTest.cpp" />
     <ClCompile Include="MarshalledValuesTest.cpp" />
+    <ClCompile Include="WrlAsyncOperation.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
@@ -49,6 +50,7 @@
     <ClInclude Include="CustomIterableTest.h" />
     <ClInclude Include="CustomReadOnlyDictionaryTest.h" />
     <ClInclude Include="MarshalledValuesTest.h" />
+    <ClInclude Include="WrlAsyncOperation.h" />
   </ItemGroup>
   <ItemGroup>
     <Midl Include="TestComponentCSharp.idl" />

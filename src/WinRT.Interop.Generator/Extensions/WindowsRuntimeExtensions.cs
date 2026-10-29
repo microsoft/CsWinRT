@@ -1311,6 +1311,28 @@ internal static class WindowsRuntimeExtensions
         }
     }
 
+    extension(SzArrayTypeSignature arrayType)
+    {
+        /// <summary>
+        /// Checks whether a <see cref="SzArrayTypeSignature"/> is a covariant SZ array type (i.e. one that can be
+        /// treated as an array of inspectable objects, as it has an element type that is some reference type that
+        /// is not <see cref="object"/>, <see cref="string"/>, <see cref="Type"/> or <see cref="Exception"/>).
+        /// </summary>
+        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <returns>Whether the array type is a covariant SZ array type.</returns>
+        public bool IsCovariantSzArrayType(InteropReferences interopReferences)
+        {
+            TypeSignature elementType = arrayType.BaseType;
+
+            return
+                !elementType.IsValueType &&
+                !elementType.IsTypeOfObject() &&
+                !elementType.IsTypeOfString() &&
+                !elementType.IsTypeOfType(interopReferences) &&
+                !elementType.IsTypeOfException(interopReferences);
+        }
+    }
+
     extension(ModuleDefinition module)
     {
         /// <summary>

@@ -829,6 +829,11 @@ internal sealed class InteropReferences
     public TypeReference IPropertyValueImpl => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "IPropertyValueImpl"u8);
 
     /// <summary>
+    /// Gets the type reference for the shared <c>IReferenceArray&lt;Object&gt;</c> implementation.
+    /// </summary>
+    public TypeReference IReferenceArrayObjectImpl => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "IReferenceArrayObjectImpl"u8);
+
+    /// <summary>
     /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.InteropServices.IStringableImpl</c>.
     /// </summary>
     public TypeReference IStringableImpl => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "IStringableImpl"u8);
@@ -2140,6 +2145,20 @@ internal sealed class InteropReferences
     /// </summary>
     public MemberReference IPropertyValueImplget_OtherTypeVtable => field ??= IPropertyValueImpl
         .CreateMemberReference("get_OtherTypeVtable"u8, MethodSignature.CreateStatic(
+            returnType: _corLibTypeFactory.IntPtr));
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IReferenceArrayObjectImpl.get_IID()</c>.
+    /// </summary>
+    public MemberReference IReferenceArrayObjectImplget_IID => field ??= IReferenceArrayObjectImpl
+        .CreateMemberReference("get_IID"u8, MethodSignature.CreateStatic(
+            returnType: WellKnownTypeSignatureFactory.InGuid(this)));
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IReferenceArrayObjectImpl.get_Vtable()</c>.
+    /// </summary>
+    public MemberReference IReferenceArrayObjectImplget_Vtable => field ??= IReferenceArrayObjectImpl
+        .CreateMemberReference("get_Vtable"u8, MethodSignature.CreateStatic(
             returnType: _corLibTypeFactory.IntPtr));
 
     /// <summary>
