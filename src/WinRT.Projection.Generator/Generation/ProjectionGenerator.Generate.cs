@@ -7,6 +7,7 @@ using System.IO;
 using System.Linq;
 using AsmResolver;
 using AsmResolver.DotNet;
+using ConsoleAppFramework;
 using WindowsRuntime.Generator.Errors;
 using WindowsRuntime.Generator.Helpers;
 using WindowsRuntime.ProjectionGenerator.Errors;
@@ -28,6 +29,21 @@ internal partial class ProjectionGenerator
     {
         args.Token.ThrowIfCancellationRequested();
 
+        bool isSdkMode = args.AssemblyName != "WinRT.Component" && args.WindowsSdkOnly;
+
+        // Show the appropriate message to inform users of what this generator is doing, based on the input
+        // arguments. If we don't have precompiled projections, this tool might run up to 4 times during
+        // builds (Windows SDK, Windows SDK XAML, 3rd party projections, and authored components), so this
+        // helps make things clearer. The Windows SDK messages have no data dependency, so
+        // they are logged right away. The other ones report the number of .winmd-s this invocation actually
+        // processes (the input list is shared by all invocations), so they are logged once that is known.
+        if (isSdkMode)
+        {
+            ConsoleApp.Log(args.WindowsUIXamlProjection
+                ? "Processing 'Windows.UI.Xaml' .winmd references"
+                : "Processing Windows SDK .winmd references");
+        }
+
         BuildWriterOptions(
             args,
             out string outputFolder,
@@ -35,7 +51,16 @@ internal partial class ProjectionGenerator
             out bool hasTypesToProject,
             out ProjectionWriterOptions writerOptions,
             out List<string> componentAssemblyNames,
-            out List<string> activationFactoryAssemblyNames);
+            out List<string> activationFactoryAssemblyNames,
+            out int winmdCount);
+
+        // Log the number of .winmd-s this invocation processes, now that it is known
+        if (!isSdkMode)
+        {
+            ConsoleApp.Log(args.AssemblyName == "WinRT.Component"
+                ? $"Processing {winmdCount} .winmd component(s)"
+                : $"Processing {winmdCount} .winmd reference(s)");
+        }
 
         string[] referencesWithoutProjections = [.. args.ReferenceAssemblyPaths.Where(r => !projectionReferenceAssemblies.Contains(r))];
 
@@ -98,6 +123,7 @@ internal partial class ProjectionGenerator
     /// <param name="writerOptions">The resulting writer options.</param>
     /// <param name="componentAssemblyNames">Sorted simple names of input <c>[WindowsRuntimeComponentAssembly]</c> references (populated only in component mode).</param>
     /// <param name="activationFactoryAssemblyNames">Sorted simple names of input references that only contribute an activation entry point (populated only in component mode).</param>
+    /// <param name="winmdCount">The number of input <c>.winmd</c> files this invocation actually processes. In component mode, this is the number of authored component <c>.winmd</c> files. Otherwise, it is the number of third-party <c>.winmd</c> files (excluding the Windows SDK, the internal interop metadata, and authored components).</param>
     private static void BuildWriterOptions(
         ProjectionGeneratorArgs args,
         out string outputFolder,
@@ -105,10 +131,12 @@ internal partial class ProjectionGenerator
         out bool hasTypesToProject,
         out ProjectionWriterOptions writerOptions,
         out List<string> componentAssemblyNames,
-        out List<string> activationFactoryAssemblyNames)
+        out List<string> activationFactoryAssemblyNames,
+        out int winmdCount)
     {
         args.Token.ThrowIfCancellationRequested();
 
+        winmdCount = 0;
         outputFolder = Path.Combine(Path.GetFullPath(args.GeneratedAssemblyDirectory), "CsWinRTProjectionSources", args.AssemblyName);
         projectionReferenceAssemblies = [];
         hasTypesToProject = false;
@@ -200,6 +228,8 @@ internal partial class ProjectionGenerator
                     continue;
                 }
 
+                winmdCount++;
+
                 ModuleDefinition winmdModule = ModuleDefinition.FromFile(winmdPath, resolver.ReaderParameters, createRuntimeContext: false);
 
                 foreach (TypeDefinition type in winmdModule.TopLevelTypes)
@@ -220,9 +250,19 @@ internal partial class ProjectionGenerator
         // explicitly requested types (everything else already lives in the real projection).
         if (!isComponentMode)
         {
+            // Authored components share the same .winmd input list, but are handled by the component
+            // projection instead, so track them to leave them out of the reported number of references.
+            HashSet<string> referencedComponentNames = [];
+
             foreach (string referenceAssemblyPath in args.ReferenceAssemblyPaths.Distinct(StringComparer.Ordinal).Order(StringComparer.Ordinal))
             {
                 ModuleDefinition moduleDefinition = ModuleDefinition.FromFile(referenceAssemblyPath, resolver.ReaderParameters);
+
+                // Record component assembly names, to match them against their .winmd-s (same file stem) and exclude those from the count
+                if (IsComponentAssembly(moduleDefinition) && moduleDefinition.Assembly?.Name is Utf8String componentName)
+                {
+                    _ = referencedComponentNames.Add(componentName.Value);
+                }
 
                 // For non-component assemblies, check if this is a Windows Runtime reference assembly.
                 if (!IsReferenceAssembly(moduleDefinition) || !IsWindowsRuntimeReferenceAssembly(moduleDefinition))
@@ -297,6 +337,20 @@ internal partial class ProjectionGenerator
                 // the projection being generated here supplies their real implementation. This is the same
                 // contract as any other reference projection: metadata at compile time, implementation at publish.
                 implementableTypes.AddRange(ReadImplementableClassNames(moduleDefinition, referenceAssemblyPath));
+            }
+
+            // Only count the third-party .winmd-s: the Windows SDK, the internal interop metadata and the
+            // authored components are all part of the same input list, but are not handled by this projection.
+            foreach (string winmdPath in args.WinMDPaths)
+            {
+                string winmdFileName = Path.GetFileNameWithoutExtension(winmdPath);
+
+                if (!IsWindowsSdkMetadataName(winmdFileName) &&
+                    winmdFileName != "WindowsRuntime.Internal" &&
+                    !referencedComponentNames.Contains(winmdFileName))
+                {
+                    winmdCount++;
+                }
             }
         }
 
