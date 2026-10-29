@@ -44,6 +44,8 @@ internal sealed partial class WindowsRuntimeIidResolver(
     {
         token.ThrowIfCancellationRequested();
 
+        // 'dynamic' is just 'object' with a different compile-time identity. Resolving it would be correct too, but it's
+        // so rare as a type argument that it's not worth supporting, so the call keeps using the runtime lookup instead
         if (type.TypeKind == TypeKind.Dynamic)
         {
             iid = default;
