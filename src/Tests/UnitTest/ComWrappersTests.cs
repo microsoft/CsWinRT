@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Threading;
@@ -18,6 +19,82 @@ namespace UnitTest;
 [TestClass]
 public unsafe class ComWrappersTests
 {
+    [TestMethod]
+    public void TestConvertToUnmanagedWithIidNullReturnsNull()
+    {
+        Guid iid = new("AF86E2E0-B12D-4C6A-9C5A-D7AA65101E90");
+
+        Assert.IsTrue(WindowsRuntimeMarshal.ConvertToUnmanaged(null, in iid) is null);
+    }
+
+    [TestMethod]
+    public void TestConvertToUnmanagedWithIidManagedObjectReturnsQueriedInterface()
+    {
+        // 'IIterable<IInspectable>', which is implemented by 'List<object>'
+        Guid iid = new("092B849B-60B1-52BE-A44A-6FE8E933CBE4");
+        List<object> original = new();
+        void* unknown = WindowsRuntimeMarshal.ConvertToUnmanaged(original);
+        void* expected = null;
+        void* actual = null;
+
+        try
+        {
+            Marshal.ThrowExceptionForHR(Marshal.QueryInterface((nint)unknown, in iid, out nint expectedPtr));
+
+            expected = (void*)expectedPtr;
+            actual = WindowsRuntimeMarshal.ConvertToUnmanaged(original, in iid);
+
+            Assert.IsTrue(actual is not null);
+            Assert.AreEqual((nint)expected, (nint)actual);
+            Assert.AreSame(original, WindowsRuntimeMarshal.ConvertToManaged(actual));
+        }
+        finally
+        {
+            WindowsRuntimeMarshal.Free(actual);
+            WindowsRuntimeMarshal.Free(expected);
+            WindowsRuntimeMarshal.Free(unknown);
+        }
+    }
+
+    [TestMethod]
+    public void TestConvertToUnmanagedWithIidManagedObjectWithUnsupportedIidThrowsInvalidCastException()
+    {
+        Guid iid = new("A9D2E5F3-3B4E-4E1D-8A52-5C0F1F7D6B11");
+        object original = new();
+
+        InvalidCastException exception = Assert.ThrowsExactly<InvalidCastException>(() => WindowsRuntimeMarshal.ConvertToUnmanaged(original, in iid));
+
+        StringAssert.Contains(exception.Message, "A9D2E5F3-3B4E-4E1D-8A52-5C0F1F7D6B11");
+    }
+
+    [TestMethod]
+    public void TestConvertToUnmanagedWithIidNativeObjectReturnsQueriedInterface()
+    {
+        // 'IPropertySet', which is implemented by 'PropertySet'
+        Guid iid = new("8A43ED9F-F4E6-4421-ACF9-1DAB2986820C");
+        Windows.Foundation.Collections.PropertySet original = new();
+        void* pointer = WindowsRuntimeMarshal.ConvertToUnmanaged(original, in iid);
+
+        try
+        {
+            Assert.IsTrue(pointer is not null);
+            Assert.AreSame(original, WindowsRuntimeMarshal.ConvertToManaged(pointer));
+        }
+        finally
+        {
+            WindowsRuntimeMarshal.Free(pointer);
+        }
+    }
+
+    [TestMethod]
+    public void TestConvertToUnmanagedWithIidNativeObjectWithUnsupportedIidThrowsInvalidCastException()
+    {
+        Guid iid = new("A9D2E5F3-3B4E-4E1D-8A52-5C0F1F7D6B11");
+        Windows.Foundation.Collections.PropertySet original = new();
+
+        Assert.ThrowsExactly<InvalidCastException>(() => WindowsRuntimeMarshal.ConvertToUnmanaged(original, in iid));
+    }
+
     [TestMethod]
     public void TestConvertToManagedNullReturnsNull()
     {
