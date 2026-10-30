@@ -304,15 +304,6 @@ public static unsafe class INotifyDataErrorInfoImpl
     {
         *result = null;
 
-        // Keep the iterator in this assembly so the interop generator can discover its CCW
-        static IEnumerable<object> Enumerate(IEnumerable source)
-        {
-            foreach (object value in source)
-            {
-                yield return value;
-            }
-        }
-
         try
         {
             var thisObject = ComInterfaceDispatch.GetInstance<global::System.ComponentModel.INotifyDataErrorInfo>((ComInterfaceDispatch*)thisPtr);
@@ -324,9 +315,7 @@ public static unsafe class INotifyDataErrorInfoImpl
                 [UnsafeAccessorType("ABI.System.Collections.Generic.<#corlib>IEnumerable'1<object>Marshaller, WinRT.Interop")] object? _,
                 IEnumerable<object>? value);
 
-            IEnumerable<object>? errors = managedResult is null ? null : managedResult as IEnumerable<object> ?? Enumerate(managedResult);
-
-            *result = ConvertToUnmanaged(null, errors).DetachThisPtrUnsafe();
+            *result = ConvertToUnmanaged(null, BindableIEnumerableAdapter.AsObjectEnumerable(managedResult)).DetachThisPtrUnsafe();
 
             return WellKnownErrorCodes.S_OK;
         }
