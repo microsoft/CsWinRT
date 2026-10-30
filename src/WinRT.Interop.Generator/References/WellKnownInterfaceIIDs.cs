@@ -98,6 +98,8 @@ internal static class WellKnownInterfaceIIDs
                 => "Windows_Foundation_Collections_IVectorChangedEventArgs",
             _ when interopReferences.SignatureComparer.Equals(interfaceType, interopReferences.IStringable)
                 => "IStringable",
+            _ when interopReferences.SignatureComparer.Equals(interfaceType, interopReferences.IMemoryBufferReference)
+                => "Windows_Foundation_IMemoryBufferReference",
             _ when interopReferences.SignatureComparer.Equals(interfaceType, interopReferences.IBuffer)
                 => "Windows_Storage_Streams_IBuffer",
             _ when interopReferences.SignatureComparer.Equals(interfaceType, interopReferences.IInputStream)

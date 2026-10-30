@@ -3,7 +3,10 @@
 
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using WindowsRuntime.InteropServices.Marshalling;
+
+#pragma warning disable IDE0046
 
 namespace WindowsRuntime.InteropServices;
 
@@ -48,5 +51,39 @@ internal static class BindableIEnumerableAdapter
             // Marshal the adapter, we'll always have marshalling info for it (same as in 'IEnumerableAdapter<T>.First')
             *enumerator = (void*)WindowsRuntimeComWrappers.GetOrCreateComInterfaceForObjectExact(enumeratorAdapter, in WellKnownWindowsInterfaceIIDs.IID_IBindableIterator);
         }
+    }
+
+    /// <summary>
+    /// Gets an <see cref="IEnumerable{T}"/> of <see cref="object"/> view of a given <see cref="IEnumerable"/> instance.
+    /// </summary>
+    /// <param name="enumerable">The input <see cref="IEnumerable"/> instance.</param>
+    /// <returns>
+    /// <paramref name="enumerable"/> itself if it already implements <see cref="IEnumerable{T}"/> of <see cref="object"/>,
+    /// otherwise an <see cref="IEnumerable{T}"/> of <see cref="object"/> instance enumerating the items in <paramref name="enumerable"/>.
+    /// </returns>
+    /// <remarks>
+    /// This method is used to marshal <see cref="IEnumerable"/> values that need to be exposed as
+    /// <c>Windows.Foundation.Collections.IIterable&lt;IInspectable&gt;</c> (rather than as
+    /// <c>Windows.UI.Xaml.Interop.IBindableIterable</c>) when the input instance doesn't
+    /// also implement the generic interface.
+    /// </remarks>
+    [return: NotNullIfNotNull(nameof(enumerable))]
+    public static IEnumerable<object>? AsObjectEnumerable(IEnumerable? enumerable)
+    {
+        // Keep the iterator in this assembly, so that the interop generator can discover it and generate its CCW
+        static IEnumerable<object> Enumerate(IEnumerable enumerable)
+        {
+            foreach (object value in enumerable)
+            {
+                yield return value;
+            }
+        }
+
+        if (enumerable is null)
+        {
+            return null;
+        }
+
+        return enumerable as IEnumerable<object> ?? Enumerate(enumerable);
     }
 }

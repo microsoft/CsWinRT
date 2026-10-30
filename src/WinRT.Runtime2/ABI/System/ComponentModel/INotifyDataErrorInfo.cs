@@ -315,7 +315,7 @@ public static unsafe class INotifyDataErrorInfoImpl
                 [UnsafeAccessorType("ABI.System.Collections.Generic.<#corlib>IEnumerable'1<object>Marshaller, WinRT.Interop")] object? _,
                 IEnumerable<object>? value);
 
-            *result = ConvertToUnmanaged(null, (IEnumerable<object>)managedResult).DetachThisPtrUnsafe();
+            *result = ConvertToUnmanaged(null, BindableIEnumerableAdapter.AsObjectEnumerable(managedResult)).DetachThisPtrUnsafe();
 
             return WellKnownErrorCodes.S_OK;
         }
