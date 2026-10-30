@@ -144,7 +144,7 @@ public static unsafe class IMemoryBufferReferenceMethods
     public static EventHandlerEventSource<IMemoryBufferReference, object> Closed(WindowsRuntimeObject thisObject, WindowsRuntimeObjectReference thisReference)
     {
         [UnsafeAccessor(UnsafeAccessorKind.Constructor)]
-        [return: UnsafeAccessorType("ABI.WindowsRuntime.InteropServices.<#CsWinRT>EventHandlerEventSource'1<<#CsWinRT>Windows-Foundation-IMemoryBufferReference|object>, WinRT.Interop")]
+        [return: UnsafeAccessorType("ABI.WindowsRuntime.InteropServices.<#CsWinRT>EventHandlerEventSource'2<<#CsWinRT>Windows-Foundation-IMemoryBufferReference|object>, WinRT.Interop")]
         static extern object ctor(WindowsRuntimeObjectReference nativeObjectReference, int index);
 
         return ClosedTable.GetOrAdd(
@@ -257,7 +257,7 @@ public static unsafe class IMemoryBufferReferenceImpl
 
             [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = nameof(ConvertToManaged))]
             static extern EventHandler<IMemoryBufferReference, object>? ConvertToManaged(
-                [UnsafeAccessorType("ABI.System.<#corlib>EventHandler'2<<#CsWinRT>Windows.Foundation.IMemoryBufferReference|object>Marshaller, WinRT.Interop")] object? _,
+                [UnsafeAccessorType("ABI.System.<#corlib>EventHandler'2<<#CsWinRT>Windows-Foundation-IMemoryBufferReference|object>Marshaller, WinRT.Interop")] object? _,
                 void* value);
 
             EventHandler<IMemoryBufferReference, object>? managedHandler = ConvertToManaged(null, handler);

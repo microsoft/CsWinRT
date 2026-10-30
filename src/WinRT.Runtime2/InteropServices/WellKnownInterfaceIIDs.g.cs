@@ -211,6 +211,13 @@ public static class WellKnownInterfaceIIDs
         get => ref WellKnownWindowsInterfaceIIDs.IID_IAsyncInfo;
     }
 
+    /// <summary>The IID for <c>Windows.Foundation.IMemoryBufferReference</c> (mapped to <see cref="global::Windows.Foundation.IMemoryBufferReference"/>.</summary>
+    public static ref readonly Guid IID_Windows_Foundation_IMemoryBufferReference
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]   
+        get => ref WellKnownWindowsInterfaceIIDs.IID_IMemoryBufferReference;
+    }
+
     /// <summary>The IID for <c>Windows.Storage.Streams.IBuffer</c> (mapped to <see cref="global::Windows.Storage.Streams.IBuffer"/>.</summary>
     public static ref readonly Guid IID_Windows_Storage_Streams_IBuffer
     {
