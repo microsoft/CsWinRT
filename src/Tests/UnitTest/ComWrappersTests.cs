@@ -3,6 +3,8 @@
 
 using System;
 using System.Collections;
+using System.Collections.Generic;
+using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Threading;
@@ -13,11 +15,171 @@ using WindowsRuntime.InteropServices.Marshalling;
 namespace UnitTest;
 
 /// <summary>
-/// Tests for the <c>ComWrappers</c> infrastructure backing RCW creation.
+/// Tests for the <c>ComWrappers</c> infrastructure backing RCW and CCW marshalling.
 /// </summary>
 [TestClass]
 public unsafe class ComWrappersTests
 {
+    [TestMethod]
+    [DataRow(false, false)]
+    [DataRow(false, true)]
+    [DataRow(true, false)]
+    [DataRow(true, true)]
+    public void PropertyValue_MappedArrayGetters_ReturnNativeValues(bool dateTime, bool empty)
+    {
+        object source;
+        long[] expected;
+        if (dateTime)
+        {
+            DateTimeOffset[] values = empty ? [] :
+                [DateTimeOffset.UnixEpoch, new DateTimeOffset(2020, 1, 2, 3, 4, 5, TimeSpan.FromHours(5))];
+            source = values;
+            expected = Array.ConvertAll(values, value => value.ToFileTime());
+        }
+        else
+        {
+            TimeSpan[] values = empty ? [] : [TimeSpan.FromSeconds(42), TimeSpan.FromTicks(-1234567)];
+            source = values;
+            expected = Array.ConvertAll(values, value => value.Ticks);
+        }
+
+        using var boxed = WindowsRuntimeObjectMarshaller.ConvertToUnmanaged(source);
+        nint propertyValue = 0;
+        long* data = null;
+        uint count = 0;
+
+        try
+        {
+            Marshal.ThrowExceptionForHR(Marshal.QueryInterface(
+                (nint)boxed.GetThisPtrUnsafe(), in WellKnownInterfaceIIDs.IID_IPropertyValue, out propertyValue));
+
+            Marshal.ThrowExceptionForHR(
+                ((delegate* unmanaged[MemberFunction]<void*, uint*, long**, int>)(*(void***)propertyValue)[dateTime ? 40 : 41])((void*)propertyValue, &count, &data));
+
+            Assert.AreEqual((uint)expected.Length, count);
+            CollectionAssert.AreEqual(expected, new ReadOnlySpan<long>(data, (int)count).ToArray());
+        }
+        finally
+        {
+            Marshal.FreeCoTaskMem((nint)data);
+            WindowsRuntimeMarshal.Free((void*)propertyValue);
+        }
+    }
+
+    [TestMethod]
+    [DataRow("ObjectArray")]
+    [DataRow("ArrayList")]
+    [DataRow("ValueArray")]
+    [DataRow("Empty")]
+    [DataRow("Null")]
+    public void DataErrorInfo_GetErrors_MarshalsEnumerable(string kind)
+    {
+        object[] expected = kind switch
+        {
+            "ValueArray" => [42, 84],
+            "Empty" or "Null" => [],
+            _ => ["first", "second"]
+        };
+        IEnumerable errors = kind switch
+        {
+            "ObjectArray" => expected,
+            "ArrayList" => new ArrayList(expected),
+            "ValueArray" => new int[] { 42, 84 },
+            "Empty" => new ArrayList(),
+            "Null" => null,
+            _ => throw new ArgumentOutOfRangeException(nameof(kind))
+        };
+        var source = new DataErrorInfo(errors);
+        using var ccw = WindowsRuntimeInterfaceMarshaller<INotifyDataErrorInfo>.ConvertToUnmanaged(
+            source, WindowsRuntimeMarshal.GetIid<INotifyDataErrorInfo>());
+        void* thisPtr = ccw.GetThisPtrUnsafe();
+        void* propertyName = HStringMarshaller.ConvertToUnmanaged("Value");
+        void* result = null;
+
+        try
+        {
+            Marshal.ThrowExceptionForHR(
+                ((delegate* unmanaged[MemberFunction]<void*, void*, void**, int>)(*(void***)thisPtr)[9])(thisPtr, propertyName, &result));
+
+            Assert.AreEqual("Value", source.RequestedPropertyName);
+
+            if (kind == "Null")
+            {
+                Assert.IsTrue(result is null);
+            }
+            else
+            {
+                Assert.IsTrue(result is not null);
+                CollectionAssert.AreEqual(expected, ReadObjectIterable(result));
+            }
+        }
+        finally
+        {
+            WindowsRuntimeMarshal.Free(result);
+            HStringMarshaller.Free(propertyName);
+        }
+    }
+
+    private static object[] ReadObjectIterable(void* iterable)
+    {
+        void* iterator = null;
+
+        try
+        {
+            Marshal.ThrowExceptionForHR(
+                ((delegate* unmanaged[MemberFunction]<void*, void**, int>)(*(void***)iterable)[6])(iterable, &iterator));
+
+            var values = new List<object>();
+            byte hasCurrent;
+            Marshal.ThrowExceptionForHR(
+                ((delegate* unmanaged[MemberFunction]<void*, byte*, int>)(*(void***)iterator)[7])(iterator, &hasCurrent));
+
+            while (hasCurrent != 0)
+            {
+                void* current = null;
+
+                try
+                {
+                    Marshal.ThrowExceptionForHR(
+                        ((delegate* unmanaged[MemberFunction]<void*, void**, int>)(*(void***)iterator)[6])(iterator, &current));
+                    values.Add(WindowsRuntimeObjectMarshaller.ConvertToManaged(current));
+                }
+                finally
+                {
+                    WindowsRuntimeMarshal.Free(current);
+                }
+
+                Marshal.ThrowExceptionForHR(
+                    ((delegate* unmanaged[MemberFunction]<void*, byte*, int>)(*(void***)iterator)[8])(iterator, &hasCurrent));
+            }
+
+            return values.ToArray();
+        }
+        finally
+        {
+            WindowsRuntimeMarshal.Free(iterator);
+        }
+    }
+
+    private sealed class DataErrorInfo(IEnumerable errors) : INotifyDataErrorInfo
+    {
+        public bool HasErrors => errors is not null;
+
+        public string RequestedPropertyName { get; private set; }
+
+        public event EventHandler<DataErrorsChangedEventArgs> ErrorsChanged
+        {
+            add { }
+            remove { }
+        }
+
+        public IEnumerable GetErrors(string propertyName)
+        {
+            RequestedPropertyName = propertyName;
+            return errors;
+        }
+    }
+
     [TestMethod]
     public void TestConvertToManagedNullReturnsNull()
     {
