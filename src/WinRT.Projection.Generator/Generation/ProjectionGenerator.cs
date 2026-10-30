@@ -32,17 +32,9 @@ internal static partial class ProjectionGenerator
             log: ConsoleApp.Log,
             token: token);
 
-        // Process all .winmd references. Show the appropriate message to inform users of what this
-        // generator is doing, based on the input arguments. If we don't have precompiled projections,
-        // this tool might run up to 3 times during builds, so this helps make things clearer.
+        // Process all .winmd references (the progress message is logged from within the phase)
         ProjectionGeneratorProcessingState processingState = runner.RunPhase(
             phaseName: "processing",
-            logMessage: runner.Args switch
-            {
-                { WindowsSdkOnly: true, WindowsUIXamlProjection: false } => "Processing Windows SDK .winmd references",
-                { WindowsSdkOnly: true, WindowsUIXamlProjection: true } => "Processing 'Windows.UI.Xaml' .winmd references",
-                _ => $"Processing {runner.Args.WinMDPaths.Length} .winmd reference(s)"
-            },
             body: ProcessReferences);
 
         // Prepare the source directory, removing stale files from the previous generation
