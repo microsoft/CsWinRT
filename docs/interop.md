@@ -111,6 +111,20 @@ finally
 }
 ```
 
+Native code that needs a specific interface pointer can pass the IID too, which performs the additional `QueryInterface` call and releases the intermediate pointer. The managed object can be `null` (this returns `null`), and an `InvalidCastException` is thrown if the object does not implement the interface:
+
+```csharp
+void* vectorPtr = WindowsRuntimeMarshal.ConvertToUnmanaged(list, WindowsRuntimeMarshal.GetIid<IList<string>>());
+try
+{
+    // use vectorPtr (an 'IVector<HSTRING>' pointer)
+}
+finally
+{
+    WindowsRuntimeMarshal.Free(vectorPtr);
+}
+```
+
 Native code can also need a CCW **around a projected native object's managed wrapper**. For example, XAML uses reference tracking to obtain managed collection interfaces when a native collection does not expose the bindable or covariant interfaces it needs. Opt the projected class into CCW generation with an assembly attribute:
 
 ```csharp
