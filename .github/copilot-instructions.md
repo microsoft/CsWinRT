@@ -159,6 +159,7 @@ By running the interop generator at the very end of the build process (after all
 | `CsWinRTImplementWinMDTypes` | `false` | Additionally emit, into the projection, the abstract base classes that let its Windows Runtime types be implemented (authored) in C# |
 | `CsWinRTUseWindowsUIXamlProjections` | `false` | Use UWP XAML (`Windows.UI.Xaml`) instead of WinUI (`Microsoft.UI.Xaml`) |
 | `CsWinRTMergeReferencedActivationFactories` | `false` | Merge activation factories from referenced components |
+| `CsWinRTGenerateGetIidInterceptors` | `true` | Let the source generator replace statically computable `WindowsRuntimeMarshal.GetIid<T>()` calls with precomputed IIDs |
 
 ---
 
@@ -343,12 +344,13 @@ A Roslyn incremental source generator and diagnostic analyzer package. Runs at *
 - **Assembly name**: `WinRT.SourceGenerator`
 - **Dependency**: `Microsoft.CodeAnalysis.CSharp` 5.0.0
 
-**Three source generators:**
+**Four source generators:**
 
 | Generator | What It Generates |
 |-----------|-------------------|
 | `AuthoringExportTypesGenerator` | Activation factory infrastructure for Windows Runtime component authoring. Emits `ManagedExports.g.cs` (with `GetActivationFactory()` method) and `NativeExports.g.cs` (with `DllGetActivationFactory()` entry point for Native AOT). Triggered when `CsWinRTComponent = true`. |
 | `CustomPropertyProviderGenerator` | `ICustomPropertyProvider` implementations for XAML data binding. Annotate types with `[GeneratedCustomPropertyProvider]` to auto-generate property accessors. Supports both UWP and WinUI XAML. |
+| `GetIidInterceptorGenerator` | RVA-backed IID constants for direct `WindowsRuntimeMarshal.GetIid<T>()` calls whose closed type arguments have statically computable Windows Runtime IIDs. Other calls retain the runtime lookup. Uses the `WindowsRuntime.Generated` interceptor namespace. Reference projections record each runtime class's default interface name in `[WindowsRuntimeReferenceAssemblyMetadata]` (`CsWinRT.DefaultInterface.v1:<class>`), which the generator resolves to derive IIDs. Opt out with `CsWinRTGenerateGetIidInterceptors=false`, which also leaves `WindowsRuntime.Generated` out of `InterceptorsNamespaces`: calls are only analyzed when that namespace is enabled (checked in the syntax predicate, so opted-out projects skip all semantic work), and the per-compilation metadata cache (`WindowsRuntimeMetadataCache`) shares projection metadata between all analyzed calls. |
 | `TypeMapAssemblyTargetGenerator` | `[TypeMapAssemblyTarget]` assembly attributes for runtime type mapping in AOT scenarios. Discovers referenced Windows Runtime assemblies and registers them with the three type map groups: `WindowsRuntimeComWrappersTypeMapGroup`, `WindowsRuntimeMetadataTypeMapGroup`, `DynamicInterfaceCastableImplementationTypeMapGroup`. |
 
 **Diagnostic analyzers** producing diagnostics with IDs `CSWINRT2000`–`CSWINRT2027` (the full list, with severities, is in `AnalyzerReleases.Shipped.md`). Some notable groups:

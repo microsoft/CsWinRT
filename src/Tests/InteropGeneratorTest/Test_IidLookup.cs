@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using AsmResolver;
 using AsmResolver.DotNet;
@@ -582,6 +583,32 @@ public sealed class Test_IidLookup
         }
 
         Assert.IsFalse(keys.Any(key => key.Contains("[System.", StringComparison.Ordinal) || key.Contains("[Microsoft.", StringComparison.Ordinal)));
+    }
+
+    [TestMethod]
+    public async Task NonGenericEventHandler_IsNotSupportedAtAnyDepth()
+    {
+        using InteropGeneratorRunner runner = new(applicationSource: """
+            public static class Program
+            {
+                public static System.EventHandler Handler;
+                public static System.EventHandler[] Handlers;
+                public static System.Collections.Generic.IList<System.EventHandler> List;
+                public static System.Collections.Generic.IDictionary<string, System.EventHandler> Map;
+                public static System.Collections.Generic.IList<System.EventHandler<object>> GenericList;
+                public static void Main() => WindowsRuntime.InteropServices.WindowsRuntimeMarshal.GetIid<object>();
+            }
+            """);
+        (_, ModuleDefinition module) = runner.LoadOutput(await runner.GenerateAsync("non-generic-event-handler"));
+        string[] keys = GetIidKeys(module);
+
+        // The non-generic 'EventHandler' has no IID entries, on its own or as an element or generic argument of any constructed type
+        string[] unsupported = [.. keys.Where(static key => Regex.IsMatch(key, @"\]System\.EventHandler(?![`\w])"))];
+
+        Assert.IsEmpty(unsupported, string.Join("\n", unsupported));
+
+        // The generic 'EventHandler<T>' is unaffected
+        Assert.IsTrue(keys.Any(key => key.Contains("System.EventHandler`1[", StringComparison.Ordinal)), string.Join("\n", keys));
     }
 
     [TestMethod]

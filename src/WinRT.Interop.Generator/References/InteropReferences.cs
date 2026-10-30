@@ -155,7 +155,7 @@ internal sealed class InteropReferences
         name: "System.ComponentModel"u8,
         version: new Version(10, 0, 0, 0),
         publicKey: false,
-        publicKeyOrToken: WellKnownPublicKeyTokens.SystemObjectModel);
+        publicKeyOrToken: WellKnownPublicKeyTokens.SystemComponentModel);
 
     /// <summary>
     /// Gets the <see cref="AssemblyReference"/> for <c>System.Memory.dll</c>.

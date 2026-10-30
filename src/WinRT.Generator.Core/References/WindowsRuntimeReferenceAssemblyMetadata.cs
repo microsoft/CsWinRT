@@ -31,6 +31,17 @@ internal static class WindowsRuntimeReferenceAssemblyMetadata
     public const string ImplementableClass = "CsWinRT.ImplementableClass.v1";
 
     /// <summary>
+    /// The key prefix for the default interface of one Windows Runtime class.
+    /// </summary>
+    /// <remarks>
+    /// The key is completed with the fully qualified class name, and the value is the C# name of the class's default
+    /// interface (e.g. <c>Contoso.IWidget</c>, or <c>System.Collections.Generic.IList&lt;string&gt;</c>).
+    /// This lets consumers derive the class's IID and signature even when its default interface is exclusive-to, and
+    /// therefore not among the interfaces declared by the class in the reference projection.
+    /// </remarks>
+    public const string DefaultInterfacePrefix = "CsWinRT.DefaultInterface.v1:";
+
+    /// <summary>
     /// Gets the full name of the instance base generated for an implementable Windows Runtime class.
     /// </summary>
     /// <param name="runtimeClassName">The fully qualified Windows Runtime class name.</param>

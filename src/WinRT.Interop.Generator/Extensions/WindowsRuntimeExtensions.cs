@@ -953,6 +953,34 @@ internal static class WindowsRuntimeExtensions
     extension(TypeSignature signature)
     {
         /// <summary>
+        /// Checks whether a <see cref="TypeSignature"/> is, or is constructed from, the non-generic <see cref="System.EventHandler"/>.
+        /// </summary>
+        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <returns>Whether the type is, or has a generic argument or element type that is, the non-generic <see cref="System.EventHandler"/>.</returns>
+        public bool IsOrContainsNonGenericEventHandlerType(InteropReferences interopReferences)
+        {
+            switch (signature)
+            {
+                case GenericInstanceTypeSignature genericType:
+                    foreach (TypeSignature argument in genericType.TypeArguments)
+                    {
+                        if (argument.IsOrContainsNonGenericEventHandlerType(interopReferences))
+                        {
+                            return true;
+                        }
+                    }
+
+                    return false;
+                case SzArrayTypeSignature arrayType:
+                    return arrayType.BaseType.IsOrContainsNonGenericEventHandlerType(interopReferences);
+                case BoxedTypeSignature boxedType:
+                    return boxedType.BaseType.IsOrContainsNonGenericEventHandlerType(interopReferences);
+                default:
+                    return interopReferences.SignatureComparer.Equals(signature, interopReferences.EventHandler);
+            }
+        }
+
+        /// <summary>
         /// Tries to extract the underlying type from a constructed <see cref="Nullable{T}"/> type.
         /// </summary>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
