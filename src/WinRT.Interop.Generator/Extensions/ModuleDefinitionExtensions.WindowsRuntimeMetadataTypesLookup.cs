@@ -18,11 +18,11 @@ internal partial class ModuleDefinitionExtensions
     /// Gets a lookup of source <c>.winmd</c> module names ("stems") for projected Windows Runtime types in a given
     /// module. The lookup is built from the <c>[WindowsRuntimeMetadata]</c> attributes on the
     /// <c>WindowsRuntimeMetadataTypes</c> type in the <c>ABI</c> namespace. The resulting dictionary maps projected
-    /// types (by namespace and name) to their source <c>.winmd</c> stem.
+    /// types (by namespace and name) to their full type identity and source <c>.winmd</c> stem.
     /// </summary>
     /// <param name="module">The input <see cref="ModuleDefinition"/> instance.</param>
     /// <returns>The resulting metadata-types lookup.</returns>
-    public static IReadOnlyDictionary<(Utf8String? Namespace, Utf8String? Name), Utf8String> GetWindowsRuntimeMetadataTypesLookup(this ModuleDefinition module)
+    public static IReadOnlyDictionary<(Utf8String? Namespace, Utf8String? Name), (TypeSignature Type, Utf8String Stem)> GetWindowsRuntimeMetadataTypesLookup(this ModuleDefinition module)
     {
         return WindowsRuntimeMetadataTypesLookupCache.Instance.GetOrAdd(
             key: module,
@@ -48,10 +48,10 @@ internal partial class ModuleDefinitionExtensions
                 // to do anything here, lookups would just fail and report the correct diagnostics.
                 if (windowsRuntimeMetadataTypesType is null)
                 {
-                    return FrozenDictionary<(Utf8String?, Utf8String?), Utf8String>.Empty;
+                    return FrozenDictionary<(Utf8String?, Utf8String?), (TypeSignature, Utf8String)>.Empty;
                 }
 
-                Dictionary<(Utf8String?, Utf8String?), Utf8String> builder = [];
+                Dictionary<(Utf8String?, Utf8String?), (TypeSignature, Utf8String)> builder = [];
 
                 // Enumerate all attributes on the lookup type and extract projected type to .winmd stem pairs
                 foreach (CustomAttribute attribute in windowsRuntimeMetadataTypesType.CustomAttributes)
@@ -63,7 +63,7 @@ internal partial class ModuleDefinitionExtensions
                     }
 
                     // Add the current pair to the map we're building
-                    builder[(projectedType.Namespace, projectedType.Name)] = stem;
+                    builder[(projectedType.Namespace, projectedType.Name)] = (projectedType, stem);
                 }
 
                 return builder.ToFrozenDictionary();
@@ -79,5 +79,5 @@ file static class WindowsRuntimeMetadataTypesLookupCache
     /// <summary>
     /// The singleton metadata-types lookups map.
     /// </summary>
-    public static readonly ConditionalWeakTable<ModuleDefinition, FrozenDictionary<(Utf8String? Namespace, Utf8String? Name), Utf8String>> Instance = [];
+    public static readonly ConditionalWeakTable<ModuleDefinition, FrozenDictionary<(Utf8String? Namespace, Utf8String? Name), (TypeSignature Type, Utf8String Stem)>> Instance = [];
 }

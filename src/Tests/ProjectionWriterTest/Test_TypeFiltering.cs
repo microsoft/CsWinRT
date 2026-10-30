@@ -4,6 +4,8 @@
 using System;
 using System.IO;
 using System.Linq;
+using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 using ProjectionWriterTest.Helpers;
 using WindowsRuntime.ProjectionWriter;
 
@@ -23,6 +25,7 @@ public class Test_TypeFiltering
             {
                 InputPaths = [inputPath],
                 OutputFolder = outputFolder,
+                OutputAssemblyName = "Projection",
                 IncludeTypes = ["Contoso.User"],
                 ReferenceProjection = referenceProjection
             });
@@ -40,6 +43,7 @@ public class Test_TypeFiltering
             {
                 InputPaths = [inputPath],
                 OutputFolder = outputFolder,
+                OutputAssemblyName = "Projection",
                 Include = ["Contoso"],
                 Exclude = ["Contoso.User2", "Contoso.IUser2", "Contoso.UserProfile"],
                 ReferenceProjection = true
@@ -58,6 +62,7 @@ public class Test_TypeFiltering
             {
                 InputPaths = [inputPath],
                 OutputFolder = outputFolder,
+                OutputAssemblyName = "Projection",
                 IncludeTypes = ["Contoso.User"]
             });
 
@@ -69,6 +74,92 @@ public class Test_TypeFiltering
             StringAssert.Contains(source, "IUserStaticsMethods");
             StringAssert.Contains(iids, "IUserStatics");
             StringAssert.Contains(iids, "IUser");
+        });
+    }
+
+    [TestMethod]
+    public void ComponentProjection_RecordsOnlyExportedAuthoredTypes()
+    {
+        WithMetadata((inputPath, outputFolder) =>
+        {
+            ProjectionWriter.Run(new ProjectionWriterOptions
+            {
+                InputPaths = [inputPath],
+                OutputFolder = outputFolder,
+                OutputAssemblyName = "Projection",
+                Include = ["Contoso"],
+                Exclude = ["Contoso.User2", "Contoso.IUser2", "Contoso.UserProfile"],
+                Component = true
+            });
+
+            string metadata = File.ReadAllText(Path.Combine(outputFolder, "WindowsRuntimeMetadataTypes.cs"));
+            string[] types = CSharpSyntaxTree.ParseText(metadata).GetRoot()
+                .DescendantNodes().OfType<TypeOfExpressionSyntax>()
+                .Select(type => type.Type.ToString().Replace("global::", "", StringComparison.Ordinal).Replace("@", "", StringComparison.Ordinal))
+                .ToArray();
+
+            CollectionAssert.Contains(types, "Contoso.User");
+            CollectionAssert.Contains(types, "ABI.Impl.Contoso.IUser");
+            CollectionAssert.DoesNotContain(types, "Contoso.IUser");
+            CollectionAssert.DoesNotContain(types, "Contoso.IUserStatics");
+            Assert.IsFalse(types.Any(type => type.Contains("User2", StringComparison.Ordinal)));
+            Assert.IsFalse(types.Any(type => type.Contains("UserProfile", StringComparison.Ordinal)));
+        });
+    }
+
+    [TestMethod]
+    public void ComponentReferenceProjection_DoesNotRecordInteropMetadata()
+    {
+        WithMetadata((inputPath, outputFolder) =>
+        {
+            ProjectionWriter.Run(new ProjectionWriterOptions
+            {
+                InputPaths = [inputPath],
+                OutputFolder = outputFolder,
+                OutputAssemblyName = "Projection",
+                IncludeTypes = ["Contoso.User"],
+                Component = true,
+                ReferenceProjection = true
+            });
+
+            Assert.IsFalse(File.Exists(Path.Combine(outputFolder, "WindowsRuntimeMetadataTypes.cs")));
+        });
+    }
+
+    [TestMethod]
+    public void ExactTypeExcludes_CarveOutOfANamespaceInclude()
+    {
+        // Harvested from a reference projection's own metadata, which declares the internal
+        // exclusive-to interfaces alongside the public runtime classes
+        WithMetadata((inputPath, outputFolder) =>
+        {
+            ProjectionWriter.Run(new ProjectionWriterOptions
+            {
+                InputPaths = [inputPath],
+                OutputFolder = outputFolder,
+                OutputAssemblyName = "Projection",
+                Include = ["Contoso"],
+                ExcludeTypes =
+                [
+                    "Contoso.User2",
+                    "Contoso.IUser2",
+                    "Contoso.IUser2Statics",
+                    "Contoso.UserProfile.UserSetupManager",
+                    "Contoso.UserProfile.IUserSetupManager",
+                    "Contoso.UserProfile.IUserSetupManagerStatics"
+                ]
+            });
+
+            string source = File.ReadAllText(Path.Combine(outputFolder, "Contoso.cs"));
+
+            StringAssert.Contains(source, "class User");
+            Assert.IsFalse(source.Contains("User2", StringComparison.Ordinal));
+
+            string allSources = string.Join(
+                Environment.NewLine,
+                Directory.GetFiles(outputFolder, "*.cs").Select(File.ReadAllText));
+
+            Assert.IsFalse(allSources.Contains("UserSetupManager", StringComparison.Ordinal));
         });
     }
 

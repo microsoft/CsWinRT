@@ -113,7 +113,6 @@ public sealed class DictionaryValueCollection<TKey, TValue> : ICollection<TValue
     /// <summary>
     /// The <see cref="IEnumerator{T}"/> implementation for <see cref="DictionaryValueCollection{TKey, TValue}"/>.
     /// </summary>
-    [WindowsRuntimeImplementationOnlyMember]
     public sealed class Enumerator : IEnumerator<TValue>
     {
         /// <summary>

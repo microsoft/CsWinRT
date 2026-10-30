@@ -215,7 +215,7 @@ internal static class MappedInterfaceStubFactory
         }
 
         string elementId = EncodeArgIdentifier(context, args[0]);
-        string interopTypeArgs = InteropTypeNameWriter.EncodeInteropTypeName(argSigs[0], TypedefNameType.Projected);
+        string interopTypeArgs = InteropTypeNameWriter.EncodeInteropTypeName(context, argSigs[0], TypedefNameType.Projected);
         string interopType = "ABI.System.Collections.Generic.<#corlib>IEnumerable'1<" + interopTypeArgs + ">Methods, WinRT.Interop";
         string prefix = "IEnumerableMethods_" + elementId + "_";
 
@@ -252,7 +252,7 @@ internal static class MappedInterfaceStubFactory
         }
 
         string elementId = EncodeArgIdentifier(context, args[0]);
-        string interopTypeArgs = InteropTypeNameWriter.EncodeInteropTypeName(argSigs[0], TypedefNameType.Projected);
+        string interopTypeArgs = InteropTypeNameWriter.EncodeInteropTypeName(context, argSigs[0], TypedefNameType.Projected);
         string interopType = "ABI.System.Collections.Generic.<#corlib>IEnumerator'1<" + interopTypeArgs + ">Methods, WinRT.Interop";
         string prefix = "IEnumeratorMethods_" + elementId + "_";
 
@@ -322,8 +322,8 @@ internal static class MappedInterfaceStubFactory
         string kvLong = kvNested;
         string keyId = EncodeArgIdentifier(context, args[0]);
         string valId = EncodeArgIdentifier(context, args[1]);
-        string keyInteropArg = InteropTypeNameWriter.EncodeInteropTypeName(argSigs[0], TypedefNameType.Projected);
-        string valInteropArg = InteropTypeNameWriter.EncodeInteropTypeName(argSigs[1], TypedefNameType.Projected);
+        string keyInteropArg = InteropTypeNameWriter.EncodeInteropTypeName(context, argSigs[0], TypedefNameType.Projected);
+        string valInteropArg = InteropTypeNameWriter.EncodeInteropTypeName(context, argSigs[1], TypedefNameType.Projected);
         string interopType = "ABI.System.Collections.Generic.<#corlib>IDictionary'2<" + keyInteropArg + "|" + valInteropArg + ">Methods, WinRT.Interop";
         string prefix = "IDictionaryMethods_" + keyId + "_" + valId + "_";
 
@@ -404,8 +404,8 @@ internal static class MappedInterfaceStubFactory
 
         string keyId = EncodeArgIdentifier(context, args[0]);
         string valId = EncodeArgIdentifier(context, args[1]);
-        string keyInteropArg = InteropTypeNameWriter.EncodeInteropTypeName(argSigs[0], TypedefNameType.Projected);
-        string valInteropArg = InteropTypeNameWriter.EncodeInteropTypeName(argSigs[1], TypedefNameType.Projected);
+        string keyInteropArg = InteropTypeNameWriter.EncodeInteropTypeName(context, argSigs[0], TypedefNameType.Projected);
+        string valInteropArg = InteropTypeNameWriter.EncodeInteropTypeName(context, argSigs[1], TypedefNameType.Projected);
         string interopType = "ABI.System.Collections.Generic.<#corlib>IReadOnlyDictionary'2<" + keyInteropArg + "|" + valInteropArg + ">Methods, WinRT.Interop";
         string prefix = "IReadOnlyDictionaryMethods_" + keyId + "_" + valId + "_";
 
@@ -456,7 +456,7 @@ internal static class MappedInterfaceStubFactory
         }
 
         string elementId = EncodeArgIdentifier(context, args[0]);
-        string interopTypeArgs = InteropTypeNameWriter.EncodeInteropTypeName(argSigs[0], TypedefNameType.Projected);
+        string interopTypeArgs = InteropTypeNameWriter.EncodeInteropTypeName(context, argSigs[0], TypedefNameType.Projected);
         string interopType = "ABI.System.Collections.Generic.<#corlib>IReadOnlyList'1<" + interopTypeArgs + ">Methods, WinRT.Interop";
         string prefix = "IReadOnlyListMethods_" + elementId + "_";
 
@@ -531,7 +531,7 @@ internal static class MappedInterfaceStubFactory
         }
 
         string elementId = EncodeArgIdentifier(context, args[0]);
-        string interopTypeArgs = InteropTypeNameWriter.EncodeInteropTypeName(argSigs[0], TypedefNameType.Projected);
+        string interopTypeArgs = InteropTypeNameWriter.EncodeInteropTypeName(context, argSigs[0], TypedefNameType.Projected);
         string interopType = "ABI.System.Collections.Generic.<#corlib>IList'1<" + interopTypeArgs + ">Methods, WinRT.Interop";
         string prefix = "IListMethods_" + elementId + "_";
 

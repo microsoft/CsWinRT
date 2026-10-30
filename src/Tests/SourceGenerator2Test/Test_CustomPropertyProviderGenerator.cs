@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
@@ -13,6 +14,130 @@ namespace WindowsRuntime.SourceGenerator.Tests;
 [TestClass]
 public class Test_CustomPropertyProviderGenerator
 {
+    [TestMethod]
+    [DataRow("string?", "string", "\"Initialized\"", typeof(string), false)]
+    [DataRow("string?", "string", "\"Initialized\"", typeof(string), true)]
+    [DataRow("object?", "object", "new object()", typeof(object), false)]
+    [DataRow("object?", "object", "new object()", typeof(object), true)]
+    [DataRow("string?[]?", "string[]", "new string?[] { \"Initialized\", null }", typeof(string[]), false)]
+    [DataRow("string?[]?", "string[]", "new string?[] { \"Initialized\", null }", typeof(string[]), true)]
+    [DataRow("List<string?>?", "List<string>", "new() { \"Initialized\", null }", typeof(List<string>), false)]
+    [DataRow("List<string?>?", "List<string>", "new() { \"Initialized\", null }", typeof(List<string>), true)]
+    [DataRow("Dictionary<string, List<int?>?>?", "Dictionary<string, List<int?>>", "new() { [\"key\"] = new() { 42, null } }", typeof(Dictionary<string, List<int?>>), false)]
+    [DataRow("Dictionary<string, List<int?>?>?", "Dictionary<string, List<int?>>", "new() { [\"key\"] = new() { 42, null } }", typeof(Dictionary<string, List<int?>>), true)]
+    [DataRow("int?", "int?", "42", typeof(int?), false)]
+    [DataRow("int?", "int?", "42", typeof(int?), true)]
+    [DataRow("DateTime?", "DateTime?", "new DateTime(2026, 9, 11)", typeof(DateTime?), false)]
+    [DataRow("DateTime?", "DateTime?", "new DateTime(2026, 9, 11)", typeof(DateTime?), true)]
+    [DataRow("KeyValuePair<string?, int?>?", "KeyValuePair<string, int?>?", "new(\"key\", 42)", typeof(KeyValuePair<string, int?>?), false)]
+    [DataRow("KeyValuePair<string?, int?>?", "KeyValuePair<string, int?>?", "new(\"key\", 42)", typeof(KeyValuePair<string, int?>?), true)]
+    [DataRow("(string? Text, int? Number)?", "(string Text, int? Number)?", "(\"Initialized\", 42)", typeof((string, int?)?), false)]
+    [DataRow("(string? Text, int? Number)?", "(string Text, int? Number)?", "(\"Initialized\", 42)", typeof((string, int?)?), true)]
+    public void NullableTypes_UseRuntimeTypesAndPreserveAccessors(
+        string typeName,
+        string typeOfName,
+        string initializer,
+        Type expectedType,
+        bool explicitSelection)
+    {
+        string source = $$"""
+            #nullable enable
+
+            using System;
+            using System.Collections.Generic;
+            using WindowsRuntime.Xaml;
+
+            namespace MyNamespace;
+
+            [GeneratedCustomPropertyProvider{{(explicitSelection ? $"([nameof(Writable), nameof(InitOnly)], [typeof({typeOfName})])" : "")}}]
+            public sealed partial class MyType
+            {
+                private {{typeName}} indexedValue = {{initializer}};
+
+                public object? LastIndex;
+
+                public {{typeName}} Writable { get; set; }
+
+                public required {{typeName}} InitOnly { get; init; }
+
+                public {{typeName}} this[{{typeName}} index]
+                {
+                    get
+                    {
+                        LastIndex = index;
+                        return indexedValue;
+                    }
+                    set
+                    {
+                        LastIndex = index;
+                        indexedValue = value;
+                    }
+                }
+
+                public static MyType Create() => new MyType { InitOnly = {{initializer}} };
+            }
+            """;
+
+        ICustomPropertyProvider provider = CreateProvider(source);
+        ICustomProperty initOnly = provider.GetCustomProperty("InitOnly");
+        ICustomProperty writable = provider.GetCustomProperty("Writable");
+        ICustomProperty indexer = provider.GetIndexedProperty("Item", expectedType);
+
+        Assert.IsNotNull(initOnly);
+        Assert.IsNotNull(writable);
+        Assert.IsNotNull(indexer);
+        Assert.AreEqual(3, provider.GetType().Assembly.GetTypes().Count(type => typeof(ICustomProperty).IsAssignableFrom(type)));
+        Assert.IsNull(provider.GetIndexedProperty("Item", typeof(bool)));
+
+        Assert.AreEqual(expectedType, initOnly.Type);
+        Assert.IsTrue(initOnly.CanRead);
+        Assert.IsFalse(initOnly.CanWrite);
+
+        object initialValue = initOnly.GetValue(provider);
+
+        Assert.IsNotNull(initialValue);
+        Assert.IsTrue(expectedType.IsInstanceOfType(initialValue));
+        Assert.ThrowsExactly<NotSupportedException>(() => initOnly.SetValue(provider, null));
+        Assert.AreEqual(initialValue, initOnly.GetValue(provider));
+
+        Assert.AreEqual(expectedType, writable.Type);
+        Assert.IsTrue(writable.CanRead);
+        Assert.IsTrue(writable.CanWrite);
+        Assert.IsNull(writable.GetValue(provider));
+
+        writable.SetValue(provider, initialValue);
+
+        Assert.AreEqual(initialValue, writable.GetValue(provider));
+
+        writable.SetValue(provider, null);
+
+        Assert.IsNull(writable.GetValue(provider));
+
+        Assert.AreEqual(expectedType, indexer.Type);
+        Assert.IsTrue(indexer.CanRead);
+        Assert.IsTrue(indexer.CanWrite);
+
+        object indexedValue = indexer.GetIndexedValue(provider, null);
+        FieldInfo lastIndex = provider.GetType().GetField("LastIndex");
+
+        Assert.IsNotNull(indexedValue);
+        Assert.IsTrue(expectedType.IsInstanceOfType(indexedValue));
+        Assert.IsNotNull(lastIndex);
+        Assert.IsNull(lastIndex.GetValue(provider));
+
+        indexer.SetIndexedValue(provider, initialValue, initialValue);
+
+        Assert.AreEqual(initialValue, lastIndex.GetValue(provider));
+        Assert.AreEqual(initialValue, indexer.GetIndexedValue(provider, null));
+        Assert.IsNull(lastIndex.GetValue(provider));
+
+        indexer.SetIndexedValue(provider, null, null);
+
+        Assert.IsNull(lastIndex.GetValue(provider));
+        Assert.IsNull(indexer.GetIndexedValue(provider, initialValue));
+        Assert.AreEqual(initialValue, lastIndex.GetValue(provider));
+    }
+
     [TestMethod]
     [DataRow(false)]
     [DataRow(true)]
@@ -547,8 +672,8 @@ public class Test_CustomPropertyProviderGenerator
                     {
                         return name switch
                         {
-                            nameof(Name) => global::WindowsRuntime.Xaml.Generated.MyClass_Name.Instance,
-                            nameof(Age) => global::WindowsRuntime.Xaml.Generated.MyClass_Age.Instance,
+                            nameof(Name) => __CustomProperty_Name.Instance,
+                            nameof(Age) => __CustomProperty_Age.Instance,
                             _ => null
                         };
                     }
@@ -559,7 +684,7 @@ public class Test_CustomPropertyProviderGenerator
                     {
                         if (type == typeof(int))
                         {
-                            return global::WindowsRuntime.Xaml.Generated.MyClass_this__int.Instance;
+                            return __CustomIndexer__int.Instance;
                         }
 
                         return null;
@@ -571,164 +696,155 @@ public class Test_CustomPropertyProviderGenerator
                     {
                         return ToString();
                     }
-                }
-            }
 
-            namespace WindowsRuntime.Xaml.Generated
-            {
-                using global::System;
-                using global::System.CodeDom.Compiler;
-                using global::System.Diagnostics;
-                using global::System.Diagnostics.CodeAnalysis;
-                using global::Microsoft.UI.Xaml.Data;
-
-                /// <summary>
-                /// The <see cref="ICustomProperty"/> implementation for <see cref="MyNamespace.MyClass.Name"/>.
-                /// </summary>
-                [GeneratedCode("CustomPropertyProviderGenerator", <ASSEMBLY_VERSION>)]
-                [DebuggerNonUserCode]
-                [ExcludeFromCodeCoverage]
-                file sealed class MyClass_Name : ICustomProperty
-                {
                     /// <summary>
-                    /// Gets the singleton <see cref="MyClass_Name"/> instance for this custom property.
+                    /// The <see cref="global::Microsoft.UI.Xaml.Data.ICustomProperty"/> implementation for <see cref="global::MyNamespace.MyClass.Name"/>.
                     /// </summary>
-                    public static readonly MyClass_Name Instance = new();
-
-                    /// <inheritdoc/>
-                    public bool CanRead => true;
-
-                    /// <inheritdoc/>
-                    public bool CanWrite => false;
-
-                    /// <inheritdoc/>
-                    public string Name => "Name";
-
-                    /// <inheritdoc/>
-                    public Type Type => typeof(string);
-
-                    /// <inheritdoc/>
-                    public object GetValue(object target)
+                    [global::System.CodeDom.Compiler.GeneratedCode("CustomPropertyProviderGenerator", <ASSEMBLY_VERSION>)]
+                    [global::System.Diagnostics.DebuggerNonUserCode]
+                    [global::System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
+                    private sealed class __CustomProperty_Name : global::Microsoft.UI.Xaml.Data.ICustomProperty
                     {
-                        return ((global::MyNamespace.MyClass)target).Name;
+                        /// <summary>
+                        /// Gets the singleton <see cref="__CustomProperty_Name"/> instance for this custom property.
+                        /// </summary>
+                        public static readonly __CustomProperty_Name Instance = new();
+
+                        /// <inheritdoc/>
+                        public bool CanRead => true;
+
+                        /// <inheritdoc/>
+                        public bool CanWrite => false;
+
+                        /// <inheritdoc/>
+                        public string Name => "Name";
+
+                        /// <inheritdoc/>
+                        public global::System.Type Type => typeof(string);
+
+                        /// <inheritdoc/>
+                        public object GetValue(object target)
+                        {
+                            return ((global::MyNamespace.MyClass)target).Name;
+                        }
+
+                        /// <inheritdoc/>
+                        public void SetValue(object target, object value)
+                        {
+                            throw new global::System.NotSupportedException();
+                        }
+
+                        /// <inheritdoc/>
+                        public object GetIndexedValue(object target, object index)
+                        {
+                            throw new global::System.NotSupportedException();
+                        }
+
+                        /// <inheritdoc/>
+                        public void SetIndexedValue(object target, object value, object index)
+                        {
+                            throw new global::System.NotSupportedException();
+                        }
                     }
 
-                    /// <inheritdoc/>
-                    public void SetValue(object target, object value)
-                    {
-                        throw new NotSupportedException();
-                    }
-
-                    /// <inheritdoc/>
-                    public object GetIndexedValue(object target, object index)
-                    {
-                        throw new NotSupportedException();
-                    }
-
-                    /// <inheritdoc/>
-                    public void SetIndexedValue(object target, object value, object index)
-                    {
-                        throw new NotSupportedException();
-                    }
-                }
-
-                /// <summary>
-                /// The <see cref="ICustomProperty"/> implementation for <see cref="MyNamespace.MyClass.Age"/>.
-                /// </summary>
-                [GeneratedCode("CustomPropertyProviderGenerator", <ASSEMBLY_VERSION>)]
-                [DebuggerNonUserCode]
-                [ExcludeFromCodeCoverage]
-                file sealed class MyClass_Age : ICustomProperty
-                {
                     /// <summary>
-                    /// Gets the singleton <see cref="MyClass_Age"/> instance for this custom property.
+                    /// The <see cref="global::Microsoft.UI.Xaml.Data.ICustomProperty"/> implementation for <see cref="global::MyNamespace.MyClass.Age"/>.
                     /// </summary>
-                    public static readonly MyClass_Age Instance = new();
-
-                    /// <inheritdoc/>
-                    public bool CanRead => true;
-
-                    /// <inheritdoc/>
-                    public bool CanWrite => true;
-
-                    /// <inheritdoc/>
-                    public string Name => "Age";
-
-                    /// <inheritdoc/>
-                    public Type Type => typeof(int);
-
-                    /// <inheritdoc/>
-                    public object GetValue(object target)
+                    [global::System.CodeDom.Compiler.GeneratedCode("CustomPropertyProviderGenerator", <ASSEMBLY_VERSION>)]
+                    [global::System.Diagnostics.DebuggerNonUserCode]
+                    [global::System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
+                    private sealed class __CustomProperty_Age : global::Microsoft.UI.Xaml.Data.ICustomProperty
                     {
-                        return ((global::MyNamespace.MyClass)target).Age;
+                        /// <summary>
+                        /// Gets the singleton <see cref="__CustomProperty_Age"/> instance for this custom property.
+                        /// </summary>
+                        public static readonly __CustomProperty_Age Instance = new();
+
+                        /// <inheritdoc/>
+                        public bool CanRead => true;
+
+                        /// <inheritdoc/>
+                        public bool CanWrite => true;
+
+                        /// <inheritdoc/>
+                        public string Name => "Age";
+
+                        /// <inheritdoc/>
+                        public global::System.Type Type => typeof(int);
+
+                        /// <inheritdoc/>
+                        public object GetValue(object target)
+                        {
+                            return ((global::MyNamespace.MyClass)target).Age;
+                        }
+
+                        /// <inheritdoc/>
+                        public void SetValue(object target, object value)
+                        {
+                            ((global::MyNamespace.MyClass)target).Age = (int)value;
+                        }
+
+                        /// <inheritdoc/>
+                        public object GetIndexedValue(object target, object index)
+                        {
+                            throw new global::System.NotSupportedException();
+                        }
+
+                        /// <inheritdoc/>
+                        public void SetIndexedValue(object target, object value, object index)
+                        {
+                            throw new global::System.NotSupportedException();
+                        }
                     }
 
-                    /// <inheritdoc/>
-                    public void SetValue(object target, object value)
-                    {
-                        ((global::MyNamespace.MyClass)target).Age = (int)value;
-                    }
-
-                    /// <inheritdoc/>
-                    public object GetIndexedValue(object target, object index)
-                    {
-                        throw new NotSupportedException();
-                    }
-
-                    /// <inheritdoc/>
-                    public void SetIndexedValue(object target, object value, object index)
-                    {
-                        throw new NotSupportedException();
-                    }
-                }
-
-                /// <summary>
-                /// The <see cref="ICustomProperty"/> implementation for <see cref="MyNamespace.MyClass"/>'s <see cref="int"/> indexer.
-                /// </summary>
-                [GeneratedCode("CustomPropertyProviderGenerator", <ASSEMBLY_VERSION>)]
-                [DebuggerNonUserCode]
-                [ExcludeFromCodeCoverage]
-                file sealed class MyClass_this__int : ICustomProperty
-                {
                     /// <summary>
-                    /// Gets the singleton <see cref="MyClass_this__int"/> instance for this custom property.
+                    /// The <see cref="global::Microsoft.UI.Xaml.Data.ICustomProperty"/> implementation for <see cref="global::MyNamespace.MyClass"/>'s <see cref="int"/> indexer.
                     /// </summary>
-                    public static readonly MyClass_this__int Instance = new();
-
-                    /// <inheritdoc/>
-                    public bool CanRead => true;
-
-                    /// <inheritdoc/>
-                    public bool CanWrite => true;
-
-                    /// <inheritdoc/>
-                    public string Name => "this";
-
-                    /// <inheritdoc/>
-                    public Type Type => typeof(int);
-
-                    /// <inheritdoc/>
-                    public object GetValue(object target)
+                    [global::System.CodeDom.Compiler.GeneratedCode("CustomPropertyProviderGenerator", <ASSEMBLY_VERSION>)]
+                    [global::System.Diagnostics.DebuggerNonUserCode]
+                    [global::System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
+                    private sealed class __CustomIndexer__int : global::Microsoft.UI.Xaml.Data.ICustomProperty
                     {
-                        throw new NotSupportedException();
-                    }
+                        /// <summary>
+                        /// Gets the singleton <see cref="__CustomIndexer__int"/> instance for this custom property.
+                        /// </summary>
+                        public static readonly __CustomIndexer__int Instance = new();
 
-                    /// <inheritdoc/>
-                    public void SetValue(object target, object value)
-                    {
-                        throw new NotSupportedException();
-                    }
+                        /// <inheritdoc/>
+                        public bool CanRead => true;
 
-                    /// <inheritdoc/>
-                    public object GetIndexedValue(object target, object index)
-                    {
-                        return ((global::MyNamespace.MyClass)target)[(int)index];
-                    }
+                        /// <inheritdoc/>
+                        public bool CanWrite => true;
 
-                    /// <inheritdoc/>
-                    public void SetIndexedValue(object target, object value, object index)
-                    {
-                        ((global::MyNamespace.MyClass)target)[(int)index] = (int)value;
+                        /// <inheritdoc/>
+                        public string Name => "this";
+
+                        /// <inheritdoc/>
+                        public global::System.Type Type => typeof(int);
+
+                        /// <inheritdoc/>
+                        public object GetValue(object target)
+                        {
+                            throw new global::System.NotSupportedException();
+                        }
+
+                        /// <inheritdoc/>
+                        public void SetValue(object target, object value)
+                        {
+                            throw new global::System.NotSupportedException();
+                        }
+
+                        /// <inheritdoc/>
+                        public object GetIndexedValue(object target, object index)
+                        {
+                            return ((global::MyNamespace.MyClass)target)[(int)index];
+                        }
+
+                        /// <inheritdoc/>
+                        public void SetIndexedValue(object target, object value, object index)
+                        {
+                            ((global::MyNamespace.MyClass)target)[(int)index] = (int)value;
+                        }
                     }
                 }
             }
@@ -827,8 +943,8 @@ public class Test_CustomPropertyProviderGenerator
                     {
                         return name switch
                         {
-                            nameof(Name) => global::WindowsRuntime.Xaml.Generated.MyClass_Name.Instance,
-                            nameof(Age) => global::WindowsRuntime.Xaml.Generated.MyClass_Age.Instance,
+                            nameof(Name) => __CustomProperty_Name.Instance,
+                            nameof(Age) => __CustomProperty_Age.Instance,
                             _ => null
                         };
                     }
@@ -846,114 +962,105 @@ public class Test_CustomPropertyProviderGenerator
                     {
                         return ToString();
                     }
-                }
-            }
 
-            namespace WindowsRuntime.Xaml.Generated
-            {
-                using global::System;
-                using global::System.CodeDom.Compiler;
-                using global::System.Diagnostics;
-                using global::System.Diagnostics.CodeAnalysis;
-                using global::Microsoft.UI.Xaml.Data;
-
-                /// <summary>
-                /// The <see cref="ICustomProperty"/> implementation for <see cref="MyNamespace.MyClass.Name"/>.
-                /// </summary>
-                [GeneratedCode("CustomPropertyProviderGenerator", <ASSEMBLY_VERSION>)]
-                [DebuggerNonUserCode]
-                [ExcludeFromCodeCoverage]
-                file sealed class MyClass_Name : ICustomProperty
-                {
                     /// <summary>
-                    /// Gets the singleton <see cref="MyClass_Name"/> instance for this custom property.
+                    /// The <see cref="global::Microsoft.UI.Xaml.Data.ICustomProperty"/> implementation for <see cref="global::MyNamespace.MyClass.Name"/>.
                     /// </summary>
-                    public static readonly MyClass_Name Instance = new();
-
-                    /// <inheritdoc/>
-                    public bool CanRead => true;
-
-                    /// <inheritdoc/>
-                    public bool CanWrite => false;
-
-                    /// <inheritdoc/>
-                    public string Name => "Name";
-
-                    /// <inheritdoc/>
-                    public Type Type => typeof(string);
-
-                    /// <inheritdoc/>
-                    public object GetValue(object target)
+                    [global::System.CodeDom.Compiler.GeneratedCode("CustomPropertyProviderGenerator", <ASSEMBLY_VERSION>)]
+                    [global::System.Diagnostics.DebuggerNonUserCode]
+                    [global::System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
+                    private sealed class __CustomProperty_Name : global::Microsoft.UI.Xaml.Data.ICustomProperty
                     {
-                        return ((global::MyNamespace.MyClass)target).Name;
+                        /// <summary>
+                        /// Gets the singleton <see cref="__CustomProperty_Name"/> instance for this custom property.
+                        /// </summary>
+                        public static readonly __CustomProperty_Name Instance = new();
+
+                        /// <inheritdoc/>
+                        public bool CanRead => true;
+
+                        /// <inheritdoc/>
+                        public bool CanWrite => false;
+
+                        /// <inheritdoc/>
+                        public string Name => "Name";
+
+                        /// <inheritdoc/>
+                        public global::System.Type Type => typeof(string);
+
+                        /// <inheritdoc/>
+                        public object GetValue(object target)
+                        {
+                            return ((global::MyNamespace.MyClass)target).Name;
+                        }
+
+                        /// <inheritdoc/>
+                        public void SetValue(object target, object value)
+                        {
+                            throw new global::System.NotSupportedException();
+                        }
+
+                        /// <inheritdoc/>
+                        public object GetIndexedValue(object target, object index)
+                        {
+                            throw new global::System.NotSupportedException();
+                        }
+
+                        /// <inheritdoc/>
+                        public void SetIndexedValue(object target, object value, object index)
+                        {
+                            throw new global::System.NotSupportedException();
+                        }
                     }
 
-                    /// <inheritdoc/>
-                    public void SetValue(object target, object value)
-                    {
-                        throw new NotSupportedException();
-                    }
-
-                    /// <inheritdoc/>
-                    public object GetIndexedValue(object target, object index)
-                    {
-                        throw new NotSupportedException();
-                    }
-
-                    /// <inheritdoc/>
-                    public void SetIndexedValue(object target, object value, object index)
-                    {
-                        throw new NotSupportedException();
-                    }
-                }
-
-                /// <summary>
-                /// The <see cref="ICustomProperty"/> implementation for <see cref="MyNamespace.MyClass.Age"/>.
-                /// </summary>
-                [GeneratedCode("CustomPropertyProviderGenerator", <ASSEMBLY_VERSION>)]
-                [DebuggerNonUserCode]
-                [ExcludeFromCodeCoverage]
-                file sealed class MyClass_Age : ICustomProperty
-                {
                     /// <summary>
-                    /// Gets the singleton <see cref="MyClass_Age"/> instance for this custom property.
+                    /// The <see cref="global::Microsoft.UI.Xaml.Data.ICustomProperty"/> implementation for <see cref="global::MyNamespace.MyClass.Age"/>.
                     /// </summary>
-                    public static readonly MyClass_Age Instance = new();
-
-                    /// <inheritdoc/>
-                    public bool CanRead => true;
-
-                    /// <inheritdoc/>
-                    public bool CanWrite => true;
-
-                    /// <inheritdoc/>
-                    public string Name => "Age";
-
-                    /// <inheritdoc/>
-                    public Type Type => typeof(int);
-
-                    /// <inheritdoc/>
-                    public object GetValue(object target)
+                    [global::System.CodeDom.Compiler.GeneratedCode("CustomPropertyProviderGenerator", <ASSEMBLY_VERSION>)]
+                    [global::System.Diagnostics.DebuggerNonUserCode]
+                    [global::System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
+                    private sealed class __CustomProperty_Age : global::Microsoft.UI.Xaml.Data.ICustomProperty
                     {
-                        return ((global::MyNamespace.MyClass)target).Age;
-                    }
+                        /// <summary>
+                        /// Gets the singleton <see cref="__CustomProperty_Age"/> instance for this custom property.
+                        /// </summary>
+                        public static readonly __CustomProperty_Age Instance = new();
 
-                    /// <inheritdoc/>
-                    public void SetValue(object target, object value)
-                    {
-                        ((global::MyNamespace.MyClass)target).Age = (int)value;
-                    }
+                        /// <inheritdoc/>
+                        public bool CanRead => true;
 
-                    /// <inheritdoc/>
-                    public object GetIndexedValue(object target, object index)
-                    {
-                        throw new NotSupportedException();
-                    }
+                        /// <inheritdoc/>
+                        public bool CanWrite => true;
 
-                    /// <inheritdoc/>
-                    public void SetIndexedValue(object target, object value, object index)
-                    {
-                        throw new NotSupportedException();
+                        /// <inheritdoc/>
+                        public string Name => "Age";
+
+                        /// <inheritdoc/>
+                        public global::System.Type Type => typeof(int);
+
+                        /// <inheritdoc/>
+                        public object GetValue(object target)
+                        {
+                            return ((global::MyNamespace.MyClass)target).Age;
+                        }
+
+                        /// <inheritdoc/>
+                        public void SetValue(object target, object value)
+                        {
+                            ((global::MyNamespace.MyClass)target).Age = (int)value;
+                        }
+
+                        /// <inheritdoc/>
+                        public object GetIndexedValue(object target, object index)
+                        {
+                            throw new global::System.NotSupportedException();
+                        }
+
+                        /// <inheritdoc/>
+                        public void SetIndexedValue(object target, object value, object index)
+                        {
+                            throw new global::System.NotSupportedException();
+                        }
                     }
                 }
             }
@@ -1007,7 +1114,7 @@ public class Test_CustomPropertyProviderGenerator
                     {
                         if (type == typeof(int))
                         {
-                            return global::WindowsRuntime.Xaml.Generated.MyClass_this__int.Instance;
+                            return __CustomIndexer__int.Instance;
                         }
 
                         return null;
@@ -1019,64 +1126,55 @@ public class Test_CustomPropertyProviderGenerator
                     {
                         return ToString();
                     }
-                }
-            }
 
-            namespace WindowsRuntime.Xaml.Generated
-            {
-                using global::System;
-                using global::System.CodeDom.Compiler;
-                using global::System.Diagnostics;
-                using global::System.Diagnostics.CodeAnalysis;
-                using global::Microsoft.UI.Xaml.Data;
-
-                /// <summary>
-                /// The <see cref="ICustomProperty"/> implementation for <see cref="MyNamespace.MyClass"/>'s <see cref="int"/> indexer.
-                /// </summary>
-                [GeneratedCode("CustomPropertyProviderGenerator", <ASSEMBLY_VERSION>)]
-                [DebuggerNonUserCode]
-                [ExcludeFromCodeCoverage]
-                file sealed class MyClass_this__int : ICustomProperty
-                {
                     /// <summary>
-                    /// Gets the singleton <see cref="MyClass_this__int"/> instance for this custom property.
+                    /// The <see cref="global::Microsoft.UI.Xaml.Data.ICustomProperty"/> implementation for <see cref="global::MyNamespace.MyClass"/>'s <see cref="int"/> indexer.
                     /// </summary>
-                    public static readonly MyClass_this__int Instance = new();
-
-                    /// <inheritdoc/>
-                    public bool CanRead => true;
-
-                    /// <inheritdoc/>
-                    public bool CanWrite => true;
-
-                    /// <inheritdoc/>
-                    public string Name => "this";
-
-                    /// <inheritdoc/>
-                    public Type Type => typeof(int);
-
-                    /// <inheritdoc/>
-                    public object GetValue(object target)
+                    [global::System.CodeDom.Compiler.GeneratedCode("CustomPropertyProviderGenerator", <ASSEMBLY_VERSION>)]
+                    [global::System.Diagnostics.DebuggerNonUserCode]
+                    [global::System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
+                    private sealed class __CustomIndexer__int : global::Microsoft.UI.Xaml.Data.ICustomProperty
                     {
-                        throw new NotSupportedException();
-                    }
+                        /// <summary>
+                        /// Gets the singleton <see cref="__CustomIndexer__int"/> instance for this custom property.
+                        /// </summary>
+                        public static readonly __CustomIndexer__int Instance = new();
 
-                    /// <inheritdoc/>
-                    public void SetValue(object target, object value)
-                    {
-                        throw new NotSupportedException();
-                    }
+                        /// <inheritdoc/>
+                        public bool CanRead => true;
 
-                    /// <inheritdoc/>
-                    public object GetIndexedValue(object target, object index)
-                    {
-                        return ((global::MyNamespace.MyClass)target)[(int)index];
-                    }
+                        /// <inheritdoc/>
+                        public bool CanWrite => true;
 
-                    /// <inheritdoc/>
-                    public void SetIndexedValue(object target, object value, object index)
-                    {
-                        ((global::MyNamespace.MyClass)target)[(int)index] = (int)value;
+                        /// <inheritdoc/>
+                        public string Name => "this";
+
+                        /// <inheritdoc/>
+                        public global::System.Type Type => typeof(int);
+
+                        /// <inheritdoc/>
+                        public object GetValue(object target)
+                        {
+                            throw new global::System.NotSupportedException();
+                        }
+
+                        /// <inheritdoc/>
+                        public void SetValue(object target, object value)
+                        {
+                            throw new global::System.NotSupportedException();
+                        }
+
+                        /// <inheritdoc/>
+                        public object GetIndexedValue(object target, object index)
+                        {
+                            return ((global::MyNamespace.MyClass)target)[(int)index];
+                        }
+
+                        /// <inheritdoc/>
+                        public void SetIndexedValue(object target, object value, object index)
+                        {
+                            ((global::MyNamespace.MyClass)target)[(int)index] = (int)value;
+                        }
                     }
                 }
             }
@@ -1119,7 +1217,7 @@ public class Test_CustomPropertyProviderGenerator
                     {
                         return name switch
                         {
-                            nameof(Name) => global::WindowsRuntime.Xaml.Generated.MyClass_Name.Instance,
+                            nameof(Name) => __CustomProperty_Name.Instance,
                             _ => null
                         };
                     }
@@ -1137,64 +1235,55 @@ public class Test_CustomPropertyProviderGenerator
                     {
                         return ToString();
                     }
-                }
-            }
 
-            namespace WindowsRuntime.Xaml.Generated
-            {
-                using global::System;
-                using global::System.CodeDom.Compiler;
-                using global::System.Diagnostics;
-                using global::System.Diagnostics.CodeAnalysis;
-                using global::Microsoft.UI.Xaml.Data;
-
-                /// <summary>
-                /// The <see cref="ICustomProperty"/> implementation for <see cref="MyNamespace.MyClass.Name"/>.
-                /// </summary>
-                [GeneratedCode("CustomPropertyProviderGenerator", <ASSEMBLY_VERSION>)]
-                [DebuggerNonUserCode]
-                [ExcludeFromCodeCoverage]
-                file sealed class MyClass_Name : ICustomProperty
-                {
                     /// <summary>
-                    /// Gets the singleton <see cref="MyClass_Name"/> instance for this custom property.
+                    /// The <see cref="global::Microsoft.UI.Xaml.Data.ICustomProperty"/> implementation for <see cref="global::MyNamespace.MyClass.Name"/>.
                     /// </summary>
-                    public static readonly MyClass_Name Instance = new();
-
-                    /// <inheritdoc/>
-                    public bool CanRead => true;
-
-                    /// <inheritdoc/>
-                    public bool CanWrite => false;
-
-                    /// <inheritdoc/>
-                    public string Name => "Name";
-
-                    /// <inheritdoc/>
-                    public Type Type => typeof(string);
-
-                    /// <inheritdoc/>
-                    public object GetValue(object target)
+                    [global::System.CodeDom.Compiler.GeneratedCode("CustomPropertyProviderGenerator", <ASSEMBLY_VERSION>)]
+                    [global::System.Diagnostics.DebuggerNonUserCode]
+                    [global::System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
+                    private sealed class __CustomProperty_Name : global::Microsoft.UI.Xaml.Data.ICustomProperty
                     {
-                        return ((global::MyNamespace.MyClass)target).Name;
-                    }
+                        /// <summary>
+                        /// Gets the singleton <see cref="__CustomProperty_Name"/> instance for this custom property.
+                        /// </summary>
+                        public static readonly __CustomProperty_Name Instance = new();
 
-                    /// <inheritdoc/>
-                    public void SetValue(object target, object value)
-                    {
-                        throw new NotSupportedException();
-                    }
+                        /// <inheritdoc/>
+                        public bool CanRead => true;
 
-                    /// <inheritdoc/>
-                    public object GetIndexedValue(object target, object index)
-                    {
-                        throw new NotSupportedException();
-                    }
+                        /// <inheritdoc/>
+                        public bool CanWrite => false;
 
-                    /// <inheritdoc/>
-                    public void SetIndexedValue(object target, object value, object index)
-                    {
-                        throw new NotSupportedException();
+                        /// <inheritdoc/>
+                        public string Name => "Name";
+
+                        /// <inheritdoc/>
+                        public global::System.Type Type => typeof(string);
+
+                        /// <inheritdoc/>
+                        public object GetValue(object target)
+                        {
+                            return ((global::MyNamespace.MyClass)target).Name;
+                        }
+
+                        /// <inheritdoc/>
+                        public void SetValue(object target, object value)
+                        {
+                            throw new global::System.NotSupportedException();
+                        }
+
+                        /// <inheritdoc/>
+                        public object GetIndexedValue(object target, object index)
+                        {
+                            throw new global::System.NotSupportedException();
+                        }
+
+                        /// <inheritdoc/>
+                        public void SetIndexedValue(object target, object value, object index)
+                        {
+                            throw new global::System.NotSupportedException();
+                        }
                     }
                 }
             }
@@ -1237,7 +1326,7 @@ public class Test_CustomPropertyProviderGenerator
                     {
                         return name switch
                         {
-                            nameof(Name) => global::WindowsRuntime.Xaml.Generated.MyClass_Name.Instance,
+                            nameof(Name) => __CustomProperty_Name.Instance,
                             _ => null
                         };
                     }
@@ -1255,64 +1344,55 @@ public class Test_CustomPropertyProviderGenerator
                     {
                         return ToString();
                     }
-                }
-            }
 
-            namespace WindowsRuntime.Xaml.Generated
-            {
-                using global::System;
-                using global::System.CodeDom.Compiler;
-                using global::System.Diagnostics;
-                using global::System.Diagnostics.CodeAnalysis;
-                using global::Microsoft.UI.Xaml.Data;
-
-                /// <summary>
-                /// The <see cref="ICustomProperty"/> implementation for <see cref="MyNamespace.MyClass.Name"/>.
-                /// </summary>
-                [GeneratedCode("CustomPropertyProviderGenerator", <ASSEMBLY_VERSION>)]
-                [DebuggerNonUserCode]
-                [ExcludeFromCodeCoverage]
-                file sealed class MyClass_Name : ICustomProperty
-                {
                     /// <summary>
-                    /// Gets the singleton <see cref="MyClass_Name"/> instance for this custom property.
+                    /// The <see cref="global::Microsoft.UI.Xaml.Data.ICustomProperty"/> implementation for <see cref="global::MyNamespace.MyClass.Name"/>.
                     /// </summary>
-                    public static readonly MyClass_Name Instance = new();
-
-                    /// <inheritdoc/>
-                    public bool CanRead => false;
-
-                    /// <inheritdoc/>
-                    public bool CanWrite => true;
-
-                    /// <inheritdoc/>
-                    public string Name => "Name";
-
-                    /// <inheritdoc/>
-                    public Type Type => typeof(string);
-
-                    /// <inheritdoc/>
-                    public object GetValue(object target)
+                    [global::System.CodeDom.Compiler.GeneratedCode("CustomPropertyProviderGenerator", <ASSEMBLY_VERSION>)]
+                    [global::System.Diagnostics.DebuggerNonUserCode]
+                    [global::System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
+                    private sealed class __CustomProperty_Name : global::Microsoft.UI.Xaml.Data.ICustomProperty
                     {
-                        throw new NotSupportedException();
-                    }
+                        /// <summary>
+                        /// Gets the singleton <see cref="__CustomProperty_Name"/> instance for this custom property.
+                        /// </summary>
+                        public static readonly __CustomProperty_Name Instance = new();
 
-                    /// <inheritdoc/>
-                    public void SetValue(object target, object value)
-                    {
-                        ((global::MyNamespace.MyClass)target).Name = (string)value;
-                    }
+                        /// <inheritdoc/>
+                        public bool CanRead => false;
 
-                    /// <inheritdoc/>
-                    public object GetIndexedValue(object target, object index)
-                    {
-                        throw new NotSupportedException();
-                    }
+                        /// <inheritdoc/>
+                        public bool CanWrite => true;
 
-                    /// <inheritdoc/>
-                    public void SetIndexedValue(object target, object value, object index)
-                    {
-                        throw new NotSupportedException();
+                        /// <inheritdoc/>
+                        public string Name => "Name";
+
+                        /// <inheritdoc/>
+                        public global::System.Type Type => typeof(string);
+
+                        /// <inheritdoc/>
+                        public object GetValue(object target)
+                        {
+                            throw new global::System.NotSupportedException();
+                        }
+
+                        /// <inheritdoc/>
+                        public void SetValue(object target, object value)
+                        {
+                            ((global::MyNamespace.MyClass)target).Name = (string)value;
+                        }
+
+                        /// <inheritdoc/>
+                        public object GetIndexedValue(object target, object index)
+                        {
+                            throw new global::System.NotSupportedException();
+                        }
+
+                        /// <inheritdoc/>
+                        public void SetIndexedValue(object target, object value, object index)
+                        {
+                            throw new global::System.NotSupportedException();
+                        }
                     }
                 }
             }
@@ -1355,7 +1435,7 @@ public class Test_CustomPropertyProviderGenerator
                     {
                         return name switch
                         {
-                            nameof(Count) => global::WindowsRuntime.Xaml.Generated.MyClass_Count.Instance,
+                            nameof(Count) => __CustomProperty_Count.Instance,
                             _ => null
                         };
                     }
@@ -1373,64 +1453,55 @@ public class Test_CustomPropertyProviderGenerator
                     {
                         return ToString();
                     }
-                }
-            }
 
-            namespace WindowsRuntime.Xaml.Generated
-            {
-                using global::System;
-                using global::System.CodeDom.Compiler;
-                using global::System.Diagnostics;
-                using global::System.Diagnostics.CodeAnalysis;
-                using global::Microsoft.UI.Xaml.Data;
-
-                /// <summary>
-                /// The <see cref="ICustomProperty"/> implementation for <see cref="MyNamespace.MyClass.Count"/>.
-                /// </summary>
-                [GeneratedCode("CustomPropertyProviderGenerator", <ASSEMBLY_VERSION>)]
-                [DebuggerNonUserCode]
-                [ExcludeFromCodeCoverage]
-                file sealed class MyClass_Count : ICustomProperty
-                {
                     /// <summary>
-                    /// Gets the singleton <see cref="MyClass_Count"/> instance for this custom property.
+                    /// The <see cref="global::Microsoft.UI.Xaml.Data.ICustomProperty"/> implementation for <see cref="global::MyNamespace.MyClass.Count"/>.
                     /// </summary>
-                    public static readonly MyClass_Count Instance = new();
-
-                    /// <inheritdoc/>
-                    public bool CanRead => true;
-
-                    /// <inheritdoc/>
-                    public bool CanWrite => true;
-
-                    /// <inheritdoc/>
-                    public string Name => "Count";
-
-                    /// <inheritdoc/>
-                    public Type Type => typeof(int);
-
-                    /// <inheritdoc/>
-                    public object GetValue(object target)
+                    [global::System.CodeDom.Compiler.GeneratedCode("CustomPropertyProviderGenerator", <ASSEMBLY_VERSION>)]
+                    [global::System.Diagnostics.DebuggerNonUserCode]
+                    [global::System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
+                    private sealed class __CustomProperty_Count : global::Microsoft.UI.Xaml.Data.ICustomProperty
                     {
-                        return global::MyNamespace.MyClass.Count;
-                    }
+                        /// <summary>
+                        /// Gets the singleton <see cref="__CustomProperty_Count"/> instance for this custom property.
+                        /// </summary>
+                        public static readonly __CustomProperty_Count Instance = new();
 
-                    /// <inheritdoc/>
-                    public void SetValue(object target, object value)
-                    {
-                        global::MyNamespace.MyClass.Count = (int)value;
-                    }
+                        /// <inheritdoc/>
+                        public bool CanRead => true;
 
-                    /// <inheritdoc/>
-                    public object GetIndexedValue(object target, object index)
-                    {
-                        throw new NotSupportedException();
-                    }
+                        /// <inheritdoc/>
+                        public bool CanWrite => true;
 
-                    /// <inheritdoc/>
-                    public void SetIndexedValue(object target, object value, object index)
-                    {
-                        throw new NotSupportedException();
+                        /// <inheritdoc/>
+                        public string Name => "Count";
+
+                        /// <inheritdoc/>
+                        public global::System.Type Type => typeof(int);
+
+                        /// <inheritdoc/>
+                        public object GetValue(object target)
+                        {
+                            return global::MyNamespace.MyClass.Count;
+                        }
+
+                        /// <inheritdoc/>
+                        public void SetValue(object target, object value)
+                        {
+                            global::MyNamespace.MyClass.Count = (int)value;
+                        }
+
+                        /// <inheritdoc/>
+                        public object GetIndexedValue(object target, object index)
+                        {
+                            throw new global::System.NotSupportedException();
+                        }
+
+                        /// <inheritdoc/>
+                        public void SetIndexedValue(object target, object value, object index)
+                        {
+                            throw new global::System.NotSupportedException();
+                        }
                     }
                 }
             }
@@ -1480,7 +1551,7 @@ public class Test_CustomPropertyProviderGenerator
                     {
                         if (type == typeof(int))
                         {
-                            return global::WindowsRuntime.Xaml.Generated.MyClass_this__int.Instance;
+                            return __CustomIndexer__int.Instance;
                         }
 
                         return null;
@@ -1492,64 +1563,55 @@ public class Test_CustomPropertyProviderGenerator
                     {
                         return ToString();
                     }
-                }
-            }
 
-            namespace WindowsRuntime.Xaml.Generated
-            {
-                using global::System;
-                using global::System.CodeDom.Compiler;
-                using global::System.Diagnostics;
-                using global::System.Diagnostics.CodeAnalysis;
-                using global::Microsoft.UI.Xaml.Data;
-
-                /// <summary>
-                /// The <see cref="ICustomProperty"/> implementation for <see cref="MyNamespace.MyClass"/>'s <see cref="int"/> indexer.
-                /// </summary>
-                [GeneratedCode("CustomPropertyProviderGenerator", <ASSEMBLY_VERSION>)]
-                [DebuggerNonUserCode]
-                [ExcludeFromCodeCoverage]
-                file sealed class MyClass_this__int : ICustomProperty
-                {
                     /// <summary>
-                    /// Gets the singleton <see cref="MyClass_this__int"/> instance for this custom property.
+                    /// The <see cref="global::Microsoft.UI.Xaml.Data.ICustomProperty"/> implementation for <see cref="global::MyNamespace.MyClass"/>'s <see cref="int"/> indexer.
                     /// </summary>
-                    public static readonly MyClass_this__int Instance = new();
-
-                    /// <inheritdoc/>
-                    public bool CanRead => true;
-
-                    /// <inheritdoc/>
-                    public bool CanWrite => false;
-
-                    /// <inheritdoc/>
-                    public string Name => "this";
-
-                    /// <inheritdoc/>
-                    public Type Type => typeof(string);
-
-                    /// <inheritdoc/>
-                    public object GetValue(object target)
+                    [global::System.CodeDom.Compiler.GeneratedCode("CustomPropertyProviderGenerator", <ASSEMBLY_VERSION>)]
+                    [global::System.Diagnostics.DebuggerNonUserCode]
+                    [global::System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
+                    private sealed class __CustomIndexer__int : global::Microsoft.UI.Xaml.Data.ICustomProperty
                     {
-                        throw new NotSupportedException();
-                    }
+                        /// <summary>
+                        /// Gets the singleton <see cref="__CustomIndexer__int"/> instance for this custom property.
+                        /// </summary>
+                        public static readonly __CustomIndexer__int Instance = new();
 
-                    /// <inheritdoc/>
-                    public void SetValue(object target, object value)
-                    {
-                        throw new NotSupportedException();
-                    }
+                        /// <inheritdoc/>
+                        public bool CanRead => true;
 
-                    /// <inheritdoc/>
-                    public object GetIndexedValue(object target, object index)
-                    {
-                        return ((global::MyNamespace.MyClass)target)[(int)index];
-                    }
+                        /// <inheritdoc/>
+                        public bool CanWrite => false;
 
-                    /// <inheritdoc/>
-                    public void SetIndexedValue(object target, object value, object index)
-                    {
-                        throw new NotSupportedException();
+                        /// <inheritdoc/>
+                        public string Name => "this";
+
+                        /// <inheritdoc/>
+                        public global::System.Type Type => typeof(string);
+
+                        /// <inheritdoc/>
+                        public object GetValue(object target)
+                        {
+                            throw new global::System.NotSupportedException();
+                        }
+
+                        /// <inheritdoc/>
+                        public void SetValue(object target, object value)
+                        {
+                            throw new global::System.NotSupportedException();
+                        }
+
+                        /// <inheritdoc/>
+                        public object GetIndexedValue(object target, object index)
+                        {
+                            return ((global::MyNamespace.MyClass)target)[(int)index];
+                        }
+
+                        /// <inheritdoc/>
+                        public void SetIndexedValue(object target, object value, object index)
+                        {
+                            throw new global::System.NotSupportedException();
+                        }
                     }
                 }
             }

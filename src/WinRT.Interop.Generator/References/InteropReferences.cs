@@ -33,20 +33,36 @@ internal sealed class InteropReferences
     /// <param name="runtimeContext">The <see cref="AsmResolver.DotNet.RuntimeContext"/> currently in use.</param>
     /// <param name="corLibTypeFactory">The <see cref="AsmResolver.DotNet.Signatures.CorLibTypeFactory"/> currently in use.</param>
     /// <param name="windowsRuntimeModule">The <see cref="IResolutionScope"/> for the Windows Runtime assembly (i.e. <c>WinRT.Runtime.dll</c>).</param>
+    /// <param name="windowsRuntimeComponentModule">The generated component projection, if available.</param>
+    /// <param name="signatureComparer">The resolution-aware, version-agnostic signature comparer.</param>
     public InteropReferences(
         RuntimeContext runtimeContext,
         CorLibTypeFactory corLibTypeFactory,
-        IResolutionScope windowsRuntimeModule)
+        IResolutionScope windowsRuntimeModule,
+        ModuleDefinition? windowsRuntimeComponentModule,
+        SignatureComparer signatureComparer)
     {
         RuntimeContext = runtimeContext;
         _corLibTypeFactory = corLibTypeFactory;
         _windowsRuntimeModule = windowsRuntimeModule;
+        WindowsRuntimeComponentModule = windowsRuntimeComponentModule;
+        SignatureComparer = signatureComparer;
     }
 
     /// <summary>
     /// Gets the <see cref="AsmResolver.DotNet.RuntimeContext"/> instance associated with this instance.
     /// </summary>
     public RuntimeContext RuntimeContext { get; }
+
+    /// <summary>
+    /// Gets the comparer shared by this generator invocation.
+    /// </summary>
+    public SignatureComparer SignatureComparer { get; }
+
+    /// <summary>
+    /// Gets the generated component projection containing the exported authored type metadata.
+    /// </summary>
+    public ModuleDefinition? WindowsRuntimeComponentModule { get; }
 
     /// <summary>
     /// Gets the <see cref="AsmResolver.DotNet.Signatures.CorLibTypeFactory"/> instance associated with this instance.
@@ -139,7 +155,7 @@ internal sealed class InteropReferences
         name: "System.ComponentModel"u8,
         version: new Version(10, 0, 0, 0),
         publicKey: false,
-        publicKeyOrToken: WellKnownPublicKeyTokens.SystemObjectModel);
+        publicKeyOrToken: WellKnownPublicKeyTokens.SystemComponentModel);
 
     /// <summary>
     /// Gets the <see cref="AssemblyReference"/> for <c>System.Memory.dll</c>.
@@ -563,6 +579,7 @@ internal sealed class InteropReferences
     /// that a type failing to resolve stays an error for every other type.
     /// </remarks>
     public TypeSignatureEquatableSet CollectionChangedListTypes => field ??= new TypeSignatureEquatableSet(
+        SignatureComparer,
         SingleItemReadOnlyList.ToReferenceTypeSignature(),
         ReadOnlyList.ToReferenceTypeSignature());
 
@@ -782,6 +799,11 @@ internal sealed class InteropReferences
     public TypeReference WindowsRuntimeMetadataTypeMapGroup => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "WindowsRuntimeMetadataTypeMapGroup"u8);
 
     /// <summary>
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.InteropServices.WindowsRuntimeIidTypeMapGroup</c>.
+    /// </summary>
+    public TypeReference WindowsRuntimeIidTypeMapGroup => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "WindowsRuntimeIidTypeMapGroup"u8);
+
+    /// <summary>
     /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.InteropServices.DynamicInterfaceCastableImplementationTypeMapGroup</c>.
     /// </summary>
     public TypeReference DynamicInterfaceCastableImplementationTypeMapGroup => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "DynamicInterfaceCastableImplementationTypeMapGroup"u8);
@@ -807,9 +829,19 @@ internal sealed class InteropReferences
     public TypeReference IPropertyValueImpl => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "IPropertyValueImpl"u8);
 
     /// <summary>
+    /// Gets the type reference for the shared <c>IReferenceArray&lt;Object&gt;</c> implementation.
+    /// </summary>
+    public TypeReference IReferenceArrayObjectImpl => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "IReferenceArrayObjectImpl"u8);
+
+    /// <summary>
     /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.InteropServices.IStringableImpl</c>.
     /// </summary>
     public TypeReference IStringableImpl => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "IStringableImpl"u8);
+
+    /// <summary>
+    /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.InteropServices.ICustomPropertyProviderImpl</c>.
+    /// </summary>
+    public TypeReference ICustomPropertyProviderImpl => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "ICustomPropertyProviderImpl"u8);
 
     /// <summary>
     /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.InteropServices.IMarshalImpl</c>.
@@ -1277,6 +1309,11 @@ internal sealed class InteropReferences
     public TypeReference DynamicInterfaceCastableForwarderAttribute => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "DynamicInterfaceCastableForwarderAttribute"u8);
 
     /// <summary>
+    /// Gets the <see cref="TypeReference"/> for <c>WindowsRuntime.InteropServices.DynamicInterfaceCastableEnumerableAttribute</c>.
+    /// </summary>
+    public TypeReference DynamicInterfaceCastableEnumerableAttribute => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "DynamicInterfaceCastableEnumerableAttribute"u8);
+
+    /// <summary>
     /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <c>WindowsRuntime.InteropServices.WindowsRuntimeComWrappersMarshallerAttribute</c>.
     /// </summary>
     public TypeReference WindowsRuntimeComWrappersMarshallerAttribute => field ??= _windowsRuntimeModule.CreateTypeReference("WindowsRuntime.InteropServices"u8, "WindowsRuntimeComWrappersMarshallerAttribute"u8);
@@ -1734,6 +1771,11 @@ internal sealed class InteropReferences
     public MemberReference TypeMapAttributeWindowsRuntimeMetadataTypeMapGroup_ctor_TrimTarget => field ??= TypeMapAttribute1_ctor_TrimTarget(WindowsRuntimeMetadataTypeMapGroup.ToReferenceTypeSignature());
 
     /// <summary>
+    /// Gets the <see cref="MemberReference"/> for the external IID type map attribute constructor.
+    /// </summary>
+    public MemberReference TypeMapAttributeWindowsRuntimeIidTypeMapGroup_ctor_TrimTarget => field ??= TypeMapAttribute1_ctor_TrimTarget(WindowsRuntimeIidTypeMapGroup.ToReferenceTypeSignature());
+
+    /// <summary>
     /// Gets the <see cref="AsmResolver.DotNet.TypeReference"/> for <see cref="System.Runtime.InteropServices.TypeMapAssociationAttribute{TTypeMapGroup}.TypeMapAssociationAttribute(System.Type, System.Type)"/>, using <see cref="WindowsRuntimeMetadataTypeMapGroup"/>.
     /// </summary>
     public MemberReference TypeMapAssociationAttributeWindowsRuntimeMetadataTypeMapGroup_ctor => field ??= TypeMapAssociationAttribute1_ctor(WindowsRuntimeMetadataTypeMapGroup.ToReferenceTypeSignature());
@@ -2106,9 +2148,37 @@ internal sealed class InteropReferences
             returnType: _corLibTypeFactory.IntPtr));
 
     /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IReferenceArrayObjectImpl.get_IID()</c>.
+    /// </summary>
+    public MemberReference IReferenceArrayObjectImplget_IID => field ??= IReferenceArrayObjectImpl
+        .CreateMemberReference("get_IID"u8, MethodSignature.CreateStatic(
+            returnType: WellKnownTypeSignatureFactory.InGuid(this)));
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IReferenceArrayObjectImpl.get_Vtable()</c>.
+    /// </summary>
+    public MemberReference IReferenceArrayObjectImplget_Vtable => field ??= IReferenceArrayObjectImpl
+        .CreateMemberReference("get_Vtable"u8, MethodSignature.CreateStatic(
+            returnType: _corLibTypeFactory.IntPtr));
+
+    /// <summary>
     /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IStringableImpl.get_Vtable()</c>.
     /// </summary>
     public MemberReference IStringableImplget_Vtable => field ??= IStringableImpl
+        .CreateMemberReference("get_Vtable"u8, MethodSignature.CreateStatic(
+            returnType: _corLibTypeFactory.IntPtr));
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.ICustomPropertyProviderImpl.get_IID()</c>.
+    /// </summary>
+    public MemberReference ICustomPropertyProviderImplget_IID => field ??= ICustomPropertyProviderImpl
+        .CreateMemberReference("get_IID"u8, MethodSignature.CreateStatic(
+            returnType: WellKnownTypeSignatureFactory.InGuid(this)));
+
+    /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.ICustomPropertyProviderImpl.get_Vtable()</c>.
+    /// </summary>
+    public MemberReference ICustomPropertyProviderImplget_Vtable => field ??= ICustomPropertyProviderImpl
         .CreateMemberReference("get_Vtable"u8, MethodSignature.CreateStatic(
             returnType: _corLibTypeFactory.IntPtr));
 
@@ -4080,6 +4150,11 @@ internal sealed class InteropReferences
                     Type.ToReferenceTypeSignature(),
                     Type.ToReferenceTypeSignature()]);
     }
+
+    /// <summary>
+    /// Gets the constructor for the non-generic enumeration attribute base.
+    /// </summary>
+    public MemberReference DynamicInterfaceCastableEnumerableAttribute_ctor => field ??= DynamicInterfaceCastableEnumerableAttribute.CreateConstructorReference(_corLibTypeFactory);
 
     /// <summary>
     /// Gets the <see cref="MemberReference"/> for the <c>.ctor</c> method of a given delegate type.

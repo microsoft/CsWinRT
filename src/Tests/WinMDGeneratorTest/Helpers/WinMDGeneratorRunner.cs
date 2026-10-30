@@ -24,8 +24,13 @@ namespace WinMDGeneratorTest.Helpers;
 /// a separate process, and asserts the result. Tests should call <see cref="AssertSuccess"/> or one of
 /// the <c>AssertFailure</c> overloads so each scenario stays a single call.
 /// </remarks>
-internal static class WinMDGeneratorRunner
+internal static partial class WinMDGeneratorRunner
 {
+    /// <summary>
+    /// The runtime assembly containing the supported component-authoring attributes.
+    /// </summary>
+    private static readonly string RuntimeAssemblyPath = typeof(WindowsRuntime.InteropServices.ExcludeFromWindowsMetadataAttribute).Assembly.Location;
+
     /// <summary>
     /// Asserts that the generator succeeds (exit code <c>0</c>) for the given component source.
     /// </summary>
@@ -146,7 +151,7 @@ internal static class WinMDGeneratorRunner
         CSharpCompilation compilation = CSharpCompilation.Create(
             assemblyName: "TestInput",
             syntaxTrees: [sourceTree, assemblyInfoTree],
-            references: Net100.References.All,
+            references: Net100.References.All.Add(MetadataReference.CreateFromFile(RuntimeAssemblyPath)),
             options: new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary, allowUnsafe: true));
 
         EmitResult result = compilation.Emit(outputPath);
@@ -162,12 +167,169 @@ internal static class WinMDGeneratorRunner
     /// </summary>
     /// <remarks>
     /// Keys are formatted as <c>Namespace.Type</c> for types and <c>Namespace.Type.Member</c> for methods,
-    /// properties, events and fields. That distinction matters: Windows Runtime metadata places some member
+    /// properties, events and fields. Interface implementation rows use <c>Namespace.Type:Assembly::Namespace.Interface</c>.
+    /// That distinction matters: Windows Runtime metadata places some member
     /// attributes on the accessor method (e.g. <c>get_Value</c>) rather than on the property or event row.
     /// </remarks>
     /// <param name="source">The C# source defining the authored component types.</param>
     /// <returns>A lookup from metadata row to the fully qualified names of the attributes applied to it.</returns>
     public static ILookup<string, string> GetGeneratedAttributes(string source)
+    {
+        return Generate(source, ReadAttributes);
+    }
+
+    /// <summary>
+    /// Runs the generator for the given component source and returns the full names of the types in the produced <c>.winmd</c>.
+    /// </summary>
+    /// <param name="source">The C# source defining the authored component types.</param>
+    /// <returns>The full names of the types in the produced <c>.winmd</c>.</returns>
+    public static string[] GetGeneratedTypeNames(string source)
+    {
+        return Generate(source, ReadTypeNames);
+    }
+
+    /// <summary>
+    /// Gets each generated type's base directly from the emitted WinMD metadata.
+    /// </summary>
+    /// <param name="source">The authored component source.</param>
+    /// <returns>Base type names with assembly scopes, keyed by declaring type; interfaces have no base type.</returns>
+    public static Dictionary<string, string?> GetGeneratedBaseTypes(string source)
+    {
+        return Generate(source, static path =>
+        {
+            using FileStream stream = File.OpenRead(path);
+            using PEReader peReader = new(stream);
+            MetadataReader reader = peReader.GetMetadataReader(MetadataReaderOptions.None);
+            MetadataTypeNameProvider provider = new();
+            Dictionary<string, string?> baseTypes = [];
+
+            foreach (TypeDefinitionHandle handle in reader.TypeDefinitions)
+            {
+                TypeDefinition type = reader.GetTypeDefinition(handle);
+                string owner = Format(reader.GetString(type.Namespace), reader.GetString(type.Name));
+
+                baseTypes.Add(owner, type.BaseType.IsNil ? null : provider.GetTypeName(reader, type.BaseType));
+            }
+
+            return baseTypes;
+        });
+    }
+
+    /// <summary>
+    /// Gets the declaring type and name of every emitted method, property, event, and field.
+    /// </summary>
+    /// <param name="source">The authored component source.</param>
+    /// <returns>The fully qualified member names, including repeated names for overloads.</returns>
+    public static string[] GetGeneratedMemberNames(string source)
+    {
+        return Generate(source, static path =>
+        {
+            using FileStream stream = File.OpenRead(path);
+            using PEReader peReader = new(stream);
+            MetadataReader reader = peReader.GetMetadataReader(MetadataReaderOptions.None);
+            List<string> members = [];
+
+            foreach (TypeDefinitionHandle handle in reader.TypeDefinitions)
+            {
+                TypeDefinition type = reader.GetTypeDefinition(handle);
+                string owner = Format(reader.GetString(type.Namespace), reader.GetString(type.Name));
+
+                members.AddRange(type.GetMethods().Select(handle => reader.GetString(reader.GetMethodDefinition(handle).Name))
+                    .Concat(type.GetProperties().Select(handle => reader.GetString(reader.GetPropertyDefinition(handle).Name)))
+                    .Concat(type.GetEvents().Select(handle => reader.GetString(reader.GetEventDefinition(handle).Name)))
+                    .Concat(type.GetFields().Select(handle => reader.GetString(reader.GetFieldDefinition(handle).Name)))
+                    .Select(name => $"{owner}.{name}"));
+            }
+
+            return members.ToArray();
+        });
+    }
+
+    /// <summary>
+    /// Gets actual method signatures and implemented interfaces from a generated WinMD without CLR projections.
+    /// </summary>
+    /// <param name="source">The authored component source.</param>
+    /// <param name="useWindowsUIXamlProjections">Whether to select UWP XAML instead of WinUI.</param>
+    /// <returns>Method signatures keyed by declaring type and method name, and interfaces keyed by implementing type.</returns>
+    public static (Dictionary<string, string> Methods, Dictionary<string, string[]> Interfaces) GetGeneratedApiSurface(
+        string source,
+        bool useWindowsUIXamlProjections = false)
+    {
+        return Generate(source, static path =>
+        {
+            using FileStream stream = File.OpenRead(path);
+            using PEReader peReader = new(stream);
+            MetadataReader reader = peReader.GetMetadataReader(MetadataReaderOptions.None);
+            MetadataTypeNameProvider provider = new();
+            Dictionary<string, string> methods = [];
+
+            foreach (TypeDefinitionHandle handle in reader.TypeDefinitions)
+            {
+                TypeDefinition type = reader.GetTypeDefinition(handle);
+                string owner = Format(reader.GetString(type.Namespace), reader.GetString(type.Name));
+
+                foreach (MethodDefinitionHandle methodHandle in type.GetMethods())
+                {
+                    MethodDefinition method = reader.GetMethodDefinition(methodHandle);
+                    MethodSignature<string> signature = method.DecodeSignature(provider, genericContext: (object?)null);
+                    string name = reader.GetString(method.Name);
+
+                    methods.Add($"{owner}.{name}", $"{signature.ReturnType}({string.Join(", ", signature.ParameterTypes)})");
+                }
+            }
+
+            return (methods, ReadImplementedInterfaces(reader));
+        }, useWindowsUIXamlProjections);
+    }
+
+    /// <summary>
+    /// Gets implemented interfaces directly from WinMD metadata, including types with overloaded methods.
+    /// </summary>
+    /// <param name="source">The authored component source.</param>
+    /// <returns>The interface contracts keyed by implementing type.</returns>
+    public static Dictionary<string, string[]> GetGeneratedInterfaces(string source)
+    {
+        return Generate(source, static path =>
+        {
+            using FileStream stream = File.OpenRead(path);
+            using PEReader peReader = new(stream);
+            return ReadImplementedInterfaces(peReader.GetMetadataReader(MetadataReaderOptions.None));
+        });
+    }
+
+    /// <summary>
+    /// Reads interface implementation rows without applying runtime metadata projections.
+    /// </summary>
+    private static Dictionary<string, string[]> ReadImplementedInterfaces(MetadataReader reader)
+    {
+        MetadataTypeNameProvider provider = new();
+        Dictionary<string, string[]> interfaces = [];
+
+        foreach (TypeDefinitionHandle handle in reader.TypeDefinitions)
+        {
+            TypeDefinition type = reader.GetTypeDefinition(handle);
+            string owner = Format(reader.GetString(type.Namespace), reader.GetString(type.Name));
+
+            interfaces.Add(owner, [.. type.GetInterfaceImplementations()
+                .Select(reader.GetInterfaceImplementation)
+                .Select(implementation => provider.GetTypeName(reader, implementation.Interface))]);
+        }
+
+        return interfaces;
+    }
+
+    /// <summary>
+    /// Runs the generator for the given component source and reads the produced <c>.winmd</c>.
+    /// </summary>
+    /// <typeparam name="T">The type of value read from the produced <c>.winmd</c>.</typeparam>
+    /// <param name="source">The C# source defining the authored component types.</param>
+    /// <param name="read">Reads the value from the produced <c>.winmd</c>, given its path.</param>
+    /// <param name="useWindowsUIXamlProjections">Whether to select UWP XAML instead of WinUI.</param>
+    /// <returns>The value read from the produced <c>.winmd</c>.</returns>
+    private static T Generate<T>(
+        string source,
+        Func<string, T> read,
+        bool useWindowsUIXamlProjections = false)
     {
         string toolPath = GetGeneratorPath();
         string temporaryDirectory = Directory.CreateTempSubdirectory("WinMDGeneratorTest_").FullName;
@@ -177,25 +339,44 @@ internal static class WinMDGeneratorRunner
             string inputAssemblyPath = CompileComponent(source, temporaryDirectory);
             string outputWinMDPath = Path.Combine(temporaryDirectory, "TestInput.winmd");
             string responseFilePath = Path.Combine(temporaryDirectory, "args.rsp");
+            string[] references = StageReferenceAssemblies(temporaryDirectory);
 
             File.WriteAllText(responseFilePath, $"""
                 --input-assembly-path {inputAssemblyPath}
-                --reference-assembly-paths {inputAssemblyPath}
+                --reference-assembly-paths {inputAssemblyPath},{string.Join(',', references)}
                 --output-winmd-path {outputWinMDPath}
                 --assembly-version 1.0.0.0
-                --use-windows-ui-xaml-projections false
+                --use-windows-ui-xaml-projections {useWindowsUIXamlProjections}
                 """);
 
             (int exitCode, string output) = RunTool(toolPath, responseFilePath);
 
             Assert.AreEqual(0, exitCode, output);
 
-            return ReadAttributes(outputWinMDPath);
+            return read(outputWinMDPath);
         }
         finally
         {
             TryDeleteDirectory(temporaryDirectory);
         }
+    }
+
+    /// <summary>
+    /// Reads the full names of the types in a <c>.winmd</c>.
+    /// </summary>
+    /// <param name="winmdPath">The path of the <c>.winmd</c> to read.</param>
+    /// <returns>The full names of the types in the <c>.winmd</c>.</returns>
+    private static string[] ReadTypeNames(string winmdPath)
+    {
+        using FileStream stream = File.OpenRead(winmdPath);
+        using PEReader peReader = new(stream);
+
+        MetadataReader reader = peReader.GetMetadataReader(MetadataReaderOptions.None);
+
+        return [.. reader.TypeDefinitions
+            .Select(reader.GetTypeDefinition)
+            .Select(type => Format(reader.GetString(type.Namespace), reader.GetString(type.Name)))
+            .Where(static name => name != "<Module>")];
     }
 
     /// <summary>
@@ -212,6 +393,7 @@ internal static class WinMDGeneratorRunner
         // Runtime metadata the generator emits, not the CLR view of it that the reader can synthesize
         MetadataReader reader = peReader.GetMetadataReader(MetadataReaderOptions.None);
 
+        MetadataTypeNameProvider provider = new();
         List<KeyValuePair<string, string>> attributes = [];
 
         void AddAttributes(string owner, CustomAttributeHandleCollection handles)
@@ -228,6 +410,14 @@ internal static class WinMDGeneratorRunner
             string owner = Format(reader.GetString(type.Namespace), reader.GetString(type.Name));
 
             AddAttributes(owner, type.GetCustomAttributes());
+
+            foreach (InterfaceImplementationHandle implementationHandle in type.GetInterfaceImplementations())
+            {
+                InterfaceImplementation implementation = reader.GetInterfaceImplementation(implementationHandle);
+                string interfaceName = provider.GetTypeName(reader, implementation.Interface);
+
+                AddAttributes($"{owner}:{interfaceName}", implementation.GetCustomAttributes());
+            }
 
             foreach (MethodDefinitionHandle methodHandle in type.GetMethods())
             {
@@ -315,15 +505,31 @@ internal static class WinMDGeneratorRunner
         return Run(temporaryDirectory =>
         {
             string inputAssemblyPath = CompileComponent(source, temporaryDirectory);
+            string[] references = StageReferenceAssemblies(temporaryDirectory);
 
             return $"""
                 --input-assembly-path {inputAssemblyPath}
-                --reference-assembly-paths {inputAssemblyPath}
+                --reference-assembly-paths {inputAssemblyPath},{string.Join(',', references)}
                 --output-winmd-path {Path.Combine(temporaryDirectory, "TestInput.winmd")}
                 --assembly-version 1.0.0.0
                 --use-windows-ui-xaml-projections {useWindowsUIXamlProjections}
                 """;
         });
+    }
+
+    /// <summary>
+    /// Materializes the compilation's framework references for metadata resolution by the tool.
+    /// </summary>
+    private static string[] StageReferenceAssemblies(string directory)
+    {
+        string referencesDirectory = Directory.CreateDirectory(Path.Combine(directory, "references")).FullName;
+
+        return [RuntimeAssemblyPath, .. Net100.ReferenceInfos.All.Select(reference =>
+        {
+            string path = Path.Combine(referencesDirectory, reference.FileName);
+            File.WriteAllBytes(path, reference.ImageBytes);
+            return path;
+        })];
     }
 
     /// <summary>

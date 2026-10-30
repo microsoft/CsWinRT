@@ -4,6 +4,10 @@ parameters:
     default: 
     - JsonValueFunctionCalls
     - ClassActivation
+    - CustomPropertyProvider
+    - DefaultCustomPropertyProviderDisabled
+    - DefaultCustomPropertyProviderSuppressed
+    - DefaultCustomPropertyProviderWinUI
     - Structs
     - Events
     - DynamicInterfaceCasting
@@ -12,7 +16,13 @@ parameters:
     - DerivedClassActivation
     - DerivedClassAsBaseClass
     - CCW
+    - NativeExposedType
     - TypeMarshaling
+    - ImplementWinMDTypes
+    - UserDefinedTypeNames
+    - ForwardedTypeIdentities
+    - GetIidInterceptors
+    - GetIidInterceptorsFallback
 
 steps:
   - ${{ each functionalTest in parameters.FunctionalTests }}:
@@ -43,11 +53,16 @@ steps:
       inputs:
         workingDirectory: $(Build.SourcesDirectory)\src\Tests\FunctionalTests\${{ functionalTest }}\bin\$(BuildConfiguration)\net10.0\win-$(BuildPlatform)\publish
         script: |
+          setlocal EnableDelayedExpansion
           dir
           echo Running ${{ functionalTest }}.exe 
           ${{ functionalTest }}.exe 
           if %Errorlevel% NEQ 100 (
             exit /b !ErrorLevel!
+          )
+          if /i "${{ functionalTest }}"=="NativeExposedType" (
+            NativeExposedType.exe --rcw-first
+            if !ErrorLevel! NEQ 100 exit /b !ErrorLevel!
           )
           exit /b 0 
 
@@ -74,11 +89,16 @@ steps:
       inputs:
         workingDirectory: $(Build.SourcesDirectory)\src\Tests\FunctionalTests\${{ functionalTest }}\bin\$(BuildConfiguration)\net10.0\win-$(BuildPlatform)\publish
         script: |
+          setlocal EnableDelayedExpansion
           dir
           echo Running ${{ functionalTest }}.exe 
           ${{ functionalTest }}.exe 
           if %Errorlevel% NEQ 100 (
             exit /b !ErrorLevel!
+          )
+          if /i "${{ functionalTest }}"=="NativeExposedType" (
+            NativeExposedType.exe --rcw-first
+            if !ErrorLevel! NEQ 100 exit /b !ErrorLevel!
           )
           exit /b 0 
 

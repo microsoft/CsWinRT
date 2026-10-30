@@ -27,7 +27,7 @@ internal sealed partial class ProjectionGenerator
         ConcurrentBag<KeyValuePair<string, string>> exclusiveToInterfaceEntries = state.ExclusiveToInterfaceEntries;
         ConcurrentDictionary<string, string> authoredTypeNameToMetadataMap = state.AuthoredTypeNameToMetadataMap;
         HashSet<TypeDefinition> componentActivatable = state.ComponentActivatable;
-        ProjectionEmitContext context = new(_settings, _cache, ns, _staticConstructorAnalyzer, state.WindowsRuntimeMetadataTypeEntries);
+        ProjectionEmitContext context = new(_settings, _cache, ns, _staticConstructorAnalyzer, state.WindowsRuntimeMetadataTypeEntries, _activationFactoryExtensions);
         using IndentedTextWriterOwner writerOwner = IndentedTextWriterPool.GetOrCreate();
         IndentedTextWriter writer = writerOwner.Writer;
 
@@ -133,6 +133,14 @@ internal sealed partial class ProjectionGenerator
             // Skip generic types and mapped types
             if (MappedTypes.Get(ns2, nm2) is not null || type.IsGeneric)
             {
+                if (MappedTypes.Get(ns2, nm2) is { EmitAbi: true } additionType && _settings.AdditionFilter.IncludesNamespace(ns))
+                {
+                    MetadataAttributeFactory.AddWindowsRuntimeMetadataTypeEntry(
+                        context: context,
+                        type: type,
+                        projectedTypeName: TypedefNameWriter.BuildGlobalQualifiedName(additionType.MappedNamespace, additionType.MappedName));
+                }
+
                 written = true;
                 continue;
             }
@@ -141,9 +149,18 @@ internal sealed partial class ProjectionGenerator
             TypeKind kind = TypeKindResolver.Resolve(type);
             ProjectionFileBuilder.WriteType(writer, context, type, kind);
 
+            if (_settings.ReferenceProjection &&
+                kind == TypeKind.Interface &&
+                type.IsExclusiveTo &&
+                AbiInterfaceIDicFactory.IsEnabled(context, type))
+            {
+                state.IdicExclusiveToTypes.Add(type.FullName);
+            }
+
             if (kind == TypeKind.Class && !type.IsAttributeType)
             {
                 MetadataAttributeFactory.AddDefaultInterfaceEntry(context, type, defaultInterfaceEntries);
+                MetadataAttributeFactory.AddReferenceDefaultInterfaceEntry(context, type, state.ReferenceDefaultInterfaceEntries);
                 MetadataAttributeFactory.AddExclusiveToInterfaceEntries(context, type, exclusiveToInterfaceEntries);
                 ComponentFactory.AddMetadataTypeEntry(context, type, authoredTypeNameToMetadataMap);
 
@@ -253,8 +270,48 @@ internal sealed partial class ProjectionGenerator
 
                 TypeKind kind = TypeKindResolver.Resolve(type);
                 ProjectionFileBuilder.WriteAbiType(writer, context, type, kind);
+
+                // Also emit the abstract base classes that let this runtime class be implemented in C#, if
+                // the projection being generated supports that (either because it was asked to, or because a
+                // referenced authoring projection declares the type and needs its implementation supplied).
+                if (kind == TypeKind.Class && AbiImplementableClassFactory.ShouldEmit(context, type))
+                {
+                    AbiImplementableClassFactory.WriteImplementableBases(writer, context, type, state.ImplementableClasses);
+                }
             }
             writer.WriteEndAbiNamespace(context);
+        }
+        else if (_settings.ImplementWinMDTypes)
+        {
+            // A reference projection has no ABI implementation types, but it still declares the abstract
+            // base classes that let its runtime classes be implemented in C#. Their bodies are supplied
+            // when an application is built, exactly like the rest of the projection.
+            bool wroteAbiNamespace = false;
+
+            foreach (TypeDefinition type in members.Types)
+            {
+                if (type.IsGeneric ||
+                    !_settings.Filter.Includes(type.FullName) ||
+                    TypeKindResolver.Resolve(type) != TypeKind.Class ||
+                    !AbiImplementableClassFactory.ShouldEmit(context, type))
+                {
+                    continue;
+                }
+
+                if (!wroteAbiNamespace)
+                {
+                    writer.WriteBeginAbiNamespace(context);
+
+                    wroteAbiNamespace = true;
+                }
+
+                AbiImplementableClassFactory.WriteImplementableBases(writer, context, type, state.ImplementableClasses);
+            }
+
+            if (wroteAbiNamespace)
+            {
+                writer.WriteEndAbiNamespace(context);
+            }
         }
 
         // Phase 4: Custom additions to namespaces

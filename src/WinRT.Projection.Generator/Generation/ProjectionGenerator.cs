@@ -32,31 +32,37 @@ internal static partial class ProjectionGenerator
             log: ConsoleApp.Log,
             token: token);
 
-        // Process all .winmd references. Show the appropriate message to inform users of what this
-        // generator is doing, based on the input arguments. If we don't have precompiled projections,
-        // this tool might run up to 3 times during builds, so this helps make things clearer.
+        // Process all .winmd references (the progress message is logged from within the phase)
         ProjectionGeneratorProcessingState processingState = runner.RunPhase(
             phaseName: "processing",
-            logMessage: runner.Args switch
-            {
-                { WindowsSdkOnly: true, WindowsUIXamlProjection: false } => "Processing Windows SDK .winmd references",
-                { WindowsSdkOnly: true, WindowsUIXamlProjection: true } => "Processing 'Windows.UI.Xaml' .winmd references",
-                _ => $"Processing {runner.Args.WinMDPaths.Length} .winmd reference(s)"
-            },
             body: ProcessReferences);
 
-        // If no types were found to project (e.g., component mode with no component references),
-        // skip the source generation and emit phases entirely (no .dll will be produced at all).
-        if (!processingState.HasTypesToProject)
+        // Prepare the source directory, removing stale files from the previous generation
+        runner.RunPhase(
+            phaseName: "source-directory",
+            body: args => PrepareSourcesDirectory(args, processingState));
+
+        // Nothing to project and nothing to merge: skip the remaining phases entirely (no .dll will be
+        // produced at all). An assembly implementing classes declared in existing metadata contributes no
+        // types to project, but its activation entry point still has to be merged, so it is not "nothing".
+        if (!processingState.HasTypesToProject && !processingState.HasMergedActivation)
         {
+            // Removing the last supplemental reference must not leave a stale projection behind.
+            runner.RunPhase(
+                phaseName: "emit",
+                body: args => File.Delete(Path.Combine(args.GeneratedAssemblyDirectory, args.AssemblyName + ".dll")));
+
             return;
         }
 
         // Invoke the projection writer (in-process) to generate the projection sources
-        runner.RunPhase(
-            phaseName: "source-generation",
-            logMessage: "Generating projection code",
-            body: _ => GenerateSources(processingState));
+        if (processingState.HasTypesToProject)
+        {
+            runner.RunPhase(
+                phaseName: "source-generation",
+                logMessage: "Generating projection code",
+                body: _ => GenerateSources(processingState));
+        }
 
         // In component mode (i.e. producing 'WinRT.Component.dll'), emit the supporting source files
         // alongside the projection writer's output so the merged '.dll' plays the entry-assembly and

@@ -6,6 +6,7 @@ namespace Windows.UI.Xaml
 #if !CSWINRT_REFERENCE_PROJECTION
     [WindowsRuntimeType]
     [WindowsRuntimeClassName("Windows.Foundation.IReference`1<Windows.UI.Xaml.GridLength>")]
+    [WindowsRuntimeReferenceType(typeof(GridLength?))]
     [ABI.Windows.UI.Xaml.GridLengthComWrappersMarshaller]
 #endif
     public struct GridLength : IEquatable<GridLength>

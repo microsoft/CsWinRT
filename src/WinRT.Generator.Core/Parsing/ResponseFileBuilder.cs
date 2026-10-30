@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections;
+using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Reflection;
@@ -53,12 +54,11 @@ internal static class ResponseFileBuilder
                 continue;
             }
 
-            // Optional booleans default to 'false' on parse, so emitting "name false" would be
-            // redundant. Required booleans always emit (both 'true' and 'false') so the parser
-            // sees them and doesn't reject them as missing-required.
+            // Optional false values can be omitted unless their declared default is true.
+            // Required booleans always emit so the parser doesn't reject them as missing.
             bool isRequired = property.GetCustomAttribute<RequiredMemberAttribute>() is not null;
 
-            if (value is false && !isRequired)
+            if (value is false && !isRequired && property.GetCustomAttribute<DefaultValueAttribute>()?.Value is not true)
             {
                 continue;
             }

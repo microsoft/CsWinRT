@@ -7,6 +7,18 @@
         threadingModel="both"
         xmlns="urn:schemas-microsoft-com:winrt.v1" />
     <activatableClass
+        name="AuthoringTest.ExcludedBases.ConcreteDerived"
+        threadingModel="both"
+        xmlns="urn:schemas-microsoft-com:winrt.v1" />
+    <activatableClass
+        name="AuthoringTest.ExcludedBases.RedeclaredDerived"
+        threadingModel="both"
+        xmlns="urn:schemas-microsoft-com:winrt.v1" />
+    <activatableClass
+        name="AuthoringTest.ExcludedBases.AbstractDerived"
+        threadingModel="both"
+        xmlns="urn:schemas-microsoft-com:winrt.v1" />
+    <activatableClass
         name="AuthoringTest.CustomCommand"
         threadingModel="both"
         xmlns="urn:schemas-microsoft-com:winrt.v1" />        

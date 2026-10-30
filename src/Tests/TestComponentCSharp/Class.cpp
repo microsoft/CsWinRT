@@ -1,7 +1,11 @@
 #include "pch.h"
+#include <winrt/Windows.Storage.h>
+#include <winrt/Windows.Storage.Streams.h>
+#include "AsyncSignal.h"
 #include "Class.h"
 #include "Class.g.cpp"
 #include "CustomEquals.h"
+#include "WrlAsyncOperation.h"
 
 using namespace std::chrono;
 
@@ -180,6 +184,78 @@ namespace winrt::TestComponentCSharp::implementation
         }
     };
 
+    template <typename K, typename V>
+    struct observable_map : implements<observable_map<K, V>, IObservableMap<K, V>, IMap<K, V>, IIterable<IKeyValuePair<K, V>>>
+    {
+        observable_map(bool allowEventCalls, std::map<K, V> values) :
+            _wrapped(single_threaded_observable_map<K, V>(std::move(values))),
+            _allowEventCalls(allowEventCalls)
+        {
+            _wrapped.MapChanged([this](IObservableMap<K, V> const&, IMapChangedEventArgs<K> const& args)
+            {
+                _mapChanged(*this, args);
+            });
+        }
+
+        V Lookup(K const& key) const
+        {
+            return _wrapped.Lookup(key);
+        }
+
+        uint32_t Size() const
+        {
+            return _wrapped.Size();
+        }
+
+        bool HasKey(K const& key) const
+        {
+            return _wrapped.HasKey(key);
+        }
+
+        IMapView<K, V> GetView() const
+        {
+            return _wrapped.GetView();
+        }
+
+        bool Insert(K const& key, V const& value)
+        {
+            return _wrapped.Insert(key, value);
+        }
+
+        void Remove(K const& key)
+        {
+            _wrapped.Remove(key);
+        }
+
+        void Clear()
+        {
+            _wrapped.Clear();
+        }
+
+        IIterator<IKeyValuePair<K, V>> First() const
+        {
+            return _wrapped.First();
+        }
+
+        event_token MapChanged(MapChangedEventHandler<K, V> const& handler)
+        {
+            // Reject a misrouted Lookup before treating its key as a COM delegate.
+            check_hresult(_allowEventCalls ? S_OK : E_UNEXPECTED);
+            return _mapChanged.add(handler);
+        }
+
+        void MapChanged(event_token const& token)
+        {
+            check_hresult(_allowEventCalls ? S_OK : E_UNEXPECTED);
+            _mapChanged.remove(token);
+        }
+
+    private:
+        IObservableMap<K, V> _wrapped;
+        bool _allowEventCalls;
+        event<MapChangedEventHandler<K, V>> _mapChanged;
+    };
+
     struct data_errors_changed_event_args : implements<data_errors_changed_event_args, IDataErrorsChangedEventArgs>
     {
         data_errors_changed_event_args(winrt::hstring name) :
@@ -336,6 +412,14 @@ namespace winrt::TestComponentCSharp::implementation
     DateTime Class::Now()
     {
         return winrt::clock::now();
+    }
+    TestComponentCSharp::Class Class::CreateFromString(hstring const& value)
+    {
+        return winrt::make<Class>(0, value);
+    }
+    TestComponentCSharp::NonBlittableStringStruct Class::CreateStructFromString(hstring const& value)
+    {
+        return { value };
     }
     winrt::event_token Class::Event0(TestComponentCSharp::EventHandler0 const& handler)
     {
@@ -1082,6 +1166,87 @@ namespace winrt::TestComponentCSharp::implementation
         return winrt::single_threaded_vector_view(std::vector{ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 });
     }
 
+    Windows::Foundation::IInspectable Class::GetInputStreamOptionsVector()
+    {
+        // Keep the closed vector types out of the managed projection's signatures
+        return winrt::single_threaded_vector(std::vector{
+            Windows::Storage::Streams::InputStreamOptions::None,
+            Windows::Storage::Streams::InputStreamOptions::Partial,
+            Windows::Storage::Streams::InputStreamOptions::ReadAhead });
+    }
+
+    Windows::Foundation::IInspectable Class::GetFileAccessModeVector()
+    {
+        return winrt::single_threaded_vector(std::vector{
+            Windows::Storage::FileAccessMode::Read,
+            Windows::Storage::FileAccessMode::ReadWrite,
+            Windows::Storage::FileAccessMode::Read });
+    }
+
+    Windows::Foundation::IInspectable Class::GetCreationCollisionOptionVector()
+    {
+        return winrt::single_threaded_vector(std::vector{
+            Windows::Storage::CreationCollisionOption::GenerateUniqueName,
+            Windows::Storage::CreationCollisionOption::ReplaceExisting,
+            Windows::Storage::CreationCollisionOption::FailIfExists });
+    }
+
+    Windows::Foundation::IInspectable Class::GetInterfaceDispatchVector()
+    {
+        return winrt::single_threaded_vector(std::vector{
+            InterfaceDispatchElement::First,
+            InterfaceDispatchElement::Second,
+            InterfaceDispatchElement::Third });
+    }
+
+    Windows::Foundation::IInspectable Class::GetDirectDispatchVector()
+    {
+        return winrt::single_threaded_vector(std::vector{
+            DirectDispatchElement::First,
+            DirectDispatchElement::Second,
+            DirectDispatchElement::Third });
+    }
+
+    Windows::Foundation::IInspectable Class::GetAbstractDispatchVector()
+    {
+        return winrt::single_threaded_vector(std::vector{
+            AbstractDispatchElement::First,
+            AbstractDispatchElement::Second,
+            AbstractDispatchElement::Third });
+    }
+
+    Windows::Foundation::IInspectable Class::GetVirtualDispatchVector()
+    {
+        return winrt::single_threaded_vector(std::vector{
+            VirtualDispatchElement::First,
+            VirtualDispatchElement::Second,
+            VirtualDispatchElement::Third });
+    }
+
+    Windows::Foundation::IInspectable Class::GetSealedDispatchVector()
+    {
+        return winrt::single_threaded_vector(std::vector{
+            SealedDispatchElement::First,
+            SealedDispatchElement::Second,
+            SealedDispatchElement::Third });
+    }
+
+    Windows::Foundation::IInspectable Class::GetClosedArgumentVector()
+    {
+        return winrt::single_threaded_vector(std::vector{
+            ClosedArgumentElement::First,
+            ClosedArgumentElement::Second,
+            ClosedArgumentElement::Third });
+    }
+
+    Windows::Foundation::IInspectable Class::GetStaticChainVector()
+    {
+        return winrt::single_threaded_vector(std::vector{
+            StaticChainElement::First,
+            StaticChainElement::Second,
+            StaticChainElement::Third });
+    }
+
     IVectorView<bool> Class::GetBoolVector()
     {
         return winrt::single_threaded_vector_view(std::vector{ true, false, true, false });
@@ -1126,6 +1291,16 @@ namespace winrt::TestComponentCSharp::implementation
     IMap<int32_t, int32_t> Class::GetIntToIntDictionary()
     {
         return single_threaded_map<int32_t, int32_t>(std::map<int32_t, int32_t>{ {1, 4}, { 2, 8 }, { 3, 12 } });
+    }
+
+    IObservableMap<hstring, hstring> Class::CreateObservableStringMap(bool allowEventCalls)
+    {
+        return make<observable_map<hstring, hstring>>(allowEventCalls, std::map<hstring, hstring>{ { L"one", L"first" } });
+    }
+
+    IObservableMap<int32_t, int32_t> Class::CreateObservableIntMap(bool allowEventCalls)
+    {
+        return make<observable_map<int32_t, int32_t>>(allowEventCalls, std::map<int32_t, int32_t>{ { 1, 10 } });
     }
 
     IMap<WF::TimeSpan, WF::TimeSpan> Class::GetTimeSpanToTimeSpanDictionary()
@@ -1278,7 +1453,7 @@ namespace winrt::TestComponentCSharp::implementation
         auto cancel = co_await winrt::get_cancellation_token();
         cancel.callback([this]() { ::SetEvent(_syncHandle.get()); });
 
-        co_await winrt::resume_on_signal(_syncHandle.get());
+        co_await async_signal_awaiter{ _syncHandle.get() };
         if (cancel()) co_return;
         winrt::check_hresult(_asyncResult.load());
     }
@@ -1312,7 +1487,7 @@ namespace winrt::TestComponentCSharp::implementation
         auto progress = co_await winrt::get_progress_token();
         while (true)
         {
-            co_await winrt::resume_on_signal(_syncHandle.get());
+            co_await async_signal_awaiter{ _syncHandle.get() };
             if (cancel()) co_return;
             if (_asyncResult.load() != E_PENDING) break;
             progress(_asyncProgress.load());
@@ -1329,7 +1504,7 @@ namespace winrt::TestComponentCSharp::implementation
         auto cancel = co_await winrt::get_cancellation_token();
         cancel.callback([this]() { ::SetEvent(_syncHandle.get()); });
 
-        co_await winrt::resume_on_signal(_syncHandle.get());
+        co_await async_signal_awaiter{ _syncHandle.get() };
         if (cancel()) co_return lhs + rhs; // TODO: Why do I need to provide a value
         winrt::check_hresult(_asyncResult.load());
         co_return lhs + rhs;
@@ -1347,7 +1522,7 @@ namespace winrt::TestComponentCSharp::implementation
         auto progress = co_await winrt::get_progress_token();
         while (true)
         {
-            co_await winrt::resume_on_signal(_syncHandle.get());
+            co_await async_signal_awaiter{ _syncHandle.get() };
             if (cancel()) co_return lhs + rhs; // TODO: Why do I need to provide a value
             if (_asyncResult.load() != E_PENDING) break;
             progress(_asyncProgress.load());
@@ -1355,6 +1530,27 @@ namespace winrt::TestComponentCSharp::implementation
 
         winrt::check_hresult(_asyncResult.load());
         co_return lhs + rhs;
+    }
+
+    IAsyncOperationWithProgress<uint32_t, uint32_t> Class::WrlAddAsyncWithProgress(uint32_t lhs, uint32_t rhs)
+    {
+        return CreateWrlAsyncAddition(lhs, rhs, _completeWrlAsync);
+    }
+
+    IAsyncOperationWithProgress<uint32_t, uint32_t> Class::WrlAddAsyncWithProgress(uint32_t lhs, uint32_t rhs,
+        AsyncOperationWithProgressCompletedHandler<uint32_t, uint32_t> const& observer)
+    {
+        return CreateWrlAsyncAddition(lhs, rhs, _completeWrlAsync, observer);
+    }
+
+    bool Class::TryCompleteWrlAsync(int32_t hr)
+    {
+        if (!_completeWrlAsync)
+        {
+            winrt::throw_hresult(E_ILLEGAL_METHOD_CALL);
+        }
+        auto complete = std::move(_completeWrlAsync);
+        return complete(hr);
     }
 
     Point Class::PointProperty()
@@ -1843,6 +2039,11 @@ namespace winrt::TestComponentCSharp::implementation
         return obj.as<IReferenceArray<hstring>>().Value();
     }
 
+    com_array<WF::IInspectable> Class::UnboxObjectArray(WF::IInspectable const& obj)
+    {
+        return obj.as<IReferenceArray<WF::IInspectable>>().Value();
+    }
+
     int32_t Class::UnboxInt32UsingPropertyValue(IInspectable const& obj)
     {
         if (auto ipv = obj.try_as<IPropertyValue>())
@@ -1900,6 +2101,17 @@ namespace winrt::TestComponentCSharp::implementation
         if (auto ipv = obj.try_as<IPropertyValue>())
         {
             ipv.GetPointArray(arr);
+        }
+
+        return arr;
+    }
+
+    com_array<WF::IInspectable> Class::UnboxObjectArrayUsingPropertyValue(IInspectable const& obj)
+    {
+        com_array<WF::IInspectable> arr;
+        if (auto ipv = obj.try_as<IPropertyValue>())
+        {
+            ipv.GetInspectableArray(arr);
         }
 
         return arr;

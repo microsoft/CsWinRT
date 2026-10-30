@@ -350,12 +350,41 @@ internal partial class InteropTypeDefinitionBuilder
         }
 
         /// <summary>
+        /// Creates and tracks the attribute implementing typed enumeration for a closed element type.
+        /// </summary>
+        /// <param name="enumerableType">The <see cref="GenericInstanceTypeSignature"/> for the <see cref="System.Collections.Generic.IEnumerable{T}"/> type.</param>
+        /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
+        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <param name="emitState">The emit state for this invocation.</param>
+        /// <param name="module">The module that will contain the type being created.</param>
+        /// <param name="attributeType">The resulting attribute type.</param>
+        public static void EnumerableAttribute(
+            GenericInstanceTypeSignature enumerableType,
+            InteropDefinitions interopDefinitions,
+            InteropReferences interopReferences,
+            InteropGeneratorEmitState emitState,
+            ModuleDefinition module,
+            out TypeDefinition attributeType)
+        {
+            InteropTypeDefinitionFactory.IEnumerable1.EnumerableAttribute(
+                enumerableType: enumerableType,
+                interopDefinitions: interopDefinitions,
+                interopReferences: interopReferences,
+                module: module,
+                attributeType: out attributeType);
+
+            // Track by element type so all collection families reuse the same attribute
+            emitState.TrackTypeDefinition(attributeType, enumerableType.TypeArguments[0], "EnumerableAttribute");
+        }
+
+        /// <summary>
         /// Creates a new type definition for the interface implementation of some <c>IIterable&lt;T&gt;</c> interface.
         /// </summary>
         /// <param name="enumerableType">The <see cref="GenericInstanceTypeSignature"/> for the <see cref="System.Collections.Generic.IEnumerable{T}"/> type.</param>
         /// <param name="iterableMethodsType">The <see cref="TypeDefinition"/> instance returned by <see cref="IIterableMethods"/>.</param>
         /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+        /// <param name="emitState">The emit state for this invocation.</param>
         /// <param name="module">The module that will contain the type being created.</param>
         /// <param name="useWindowsUIXamlProjections">Whether to use <c>Windows.UI.Xaml</c> projections.</param>
         /// <param name="interfaceImplType">The resulting interface implementation type.</param>
@@ -364,6 +393,7 @@ internal partial class InteropTypeDefinitionBuilder
             TypeDefinition iterableMethodsType,
             InteropDefinitions interopDefinitions,
             InteropReferences interopReferences,
+            InteropGeneratorEmitState emitState,
             ModuleDefinition module,
             bool useWindowsUIXamlProjections,
             out TypeDefinition interfaceImplType)
@@ -380,7 +410,8 @@ internal partial class InteropTypeDefinitionBuilder
                 CustomAttributes =
                 {
                     new CustomAttribute(interopReferences.DynamicInterfaceCastableImplementationAttribute_ctor),
-                    InteropCustomAttributeFactory.Guid(enumerableType, interopDefinitions, interopReferences, useWindowsUIXamlProjections)
+                    InteropCustomAttributeFactory.Guid(enumerableType, interopDefinitions, interopReferences, useWindowsUIXamlProjections),
+                    InteropCustomAttributeFactory.DynamicInterfaceCastableEnumerable(elementType, emitState)
                 },
                 Interfaces =
                 {

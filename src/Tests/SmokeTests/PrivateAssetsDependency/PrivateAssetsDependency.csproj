@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <LangVersion>14.0</LangVersion>
+    <Nullable>enable</Nullable>
+    <PackageId>CsWinRT.SmokeTests.PrivateAssetsDependency</PackageId>
+    <CsWinRTSmokeTestPackageReference>false</CsWinRTSmokeTestPackageReference>
+  </PropertyGroup>
+</Project>

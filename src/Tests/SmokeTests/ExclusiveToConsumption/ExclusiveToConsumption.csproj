@@ -1,0 +1,28 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <UseUwp>true</UseUwp>
+    <UseUwpTools>false</UseUwpTools>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <IlcResilient>false</IlcResilient>
+    <ILLinkTreatWarningsAsErrors>true</ILLinkTreatWarningsAsErrors>
+    <SuppressTrimAnalysisWarnings>false</SuppressTrimAnalysisWarnings>
+    <SuppressAotAnalysisWarnings>false</SuppressAotAnalysisWarnings>
+    <TrimmerSingleWarn>false</TrimmerSingleWarn>
+    <ExclusiveToTestPublicInterfaces Condition="'$(ExclusiveToTestPublicInterfaces)' == ''">true</ExclusiveToTestPublicInterfaces>
+    <DefineConstants Condition="'$(ExclusiveToTestPublicInterfaces)' == 'true'">$(DefineConstants);EXCLUSIVE_TO_PUBLIC_INTERFACES</DefineConstants>
+    <RestoreAdditionalProjectSources Condition="'$(ExclusiveToProjectionPackageSource)' != ''">$(RestoreAdditionalProjectSources);$(ExclusiveToProjectionPackageSource)</RestoreAdditionalProjectSources>
+    <!-- The runner relocates intermediate output; exclude artifacts from ordinary local builds too. -->
+    <DefaultItemExcludes>$(DefaultItemExcludes);bin\**;obj\**</DefaultItemExcludes>
+  </PropertyGroup>
+
+  <!-- Direct builds remain convenient; the smoke runner exercises the packed ref/lib assets instead. -->
+  <ItemGroup Condition="'$(ExclusiveToProjectionPackageVersion)' == ''">
+    <ProjectReference Include="..\ExclusiveToProjection\ExclusiveToProjection.csproj"
+                      GlobalPropertiesToRemove="PublishAot;RuntimeIdentifier;SelfContained" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(ExclusiveToProjectionPackageVersion)' != ''">
+    <PackageReference Include="CsWinRT.SmokeTests.ExclusiveToProjection" Version="$(ExclusiveToProjectionPackageVersion)" />
+  </ItemGroup>
+</Project>

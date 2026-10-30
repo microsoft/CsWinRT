@@ -126,7 +126,6 @@ public abstract class WindowsRuntimeObservableVector<
     }
 
     /// <inheritdoc/>
-    [WindowsRuntimeImplementationOnlyMember]
     protected internal sealed override bool HasUnwrappableNativeObjectReference => true;
 
     /// <inheritdoc/>
@@ -221,7 +220,6 @@ public abstract class WindowsRuntimeObservableVector<
     }
 
     /// <inheritdoc/>
-    [WindowsRuntimeImplementationOnlyMember]
     protected sealed override bool IsOverridableInterface(in Guid iid)
     {
         return false;

@@ -5,6 +5,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading;
 using AsmResolver.DotNet;
+using WindowsRuntime.ProjectionWriter.Metadata;
 
 namespace WindowsRuntime.ProjectionWriter.Generation;
 
@@ -48,12 +49,29 @@ internal sealed class ProjectionGeneratorRunState
     public ConcurrentDictionary<string, string> AuthoredTypeNameToMetadataMap { get; } = [];
 
     /// <summary>
-    /// Gets the (projected-type-name -> source <c>.winmd</c> stem) map populated as a side effect of
-    /// emitting the per-type <c>[WindowsRuntimeType]</c> marker (see
-    /// <see cref="Factories.MetadataAttributeFactory.WriteWinRTMetadataAttributeBody"/>). It is emitted at the
-    /// end of generation as the centralized, trimmable <c>ABI.WindowsRuntimeMetadataTypes</c> lookup type.
+    /// Gets the (projected-type-name -> source metadata) map populated when emitting projected
+    /// types and recording exported authored types (see
+    /// <see cref="Factories.MetadataAttributeFactory.AddWindowsRuntimeMetadataTypeEntry"/>). It is emitted at the
+    /// end of generation as the centralized contract lookup and conditional IID map.
     /// </summary>
-    public ConcurrentDictionary<string, string> WindowsRuntimeMetadataTypeEntries { get; } = [];
+    public ConcurrentDictionary<string, WindowsRuntimeMetadataTypeEntry> WindowsRuntimeMetadataTypeEntries { get; } = [];
+
+    /// <summary>
+    /// Gets the effective exclusive-to IDIC selection to preserve in reference-projection assembly metadata.
+    /// </summary>
+    public ConcurrentBag<string> IdicExclusiveToTypes { get; } = [];
+
+    /// <summary>
+    /// Gets the Windows Runtime classes a reference projection declares implementable bases for, to preserve in its
+    /// assembly metadata (see <see cref="Factories.AbiImplementableClassFactory.WriteImplementableBases"/>).
+    /// </summary>
+    public ConcurrentBag<string> ImplementableClasses { get; } = [];
+
+    /// <summary>
+    /// Gets the (class-name -> default-interface-name) map to preserve in reference-projection assembly metadata,
+    /// populated by namespace work items via <see cref="Factories.MetadataAttributeFactory.AddReferenceDefaultInterfaceEntry"/>.
+    /// </summary>
+    public ConcurrentDictionary<string, string> ReferenceDefaultInterfaceEntries { get; } = [];
 
     /// <summary>
     /// Tracked via <see cref="Interlocked"/> so any number of work items can mark "I wrote a

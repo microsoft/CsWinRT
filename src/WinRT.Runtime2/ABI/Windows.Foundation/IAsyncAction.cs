@@ -11,20 +11,29 @@ using WindowsRuntime.InteropServices;
 using WindowsRuntime.InteropServices.Marshalling;
 using static System.Runtime.InteropServices.ComWrappers;
 
-#pragma warning disable IDE0008, IDE1006, CA2256
+#pragma warning disable IL2026, IDE0008, IDE1006, CA2256
 
-#pragma warning disable IL2026 // Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code
 [assembly: TypeMap<WindowsRuntimeMetadataTypeMapGroup>(
     value: "Windows.Foundation.IAsyncAction",
     target: typeof(IAsyncAction),
     trimTarget: typeof(IAsyncAction))]
-#pragma warning restore IL2026 // Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code
+
+[assembly: TypeMap<WindowsRuntimeIidTypeMapGroup>(
+    value: "[WinRT.Runtime]Windows.Foundation.IAsyncAction",
+    target: typeof(ABI.Windows.Foundation.IAsyncActionIidProvider),
+    trimTarget: typeof(IAsyncAction))]
 
 [assembly: TypeMapAssociation<DynamicInterfaceCastableImplementationTypeMapGroup>(
     source: typeof(IAsyncAction),
     proxy: typeof(ABI.Windows.Foundation.IAsyncActionInterfaceImpl))]
 
 namespace ABI.Windows.Foundation;
+
+/// <summary>
+/// IID metadata for <see cref="global::Windows.Foundation.IAsyncAction"/>.
+/// </summary>
+[Guid("5A648006-843A-4DA9-865B-9D26E5DFAD7B")]
+file static class IAsyncActionIidProvider;
 
 /// <summary>
 /// Marshaller for <see cref="IAsyncAction"/>.

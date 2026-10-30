@@ -2,21 +2,22 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Runtime.InteropServices;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using test_component_base;
 using test_component_derived.Nested;
 using TestComponent;  // Error CS0246? run get_testwinrt.cmd
 using Windows.Foundation;
+using Windows.Storage;
+using Windows.Storage.Streams;
 using WindowsRuntime;
 using WindowsRuntime.InteropServices;
+using static UnitTest.TestWinRTAssertions;
 
 namespace UnitTest
 {
-    [TestClass]
-    public class TestWinRT
+    internal static class TestWinRTAssertions
     {
-        public ITests Tests { get; private set; } = TestRunner.MakeTests();
-
         public static bool AllEqual<T>(T x, params T[] list) =>
             list.All(y => x.Equals(y));
 
@@ -25,6 +26,12 @@ namespace UnitTest
 
         public static bool SequencesEqual<T>(IEnumerable<T> x, params IEnumerable<T>[] list) =>
             list.All(y => x.SequenceEqual(y));
+    }
+
+    [TestClass]
+    public class TestWinRT
+    {
+        public ITests Tests { get; private set; } = TestRunner.MakeTests();
 
         [TestMethod]
         public void Params_Bool()
@@ -374,6 +381,35 @@ namespace UnitTest
         }
 
         [TestMethod]
+        [DataRow(4, 4)]
+        [DataRow(4, 64)]
+        [DataRow(16, 4)]
+        [DataRow(16, 64)]
+        [DataRow(17, 4)]
+        [DataRow(17, 64)]
+        [DataRow(33, 4)]
+        [DataRow(33, 64)]
+        [DataRow(64, 4)]
+        [DataRow(64, 64)]
+        public void Array_String_Pooled(int count, int length)
+        {
+            string[] values = new string[count];
+            for (int i = 0; i < values.Length; i++)
+            {
+                values[i] = new string((char)('a' + i % 26), length);
+            }
+
+            for (int iteration = 0; iteration < 3; iteration++)
+            {
+                string[] filled = new string[count];
+                string[] returned = Tests.Array12(values, filled, out string[] received);
+                CollectionAssert.AreEqual(values, filled);
+                CollectionAssert.AreEqual(values, received);
+                CollectionAssert.AreEqual(values, returned);
+            }
+        }
+
+        [TestMethod]
         public void Array_NullStringArray()
         {
             string[] a = null;
@@ -443,6 +479,70 @@ namespace UnitTest
             IStringable[] c;
             IStringable[] d = Tests.Array16(a, b, out c);
             Assert.IsTrue(AllEqual(a, b, c, d));
+        }
+
+        [TestMethod]
+        [DataRow(16)]
+        [DataRow(17)]
+        [DataRow(33)]
+        [DataRow(64)]
+        public void Array_NonBlittable_Pooled(int count)
+        {
+            NonBlittable[] values = Enumerable.Range(0, count)
+                .Select(i => new NonBlittable(i % 2 == 0, (char)('a' + i % 26), $"value-{i}", i))
+                .ToArray();
+            AssertArrayRoundTrip(values, Tests.Array14);
+        }
+
+        [TestMethod]
+        [DataRow(16)]
+        [DataRow(17)]
+        [DataRow(33)]
+        [DataRow(64)]
+        public void Array_Nested_Pooled(int count)
+        {
+            Nested[] values = Enumerable.Range(0, count)
+                .Select(i => new Nested(default, new NonBlittable(i % 2 == 0, 'a', $"value-{i}", i)))
+                .ToArray();
+            AssertArrayRoundTrip(values, Tests.Array15);
+        }
+
+        [TestMethod]
+        [DataRow(16)]
+        [DataRow(17)]
+        [DataRow(33)]
+        [DataRow(64)]
+        public void Array_Stringable_Pooled(int count)
+        {
+            IStringable[] values = Enumerable.Range(0, count)
+                .Select(i => (IStringable)Windows.Data.Json.JsonValue.CreateNumberValue(i))
+                .ToArray();
+            AssertArrayRoundTrip(values, Tests.Array16);
+        }
+
+        [TestMethod]
+        [DataRow(16)]
+        [DataRow(17)]
+        [DataRow(33)]
+        [DataRow(64)]
+        public void Array_Blittable_Large(int count)
+        {
+            int[] values = Enumerable.Range(0, count).ToArray();
+            AssertArrayRoundTrip(values, Tests.Array7);
+        }
+
+        private delegate T[] ArrayRoundTrip<T>(ReadOnlySpan<T> values, Span<T> filled, out T[] received);
+
+        private static void AssertArrayRoundTrip<T>(T[] values, ArrayRoundTrip<T> roundTrip)
+        {
+            for (int iteration = 0; iteration < 3; iteration++)
+            {
+                T[] filled = new T[values.Length];
+                T[] returned = roundTrip(values, filled, out T[] received);
+                CollectionAssert.AreEqual(values, filled);
+                CollectionAssert.AreEqual(values, received);
+                CollectionAssert.AreEqual(values, returned);
+            }
         }
 
         [TestMethod]
@@ -752,6 +852,353 @@ namespace UnitTest
             var listCreatedWithIDIC = (IList<string>)(object)inspectable;
             RunListTests(listCreatedWithIDIC);
         }
+
+        [TestMethod]
+        public void Collections_GenericInterface_TypeTest_IDIC()
+        {
+            object value = CreateGenericCastInspectable(new TestComponentCSharp.Class().GetInputStreamOptionsVector());
+
+            Assert.IsTrue(IsGenericList<InputStreamOptions>(value));
+        }
+
+        [TestMethod]
+        public void Collections_GenericInterface_Cast_IDIC()
+        {
+            object value = CreateGenericCastInspectable(new TestComponentCSharp.Class().GetInputStreamOptionsVector());
+
+            Assert.AreSame(value, CastGenericList<InputStreamOptions>(value));
+        }
+
+        [TestMethod]
+        public void Collections_GenericInterface_Count_IDIC()
+        {
+            object value = CreateGenericCastInspectable(new TestComponentCSharp.Class().GetInputStreamOptionsVector());
+
+            Assert.AreEqual(3, GetGenericListCount<InputStreamOptions>(value));
+        }
+
+        [TestMethod]
+        public void Collections_GenericMethodTypeArgument_TypeTest_IDIC()
+        {
+            object value = CreateGenericCastInspectable(new TestComponentCSharp.Class().GetFileAccessModeVector());
+
+            Assert.IsTrue(IsGenericType<IList<FileAccessMode>>(value));
+        }
+
+        [TestMethod]
+        public void Collections_GenericMethodTypeArgument_Cast_IDIC()
+        {
+            object value = CreateGenericCastInspectable(new TestComponentCSharp.Class().GetFileAccessModeVector());
+
+            Assert.AreSame(value, CastGenericType<IList<FileAccessMode>>(value));
+        }
+
+        [TestMethod]
+        public void Collections_NestedGenericInterface_TypeTest_IDIC()
+        {
+            object value = CreateGenericCastInspectable(new TestComponentCSharp.Class().GetCreationCollisionOptionVector());
+
+            Assert.IsTrue(OuterIsGenericList<CreationCollisionOption>(value));
+        }
+
+        [TestMethod]
+        public void Collections_NestedGenericInterface_Cast_IDIC()
+        {
+            object value = CreateGenericCastInspectable(new TestComponentCSharp.Class().GetCreationCollisionOptionVector());
+
+            Assert.AreSame(value, OuterCastGenericList<CreationCollisionOption>(value));
+        }
+
+        [TestMethod]
+        public void Collections_NestedGenericInterface_Count_IDIC()
+        {
+            object value = CreateGenericCastInspectable(new TestComponentCSharp.Class().GetCreationCollisionOptionVector());
+
+            Assert.AreEqual(3, OuterGetGenericListCount<CreationCollisionOption>(value));
+        }
+
+        [TestMethod]
+        [DataRow(false)]
+        [DataRow(true)]
+        public void Collections_GenericInterfaceDispatch_IDIC(bool cast)
+        {
+            object value = CreateGenericCastInspectable(new TestComponentCSharp.Class().GetInterfaceDispatchVector());
+            IGenericListDispatch checker = new GenericListDispatch();
+
+            Assert.IsTrue(checker.Check<TestComponentCSharp.InterfaceDispatchElement>(value, cast));
+        }
+
+        [TestMethod]
+        [DataRow(false)]
+        [DataRow(true)]
+        public void Collections_GenericDirectTypeTestDispatch_IDIC(bool cast)
+        {
+            object value = CreateGenericCastInspectable(new TestComponentCSharp.Class().GetDirectDispatchVector());
+            IGenericDirectDispatch checker = new GenericDirectDispatch();
+
+            Assert.IsTrue(checker.Check<TestComponentCSharp.DirectDispatchElement>(value, cast));
+        }
+
+        [TestMethod]
+        [DataRow(false)]
+        [DataRow(true)]
+        public void Collections_GenericAbstractDispatch_IDIC(bool cast)
+        {
+            object value = CreateGenericCastInspectable(new TestComponentCSharp.Class().GetAbstractDispatchVector());
+            GenericAbstractDispatch checker = new GenericAbstractDispatchImpl();
+
+            Assert.IsTrue(checker.Check<TestComponentCSharp.AbstractDispatchElement>(value, cast));
+        }
+
+        [TestMethod]
+        [DataRow(false)]
+        [DataRow(true)]
+        public void Collections_GenericVirtualDispatch_IDIC(bool cast)
+        {
+            object value = CreateGenericCastInspectable(new TestComponentCSharp.Class().GetVirtualDispatchVector());
+            GenericVirtualDispatch checker = new GenericVirtualDispatchImpl();
+
+            Assert.IsTrue(checker.Check<TestComponentCSharp.VirtualDispatchElement>(value, cast));
+        }
+
+        [TestMethod]
+        [DataRow(false)]
+        [DataRow(true)]
+        public void Collections_GenericSealedDispatch_IDIC(bool cast)
+        {
+            object value = CreateGenericCastInspectable(new TestComponentCSharp.Class().GetSealedDispatchVector());
+            GenericVirtualDispatchImpl checker = new GenericVirtualDispatchImpl();
+
+            Assert.IsTrue(checker.Check<TestComponentCSharp.SealedDispatchElement>(value, cast));
+        }
+
+        // The closed collection type is an explicit call-site argument, independent of dispatch discovery
+        [TestMethod]
+        [DataRow(false)]
+        [DataRow(true)]
+        public void Collections_GenericMethodArgumentControl_IDIC(bool cast)
+        {
+            object value = CreateGenericCastInspectable(new TestComponentCSharp.Class().GetClosedArgumentVector());
+            IGenericTypeDispatch checker = new GenericTypeDispatch();
+
+            Assert.IsTrue(checker.Check<IList<TestComponentCSharp.ClosedArgumentElement>>(value, cast));
+        }
+
+        // Ordinary method propagation closes the two-hop Cast<IList<T>> path without virtual dispatch
+        [TestMethod]
+        [DataRow(false)]
+        [DataRow(true)]
+        public void Collections_GenericStaticChain_IDIC(bool cast)
+        {
+            object value = CreateGenericCastInspectable(new TestComponentCSharp.Class().GetStaticChainVector());
+
+            Assert.IsTrue(ForwardGenericListDispatch<TestComponentCSharp.StaticChainElement>(value, cast));
+        }
+
+        [TestMethod]
+        public unsafe void Collections_ConstructedReceiver_DefaultInterfaceBody_CCW()
+        {
+            object value = ((IDefaultCollectionFactory)new DefaultCollectionFactory<TestComponentCSharp.InterfaceDispatchElement>()).Create();
+            void* pointer = WindowsRuntimeMarshal.ConvertToUnmanaged(value);
+            nint vector = 0;
+
+            try
+            {
+                // Existing enum-vector tests do not root this nested vector; typed assertions here would mask discovery
+
+                // pinterface({913337e9-11a1-4345-a3a2-4e7f956e222d};pinterface({9fc2b0bb-e446-44e2-aa61-9cab8f636af2};enum(TestComponentCSharp.InterfaceDispatchElement;i4)))
+                Guid iid = new("fa87665e-7544-5f82-bc73-a9517cd8c8c5");
+
+                Assert.AreEqual(0, Marshal.QueryInterface((nint)pointer, iid, out vector));
+                Assert.AreNotEqual(nint.Zero, vector);
+            }
+            finally
+            {
+                if (vector != 0)
+                {
+                    _ = Marshal.Release(vector);
+                }
+
+                WindowsRuntimeMarshal.Free(pointer);
+                GC.KeepAlive(value);
+            }
+        }
+
+        private interface IDefaultCollectionFactory
+        {
+            object Create();
+        }
+
+        private interface IDefaultCollectionFactory<T> : IDefaultCollectionFactory
+        {
+            object IDefaultCollectionFactory.Create() => new List<IAsyncOperation<T>>();
+        }
+
+        private sealed class DefaultCollectionFactory<T> : IDefaultCollectionFactory<T>;
+
+        [TestMethod]
+        public void Collections_StaticInterfaceDefault_CCW()
+        {
+            object value = CreateStaticCollection<StaticCollectionFactory<TestComponentCSharp.DirectDispatchElement>>();
+
+            // pinterface({913337e9-11a1-4345-a3a2-4e7f956e222d};pinterface({9fc2b0bb-e446-44e2-aa61-9cab8f636af2};enum(TestComponentCSharp.DirectDispatchElement;i4)))
+            AssertStaticCollectionVector(value, new Guid("8958cbbf-1e98-53ff-a747-92f4b5614187"));
+        }
+
+        [TestMethod]
+        public void Collections_StaticInterfaceDefaultCache_CCW()
+        {
+            object value = GetStaticCollection<StaticCollectionCache<TestComponentCSharp.AbstractDispatchElement>>();
+
+            // pinterface({913337e9-11a1-4345-a3a2-4e7f956e222d};pinterface({9fc2b0bb-e446-44e2-aa61-9cab8f636af2};enum(TestComponentCSharp.AbstractDispatchElement;i4)))
+            AssertStaticCollectionVector(value, new Guid("e9027f2f-5043-5447-ad65-775032182bfc"));
+        }
+
+        private static object CreateStaticCollection<TFactory>() where TFactory : IStaticCollectionFactory => TFactory.Create();
+
+        private static object GetStaticCollection<TFactory>() where TFactory : IStaticCollectionCache => TFactory.Value;
+
+        private static unsafe void AssertStaticCollectionVector(object value, Guid iid)
+        {
+            // Keep the closed expected interface out of metadata; only the selected static body introduces it
+            void* pointer = WindowsRuntimeMarshal.ConvertToUnmanaged(value);
+            nint vector = 0;
+
+            try
+            {
+                Assert.AreEqual(0, Marshal.QueryInterface((nint)pointer, iid, out vector));
+                Assert.AreNotEqual(nint.Zero, vector);
+            }
+            finally
+            {
+                if (vector != 0)
+                {
+                    _ = Marshal.Release(vector);
+                }
+
+                WindowsRuntimeMarshal.Free(pointer);
+                GC.KeepAlive(value);
+            }
+        }
+
+        private interface IStaticCollectionFactory
+        {
+            static abstract object Create();
+        }
+
+        private interface IStaticCollectionFactory<T> : IStaticCollectionFactory
+        {
+            static object IStaticCollectionFactory.Create() => new List<IAsyncOperation<T>>();
+        }
+
+        private sealed class StaticCollectionFactory<T> : IStaticCollectionFactory<T>;
+
+        private interface IStaticCollectionCache
+        {
+            static abstract object Value { get; }
+        }
+
+        private interface IStaticCollectionCache<T> : IStaticCollectionCache
+        {
+            private static readonly object Cached = new List<IAsyncOperation<T>>();
+
+            static object IStaticCollectionCache.Value => Cached;
+        }
+
+        private sealed class StaticCollectionCache<T> : IStaticCollectionCache<T>;
+
+        private interface IGenericListDispatch
+        {
+            bool Check<T>(object value, bool cast);
+        }
+
+        private sealed class GenericListDispatch : IGenericListDispatch
+        {
+            public bool Check<T>(object value, bool cast) => CheckGenericListDispatch<T>(value, cast);
+        }
+
+        private interface IGenericDirectDispatch
+        {
+            bool Check<T>(object value, bool cast);
+        }
+
+        private sealed class GenericDirectDispatch : IGenericDirectDispatch
+        {
+            public bool Check<T>(object value, bool cast) => cast ? CheckGenericListDispatch<T>(value, true) : value is IList<T>;
+        }
+
+        private abstract class GenericAbstractDispatch
+        {
+            public abstract bool Check<T>(object value, bool cast);
+        }
+
+        private sealed class GenericAbstractDispatchImpl : GenericAbstractDispatch
+        {
+            public override bool Check<T>(object value, bool cast) => CheckGenericListDispatch<T>(value, cast);
+        }
+
+        private class GenericVirtualDispatch
+        {
+            public virtual bool Check<T>(object value, bool cast) => false;
+        }
+
+        private sealed class GenericVirtualDispatchImpl : GenericVirtualDispatch
+        {
+            public override bool Check<T>(object value, bool cast) => CheckGenericListDispatch<T>(value, cast);
+        }
+
+        private interface IGenericTypeDispatch
+        {
+            bool Check<T>(object value, bool cast);
+        }
+
+        private sealed class GenericTypeDispatch : IGenericTypeDispatch
+        {
+            public bool Check<T>(object value, bool cast) => CheckGenericDispatch<T>(value, cast);
+        }
+
+        private static bool ForwardGenericListDispatch<T>(object value, bool cast) => CheckGenericListDispatch<T>(value, cast);
+
+        private static bool CheckGenericListDispatch<T>(object value, bool cast)
+        {
+            return CheckGenericDispatch<IList<T>>(value, cast) && (!cast || ((IList<T>)value).Count == 3);
+        }
+
+        private static bool CheckGenericDispatch<T>(object value, bool cast)
+        {
+            return cast ? ReferenceEquals(value, (T)value) : value is T;
+        }
+
+        private static unsafe object CreateGenericCastInspectable(object vector)
+        {
+            void* target = WindowsRuntimeMarshal.ConvertToUnmanaged(vector);
+
+            try
+            {
+                return new TestIDICInspectable(target);
+            }
+            finally
+            {
+                WindowsRuntimeMarshal.Free(target);
+                GC.KeepAlive(vector);
+            }
+        }
+
+        private static bool IsGenericList<T>(object value) => value is IList<T>;
+
+        private static object CastGenericList<T>(object value) => (IList<T>)value;
+
+        private static int GetGenericListCount<T>(object value) => ((IList<T>)value).Count;
+
+        private static bool IsGenericType<T>(object value) => value is T;
+
+        private static object CastGenericType<T>(object value) => (T)value;
+
+        private static bool OuterIsGenericList<T>(object value) => IsGenericList<T>(value);
+
+        private static object OuterCastGenericList<T>(object value) => CastGenericList<T>(value);
+
+        private static int OuterGetGenericListCount<T>(object value) => GetGenericListCount<T>(value);
 
         private void RunListTests(IList<string> c)
         {

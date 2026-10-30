@@ -216,7 +216,7 @@ internal static partial class AbiMethodBodyFactory
                 // Generic instance param: emit a local UnsafeAccessor delegate to get the marshaller method.
                 string localName = p.GetParamLocalName(paramNameOverride);
                 string callName = p.GetParamName(paramNameOverride);
-                string interopTypeName = InteropTypeNameWriter.GetInteropAssemblyQualifiedName(p.Type, TypedefNameType.ABI);
+                string interopTypeName = InteropTypeNameWriter.GetInteropAssemblyQualifiedName(context, p.Type, TypedefNameType.ABI);
                 IndentedTextWriterCallback projectedTypeName = MethodFactory.WriteProjectedSignature(context, p.Type, false);
                 UnsafeAccessorFactory.EmitStaticMethod(
                     writer,
@@ -364,8 +364,17 @@ internal static partial class AbiMethodBodyFactory
                 {{storageT}}[] {{names.ArrayFromPool}} = null;
                 Span<{{storageT}}> {{names.Span}} = {{callName}}.Length <= 16
                     ? {{names.InlineArray}}[..{{callName}}.Length]
-                    : ({{names.ArrayFromPool}} = global::System.Buffers.ArrayPool<{{storageT}}>.Shared.Rent({{callName}}.Length));
+                    : ({{names.ArrayFromPool}} = global::System.Buffers.ArrayPool<{{storageT}}>.Shared.Rent({{callName}}.Length)).AsSpan(0, {{callName}}.Length);
                 """);
+
+            if (!context.AbiTypeKindResolver.IsMappedAbiValueType(szArr.BaseType)
+                && !szArr.BaseType.IsHResultException()
+                && (cat != ParameterCategory.PassArray || context.AbiTypeKindResolver.RequiresAbiDisposal(szArr.BaseType))
+                && !(szArr.BaseType.IsString() && cat == ParameterCategory.PassArray))
+            {
+                // Cleanup can run before conversion, or after a native call only partially fills the buffer.
+                writer.WriteLine($"{names.Span}.Clear();");
+            }
 
             if (szArr.BaseType.IsString() && cat == ParameterCategory.PassArray)
             {
@@ -378,13 +387,14 @@ internal static partial class AbiMethodBodyFactory
                     HStringHeader[] {{names.HeaderArrayFromPool}} = null;
                     Span<HStringHeader> {{names.HeaderSpan}} = {{callName}}.Length <= 16
                         ? {{names.InlineHeaderArray}}[..{{callName}}.Length]
-                        : ({{names.HeaderArrayFromPool}} = global::System.Buffers.ArrayPool<HStringHeader>.Shared.Rent({{callName}}.Length));
+                        : ({{names.HeaderArrayFromPool}} = global::System.Buffers.ArrayPool<HStringHeader>.Shared.Rent({{callName}}.Length)).AsSpan(0, {{callName}}.Length);
                     
                     Unsafe.SkipInit(out InlineArray16<nint> {{names.InlinePinnedHandleArray}});
                     nint[] {{names.PinnedHandleArrayFromPool}} = null;
                     Span<nint> {{names.PinnedHandleSpan}} = {{callName}}.Length <= 16
                         ? {{names.InlinePinnedHandleArray}}[..{{callName}}.Length]
-                        : ({{names.PinnedHandleArrayFromPool}} = global::System.Buffers.ArrayPool<nint>.Shared.Rent({{callName}}.Length));
+                        : ({{names.PinnedHandleArrayFromPool}} = global::System.Buffers.ArrayPool<nint>.Shared.Rent({{callName}}.Length)).AsSpan(0, {{callName}}.Length);
+                    {{names.PinnedHandleSpan}}.Clear();
                     """);
             }
         }
@@ -702,41 +712,15 @@ internal static partial class AbiMethodBodyFactory
 
                 IndentedTextWriterCallback elementProjected = TypedefNameWriter.WriteProjectionType(context, TypeSemanticsFactory.Get(szArr.BaseType));
 
-                // For mapped value types (DateTime/TimeSpan) and complex structs, the storage
-                // element is the ABI struct type; the data pointer parameter type uses that
-                // ABI struct. The fixed() opens with void* (per truth's pattern), so a cast
-                // is required at the call site. For runtime classes/objects, use void**.
-                string dataParamType;
-                string dataCastType;
-
-                if (context.AbiTypeKindResolver.IsMappedAbiValueType(szArr.BaseType))
-                {
-                    dataParamType = AbiTypeHelpers.GetMappedAbiTypeName(szArr.BaseType) + "*";
-                    dataCastType = "(" + AbiTypeHelpers.GetMappedAbiTypeName(szArr.BaseType) + "*)";
-                }
-                else if (szArr.BaseType.IsHResultException())
-                {
-                    dataParamType = WellKnownAbiTypeNames.AbiSystemExceptionPointer;
-                    dataCastType = "(global::ABI.System.Exception*)";
-                }
-                else if (context.AbiTypeKindResolver.IsNonBlittableStruct(szArr.BaseType))
-                {
-                    string abiStructName = AbiTypeHelpers.GetAbiStructTypeName(context, szArr.BaseType);
-                    dataParamType = abiStructName + "*";
-                    dataCastType = "(" + abiStructName + "*)";
-                }
-                else
-                {
-                    dataParamType = "void**";
-                    dataCastType = "(void**)";
-                }
+                string dataParamType = AbiTypeHelpers.GetArrayElementAbiType(context, szArr.BaseType) + "*";
+                string dataCastType = "(" + dataParamType + ")";
 
                 UnsafeAccessorFactory.EmitStaticMethod(
                     writer,
                     accessName: "CopyToUnmanaged",
                     returnType: "void",
                     functionName: $"CopyToUnmanaged_{localName}",
-                    interopType: ArrayElementEncoder.GetArrayMarshallerInteropPath(szArr.BaseType),
+                    interopType: ArrayElementEncoder.GetArrayMarshallerInteropPath(context, szArr.BaseType),
                     parameterList: $"ReadOnlySpan<{elementProjected.Format()}> span, uint length, {dataParamType} data");
                 writer.WriteLine($"CopyToUnmanaged_{localName}(null, {callName}, (uint){callName}.Length, {dataCastType}_{localName});");
             }
@@ -910,7 +894,7 @@ internal static partial class AbiMethodBodyFactory
                 accessName: "CopyToManaged",
                 returnType: "void",
                 functionName: $"CopyToManaged_{localName}",
-                interopType: ArrayElementEncoder.GetArrayMarshallerInteropPath(szFA.BaseType),
+                interopType: ArrayElementEncoder.GetArrayMarshallerInteropPath(context, szFA.BaseType),
                 parameterList: $"uint length, {elementAbi}* data, Span<{elementProjected.Format()}> span");
             writer.WriteLine($"CopyToManaged_{localName}(null, (uint){names.Span}.Length, ({elementAbi}*)_{localName}, {callName});");
         }
@@ -929,7 +913,7 @@ internal static partial class AbiMethodBodyFactory
             // emits the accessor inside try, right before the assignment).
             if (uOut.IsGenericInstance())
             {
-                string interopTypeName = InteropTypeNameWriter.GetInteropAssemblyQualifiedName(uOut, TypedefNameType.ABI);
+                string interopTypeName = InteropTypeNameWriter.GetInteropAssemblyQualifiedName(context, uOut, TypedefNameType.ABI);
                 IndentedTextWriterCallback projectedTypeName = MethodFactory.WriteProjectedSignature(context, uOut, false);
                 UnsafeAccessorFactory.EmitStaticMethod(
                     writer,
@@ -1011,7 +995,7 @@ internal static partial class AbiMethodBodyFactory
             // Element ABI type for the `data` parameter (void* for ref types, ABI struct for
             // complex structs, blittable struct ABI for blittable structs, primitive ABI otherwise).
             string elementAbi = AbiTypeHelpers.GetArrayElementAbiType(context, sza.BaseType);
-            string marshallerPath = ArrayElementEncoder.GetArrayMarshallerInteropPath(sza.BaseType);
+            string marshallerPath = ArrayElementEncoder.GetArrayMarshallerInteropPath(context, sza.BaseType);
             UnsafeAccessorFactory.EmitStaticMethod(
                 writer,
                 accessName: "ConvertToManaged",
@@ -1034,7 +1018,7 @@ internal static partial class AbiMethodBodyFactory
                     accessName: "ConvertToManaged",
                     returnType: $"{elementProjected.Format()}[]",
                     functionName: "ConvertToManaged_retval",
-                    interopType: ArrayElementEncoder.GetArrayMarshallerInteropPath(retSz.BaseType),
+                    interopType: ArrayElementEncoder.GetArrayMarshallerInteropPath(context, retSz.BaseType),
                     parameterList: $"uint length, {elementAbi}* data");
                 writer.WriteLine("return ConvertToManaged_retval(null, __retval_length, __retval_data);");
             }
@@ -1057,7 +1041,7 @@ internal static partial class AbiMethodBodyFactory
                 }
                 else if (rt.IsGenericInstance())
                 {
-                    string interopTypeName = InteropTypeNameWriter.GetInteropAssemblyQualifiedName(rt, TypedefNameType.ABI);
+                    string interopTypeName = InteropTypeNameWriter.GetInteropAssemblyQualifiedName(context, rt, TypedefNameType.ABI);
                     IndentedTextWriterCallback projectedTypeName = MethodFactory.WriteProjectedSignature(context, rt, false);
                     UnsafeAccessorFactory.EmitStaticMethod(
                         writer,
@@ -1165,8 +1149,7 @@ internal static partial class AbiMethodBodyFactory
             // 1. Cleanup non-blittable PassArray/FillArray params:
             // For strings: HStringArrayMarshaller.Dispose + return ArrayPools (3 of them).
             // For runtime classes/objects: Dispose_<name> (UnsafeAccessor) + return ArrayPool.
-            // For mapped value types (DateTime/TimeSpan): no per-element disposal needed and truth
-            // doesn't return the ArrayPool either, so skip entirely.
+            // For mapped value types (DateTime/TimeSpan): only return the rented storage.
             for (int i = 0; i < sig.Parameters.Count; i++)
             {
                 ParameterInfo p = sig.Parameters[i];
@@ -1183,11 +1166,6 @@ internal static partial class AbiMethodBodyFactory
                 }
 
                 if (context.AbiTypeKindResolver.IsBlittableAbiElement(szArr.BaseType))
-                {
-                    continue;
-                }
-
-                if (context.AbiTypeKindResolver.IsMappedAbiValueType(szArr.BaseType))
                 {
                     continue;
                 }
@@ -1212,10 +1190,7 @@ internal static partial class AbiMethodBodyFactory
 
                 if (szArr.BaseType.IsString())
                 {
-                    // The HStringArrayMarshaller.Dispose + ArrayPool returns for strings only
-                    // apply to PassArray (where we set up the pinned handles + headers in the
-                    // first place). FillArray writes back HSTRING handles into the nint storage
-                    // array directly, with no per-element pinned handle / header to release.
+                    // PassArray uses borrowed fast-pass HSTRINGs; FillArray receives owned HSTRINGs.
                     if (cat == ParameterCategory.PassArray)
                     {
                         writer.WriteLine(isMultiline: true, $$"""
@@ -1232,17 +1207,17 @@ internal static partial class AbiMethodBodyFactory
                             }
                             """);
                     }
-
-                    // Both PassArray and FillArray need the inline-array's nint pool returned.
-                    writer.WriteLine();
-                    writer.WriteLine(isMultiline: true, $$"""
-                        if ({{names.ArrayFromPool}} is not null)
-                        {
-                            global::System.Buffers.ArrayPool<nint>.Shared.Return({{names.ArrayFromPool}});
-                        }
-                        """);
+                    else
+                    {
+                        writer.WriteLine(isMultiline: true, $$"""
+                            fixed(void* _{{localName}} = {{names.Span}})
+                            {
+                                HStringArrayMarshaller.Dispose((uint){{names.Span}}.Length, (void**)_{{localName}});
+                            }
+                            """);
+                    }
                 }
-                else
+                else if (context.AbiTypeKindResolver.RequiresAbiDisposal(szArr.BaseType))
                 {
                     // For complex structs, both the Dispose_<name> data param and the fixed()
                     // pointer must be typed as <ABI struct>*; the cast can be omitted. For
@@ -1252,7 +1227,7 @@ internal static partial class AbiMethodBodyFactory
                     string fixedPtrType;
                     string disposeCastType;
 
-                    if (context.AbiTypeKindResolver.IsNonBlittableStruct(szArr.BaseType))
+                    if (context.AbiTypeKindResolver.IsNonBlittableStruct(szArr.BaseType) || szArr.BaseType.IsSystemType())
                     {
                         string abiStructName = AbiTypeHelpers.GetAbiStructTypeName(context, szArr.BaseType);
                         disposeDataParamType = abiStructName + "* data";
@@ -1270,7 +1245,7 @@ internal static partial class AbiMethodBodyFactory
                         accessName: "Dispose",
                         returnType: "void",
                         functionName: $"Dispose_{localName}",
-                        interopType: ArrayElementEncoder.GetArrayMarshallerInteropPath(szArr.BaseType),
+                        interopType: ArrayElementEncoder.GetArrayMarshallerInteropPath(context, szArr.BaseType),
                         parameterList: $"uint length, {disposeDataParamType}");
 
                     writer.WriteLine(isMultiline: true, $$"""
@@ -1303,22 +1278,7 @@ internal static partial class AbiMethodBodyFactory
                 TypeSignature uOut = p.Type.StripByRefAndCustomModifiers();
                 string localName = p.GetParamLocalName(paramNameOverride);
 
-                if (uOut.IsString())
-                {
-                    writer.WriteLine($"HStringMarshaller.Free(__{localName});");
-                }
-                else if (uOut.IsObject() || context.AbiTypeKindResolver.IsRuntimeClassOrInterface(uOut) || uOut.IsGenericInstance())
-                {
-                    writer.WriteLine($"WindowsRuntimeUnknownMarshaller.Free(__{localName});");
-                }
-                else if (uOut.IsSystemType())
-                {
-                    writer.WriteLine($"global::ABI.System.TypeMarshaller.Dispose(__{localName});");
-                }
-                else if (context.AbiTypeKindResolver.IsNonBlittableStruct(uOut))
-                {
-                    writer.WriteLine($"{AbiTypeHelpers.GetMarshallerFullName(writer, context, uOut)}.Dispose(__{localName});");
-                }
+                EmitDisposeAbiValue(writer, context, uOut, $"__{localName}");
             }
 
             // 3. Free ReceiveArray params via UnsafeAccessor.
@@ -1331,7 +1291,7 @@ internal static partial class AbiMethodBodyFactory
 
                 // Element ABI type: same dispatch as the ConvertToManaged_<name> path.
                 string elementAbi = AbiTypeHelpers.GetArrayElementAbiType(context, sza.BaseType);
-                string marshallerPath = ArrayElementEncoder.GetArrayMarshallerInteropPath(sza.BaseType);
+                string marshallerPath = ArrayElementEncoder.GetArrayMarshallerInteropPath(context, sza.BaseType);
                 UnsafeAccessorFactory.EmitStaticMethod(
                     writer,
                     accessName: "Free",
@@ -1370,7 +1330,7 @@ internal static partial class AbiMethodBodyFactory
                     accessName: "Free",
                     returnType: "void",
                     functionName: "Free_retval",
-                    interopType: ArrayElementEncoder.GetArrayMarshallerInteropPath(retSz.BaseType),
+                    interopType: ArrayElementEncoder.GetArrayMarshallerInteropPath(context, retSz.BaseType),
                     parameterList: $"uint length, {elementAbi}* data");
                 writer.WriteLine("Free_retval(null, __retval_length, __retval_data);");
             }

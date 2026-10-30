@@ -30,6 +30,12 @@ public sealed class RunCsWinRTProjectionRefGenerator : ToolTask
     public string? OutputDirectory { get; set; }
 
     /// <summary>
+    /// Gets or sets the simple name of the assembly compiling the generated sources.
+    /// Required when generating an implementation projection.
+    /// </summary>
+    public string? OutputAssemblyName { get; set; }
+
+    /// <summary>
     /// Gets or sets the target framework for which the projection is being generated.
     /// CsWinRT 3.0 requires this to be 'net10.0' or later.
     /// </summary>
@@ -75,9 +81,26 @@ public sealed class RunCsWinRTProjectionRefGenerator : ToolTask
     public bool PublicExclusiveTo { get; set; }
 
     /// <summary>
+    /// Gets or sets whether to emit only the authoring surface (the exclusive-to and factory interfaces plus
+    /// the abstract base classes a component extends), so the projection being produced lets Windows Runtime
+    /// types defined in the input metadata be implemented in C#.
+    /// </summary>
+    public bool ImplementWinMDTypes { get; set; }
+
+    /// <summary>
     /// Gets or sets whether exclusive-to interfaces should support IDynamicInterfaceCastable.
     /// </summary>
     public bool IdicExclusiveTo { get; set; }
+
+    /// <summary>
+    /// Gets or sets the namespace or type-name prefixes to select when exclusive-to IDIC is enabled.
+    /// </summary>
+    public ITaskItem[]? IdicExclusiveToIncludes { get; set; }
+
+    /// <summary>
+    /// Gets or sets the namespace or type-name prefixes to exclude from exclusive-to IDIC.
+    /// </summary>
+    public ITaskItem[]? IdicExclusiveToExcludes { get; set; }
 
     /// <summary>
     /// Gets or sets whether the generated projection should be a reference assembly projection.
@@ -147,6 +170,13 @@ public sealed class RunCsWinRTProjectionRefGenerator : ToolTask
             return false;
         }
 
+        if (!ReferenceProjection && string.IsNullOrWhiteSpace(OutputAssemblyName))
+        {
+            Log.LogWarning("'OutputAssemblyName' is required for implementation projections.");
+
+            return false;
+        }
+
         if (CsWinRTToolsDirectory is null || !Directory.Exists(CsWinRTToolsDirectory))
         {
             Log.LogWarning("Tools directory '{0}' is invalid or does not exist.", CsWinRTToolsDirectory);
@@ -212,6 +242,7 @@ public sealed class RunCsWinRTProjectionRefGenerator : ToolTask
         string inputWinMDPathsArg = string.Join(",", inputWinMDPaths);
 
         AppendResponseFileCommand(args, "--input-paths", inputWinMDPathsArg);
+        AppendResponseFileOptionalCommand(args, "--assembly-name", OutputAssemblyName);
         AppendResponseFileCommand(args, "--output-directory", OutputDirectory!);
         AppendResponseFileCommand(args, "--target-framework", TargetFramework!);
 
@@ -250,9 +281,24 @@ public sealed class RunCsWinRTProjectionRefGenerator : ToolTask
             AppendResponseFileCommand(args, "--public-exclusive-to", "true");
         }
 
+        if (ImplementWinMDTypes)
+        {
+            AppendResponseFileCommand(args, "--implement-winmd-types", "true");
+        }
+
         if (IdicExclusiveTo)
         {
             AppendResponseFileCommand(args, "--idic-exclusive-to", "true");
+        }
+
+        if (IdicExclusiveToIncludes is { Length: > 0 })
+        {
+            AppendResponseFileCommand(args, "--idic-exclusive-to-includes", string.Join(",", IdicExclusiveToIncludes.Select(static i => i.ItemSpec)));
+        }
+
+        if (IdicExclusiveToExcludes is { Length: > 0 })
+        {
+            AppendResponseFileCommand(args, "--idic-exclusive-to-excludes", string.Join(",", IdicExclusiveToExcludes.Select(static i => i.ItemSpec)));
         }
 
         if (ReferenceProjection)

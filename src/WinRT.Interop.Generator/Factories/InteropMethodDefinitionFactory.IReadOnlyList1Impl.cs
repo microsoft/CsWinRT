@@ -6,7 +6,6 @@ using AsmResolver.DotNet.Code.Cil;
 using AsmResolver.DotNet.Signatures;
 using AsmResolver.PE.DotNet.Cil;
 using AsmResolver.PE.DotNet.Metadata.Tables;
-using WindowsRuntime.Generator;
 using WindowsRuntime.InteropGenerator.Generation;
 using WindowsRuntime.InteropGenerator.References;
 using static AsmResolver.PE.DotNet.Cil.CilOpCodes;
@@ -281,7 +280,7 @@ internal partial class InteropMethodDefinitionFactory
             // Get the target 'IndexOf' method (we can optimize for 'string' types)
             if (elementType.IsTypeOfString())
             {
-                adapterIndexOfMethod = SignatureComparer.IgnoreVersion.Equals(readOnlyListType.GenericType, interopReferences.IReadOnlyList1)
+                adapterIndexOfMethod = interopReferences.SignatureComparer.Equals(readOnlyListType.GenericType, interopReferences.IReadOnlyList1)
                     ? interopReferences.IReadOnlyListAdapterOfStringIndexOf
                     : interopReferences.IListAdapterOfStringIndexOf;
             }

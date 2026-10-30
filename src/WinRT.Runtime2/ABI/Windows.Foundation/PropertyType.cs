@@ -10,9 +10,8 @@ using WindowsRuntime.InteropServices;
 using WindowsRuntime.InteropServices.Marshalling;
 using static System.Runtime.InteropServices.ComWrappers;
 
-#pragma warning disable IDE1006, CA1416
+#pragma warning disable IL2026, IDE1006, CA1416
 
-#pragma warning disable IL2026 // Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code
 [assembly: TypeMap<WindowsRuntimeMetadataTypeMapGroup>(
     value: "Windows.Foundation.PropertyType",
     target: typeof(PropertyType),
@@ -22,9 +21,19 @@ using static System.Runtime.InteropServices.ComWrappers;
     value: "Windows.Foundation.IReference`1<Windows.Foundation.PropertyType>",
     target: typeof(PropertyType),
     trimTarget: typeof(PropertyType))]
-#pragma warning restore IL2026 // Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code
+
+[assembly: TypeMap<WindowsRuntimeIidTypeMapGroup>(
+    value: "[#System]System.Nullable`1[[WinRT.Runtime]Windows.Foundation.PropertyType]",
+    target: typeof(ABI.Windows.Foundation.PropertyTypeIidProvider),
+    trimTarget: typeof(PropertyType))]
 
 namespace ABI.Windows.Foundation;
+
+/// <summary>
+/// IID metadata for the nullable projection of <see cref="global::Windows.Foundation.PropertyType"/>.
+/// </summary>
+[Guid("ECEBDE54-FAC0-5AEB-9BA9-9E1FE17E31D5")]
+file static class PropertyTypeIidProvider;
 
 /// <summary>
 /// Marshaller for <see cref="PropertyType"/>.

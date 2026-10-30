@@ -59,6 +59,15 @@ internal static class AnalyzerConfigOptionsExtensions
         }
 
         /// <summary>
+        /// Gets the value of the <c>"CsWinRTGenerateGetIidInterceptors"</c> property.
+        /// </summary>
+        /// <returns>The value of the <c>"CsWinRTGenerateGetIidInterceptors"</c> property (enabled by default).</returns>
+        public bool GetCsWinRTGenerateGetIidInterceptors()
+        {
+            return options.GetBooleanProperty("CsWinRTGenerateGetIidInterceptors", defaultValue: true);
+        }
+
+        /// <summary>
         /// Tries to get the value of a boolean MSBuild property.
         /// </summary>
         /// <param name="propertyName">The property name.</param>

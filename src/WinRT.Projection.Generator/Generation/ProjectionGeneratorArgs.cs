@@ -60,9 +60,9 @@ internal sealed class ProjectionGeneratorArgs : IGeneratorArgs
     /// <summary>
     /// Gets whether to emit the <c>ProjectionTypesInitializer</c> module initializer
     /// (calls <c>Assembly.SetEntryAssembly</c>) into <c>WinRT.Component.dll</c>. Only
-    /// needed under JIT to enable <c>[TypeMapAssemblyTarget]</c> discovery at the merged
-    /// component dll; AOT uses a separate exe-project workaround. Will become
-    /// unnecessary once the <c>TypeMappingEntryAssembly</c> MSBuild property is available.
+    /// needed under JIT on .NET 10 to enable <c>[TypeMapAssemblyTarget]</c> discovery at the merged
+    /// component dll; .NET 11+ uses the runtime's <c>TypeMappingEntryAssembly</c>
+    /// configuration option instead.
     /// </summary>
     [CommandLineArgumentName("--emit-entry-point-initializer")]
     public bool EmitEntryPointInitializer { get; init; }
@@ -74,4 +74,3 @@ internal sealed class ProjectionGeneratorArgs : IGeneratorArgs
     [CommandLineArgumentName("--debug-repro-directory")]
     public string? DebugReproDirectory { get; init; }
 }
-

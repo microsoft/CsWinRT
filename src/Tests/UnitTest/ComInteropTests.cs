@@ -4,6 +4,7 @@ using System.Runtime.InteropServices.Marshalling;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Windows.ApplicationModel.DataTransfer;
 using Windows.ApplicationModel.DataTransfer.DragDrop.Core;
+using Windows.Foundation;
 using Windows.Graphics.Display;
 using Windows.Graphics.Printing;
 using Windows.Media;
@@ -17,6 +18,8 @@ using Windows.UI.Input.Core;
 using Windows.UI.Input.Spatial;
 using Windows.UI.ViewManagement;
 using TestComponentCSharp;
+using WindowsRuntime.InteropServices;
+using WindowsRuntime.InteropServices.Marshalling;
 
 namespace UnitTest
 {
@@ -33,6 +36,45 @@ namespace UnitTest
     [TestClass]
     public class ComInteropTests
     {
+        [TestMethod]
+        [DataRow(false)]
+        [DataRow(true)]
+        public unsafe void TestIStringableCCW(bool withAdditionalInterface)
+        {
+            IStringable instance = withAdditionalInterface ? new StringableAndDisposable() : new StringableOnly();
+
+            using WindowsRuntimeObjectReferenceValue ccw = WindowsRuntimeInterfaceMarshaller<IStringable>.ConvertToUnmanaged(
+                instance, typeof(IStringable).GUID);
+
+            void* thisPtr = ccw.GetThisPtrUnsafe();
+            void* result = null;
+
+            Assert.AreNotEqual(IntPtr.Zero, (IntPtr)thisPtr);
+
+            try
+            {
+                Marshal.ThrowExceptionForHR(((delegate* unmanaged[MemberFunction]<void*, void**, int>)(*(void***)thisPtr)[6])(thisPtr, &result));
+
+                Assert.AreEqual("server test", HStringMarshaller.ConvertToManaged(result));
+            }
+            finally
+            {
+                HStringMarshaller.Free(result);
+            }
+        }
+
+        private sealed class StringableOnly : IStringable
+        {
+            public override string ToString() => "server test";
+        }
+
+        private sealed class StringableAndDisposable : IStringable, IDisposable
+        {
+            public override string ToString() => "server test";
+
+            public void Dispose() { }
+        }
+
         [TestMethod]
         public void TestHWND()
         {

@@ -31,7 +31,6 @@ public abstract class WindowsRuntimeMapChangedEventArgs<TKey, TIMapChangedEventA
     }
 
     /// <inheritdoc/>
-    [WindowsRuntimeImplementationOnlyMember]
     protected internal sealed override bool HasUnwrappableNativeObjectReference => true;
 
     /// <inheritdoc/>
@@ -47,7 +46,6 @@ public abstract class WindowsRuntimeMapChangedEventArgs<TKey, TIMapChangedEventA
     }
 
     /// <inheritdoc/>
-    [WindowsRuntimeImplementationOnlyMember]
     protected sealed override bool IsOverridableInterface(in Guid iid)
     {
         return false;

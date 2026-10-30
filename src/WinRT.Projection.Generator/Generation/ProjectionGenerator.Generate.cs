@@ -7,6 +7,7 @@ using System.IO;
 using System.Linq;
 using AsmResolver;
 using AsmResolver.DotNet;
+using ConsoleAppFramework;
 using WindowsRuntime.Generator.Errors;
 using WindowsRuntime.Generator.Helpers;
 using WindowsRuntime.ProjectionGenerator.Errors;
@@ -20,24 +21,6 @@ namespace WindowsRuntime.ProjectionGenerator.Generation;
 internal partial class ProjectionGenerator
 {
     /// <summary>
-    /// Creates a temporary folder for CsWinRT generation output.
-    /// </summary>
-    /// <returns>The path to the created temporary folder.</returns>
-    /// <remarks>
-    /// The returned folder is guaranteed to already exist when this method returns.
-    /// </remarks>
-    private static string GetTempFolder()
-    {
-        // Create a temporary folder with this structure: '%TEMP%/CsWinRT/<RANDOM_NAME>'
-        string outputDir = Path.Combine(Path.GetTempPath(), "CsWinRT", Path.GetRandomFileName()).TrimEnd('\\');
-
-        // Ensure the folder does exist (code using it might rely on it existing already)
-        _ = Directory.CreateDirectory(outputDir);
-
-        return outputDir;
-    }
-
-    /// <summary>
     /// Runs the processing logic for the generator.
     /// </summary>
     /// <param name="args">The arguments for this invocation.</param>
@@ -46,13 +29,45 @@ internal partial class ProjectionGenerator
     {
         args.Token.ThrowIfCancellationRequested();
 
+        bool isComponentMode = args.AssemblyName == "WinRT.Component";
+        bool isSdkMode = !isComponentMode && args.WindowsSdkOnly;
+
+        // Show the appropriate message to inform users of what this generator is doing, based on the input
+        // arguments. If we don't have precompiled projections, this tool might run up to 4 times during
+        // builds (Windows SDK, Windows SDK XAML, 3rd party projections, and authored components), so this
+        // helps make things clearer. The Windows SDK messages have no data dependency, so
+        // they are logged right away. The other ones report the number of .winmd-s this invocation actually
+        // processes (the input list is shared by all invocations), so they are logged as soon as the
+        // reference assemblies are loaded, which is all that is needed to tell the .winmd-s apart.
+        if (isSdkMode)
+        {
+            ConsoleApp.Log(args.WindowsUIXamlProjection
+                ? "Processing 'Windows.UI.Xaml' .winmd references"
+                : "Processing Windows SDK .winmd references");
+        }
+
+        // Load the reference assemblies once, so they can be reused when building the writer options
+        ReferenceAssemblySet references = LoadReferenceAssemblies(args);
+
+        // Log the number of .winmd-s this invocation processes, before doing any of the heavy work
+        if (!isSdkMode)
+        {
+            int winmdCount = CountProcessedWinMDs(args, references, isComponentMode);
+
+            ConsoleApp.Log(isComponentMode
+                ? $"Processing {winmdCount} .winmd component(s)"
+                : $"Processing {winmdCount} .winmd reference(s)");
+        }
+
         BuildWriterOptions(
             args,
+            references,
             out string outputFolder,
             out HashSet<string> projectionReferenceAssemblies,
             out bool hasTypesToProject,
             out ProjectionWriterOptions writerOptions,
-            out List<string> componentAssemblyNames);
+            out List<string> componentAssemblyNames,
+            out List<string> activationFactoryAssemblyNames);
 
         string[] referencesWithoutProjections = [.. args.ReferenceAssemblyPaths.Where(r => !projectionReferenceAssemblies.Contains(r))];
 
@@ -61,7 +76,31 @@ internal partial class ProjectionGenerator
             referencesWithoutProjections,
             writerOptions,
             hasTypesToProject,
-            componentAssemblyNames);
+            componentAssemblyNames,
+            activationFactoryAssemblyNames);
+    }
+
+    /// <summary>
+    /// Removes stale sources and prepares the current projection's source directory.
+    /// </summary>
+    /// <param name="args">The arguments for this invocation.</param>
+    /// <param name="processingState">The state from the processing phase.</param>
+    private static void PrepareSourcesDirectory(
+        ProjectionGeneratorArgs args,
+        ProjectionGeneratorProcessingState processingState)
+    {
+        args.Token.ThrowIfCancellationRequested();
+
+        // Remove stale sources even when the last projection input has been removed
+        if (Directory.Exists(processingState.SourcesFolder))
+        {
+            Directory.Delete(processingState.SourcesFolder, recursive: true);
+        }
+
+        if (processingState.HasTypesToProject || processingState.HasMergedActivation)
+        {
+            _ = Directory.CreateDirectory(processingState.SourcesFolder);
+        }
     }
 
     /// <summary>
@@ -85,29 +124,39 @@ internal partial class ProjectionGenerator
     /// Builds the <see cref="ProjectionWriterOptions"/> from the supplied arguments and reference assemblies.
     /// </summary>
     /// <param name="args">The arguments for this invocation.</param>
+    /// <param name="references">The loaded reference assemblies.</param>
     /// <param name="outputFolder">The folder where sources will be generated.</param>
     /// <param name="projectionReferenceAssemblies">The projection reference assemblies which were used.</param>
     /// <param name="hasTypesToProject">Whether any types were found to include in the projection.</param>
     /// <param name="writerOptions">The resulting writer options.</param>
     /// <param name="componentAssemblyNames">Sorted simple names of input <c>[WindowsRuntimeComponentAssembly]</c> references (populated only in component mode).</param>
+    /// <param name="activationFactoryAssemblyNames">Sorted simple names of input references that only contribute an activation entry point (populated only in component mode).</param>
     private static void BuildWriterOptions(
         ProjectionGeneratorArgs args,
+        ReferenceAssemblySet references,
         out string outputFolder,
         out HashSet<string> projectionReferenceAssemblies,
         out bool hasTypesToProject,
         out ProjectionWriterOptions writerOptions,
-        out List<string> componentAssemblyNames)
+        out List<string> componentAssemblyNames,
+        out List<string> activationFactoryAssemblyNames)
     {
         args.Token.ThrowIfCancellationRequested();
 
-        outputFolder = GetTempFolder();
+        outputFolder = Path.Combine(Path.GetFullPath(args.GeneratedAssemblyDirectory), "CsWinRTProjectionSources", args.AssemblyName);
         projectionReferenceAssemblies = [];
         hasTypesToProject = false;
         componentAssemblyNames = [];
+        activationFactoryAssemblyNames = [];
 
         List<string> includes = [];
         List<string> includeTypes = [];
+        List<string> publicInterfaces = [];
+        HashSet<string> idicExclusiveToTypes = new(StringComparer.Ordinal);
+        Dictionary<string, string> projectedTypeOwners = new(StringComparer.Ordinal);
         List<string> excludes = [];
+        List<string> excludeTypes = [];
+        List<string> implementableTypes = [];
         List<string> winmdInputs = [];
 
         // Paths to the managed implementation assemblies of the component(s) being projected, scanned
@@ -115,11 +164,7 @@ internal partial class ProjectionGenerator
         // dependency properties) that are not present in the .winmd metadata
         List<string> componentImplementationAssemblies = [];
 
-        // Filter out .winmd files from the resolver paths
-        string[] resolverPaths = [.. args.ReferenceAssemblyPaths
-            .Where(p => !p.EndsWith(".winmd", StringComparison.OrdinalIgnoreCase))];
-
-        PathAssemblyResolver resolver = new(resolverPaths);
+        PathAssemblyResolver resolver = references.Resolver;
 
         bool isComponentMode = args.AssemblyName == "WinRT.Component";
 
@@ -135,40 +180,35 @@ internal partial class ProjectionGenerator
         // [WindowsRuntimeComponentAssembly] exists in the reference assemblies.
         if (isComponentMode)
         {
-            // Collect the names of all component assemblies from the references
-            HashSet<string> componentAssemblyNameSet = [];
+            // Assemblies that only contribute an activation entry point to the merged activation chain. These are
+            // tracked separately from the component ones: they have no '.winmd' of their own, so they must not
+            // drive the type scanning below (a same-named '.winmd' would otherwise be projected a second time).
+            HashSet<string> activationFactoryAssemblyNameSet = [];
 
-            foreach (string refPath in args.ReferenceAssemblyPaths)
+            foreach (ReferenceAssembly reference in references.Assemblies)
             {
-                if (refPath.EndsWith(".winmd", StringComparison.OrdinalIgnoreCase))
-                {
-                    continue;
-                }
-
-                ModuleDefinition refModule = ModuleDefinition.FromFile(refPath, resolver.ReaderParameters);
-
-                if (IsComponentAssembly(refModule))
+                if (reference.IsComponent)
                 {
                     // Keep the path so the projection writer can inspect the managed implementation
-                    componentImplementationAssemblies.Add(refPath);
-
-                    if (refModule.Assembly?.Name is Utf8String name)
-                    {
-                        _ = componentAssemblyNameSet.Add(name.Value);
-                    }
+                    componentImplementationAssemblies.Add(reference.Path);
+                }
+                else if (IsActivationFactoryAssembly(reference.Module) && reference.Name is not null)
+                {
+                    _ = activationFactoryAssemblyNameSet.Add(reference.Name);
                 }
             }
 
             // Sort for stable codegen output
-            componentAssemblyNames = [.. componentAssemblyNameSet];
+            componentAssemblyNames = [.. references.ComponentAssemblyNames];
             componentAssemblyNames.Sort(StringComparer.Ordinal);
+
+            activationFactoryAssemblyNames = [.. activationFactoryAssemblyNameSet];
+            activationFactoryAssemblyNames.Sort(StringComparer.Ordinal);
 
             // Scan WinMD files matching component assembly names (e.g. 'MyComponent.winmd')
             foreach (string winmdPath in args.WinMDPaths)
             {
-                string winmdFileName = Path.GetFileNameWithoutExtension(winmdPath);
-
-                if (!componentAssemblyNameSet.Contains(winmdFileName))
+                if (!references.IsComponentWinMD(winmdPath))
                 {
                     continue;
                 }
@@ -188,19 +228,24 @@ internal partial class ProjectionGenerator
             }
         }
 
-        // In non-component mode, scan reference assemblies to determine type includes.
-        // Component mode handles this above via .winmd scanning.
+        // In non-component mode, scan reference assemblies to determine type includes. Component mode
+        // handles this above via .winmd scanning, and the authoring mode is scoped exclusively to the
+        // explicitly requested types (everything else already lives in the real projection).
         if (!isComponentMode)
         {
-            foreach (string referenceAssemblyPath in args.ReferenceAssemblyPaths)
+            foreach (ReferenceAssembly reference in references.Assemblies.OrderBy(static reference => reference.Path, StringComparer.Ordinal))
             {
-                ModuleDefinition moduleDefinition = ModuleDefinition.FromFile(referenceAssemblyPath, resolver.ReaderParameters);
+                string referenceAssemblyPath = reference.Path;
+                ModuleDefinition moduleDefinition = reference.Module;
 
                 // For non-component assemblies, check if this is a Windows Runtime reference assembly.
                 if (!IsReferenceAssembly(moduleDefinition) || !IsWindowsRuntimeReferenceAssembly(moduleDefinition))
                 {
                     continue;
                 }
+
+                HashSet<string> referenceIdicExclusiveToTypes = ReadIdicExclusiveToTypes(moduleDefinition, referenceAssemblyPath);
+                RegisterProjectedTypes(moduleDefinition, referenceIdicExclusiveToTypes, referenceAssemblyPath, projectedTypeOwners);
 
                 bool isWindowsSdk = IsWindowsSdkAssembly(moduleDefinition);
 
@@ -223,6 +268,17 @@ internal partial class ProjectionGenerator
                 }
 
                 _ = projectionReferenceAssemblies.Add(referenceAssemblyPath);
+
+                idicExclusiveToTypes.UnionWith(referenceIdicExclusiveToTypes);
+
+                // Internal interfaces may have been stripped from the reference surface. Their
+                // recorded names still require exact projection includes, without making them public.
+                includeTypes.AddRange(referenceIdicExclusiveToTypes);
+
+                // Preserve the actual public surface independently of the recorded IDIC policy.
+                publicInterfaces.AddRange(moduleDefinition.TopLevelTypes
+                    .Where(static type => type.IsPublic && type.IsInterface)
+                    .Select(static type => type.FullName));
 
                 if (moduleDefinition.Assembly is not null)
                 {
@@ -249,6 +305,12 @@ internal partial class ProjectionGenerator
                     includeTypes.Add(exportedType.FullName);
                     hasTypesToProject = true;
                 }
+
+                // An authoring reference assembly carries abstract 'ABI.<Ns>.<Class>' base classes with no
+                // implementation. Record the runtime class each one stands for (from its assembly metadata), so
+                // the projection being generated here supplies their real implementation. This is the same
+                // contract as any other reference projection: metadata at compile time, implementation at publish.
+                implementableTypes.AddRange(ReadImplementableClassNames(moduleDefinition, referenceAssemblyPath));
             }
         }
 
@@ -282,18 +344,103 @@ internal partial class ProjectionGenerator
             winmdInputs.Add(winmdPath);
         }
 
+        // The SDK projection selects its types by namespace prefix, so a contract shipped under the
+        // 'Windows' root by someone else is swept in here as well as into the merged projection that owns
+        // it. Classify by where a type is defined rather than by who declares it: a reference projection
+        // may deliberately re-expose an SDK type, and that one still has to be emitted.
+        if (isWindowsSdkMode)
+        {
+            CollectNonSdkWindowsTypes(args.WinMDPaths, resolver, excludeTypes);
+        }
+
         writerOptions = new ProjectionWriterOptions
         {
             InputPaths = winmdInputs,
             OutputFolder = outputFolder,
+            OutputAssemblyName = args.AssemblyName,
             Include = includes,
             IncludeTypes = includeTypes,
+            PublicExclusiveToTypes = publicInterfaces,
+            IdicExclusiveTo = idicExclusiveToTypes.Count > 0,
+            IdicExclusiveToTypes = [.. idicExclusiveToTypes.Order(StringComparer.Ordinal)],
             Exclude = excludes,
+            ExcludeTypes = excludeTypes,
             Component = componentMode,
             ComponentImplementationAssemblyPaths = componentImplementationAssemblies,
+            ComponentAssemblyNames = componentAssemblyNames,
+            ImplementableTypes = implementableTypes,
             MaxDegreesOfParallelism = args.MaxDegreesOfParallelism,
             CancellationToken = args.Token,
         };
+    }
+
+    /// <summary>
+    /// Records the types a non-Windows-SDK input <c>.winmd</c> defines under the <c>Windows</c> namespace root,
+    /// so that the Windows SDK projection (whose filter is that whole root) leaves them to the projection that
+    /// owns them.
+    /// </summary>
+    /// <param name="winmdPaths">The input <c>.winmd</c> paths.</param>
+    /// <param name="resolver">The resolver supplying the metadata reader parameters.</param>
+    /// <param name="excludeTypes">The set to add the fully qualified type names to.</param>
+    private static void CollectNonSdkWindowsTypes(
+        IReadOnlyList<string> winmdPaths,
+        PathAssemblyResolver resolver,
+        List<string> excludeTypes)
+    {
+        foreach (string winmdPath in winmdPaths)
+        {
+            // Recognized by name, so SDK metadata is never opened
+            if (IsWindowsSdkMetadataName(Path.GetFileNameWithoutExtension(winmdPath)))
+            {
+                continue;
+            }
+
+            ModuleDefinition winmdModule;
+
+            try
+            {
+                winmdModule = ModuleDefinition.FromFile(winmdPath, resolver.ReaderParameters, createRuntimeContext: false);
+            }
+            catch (Exception)
+            {
+                // An input that cannot be read is not this step's problem to report: the writer opens the same
+                // set straight after and fails with the context needed to act on it.
+                continue;
+            }
+
+            foreach (TypeDefinition type in winmdModule.TopLevelTypes)
+            {
+                if (type.Name?.Value is "<Module>")
+                {
+                    continue;
+                }
+
+                string? typeNamespace = type.Namespace?.Value;
+
+                if (typeNamespace is null)
+                {
+                    continue;
+                }
+
+                // Matched on a segment boundary, so 'WindowsRuntime.Internal' is not treated as the SDK's
+                if (typeNamespace == "Windows" || typeNamespace.StartsWith("Windows.", StringComparison.Ordinal))
+                {
+                    excludeTypes.Add(type.FullName);
+                }
+            }
+        }
+    }
+
+    /// <summary>
+    /// Checks whether a piece of Windows Runtime metadata is the Windows SDK's own.
+    /// </summary>
+    /// <param name="metadataName">The metadata name (i.e. the <c>.winmd</c> file stem).</param>
+    /// <returns>Whether the metadata belongs to the Windows SDK.</returns>
+    private static bool IsWindowsSdkMetadataName(string metadataName)
+    {
+        return metadataName == "Windows"
+            || (metadataName.StartsWith("Windows.", StringComparison.Ordinal) &&
+                metadataName.EndsWith("Contract", StringComparison.Ordinal));
     }
 
     /// <summary>
@@ -389,5 +536,16 @@ internal partial class ProjectionGenerator
     private static bool IsComponentAssembly(ModuleDefinition moduleDefinition)
     {
         return moduleDefinition.Assembly is not null && moduleDefinition.Assembly.HasCustomAttribute("WindowsRuntime.InteropServices"u8, "WindowsRuntimeComponentAssemblyAttribute"u8);
+    }
+
+    /// <summary>
+    /// Checks if the specified module definition represents an assembly exposing a managed activation entry point
+    /// (i.e. an assembly annotated with <c>[WindowsRuntimeComponentAssemblyExportsType]</c>).
+    /// </summary>
+    /// <param name="moduleDefinition">The module definition to check.</param>
+    /// <returns><c>true</c> if the module exposes an activation entry point; otherwise, <c>false</c>.</returns>
+    private static bool IsActivationFactoryAssembly(ModuleDefinition moduleDefinition)
+    {
+        return moduleDefinition.Assembly is not null && moduleDefinition.Assembly.HasCustomAttribute("WindowsRuntime.InteropServices"u8, "WindowsRuntimeComponentAssemblyExportsTypeAttribute"u8);
     }
 }

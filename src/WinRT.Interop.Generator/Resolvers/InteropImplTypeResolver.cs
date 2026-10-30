@@ -5,7 +5,6 @@ using AsmResolver;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 using AsmResolver.PE.DotNet.Metadata.Tables;
-using WindowsRuntime.Generator;
 using WindowsRuntime.InteropGenerator.Factories;
 using WindowsRuntime.InteropGenerator.Generation;
 using WindowsRuntime.InteropGenerator.References;
@@ -36,7 +35,7 @@ internal static class InteropImplTypeResolver
 
         // The IID will be in the generated 'ABI.InterfaceIIDs' type in 'WinRT.Interop.dll'
         Utf8String get_IIDMethodName = $"get_IID_{InteropUtf8NameFactory.TypeName(type, interopDefinitions)}";
-        MethodDefinition get_IIDMethod = interopDefinitions.InterfaceIIDs.GetMethod(get_IIDMethodName);
+        MethodDefinition get_IIDMethod = interopDefinitions.GetInterfaceIIDMethod(get_IIDMethodName);
 
         // Return the pair of methods from the ABI type in 'WinRT.Interop.dll'
         return (get_IIDMethod, get_VtableMethod);
@@ -182,12 +181,13 @@ internal static class InteropImplTypeResolver
             { ElementType: ElementType.Char } => "Char16",
             { ElementType: ElementType.Object } => "Inspectable",
             { ElementType: ElementType.String } => "String",
-            _ when SignatureComparer.IgnoreVersion.Equals(type.BaseType, interopReferences.DateTimeOffset) => "DateTime",
-            _ when SignatureComparer.IgnoreVersion.Equals(type.BaseType, interopReferences.TimeSpan) => "TimeSpan",
-            _ when SignatureComparer.IgnoreVersion.Equals(type.BaseType, interopReferences.Guid) => "Guid",
-            _ when SignatureComparer.IgnoreVersion.Equals(type.BaseType, interopReferences.Point) => "Point",
-            _ when SignatureComparer.IgnoreVersion.Equals(type.BaseType, interopReferences.Size) => "Size",
-            _ when SignatureComparer.IgnoreVersion.Equals(type.BaseType, interopReferences.Rect) => "Rect",
+            _ when interopReferences.SignatureComparer.Equals(type.BaseType, interopReferences.DateTimeOffset) => "DateTime",
+            _ when interopReferences.SignatureComparer.Equals(type.BaseType, interopReferences.TimeSpan) => "TimeSpan",
+            _ when interopReferences.SignatureComparer.Equals(type.BaseType, interopReferences.Guid) => "Guid",
+            _ when interopReferences.SignatureComparer.Equals(type.BaseType, interopReferences.Point) => "Point",
+            _ when interopReferences.SignatureComparer.Equals(type.BaseType, interopReferences.Size) => "Size",
+            _ when interopReferences.SignatureComparer.Equals(type.BaseType, interopReferences.Rect) => "Rect",
+            _ when type.IsCovariantSzArrayType(interopReferences) => "Inspectable",
             _ => "OtherType"
         };
 
@@ -200,5 +200,15 @@ internal static class InteropImplTypeResolver
 
         // Return the pair of methods from the ABI type in 'WinRT.Runtime.dll'
         return (get_IIDMethod, get_VtableMethod);
+    }
+
+    /// <summary>
+    /// Gets the shared <c>IReferenceArray&lt;Object&gt;</c> implementation for covariant arrays.
+    /// </summary>
+    /// <param name="interopReferences">The references for this invocation.</param>
+    /// <returns>The IID and vtable getters.</returns>
+    public static (IMethodDefOrRef get_IID, IMethodDefOrRef get_Vtable) GetInspectableArrayTypeImpl(InteropReferences interopReferences)
+    {
+        return (interopReferences.IReferenceArrayObjectImplget_IID, interopReferences.IReferenceArrayObjectImplget_Vtable);
     }
 }

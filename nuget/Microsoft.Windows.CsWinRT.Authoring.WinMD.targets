@@ -42,8 +42,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
 
     This and '_RunCsWinRTWinMDGenerator' below depend on 'FindReferenceAssembliesForReferences'
     as well as on 'CoreCompile', so that '@(ReferencePathWithRefAssemblies)' is populated even on
-    an invocation that reaches them outside the 'Compile' pipeline. See the equivalent note on
-    '_RunCsWinRTInteropGenerator' in 'Microsoft.Windows.CsWinRT.CsWinRTGen.targets'.
+    an invocation that reaches them outside the 'Compile' pipeline.
     ============================================================
   -->
   <Target

@@ -71,7 +71,7 @@ internal static class EventTableFactory
         {
             if (isGeneric)
             {
-                string interopTypeName = InteropTypeNameWriter.GetInteropAssemblyQualifiedName(evtTypeSig, TypedefNameType.ABI);
+                string interopTypeName = InteropTypeNameWriter.GetInteropAssemblyQualifiedName(context, evtTypeSig, TypedefNameType.ABI);
                 IndentedTextWriterCallback projectedTypeName = MethodFactory.WriteProjectedSignature(context, evtTypeSig, false);
 
                 UnsafeAccessorFactory.EmitStaticMethod(

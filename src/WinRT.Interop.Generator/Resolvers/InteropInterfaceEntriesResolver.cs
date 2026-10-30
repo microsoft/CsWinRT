@@ -7,7 +7,6 @@ using System.Diagnostics.CodeAnalysis;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Code.Cil;
 using AsmResolver.DotNet.Signatures;
-using WindowsRuntime.Generator;
 using WindowsRuntime.InteropGenerator.Generation;
 using WindowsRuntime.InteropGenerator.Models;
 using WindowsRuntime.InteropGenerator.References;
@@ -37,6 +36,67 @@ internal static class InteropInterfaceEntriesResolver
     }
 
     /// <summary>
+    /// Enumerates the <c>IReferenceArray&lt;Object&gt;</c> and <c>IPropertyValue</c> entries for a covariant SZ array type
+    /// handled as a user-defined type (needed to support native array unboxing), if applicable.
+    /// </summary>
+    /// <param name="type">The type to analyze.</param>
+    /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+    /// <remarks>
+    /// If <paramref name="type"/> is not a covariant SZ array type, this method will just return an empty set.
+    /// </remarks>
+    public static IEnumerable<InteropInterfaceEntryInfo> EnumerateCovariantSzArrayInterfaceEntries(
+        TypeSignature type,
+        InteropReferences interopReferences)
+    {
+        if (type is not SzArrayTypeSignature arrayType || !arrayType.IsCovariantSzArrayType(interopReferences))
+        {
+            yield break;
+        }
+
+        (IMethodDefOrRef arrayIid, IMethodDefOrRef arrayVtable) = InteropImplTypeResolver.GetInspectableArrayTypeImpl(interopReferences);
+
+        yield return Create(arrayIid, arrayVtable);
+
+        (IMethodDefOrRef propertyValueIid, IMethodDefOrRef propertyValueVtable) = InteropImplTypeResolver.GetSzArrayTypeImpl(arrayType, interopReferences);
+
+        yield return Create(propertyValueIid, propertyValueVtable);
+    }
+
+    /// <summary>
+    /// Enumerates the default <c>ICustomPropertyProvider</c> entry, unless disabled or explicitly implemented.
+    /// </summary>
+    /// <param name="vtableTypes">The explicitly implemented interfaces, or <see langword="null"/> for types that cannot implement a custom provider.</param>
+    /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
+    /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+    public static IEnumerable<InteropInterfaceEntryInfo> EnumerateDefaultCustomPropertyProviderInterfaceEntries(
+        TypeSignatureEquatableSet? vtableTypes,
+        InteropDefinitions interopDefinitions,
+        InteropReferences interopReferences)
+    {
+        if (!interopDefinitions.EnableDefaultCustomPropertyProviderSupport)
+        {
+            yield break;
+        }
+
+        // Match the IID so inherited and custom COM implementations of 'ICustomPropertyProvider' take precedence
+        if (vtableTypes is not null)
+        {
+            foreach (TypeSignature interfaceType in vtableTypes)
+            {
+                if (interfaceType.Resolve(interopReferences.RuntimeContext).TryGetGuidAttribute(interopReferences, out Guid iid) &&
+                    iid == WellKnownInterfaceIIDs.IID_ICustomPropertyProvider)
+                {
+                    yield break;
+                }
+            }
+        }
+
+        yield return Create(
+            interopReferences.ICustomPropertyProviderImplget_IID,
+            interopReferences.ICustomPropertyProviderImplget_Vtable);
+    }
+
+    /// <summary>
     /// Enumerates all <see cref="InteropInterfaceEntryInfo"/> values from a given source set of vtable types.
     /// </summary>
     /// <param name="vtableTypes">The vtable types to use as source.</param>
@@ -44,15 +104,17 @@ internal static class InteropInterfaceEntriesResolver
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
     /// <param name="emitState">The emit state for this invocation.</param>
     /// <param name="useWindowsUIXamlProjections">Whether to use <c>Windows.UI.Xaml</c> projections.</param>
+    /// <param name="orderedVtableTypes">The prepared interface order for user-defined types, if available.</param>
     public static IEnumerable<InteropInterfaceEntryInfo> EnumerateMetadataInterfaceEntries(
         TypeSignatureEquatableSet vtableTypes,
         InteropDefinitions interopDefinitions,
         InteropReferences interopReferences,
         InteropGeneratorEmitState emitState,
-        bool useWindowsUIXamlProjections)
+        bool useWindowsUIXamlProjections,
+        IReadOnlyList<TypeSignature>? orderedVtableTypes = null)
     {
-        // Append all entries for the type (which we share for all matching user-defined types)
-        foreach (TypeSignature typeSignature in vtableTypes)
+        // Equivalent sets can have different insertion orders after parallel discovery
+        foreach (TypeSignature typeSignature in orderedVtableTypes ?? vtableTypes.OrderByFullyQualifiedTypeName(interopReferences.RuntimeContext))
         {
             // Handle generic types first, and then custom-mapped and manually projected types.
             // These require special handling, because their ABI types are in different locations.
@@ -75,7 +137,7 @@ internal static class InteropInterfaceEntriesResolver
             {
                 // If the user explicitly implemented 'IStringable', we skip it here. We want to always emit it
                 // at the end of the list of entries, to have consistent ordering with the built-in interfaces.
-                if (SignatureComparer.IgnoreVersion.Equals(typeSignature, interopReferences.IStringable))
+                if (interopReferences.SignatureComparer.Equals(typeSignature, interopReferences.IStringable))
                 {
                     continue;
                 }
@@ -129,7 +191,7 @@ internal static class InteropInterfaceEntriesResolver
             // For public (non-exclusive) interfaces from authored component assemblies, the type resolves
             // from the authored assembly but the Impl and IID live in 'WinRT.Component.dll'.
             if (interopDefinitions.WindowsRuntimeComponentModule is not null &&
-                interfaceType.IsInterface && interfaceType.IsComponentWindowsRuntimeType)
+                interfaceType.IsInterface && interfaceType.IsComponentWindowsRuntimeType(interopDefinitions.WindowsRuntimeComponentModule))
             {
                 (IMethodDefOrRef get_IIDMethod, IMethodDefOrRef get_VtableMethod) = InteropImplTypeResolver.GetComponentPublicInterfaceTypeImpl(
                     type: interfaceType,
@@ -185,7 +247,7 @@ internal static class InteropInterfaceEntriesResolver
         InteropDefinitions interopDefinitions,
         InteropReferences interopReferences)
     {
-        // For public value types from component assemblies, add 'IReference<T>' and 'IPropertyValue' entries.
+        // For exported value types from component assemblies, add 'IReference<T>' and 'IPropertyValue' entries.
         // These are needed so the struct can be boxed as 'IReference<T>' when used as a generic type argument.
         TypeDefinition userDefinedTypeDefinition = componentType.Resolve(interopReferences.RuntimeContext);
 
@@ -196,7 +258,7 @@ internal static class InteropInterfaceEntriesResolver
         }
 
         // Filter down to just authored types from components written in C#
-        if (!userDefinedTypeDefinition.IsComponentWindowsRuntimeType ||
+        if (!userDefinedTypeDefinition.IsComponentWindowsRuntimeType(interopDefinitions.WindowsRuntimeComponentModule) ||
             interopDefinitions.WindowsRuntimeComponentModule is not { } componentModule)
         {
             yield break;
@@ -287,7 +349,7 @@ internal static class InteropInterfaceEntriesResolver
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
     /// <param name="interfaceEntryInfo">The resulting <see cref="InteropInterfaceEntryInfo"/> value for <c>IStringable</c>, if found.</param>
     /// <returns>Whether <paramref name="interfaceEntryInfo"/> was found.</returns>
-    private static bool TryGetUserDefinedIStringableInterfaceImplementation(
+    public static bool TryGetUserDefinedIStringableInterfaceImplementation(
         TypeSignatureEquatableSet vtableTypes,
         InteropReferences interopReferences,
         [NotNullWhen(true)] out InteropInterfaceEntryInfo? interfaceEntryInfo)

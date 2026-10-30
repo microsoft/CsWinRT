@@ -269,16 +269,31 @@ internal static partial class ImplGenerator
             bool isSdkModule = inputModule.Assembly?.Name is Utf8String sdkName && sdkName.AsSpan().SequenceEqual("Microsoft.Windows.SDK.NET"u8);
             bool isXamlModule = inputModule.Assembly?.Name is Utf8String xamlName && xamlName.AsSpan().SequenceEqual("Microsoft.Windows.UI.Xaml"u8);
 
+            // Collect the exact set of non-public types that must also be forwarded: the Windows Runtime
+            // interfaces implemented by the abstract 'ABI.<Ns>.<Class>' base classes of an authoring
+            // projection. Those are 'internal' so they stay out of the supported surface, but the
+            // marshalling code CsWinRT generates for an application references them, so they must resolve at
+            // runtime.
+            HashSet<string> authoringInterfaces = GetAuthoringInterfaceNames(inputModule);
+
             foreach (TypeDefinition exportedType in inputModule.TopLevelTypes)
             {
-                // We only need to forward public types
-                if (!exportedType.IsPublic)
+                // Also make sure the type has a valid namespace, otherwise we can't handle it
+                if (exportedType.Namespace is null)
                 {
                     continue;
                 }
 
-                // Also make sure the type has a valid namespace, otherwise we can't handle it
-                if (exportedType.Namespace is null)
+                // We only need to forward public types, plus the Windows Runtime interfaces
+                // behind the abstract base classes an authoring projection exposes.
+                if (!exportedType.IsPublic && !authoringInterfaces.Contains(exportedType.FullName))
+                {
+                    continue;
+                }
+
+                // Never forward compiler generated types (e.g. the backing types for 'file' scoped
+                // declarations), as their names are not stable across compilations
+                if (exportedType.Name is Utf8String typeName && typeName.AsSpan().IndexOf((byte)'<') >= 0)
                 {
                     continue;
                 }
@@ -305,6 +320,87 @@ internal static partial class ImplGenerator
         {
             throw WellKnownImplExceptions.EmitTypeForwards(e);
         }
+    }
+
+    /// <summary>
+    /// Collects the full names of the non-public interfaces implemented by the abstract base classes that CsWinRT
+    /// generates for authoring Windows Runtime types declared in existing metadata (a projection built with
+    /// <c>CsWinRTImplementWinMDTypes</c>). The reference projection records those bases in its assembly metadata.
+    /// </summary>
+    /// <param name="inputModule">The input module.</param>
+    /// <returns>The full names of the non-public interfaces to forward. Empty for a regular projection.</returns>
+    /// <remarks>
+    /// These are the only non-public types that are ever forwarded. A regular projection has no such base classes,
+    /// so the result is empty and its forwarder carries public types only.
+    /// </remarks>
+    private static HashSet<string> GetAuthoringInterfaceNames(ModuleDefinition inputModule)
+    {
+        HashSet<string> names = [];
+
+        // Seed the set with the interfaces implemented by the abstract base classes
+        foreach (TypeDefinition type in inputModule.TopLevelTypes)
+        {
+            if (IsImplementableBaseClass(type))
+            {
+                _ = AddInterfaceNames(type, names);
+            }
+        }
+
+        if (names.Count == 0)
+        {
+            return names;
+        }
+
+        // Close over interface inheritance: an interface in the set may itself require others. This is a
+        // fixed point over the module, as the interfaces are all defined in it and their count is small.
+        for (bool changed = true; changed;)
+        {
+            changed = false;
+
+            foreach (TypeDefinition type in inputModule.TopLevelTypes)
+            {
+                if (type is { IsInterface: true } && names.Contains(type.FullName))
+                {
+                    changed |= AddInterfaceNames(type, names);
+                }
+            }
+        }
+
+        return names;
+    }
+
+    /// <summary>
+    /// Checks whether a type is one of the abstract base classes CsWinRT generates for authoring Windows Runtime
+    /// types declared in existing metadata, as recorded in the assembly metadata of the reference projection.
+    /// </summary>
+    /// <param name="type">The type to inspect.</param>
+    /// <returns>Whether the type is a generated implementable base class.</returns>
+    private static bool IsImplementableBaseClass(TypeDefinition type)
+    {
+        return type is { IsPublic: true, IsAbstract: true, IsClass: true } && ImplementableClassMetadata.IsImplementableBase(type);
+    }
+
+    /// <summary>
+    /// Adds the full names of the non-public interfaces directly implemented by a type.
+    /// </summary>
+    /// <param name="type">The type to inspect.</param>
+    /// <param name="names">The set being populated.</param>
+    /// <returns>Whether any new name was added.</returns>
+    private static bool AddInterfaceNames(TypeDefinition type, HashSet<string> names)
+    {
+        bool added = false;
+
+        foreach (InterfaceImplementation interfaceImplementation in type.Interfaces)
+        {
+            // Only interfaces defined in this module can be forwarded from it, and only non-public
+            // ones need to be: the public ones are already covered by the normal forwarding logic.
+            if (interfaceImplementation.Interface is TypeDefinition { IsNotPublic: true } interfaceType)
+            {
+                added |= names.Add(interfaceType.FullName);
+            }
+        }
+
+        return added;
     }
 
     /// <summary>

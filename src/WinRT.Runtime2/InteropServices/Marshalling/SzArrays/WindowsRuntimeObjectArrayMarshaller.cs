@@ -85,25 +85,9 @@ public static unsafe class WindowsRuntimeObjectArrayMarshaller
 
         ArgumentNullException.ThrowIfNull(destination);
 
-        int i = 0;
-
-        try
+        for (int i = 0; i < source.Length; i++)
         {
-            // Marshal the items in the input span
-            for (; i < source.Length; i++)
-            {
-                destination[i] = WindowsRuntimeObjectMarshaller.ConvertToUnmanaged(source[i]).DetachThisPtrUnsafe();
-            }
-        }
-        catch
-        {
-            // Release resources for any items, if we failed
-            for (int j = 0; j < i; j++)
-            {
-                WindowsRuntimeUnknownMarshaller.Free(destination[j]);
-            }
-
-            throw;
+            destination[i] = WindowsRuntimeObjectMarshaller.ConvertToUnmanaged(source[i]).DetachThisPtrUnsafe();
         }
     }
 

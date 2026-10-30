@@ -3,10 +3,12 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Reflection;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
+using WindowsRuntime.Generator.References;
 using WindowsRuntime.ProjectionWriter.Builders;
 using WindowsRuntime.ProjectionWriter.Generation;
 using WindowsRuntime.ProjectionWriter.Helpers;
@@ -14,6 +16,8 @@ using WindowsRuntime.ProjectionWriter.Metadata;
 using WindowsRuntime.ProjectionWriter.Models;
 using WindowsRuntime.ProjectionWriter.Resolvers;
 using WindowsRuntime.ProjectionWriter.Writers;
+using static WindowsRuntime.ProjectionWriter.References.WellKnownNamespaces;
+using static WindowsRuntime.ProjectionWriter.References.WellKnownTypeNames;
 
 namespace WindowsRuntime.ProjectionWriter.Factories;
 
@@ -79,6 +83,31 @@ internal static class MetadataAttributeFactory
     }
 
     /// <summary>
+    /// Writes reference-only key/value metadata, such as the effective exclusive-to IDIC selection and the
+    /// implementable bases and default interface names the reference projection declares.
+    /// </summary>
+    /// <param name="writer">The writer to emit to.</param>
+    /// <param name="entries">The (key, value) entries, in a deterministic order.</param>
+    public static void WriteReferenceAssemblyMetadata(IndentedTextWriter writer, IEnumerable<KeyValuePair<string, string>> entries)
+    {
+        writer.WriteLine(isMultiline: true, """
+            #if CSWINRT_REFERENCE_PROJECTION
+            #pragma warning disable CSWINRT3004
+            """);
+
+        foreach ((string key, string value) in entries)
+        {
+            writer.WriteLine($"""[assembly: global::{WindowsRuntimeReferenceAssemblyMetadata.AttributeTypeName}("{key}", "{value}")]""");
+        }
+
+        writer.WriteLine(isMultiline: true, """
+            #pragma warning restore CSWINRT3004
+            #endif
+
+            """);
+    }
+
+    /// <summary>
     /// Writes the per-type <c>[WindowsRuntimeType]</c> marker decorating <paramref name="type"/>, and records the
     /// type's source <c>.winmd</c> stem into the centralized metadata-types map for later emission.
     /// Skipped entirely in reference-projection mode.
@@ -136,23 +165,26 @@ internal static class MetadataAttributeFactory
             writer.Write("[WindowsRuntimeType]");
         }
 
-        // Record the type -> .winmd-stem mapping for the centralized lookup type. The metadata value is build-time
-        // only (consumed by the interop generator), so keeping it off the type itself lets it be trimmed away.
-        if (context.WindowsRuntimeMetadataTypeEntries is { } entries)
+        (string typeNs, string typeName) = type.Names();
+
+        // Component projection types (including exclusive interfaces) live under 'ABI.Impl',
+        // unlike the original authored types recorded by 'ComponentFactory.AddMetadataTypeEntry'.
+        string emittedNs = context.Settings.Component ? $"ABI.Impl.{typeNs}" : typeNs;
+
+        AddWindowsRuntimeMetadataTypeEntry(context, type, TypedefNameWriter.BuildGlobalQualifiedName(emittedNs, typeName));
+    }
+
+    /// <summary>
+    /// Records a projected or authored type and its source <c>.winmd</c> stem in the centralized metadata lookup.
+    /// </summary>
+    /// <param name="context">The active emit context.</param>
+    /// <param name="type">The source metadata type.</param>
+    /// <param name="projectedTypeName">The fully qualified C# name of the type to record.</param>
+    public static void AddWindowsRuntimeMetadataTypeEntry(ProjectionEmitContext context, TypeDefinition type, string projectedTypeName)
+    {
+        if (!context.Settings.ReferenceProjection && context.WindowsRuntimeMetadataTypeEntries is { } entries)
         {
-            string path = context.Cache.GetSourcePath(type);
-            string stem = string.IsNullOrEmpty(path) ? string.Empty : Path.GetFileNameWithoutExtension(path);
-            (string typeNs, string typeName) = type.Names();
-
-            // The centralized lookup references each type via 'typeof(...)', so the recorded name must match where
-            // the type is actually emitted. In component mode, projected types are wrapped in the 'ABI.Impl.<Ns>'
-            // namespace (see 'WriteBeginProjectedNamespace'), so mirror that same prefix here. Without it the
-            // 'typeof(...)' fails to resolve (authored exclusive-to interfaces live under 'ABI.Impl.<Ns>', not
-            // '<Ns>'), and the key wouldn't match the '(Namespace, Name)' the interop generator computes for the type.
-            string emittedNs = context.Settings.Component ? $"ABI.Impl.{typeNs}" : typeNs;
-            string globalName = TypedefNameWriter.BuildGlobalQualifiedName(emittedNs, typeName);
-
-            _ = entries.TryAdd(globalName, stem);
+            _ = entries.TryAdd(projectedTypeName, new WindowsRuntimeMetadataTypeEntry(type, context.Cache.GetSourceStem(type)));
         }
     }
 
@@ -405,15 +437,7 @@ internal static class MetadataAttributeFactory
     /// <param name="type">The interface type definition.</param>
     public static void WriteWinRTIdicTypeMapGroupAssemblyAttribute(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
-        // Generic interfaces are handled elsewhere.
-        if (type.GenericParameters.Count != 0)
-        {
-            return;
-        }
-
-        // Skip exclusive interfaces (unless idic_exclusiveto), and projection-internal types.
-        if ((type.IsExclusiveTo && !context.Settings.IdicExclusiveTo) ||
-            type.IsProjectionInternal)
+        if (!AbiInterfaceIDicFactory.IsEnabled(context, type))
         {
             return;
         }
@@ -459,20 +483,58 @@ internal static class MetadataAttributeFactory
     /// </summary>
     public static void AddDefaultInterfaceEntry(ProjectionEmitContext context, TypeDefinition type, System.Collections.Concurrent.ConcurrentDictionary<string, string> entries)
     {
-        if (context.Settings.ReferenceProjection)
-        {
-            return;
-        }
-
-        ITypeDefOrRef? defaultIface = type.GetDefaultInterface();
-
-        if (defaultIface is null)
+        if (context.Settings.ReferenceProjection || !TryGetDefaultInterfaceName(context, type, out string? interfaceName))
         {
             return;
         }
 
         (string typeNs, string typeName) = type.Names();
         string className = TypedefNameWriter.BuildGlobalQualifiedName(typeNs, typeName);
+
+        _ = entries.TryAdd(className, interfaceName);
+    }
+
+    /// <summary>
+    /// Adds an entry to the default-interface map for a class type, to preserve in reference-projection assembly metadata.
+    /// </summary>
+    /// <param name="context">The active emit context.</param>
+    /// <param name="type">The class type.</param>
+    /// <param name="entries">The (class-name -> default-interface-name) map.</param>
+    /// <remarks>
+    /// The default interface of a class is often exclusive-to, so it is not part of the class's declared interfaces
+    /// in a reference projection. Recording its name lets consumers derive the class's IID and signature from it.
+    /// </remarks>
+    public static void AddReferenceDefaultInterfaceEntry(
+        ProjectionEmitContext context,
+        TypeDefinition type,
+        System.Collections.Concurrent.ConcurrentDictionary<string, string> entries)
+    {
+        if (!context.Settings.ReferenceProjection || !TryGetDefaultInterfaceName(context, type, out string? interfaceName))
+        {
+            return;
+        }
+
+        // The names are resolved by metadata name rather than compiled, so the 'global::' qualifier is not needed
+        _ = entries.TryAdd(type.FullName, interfaceName.Replace("global::", string.Empty, StringComparison.Ordinal));
+    }
+
+    /// <summary>
+    /// Gets the fully qualified name of the default interface of a class type.
+    /// </summary>
+    /// <param name="context">The active emit context.</param>
+    /// <param name="type">The class type.</param>
+    /// <param name="interfaceName">The resulting name, if <paramref name="type"/> has a default interface.</param>
+    /// <returns>Whether <paramref name="interfaceName"/> was retrieved successfully.</returns>
+    private static bool TryGetDefaultInterfaceName(ProjectionEmitContext context, TypeDefinition type, [NotNullWhen(true)] out string? interfaceName)
+    {
+        ITypeDefOrRef? defaultIface = type.GetDefaultInterface();
+
+        if (defaultIface is null)
+        {
+            interfaceName = null;
+
+            return false;
+        }
 
         // Resolve TypeReference -> TypeDefinition so WriteTypeName goes through the Definition
         // branch which knows about authored-type CCW namespacing (ABI.Impl. prefix).
@@ -488,11 +550,61 @@ internal static class MetadataAttributeFactory
             }
         }
 
+        TypeSemantics semantics = TypeSemanticsFactory.GetFromTypeDefOrRef(capturedIface);
+
+        // A name can't represent 'IReference<T>' where 'T' projects to a reference type, as the projection drops the wrapper
+        if (HasUnwrappedReference(semantics))
+        {
+            interfaceName = null;
+
+            return false;
+        }
+
         // Build the interface display name via TypeSemantics so generic instantiations
         // (e.g. IDictionary<string, BasicStruct>), TypeRefs and TypeDefs are all handled correctly.
-        string interfaceName = TypedefNameWriter.WriteTypeName(context, TypeSemanticsFactory.GetFromTypeDefOrRef(capturedIface), TypedefNameType.CCW, true).Format();
+        interfaceName = TypedefNameWriter.WriteTypeName(context, semantics, TypedefNameType.CCW, true).Format();
 
-        _ = entries.TryAdd(className, interfaceName);
+        return true;
+    }
+
+    /// <summary>
+    /// Checks whether any generic argument is an <c>IReference&lt;T&gt;</c> that is projected as just <c>T</c>.
+    /// </summary>
+    /// <param name="semantics">The type to check.</param>
+    /// <returns>Whether the projected name of <paramref name="semantics"/> loses an <c>IReference&lt;T&gt;</c> wrapper.</returns>
+    private static bool HasUnwrappedReference(TypeSemantics semantics)
+    {
+        List<TypeSemantics>? arguments = semantics switch
+        {
+            TypeSemantics.GenericInstance gi => gi.GenericArgs,
+            TypeSemantics.GenericInstanceRef gir => gir.GenericArgs,
+            _ => null
+        };
+
+        if (arguments is null)
+        {
+            return false;
+        }
+
+        if (semantics is TypeSemantics.GenericInstanceRef { GenericType: { } genericType, GenericArgs: [{ } referencedType] })
+        {
+            (string ns, string name) = genericType.Names();
+
+            if (ns == WindowsFoundation && name == IReferenceGeneric && TypedefNameWriter.ProjectsToReferenceType(referencedType))
+            {
+                return true;
+            }
+        }
+
+        foreach (TypeSemantics argument in arguments)
+        {
+            if (HasUnwrappedReference(argument))
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /// <summary>
@@ -578,7 +690,7 @@ internal static class MetadataAttributeFactory
     /// </summary>
     /// <param name="settings">The active projection settings.</param>
     /// <param name="sortedEntries">The (projected-type-name -> <c>.winmd</c> stem) entries, sorted for determinism.</param>
-    public static void WriteWindowsRuntimeMetadataTypesClass(Settings settings, IReadOnlyList<KeyValuePair<string, string>> sortedEntries)
+    public static void WriteWindowsRuntimeMetadataTypesClass(Settings settings, IReadOnlyList<KeyValuePair<string, WindowsRuntimeMetadataTypeEntry>> sortedEntries)
     {
         if (sortedEntries.Count == 0)
         {
@@ -588,9 +700,9 @@ internal static class MetadataAttributeFactory
         // Writes all the entries for the metadata mappings
         void WriteMetadataEntries(IndentedTextWriter writer)
         {
-            foreach (KeyValuePair<string, string> kv in sortedEntries)
+            foreach (KeyValuePair<string, WindowsRuntimeMetadataTypeEntry> kv in sortedEntries)
             {
-                writer.WriteLine($"[WindowsRuntimeMetadata(typeof({kv.Key}), \"{kv.Value}\")]");
+                writer.WriteLine($"[WindowsRuntimeMetadata(typeof({kv.Key}), \"{kv.Value.SourceStem}\")]");
             }
         }
 

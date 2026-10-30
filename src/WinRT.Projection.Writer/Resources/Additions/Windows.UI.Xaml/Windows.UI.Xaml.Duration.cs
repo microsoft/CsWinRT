@@ -6,6 +6,7 @@ namespace Windows.UI.Xaml
 #if !CSWINRT_REFERENCE_PROJECTION
     [WindowsRuntimeType]
     [WindowsRuntimeClassName("Windows.Foundation.IReference`1<Windows.UI.Xaml.Duration>")]
+    [WindowsRuntimeReferenceType(typeof(Duration?))]
     [ABI.Windows.UI.Xaml.DurationComWrappersMarshaller]
 #endif
     public struct Duration : IEquatable<Duration>

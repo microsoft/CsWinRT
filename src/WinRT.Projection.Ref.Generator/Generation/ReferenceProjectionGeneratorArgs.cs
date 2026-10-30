@@ -21,6 +21,10 @@ internal sealed class ReferenceProjectionGeneratorArgs : IGeneratorArgs
     [CommandLineArgumentName("--output-directory")]
     public required string OutputDirectory { get; init; }
 
+    /// <summary>Gets the destination assembly simple name when generating implementation sources.</summary>
+    [CommandLineArgumentName("--assembly-name")]
+    public string? OutputAssemblyName { get; init; }
+
     /// <summary>Gets the target framework being built for (must start with <c>net10.0</c>).</summary>
     [CommandLineArgumentName("--target-framework")]
     public required string TargetFramework { get; init; }
@@ -49,9 +53,23 @@ internal sealed class ReferenceProjectionGeneratorArgs : IGeneratorArgs
     [CommandLineArgumentName("--public-exclusive-to")]
     public bool PublicExclusiveTo { get; init; }
 
+    /// <summary>Gets whether to emit only the authoring surface (the exclusive-to and factory interfaces
+    /// plus the abstract base classes a component extends), so the projection being produced lets Windows
+    /// Runtime types defined in the input metadata be implemented in C#.</summary>
+    [CommandLineArgumentName("--implement-winmd-types")]
+    public bool ImplementWinMDTypes { get; init; }
+
     /// <summary>Gets whether exclusive-to interfaces should support <c>IDynamicInterfaceCastable</c>.</summary>
     [CommandLineArgumentName("--idic-exclusive-to")]
     public bool IdicExclusiveTo { get; init; }
+
+    /// <summary>Gets the namespace or type-name prefixes to select when exclusive-to IDIC is enabled.</summary>
+    [CommandLineArgumentName("--idic-exclusive-to-includes")]
+    public string[] IdicExclusiveToIncludes { get; init; } = [];
+
+    /// <summary>Gets the namespace or type-name prefixes to exclude from exclusive-to IDIC.</summary>
+    [CommandLineArgumentName("--idic-exclusive-to-excludes")]
+    public string[] IdicExclusiveToExcludes { get; init; } = [];
 
     /// <summary>Gets whether to generate a projection to be used as a reference assembly.</summary>
     [CommandLineArgumentName("--reference-projection")]
@@ -64,5 +82,3 @@ internal sealed class ReferenceProjectionGeneratorArgs : IGeneratorArgs
     [CommandLineArgumentName("--debug-repro-directory")]
     public string? DebugReproDirectory { get; init; }
 }
-
-

@@ -214,8 +214,9 @@ internal static partial class WellKnownTypeDefinitionFactory
     /// Creates a new type definition for COM interface entries for a <see cref="Delegate"/> type.
     /// </summary>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+    /// <param name="enableDefaultCustomPropertyProviderSupport">Whether to include the default custom property provider entry.</param>
     /// <returns>The resulting <see cref="TypeDefinition"/> instance.</returns>
-    public static TypeDefinition DelegateInterfaceEntriesType(InteropReferences interopReferences)
+    public static TypeDefinition DelegateInterfaceEntriesType(InteropReferences interopReferences, bool enableDefaultCustomPropertyProviderSupport)
     {
         TypeDefinition interfaceEntriesType = new(
             ns: null,
@@ -231,6 +232,7 @@ internal static partial class WellKnownTypeDefinitionFactory
         // public ComInterfaceEntry Delegate;
         // public ComInterfaceEntry DelegateReference;
         // public ComInterfaceEntry IPropertyValue;
+        // public ComInterfaceEntry ICustomPropertyProvider;
         // public ComInterfaceEntry IStringable;
         // public ComInterfaceEntry IWeakReferenceSource;
         // public ComInterfaceEntry IMarshal;
@@ -240,6 +242,13 @@ internal static partial class WellKnownTypeDefinitionFactory
         interfaceEntriesType.Fields.Add(new FieldDefinition("Delegate"u8, FieldAttributes.Public, comInterfaceEntryType));
         interfaceEntriesType.Fields.Add(new FieldDefinition("DelegateReference"u8, FieldAttributes.Public, comInterfaceEntryType));
         interfaceEntriesType.Fields.Add(new FieldDefinition("IPropertyValue"u8, FieldAttributes.Public, comInterfaceEntryType));
+
+        // The 'ICustomPropertyProvider' slot is only added when default provider support is enabled
+        if (enableDefaultCustomPropertyProviderSupport)
+        {
+            interfaceEntriesType.Fields.Add(new FieldDefinition("ICustomPropertyProvider"u8, FieldAttributes.Public, comInterfaceEntryType));
+        }
+
         interfaceEntriesType.Fields.Add(new FieldDefinition("IStringable"u8, FieldAttributes.Public, comInterfaceEntryType));
         interfaceEntriesType.Fields.Add(new FieldDefinition("IWeakReferenceSource"u8, FieldAttributes.Public, comInterfaceEntryType));
         interfaceEntriesType.Fields.Add(new FieldDefinition("IMarshal"u8, FieldAttributes.Public, comInterfaceEntryType));
@@ -771,8 +780,9 @@ internal static partial class WellKnownTypeDefinitionFactory
     /// Creates a new type definition for COM interface entries for a <see cref="System.Collections.Generic.KeyValuePair{TKey, TValue}"/> type.
     /// </summary>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+    /// <param name="enableDefaultCustomPropertyProviderSupport">Whether to include the default custom property provider entry.</param>
     /// <returns>The resulting <see cref="TypeDefinition"/> instance.</returns>
-    public static TypeDefinition IKeyValuePairInterfaceEntriesType(InteropReferences interopReferences)
+    public static TypeDefinition IKeyValuePairInterfaceEntriesType(InteropReferences interopReferences, bool enableDefaultCustomPropertyProviderSupport)
     {
         TypeDefinition interfaceEntriesType = new(
             ns: null,
@@ -786,6 +796,7 @@ internal static partial class WellKnownTypeDefinitionFactory
         // The type layout looks like this:
         //
         // public ComInterfaceEntry IKeyValuePair'2;
+        // public ComInterfaceEntry ICustomPropertyProvider;
         // public ComInterfaceEntry IStringable;
         // public ComInterfaceEntry IWeakReferenceSource;
         // public ComInterfaceEntry IMarshal;
@@ -793,6 +804,13 @@ internal static partial class WellKnownTypeDefinitionFactory
         // public ComInterfaceEntry IInspectable;
         // public ComInterfaceEntry IUnknown;
         interfaceEntriesType.Fields.Add(new FieldDefinition("IKeyValuePair'2"u8, FieldAttributes.Public, comInterfaceEntryType));
+
+        // The 'ICustomPropertyProvider' slot is only added when default provider support is enabled
+        if (enableDefaultCustomPropertyProviderSupport)
+        {
+            interfaceEntriesType.Fields.Add(new FieldDefinition("ICustomPropertyProvider"u8, FieldAttributes.Public, comInterfaceEntryType));
+        }
+
         interfaceEntriesType.Fields.Add(new FieldDefinition("IStringable"u8, FieldAttributes.Public, comInterfaceEntryType));
         interfaceEntriesType.Fields.Add(new FieldDefinition("IWeakReferenceSource"u8, FieldAttributes.Public, comInterfaceEntryType));
         interfaceEntriesType.Fields.Add(new FieldDefinition("IMarshal"u8, FieldAttributes.Public, comInterfaceEntryType));
@@ -1195,8 +1213,11 @@ internal static partial class WellKnownTypeDefinitionFactory
     /// <param name="numberOfEntries">The number of COM interface entries to generate in the type.</param>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
     /// <returns>The resulting <see cref="TypeDefinition"/> instance.</returns>
+    /// <remarks>Request eligibility is validated by <see cref="InteropDefinitions.UserDefinedInterfaceEntries"/> before accessing its cache.</remarks>
     public static TypeDefinition UserDefinedInterfaceEntriesType(int numberOfEntries, InteropReferences interopReferences)
     {
+        ArgumentOutOfRangeException.ThrowIfLessThan(numberOfEntries, InteropInterfaceEntriesResolver.NumberOfNativeComInterfaceEntries);
+
         TypeDefinition interfaceEntriesType = new(
             ns: null,
             name: $"<UserDefinedInterfaceEntries(Count={numberOfEntries})>",
@@ -1208,8 +1229,6 @@ internal static partial class WellKnownTypeDefinitionFactory
 
         // Calculate the number of dynamic entries, i.e. the ones from explicitly implemented interfaces
         int numberOfDynamicEntries = numberOfEntries - InteropInterfaceEntriesResolver.NumberOfNativeComInterfaceEntries;
-
-        ArgumentOutOfRangeException.ThrowIfLessThan(numberOfDynamicEntries, 1, nameof(numberOfEntries));
 
         // Add a field for each interface entry
         for (int i = 0; i < numberOfDynamicEntries; i++)
@@ -1335,6 +1354,21 @@ internal static partial class WellKnownTypeDefinitionFactory
         return new(
             ns: "ABI"u8,
             name: "InterfaceIIDs"u8,
+            attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
+            baseType: interopReferences.Object.ToTypeDefOrRef());
+    }
+
+    /// <summary>
+    /// Creates the container type for shared key-value-pair accessor methods.
+    /// </summary>
+    /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
+    /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
+    /// <returns>The resulting key-value-pair accessor holder.</returns>
+    public static TypeDefinition KeyValuePairMethods(InteropDefinitions interopDefinitions, InteropReferences interopReferences)
+    {
+        return new(
+            ns: InteropUtf8NameFactory.TypeNamespace(interopReferences.KeyValuePair.ToReferenceTypeSignature(), interopReferences.RuntimeContext),
+            name: InteropUtf8NameFactory.TypeName(interopReferences.KeyValuePair.ToReferenceTypeSignature(), interopDefinitions, "Methods"),
             attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
             baseType: interopReferences.Object.ToTypeDefOrRef());
     }

@@ -43,7 +43,6 @@ public abstract class WindowsRuntimeEnumerator<T, TIIteratorMethods> : WindowsRu
     }
 
     /// <inheritdoc/>
-    [WindowsRuntimeImplementationOnlyMember]
     protected internal sealed override bool HasUnwrappableNativeObjectReference => true;
 
     /// <inheritdoc/>
@@ -135,7 +134,6 @@ public abstract class WindowsRuntimeEnumerator<T, TIIteratorMethods> : WindowsRu
     }
 
     /// <inheritdoc/>
-    [WindowsRuntimeImplementationOnlyMember]
     protected sealed override bool IsOverridableInterface(in Guid iid)
     {
         return false;

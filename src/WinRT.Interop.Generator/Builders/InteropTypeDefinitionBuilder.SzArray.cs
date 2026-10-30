@@ -398,6 +398,20 @@ internal partial class InteropTypeDefinitionBuilder
             // Add the entry for the 'IReferenceArray<T>' implementation first
             entriesList.Add(InteropInterfaceEntriesResolver.Create(get_IidMethod, implType.GetMethod("get_Vtable"u8)));
 
+            // Preserve the typed array identity while also supporting inspectable array unboxing
+            if (arrayType.IsCovariantSzArrayType(interopReferences))
+            {
+                (IMethodDefOrRef get_IID, IMethodDefOrRef get_Vtable) = InteropImplTypeResolver.GetInspectableArrayTypeImpl(interopReferences);
+
+                entriesList.Add(InteropInterfaceEntriesResolver.Create(get_IID, get_Vtable));
+            }
+
+            // Add the default 'ICustomPropertyProvider' without changing the first array-reference slot
+            entriesList.AddRange(InteropInterfaceEntriesResolver.EnumerateDefaultCustomPropertyProviderInterfaceEntries(
+                vtableTypes: vtableTypes,
+                interopDefinitions: interopDefinitions,
+                interopReferences: interopReferences));
+
             // Add all entries for explicitly implemented interfaces
             entriesList.AddRange(InteropInterfaceEntriesResolver.EnumerateMetadataInterfaceEntries(
                 vtableTypes: vtableTypes,

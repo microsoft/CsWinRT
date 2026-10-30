@@ -1,8 +1,8 @@
 #include "pch.h"
 
 using namespace winrt;
-using namespace Windows::Foundation;
-using namespace Windows::Foundation::Collections;
+using namespace winrt::Windows::Foundation;
+using namespace winrt::Windows::Foundation::Collections;
 
 // Activation tests across two CsWinRT components aggregated into one merged AOT host.
 
@@ -16,6 +16,28 @@ TEST(MultiComponent, GreeterMethods)
 {
     AuthoringTest2::Greeter greeter;
     EXPECT_EQ(greeter.Greet(L"world"), hstring(L"Hello, world!"));
+    EXPECT_EQ(greeter.Add(2, 3), 5);
+}
+
+// The COM interop interface that 'GreeterFactoryExtensions' adds to the generated activation factory for 'Greeter'
+struct __declspec(uuid("6E1D3C6B-2E5B-4C8A-9E4F-3A7B1F2C9D10")) IGreeterFactoryInterop : ::IUnknown
+{
+    virtual HRESULT __stdcall GetMagicNumber(int* value) = 0;
+};
+
+TEST(MultiComponent, GreeterFactoryExposesInteropInterface)
+{
+    winrt::Windows::Foundation::IActivationFactory factory = get_activation_factory<AuthoringTest2::Greeter>();
+
+    com_ptr<IGreeterFactoryInterop> interop;
+    check_hresult(get_unknown(factory)->QueryInterface(__uuidof(IGreeterFactoryInterop), interop.put_void()));
+
+    int value = 0;
+    check_hresult(interop->GetMagicNumber(&value));
+    EXPECT_EQ(value, 42);
+
+    // The generated factory still activates the class as usual
+    AuthoringTest2::Greeter greeter = factory.ActivateInstance<AuthoringTest2::Greeter>();
     EXPECT_EQ(greeter.Add(2, 3), 5);
 }
 
@@ -58,6 +80,176 @@ TEST(MultiComponent, GenericMapFromComponent2)
     EXPECT_EQ(counts.Lookup(L"beta"), 2);
     EXPECT_EQ(counts.Lookup(L"gamma"), 3);
 }
+
+// A class implemented from existing metadata is absent from the implementing component's '.winmd', so it
+// reaches the host purely through the generated activation entry points. It is activated by the name of
+// the class it implements, and has to report that name rather than the implementing type's. The raw ABI
+// is used because the projected type belongs to 'TestComponent', not to either component here.
+
+TEST(MultiComponent, ImplementedWinMDTypeActivatesAndReportsImplementedClassName)
+{
+    winrt::hstring className{ L"TestComponent.Class" };
+    winrt::guid iid = winrt::guid_of<winrt::Windows::Foundation::IActivationFactory>();
+
+    winrt::Windows::Foundation::IActivationFactory factory{ nullptr };
+
+    HRESULT hr = RoGetActivationFactory(
+        static_cast<HSTRING>(winrt::get_abi(className)),
+        reinterpret_cast<GUID const&>(iid),
+        winrt::put_abi(factory));
+
+    ASSERT_EQ(hr, S_OK);
+    ASSERT_TRUE(factory != nullptr);
+
+    auto instance = factory.ActivateInstance<winrt::Windows::Foundation::IInspectable>();
+
+    ASSERT_TRUE(instance != nullptr);
+    EXPECT_EQ(winrt::get_class_name(instance), winrt::hstring{ L"TestComponent.Class" });
+}
+
+TEST(ManagedHelpers, PrivateEventDeliversValue)
+{
+    AuthoringTest2::Greeter greeter;
+
+    EXPECT_EQ(greeter.RaiseLocalEvent(), 42);
+    EXPECT_EQ(greeter.RaiseLocalEvent(), 42);
+}
+
+TEST(ManagedHelpers, InternalCollectionsStayManaged)
+{
+    AuthoringTest2::Greeter greeter;
+
+    EXPECT_EQ(greeter.ExerciseInternalCollections(), 42);
+}
+
+TEST(ManagedHelpers, PublicNestedCollectionsStayManaged)
+{
+    AuthoringTest2::Greeter greeter;
+
+    EXPECT_EQ(greeter.ExerciseNestedCollections(), 42);
+}
+
+TEST(ManagedHelpers, PublicAbiTypesStayManaged)
+{
+    AuthoringTest2::Greeter greeter;
+
+    EXPECT_EQ(greeter.ExerciseAbiCollections(), 42);
+}
+
+TEST(ManagedHelpers, InternalListPreservesCovariance)
+{
+    AuthoringTest2::Greeter greeter;
+    auto objects = greeter.GetLocalHelpers();
+    ASSERT_EQ(objects.Size(), 1u);
+
+    auto helper = objects.GetAt(0);
+    EXPECT_EQ(helper.as<IStringable>().ToString(), hstring(L"local helper"));
+    EXPECT_EQ(get_class_name(helper), hstring(L"Windows.Foundation.IStringable"));
+
+    auto stringables = objects.as<IVectorView<IStringable>>();
+    ASSERT_EQ(stringables.Size(), 1u);
+    EXPECT_EQ(stringables.GetAt(0).ToString(), hstring(L"local helper"));
+}
+
+TEST(ManagedHelpers, PublicNestedArrayPreservesCovariance)
+{
+    AuthoringTest2::Greeter greeter;
+    auto objects = greeter.GetNestedHelpers();
+    auto iterator = objects.First();
+    ASSERT_TRUE(iterator.HasCurrent());
+
+    auto helper = iterator.Current();
+    EXPECT_EQ(helper.as<IStringable>().ToString(), hstring(L"nested helper"));
+    EXPECT_EQ(get_class_name(helper), hstring(L"Windows.Foundation.IStringable"));
+    EXPECT_FALSE(iterator.MoveNext());
+
+    auto stringables = objects.as<IIterable<IStringable>>().First();
+    ASSERT_TRUE(stringables.HasCurrent());
+    EXPECT_EQ(stringables.Current().ToString(), hstring(L"nested helper"));
+    EXPECT_FALSE(stringables.MoveNext());
+}
+
+TEST(ManagedHelpers, PublicAbiStructMarshalsThroughItsInterface)
+{
+    AuthoringTest2::Greeter greeter;
+    auto helper = greeter.GetBoxedManagedValue();
+
+    EXPECT_EQ(helper.as<IStringable>().ToString(), hstring(L"42"));
+    EXPECT_EQ(get_class_name(helper), hstring(L"Windows.Foundation.IStringable"));
+}
+
+TEST(AuthoredGenerics, RuntimeClassAndInterfaceArguments)
+{
+    AuthoringTest2::Greeter greeter;
+    auto greeters = greeter.GetGreeters();
+    ASSERT_EQ(greeters.Size(), 1u);
+    EXPECT_EQ(greeters.GetAt(0).Greet(L"generics"), hstring(L"Hello, generics!"));
+    EXPECT_EQ(get_class_name(greeters.GetAt(0)), hstring(L"AuthoringTest2.Greeter"));
+
+    auto adders = greeter.GetAdders();
+    ASSERT_EQ(adders.Size(), 1u);
+    EXPECT_EQ(adders.GetAt(0).Add(20, 22), 42);
+}
+
+TEST(AuthoredGenerics, StructArgumentsAndBoxing)
+{
+    AuthoringTest2::Greeter greeter;
+    auto values = greeter.GetAuthoredValues();
+    ASSERT_EQ(values.Size(), 1u);
+    EXPECT_EQ(values.Lookup(L"answer").Value, 42);
+
+    auto iterator = values.First();
+    ASSERT_TRUE(iterator.HasCurrent());
+    EXPECT_EQ(iterator.Current().Key(), hstring(L"answer"));
+    EXPECT_EQ(iterator.Current().Value().Value, 42);
+    EXPECT_FALSE(iterator.MoveNext());
+
+    auto boxed = greeter.GetBoxedAuthoredValue().as<IReference<AuthoringTest2::AuthoredValue>>();
+    EXPECT_EQ(boxed.Value().Value, 42);
+}
+
+TEST(AuthoredGenerics, EnumAndDelegateArguments)
+{
+    AuthoringTest2::Greeter greeter;
+    auto kinds = greeter.GetAuthoredKinds();
+    ASSERT_EQ(kinds.Size(), 1u);
+    EXPECT_EQ(kinds.GetAt(0), AuthoringTest2::AuthoredValueKind::Answer);
+
+    auto callbacks = greeter.GetAuthoredCallbacks();
+    ASSERT_EQ(callbacks.Size(), 1u);
+    EXPECT_EQ(callbacks.GetAt(0)(21), 42);
+}
+
+#ifdef CSWINRT_JIT_HOSTED
+
+// A referenced CsWinRT executable is hosted from this folder too, where the only 'WinRT.*' set is the one
+// merged for this consumer. 'AuthoringTestExe' marshals types no component here uses, so it only succeeds
+// (exit code 100) if that merged set was generated with the executable as an input.
+
+TEST(ReferencedExecutable, RunsOnMergedSet)
+{
+    wchar_t modulePath[MAX_PATH];
+    ASSERT_NE(GetModuleFileNameW(nullptr, modulePath, MAX_PATH), 0u);
+
+    std::wstring exePath{ modulePath };
+    exePath = exePath.substr(0, exePath.find_last_of(L'\\') + 1) + L"AuthoringTestExe.exe";
+
+    STARTUPINFOW startupInfo{ sizeof(startupInfo) };
+    PROCESS_INFORMATION processInfo{};
+
+    ASSERT_TRUE(CreateProcessW(exePath.c_str(), nullptr, nullptr, nullptr, FALSE, 0, nullptr, nullptr, &startupInfo, &processInfo));
+
+    DWORD exitCode = 0;
+    EXPECT_EQ(WaitForSingleObject(processInfo.hProcess, 60000), WAIT_OBJECT_0);
+    EXPECT_TRUE(GetExitCodeProcess(processInfo.hProcess, &exitCode));
+
+    CloseHandle(processInfo.hThread);
+    CloseHandle(processInfo.hProcess);
+
+    EXPECT_EQ(exitCode, 100u);
+}
+
+#endif
 
 int main(int argc, char** argv)
 {

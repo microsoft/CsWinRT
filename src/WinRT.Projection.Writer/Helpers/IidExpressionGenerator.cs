@@ -6,6 +6,7 @@ using System.Globalization;
 using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
 using AsmResolver.DotNet;
+using WindowsRuntime.Generator.Helpers;
 using WindowsRuntime.ProjectionWriter.Errors;
 using WindowsRuntime.ProjectionWriter.Factories;
 using WindowsRuntime.ProjectionWriter.Generation;
@@ -103,15 +104,6 @@ internal static partial class IidExpressionGenerator
         }
 
         WriteGuid(writer, guid, lowerCase);
-    }
-
-    /// <inheritdoc cref="WriteGuid(IndentedTextWriter, TypeDefinition, bool)"/>
-    /// <returns>The formatted GUID as a string.</returns>
-    public static string FormatGuid(TypeDefinition type, bool lowerCase)
-    {
-        using IndentedTextWriterOwner owner = IndentedTextWriterPool.GetOrCreate();
-        WriteGuid(owner.Writer, type, lowerCase);
-        return owner.Writer.ToString();
     }
 
     /// <summary>
@@ -237,20 +229,7 @@ internal static partial class IidExpressionGenerator
     /// <param name="type">The type whose <c>IReference&lt;T&gt;</c> IID is emitted.</param>
     public static void WriteIidGuidPropertyFromSignature(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
-        string signature = SignatureGenerator.GetSignature(context, new TypeSemantics.Definition(type));
-        Guid guid;
-
-        // We can use an interpolated handler here to avoid allocating the 'string' for the full signature.
-        // The additional scope here is to ensure that the rest of the method never reuses this handler.
-        {
-            DefaultInterpolatedStringHandler handler = $$"""pinterface({61c17706-2d65-11e0-9ae8-d48564015472};{{signature}})""";
-
-            guid = GuidGenerator.Generate(handler.Text);
-
-            // Don't forget to clear the handler after we used it, so its rented buffer can be returned
-            handler.Clear();
-        }
-
+        Guid guid = GetReferenceIid(context, type);
         IndentedTextWriterCallback name = WriteIidReferenceGuidPropertyName(context, type);
         IndentedTextWriterCallback bytes = WriteGuidBytes(guid);
 
@@ -267,6 +246,24 @@ internal static partial class IidExpressionGenerator
             }
             """);
         writer.WriteLine();
+    }
+
+    /// <summary>
+    /// Gets the boxed value's IID using the same signature as its marshalling implementation.
+    /// </summary>
+    /// <param name="context">The active emit context.</param>
+    /// <param name="type">The type represented by the reference.</param>
+    /// <returns>The IID of the type's Windows Runtime reference representation.</returns>
+    public static Guid GetReferenceIid(ProjectionEmitContext context, TypeDefinition type)
+    {
+        string signature = SignatureGenerator.GetSignature(context, new TypeSemantics.Definition(type));
+        DefaultInterpolatedStringHandler handler = $$"""pinterface({61c17706-2d65-11e0-9ae8-d48564015472};{{signature}})""";
+        Guid guid = GuidGenerator.Generate(handler.Text);
+
+        // Return the interpolated handler's rented buffer after hashing the signature
+        handler.Clear();
+
+        return guid;
     }
 
     /// <summary>

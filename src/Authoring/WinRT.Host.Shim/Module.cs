@@ -49,9 +49,7 @@ public static class Shim
         {
             Assembly assembly = LoadInDefaultContext(targetAssembly);
 
-            // ABI.<ModuleName>.ManagedExports.GetActivationFactory(ReadOnlySpan<char>) -> void*
-            string moduleName = Path.GetFileNameWithoutExtension(targetAssembly);
-            Type managedExportsType = assembly.GetType($"ABI.{moduleName}.ManagedExports");
+            Type managedExportsType = GetManagedExportsType(assembly, targetAssembly);
             if (managedExportsType == null)
             {
                 return REGDB_E_READREGDB;
@@ -76,6 +74,36 @@ public static class Shim
         {
             return RestrictedErrorInfoExceptionMarshaller.ConvertToUnmanaged(e);
         }
+    }
+
+    /// <summary>
+    /// Finds the type holding the component's managed <c>GetActivationFactory</c> method.
+    /// </summary>
+    /// <remarks>
+    /// A component assembly points at it with <c>[WindowsRuntimeComponentAssemblyExportsType]</c>, which is
+    /// the authoritative answer: the name derived from the assembly name does not survive a name needing
+    /// escaping to form a namespace (assembly <c>Contoso.Widgets</c> holds its exports in <c>ABI.Contoso_Widgets</c>,
+    /// not <c>ABI.Contoso.Widgets</c>). Without the attribute, the type is found by that naming convention. This is
+    /// how the merged <c>WinRT.Component.dll</c> that native consumers host is resolved (to its dispatcher
+    /// <c>ABI.WinRT.Component.ManagedExports</c>), as it does not carry the attribute.
+    /// </remarks>
+    private static Type GetManagedExportsType(Assembly assembly, string targetAssembly)
+    {
+        const string ExportsTypeAttributeName = "WindowsRuntime.InteropServices.WindowsRuntimeComponentAssemblyExportsTypeAttribute";
+
+        foreach (CustomAttributeData attribute in assembly.GetCustomAttributesData())
+        {
+            if (attribute.AttributeType.FullName == ExportsTypeAttributeName &&
+                attribute.ConstructorArguments is [{ Value: Type exportsType }])
+            {
+                return exportsType;
+            }
+        }
+
+        // ABI.<ModuleName>.ManagedExports.GetActivationFactory(ReadOnlySpan<char>) -> void*
+        string moduleName = Path.GetFileNameWithoutExtension(targetAssembly);
+
+        return assembly.GetType($"ABI.{moduleName}.ManagedExports");
     }
 
     private static Assembly LoadInDefaultContext(string targetAssembly)

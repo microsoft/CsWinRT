@@ -53,13 +53,17 @@ Contains various testing-related projects:
 
 - [`SmokeTests`](../src/Tests/SmokeTests): Minimal, isolated end-to-end smoke tests that consume the real `Microsoft.Windows.CsWinRT` NuGet package — a consumption app (`Consumption`), an authoring component (`Authoring`), a reference projection for a third-party `.winmd` (`Projection`), and reference projections for the Windows SDK (`WindowsSdkProjection`) and its `Windows.UI.Xaml` surface (`WindowsSdkXamlProjection`) — to verify the produced package works correctly outside the repository build infrastructure.
 
+- [`GraphBuild`](../src/Tests/SmokeTests/GraphBuild): A real-package scheduling regression with an application referenced by a consumer. Generated partial properties model XAML's `PrepareResources` contract and the surrounding `Compile` preparation, without requiring an installed XAML compiler. It checks cold/warm target-path and cold copy-item queries, single-node and parallel graph builds, incremental markup/code/reference changes, missing-output regeneration, clean, NoBuild publish without recompilation, design-time compilation, and explicit artifact generation. Run it with `run-smoke-tests.ps1 -Test GraphBuild -Runtime CoreCLR`.
+
+- [`Preinitialization`](../src/Tests/SmokeTests/Preinitialization): An AOT-only smoke test that checks MSTAT for surviving static constructors on `[FixedAddressValueType]` owners across the runtime, SDK/XAML and third-party projections, and generated interop assembly. It also requires representative table data to remain rooted.
+
 - [`AuthoringTest`](../src/Tests/AuthoringTest): A C#-authored WinRT component (`CsWinRTComponent=true`) covering a broad set of authoring type patterns.  Companion projects exercise consuming authored components — `AuthoringTest2`/`AuthoringTest3`, the `AuthoringConsumptionTest*` C++ consumers, and the WUX (`Windows.UI.Xaml`) and WinUI variants — several of which are still work in progress.
 
 - [`HostTest`](../src/Tests/HostTest): C++ (gtest) tests for `WinRT.Host.dll`, which provides hosting for runtime components written in C#.
 
 - [`DiagnosticTests`](../src/Tests/DiagnosticTests): Tests for the CsWinRT diagnostic and analyzer rules, driven by positive and negative source snippets.
 
-- [`BuildDeterminismTest`](../src/Tests/BuildDeterminismTest): Builds a component twice and compares the hashes of the generated `WinRT.Interop.dll` to verify deterministic builds.
+- [`BuildDeterminismTest`](../src/Tests/BuildDeterminismTest): Compares whole-file SHA256 hashes of freshly generated `WinRT.Interop.dll` files across maximum parallelism values `-1`, `1`, and `2`, including repeated runs. By default it performs clean component builds with all-assembly marshalling discovery. To isolate the generator from MSBuild, run `BuildDeterminismTest --interop <generator.exe|generator.dll> <response.rsp> [baseline.dll]` with fixed inputs. The interop replay uses normal and reversed reference/implementation input lists at each parallelism value, with a fresh process and output directory and incremental generation disabled. Supplying `baseline.dll` compares every output to that file's SHA256 **and full bytes**; without it, outputs are compared to the first replay. Failed replay outputs are retained for inspection; setting `CSWINRT_DETERMINISM_ROOT` to a directory retains successful outputs there as well. Relative paths in the response file are resolved from the current working directory. The `--interop-incremental` mode checks cache reuse, invalidation, corruption recovery, and opt-out against fresh-generation output using isolated input copies; `--probe-only` provides a reduced workload.
 
 - [`OOPExe`](../src/Tests/OOPExe): An out-of-process executable harness used by the authoring test scenarios.
 
@@ -78,6 +82,8 @@ Contains the **forwarder assembly generator** (`cswinrtimplgen.exe`). This tool 
 ## [`src/WinRT.Interop.Generator`](../src/WinRT.Interop.Generator)
 
 Contains the **interop assembly generator** (`cswinrtinteropgen.exe`). This tool runs at **app build time** after all assemblies are compiled, analyzing the entire application to generate `WinRT.Interop.dll`. This assembly contains deduplicated native COM interface entries, vtable implementations, and marshalling infrastructure for all WinRT types used across the app. Because it sees the whole application, it avoids the code duplication and type map conflicts that would occur if marshalling code were generated per-project.
+
+To keep output independent of parallel discovery, interface entries and fallback runtime class names use stable type-name ordering. Type comparisons use assembly identities for both definitions and references, and non-binding assembly processor-architecture flags are normalized in memory before emission.
 
 ## [`src/WinRT.Projection.Generator`](../src/WinRT.Projection.Generator)
 
@@ -108,4 +114,3 @@ Contains the WinRT.Runtime project for building the C#/WinRT runtime assembly, `
 ## [`src/WinRT.Sdk.Projection`](../src/WinRT.Sdk.Projection)
 
 Contains the project that produces the `WinRT.Sdk.Projection` assembly, which includes projected types from the `Windows.*` and `WinRT.Interop.*` namespaces.
-

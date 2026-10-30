@@ -188,12 +188,19 @@ internal sealed partial class WinMDWriter
     /// <param name="inputType">The <see cref="TypeDefinition"/> from the input assembly to process.</param>
     public void ProcessType(TypeDefinition inputType)
     {
+        if (inputType.IsExcludedFromWindowsMetadata())
+        {
+            return;
+        }
+
         string fullName = inputType.FullName;
 
         if (_typeDefinitionMapping.ContainsKey(fullName))
         {
             return;
         }
+
+        ValidateMetadataExclusions(inputType);
 
         if (inputType.IsEnum)
         {

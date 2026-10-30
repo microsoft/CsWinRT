@@ -13,6 +13,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     <CsWinRTGenerateProjection Condition="!$(CsWinRTEnabled)">false</CsWinRTGenerateProjection>
     <CsWinRTGenerateProjection Condition="'$(CsWinRTGenerateProjection)' == ''">true</CsWinRTGenerateProjection>
     <AllowUnsafeBlocks Condition="$(CsWinRTEnabled)">true</AllowUnsafeBlocks>
+    <InterceptorsNamespaces Condition="'$(CsWinRTGenerateGetIidInterceptors)' != 'false'">$(InterceptorsNamespaces);WindowsRuntime.Generated</InterceptorsNamespaces>
 
     <!--
       Making sure ResolveAssemblyReferences runs before CoreCompile runs as we have seen it not run
@@ -57,9 +58,13 @@ Copyright (C) Microsoft Corporation. All rights reserved.
 
     <!-- Generate a C# version of DllGetActivationFactory which matches the native export. -->
     <CsWinRTGenerateManagedDllGetActivationFactory Condition="'$(CsWinRTGenerateManagedDllGetActivationFactory)' != 'true'">false</CsWinRTGenerateManagedDllGetActivationFactory>
+
+    <!-- Intercept statically computable 'WindowsRuntimeMarshal.GetIid<T>()' calls with precomputed IIDs. -->
+    <CsWinRTGenerateGetIidInterceptors Condition="'$(CsWinRTGenerateGetIidInterceptors)' == ''">true</CsWinRTGenerateGetIidInterceptors>
   </PropertyGroup>
 
   <ItemGroup>
+    <CompilerVisibleProperty Include="CsWinRTGenerateGetIidInterceptors" />
     <CompilerVisibleProperty Include="CsWinRTAotOptimizerEnabled" />
     <CompilerVisibleProperty Include="CsWinRTAotExportsEnabled" />
     <CompilerVisibleProperty Include="CsWinRTRcwFactoryFallbackGeneratorForceOptIn" />
@@ -349,15 +354,27 @@ Copyright (C) Microsoft Corporation. All rights reserved.
       <_CsWinRTProjectionRefGenInputsCacheToHash Include="$(CsWinRTIncludes)" />
       <_CsWinRTProjectionRefGenInputsCacheToHash Include="$(CsWinRTExcludes)" />
       <_CsWinRTProjectionRefGenInputsCacheToHash Include="$(CsWinRTComponent)" />
+      <_CsWinRTProjectionRefGenInputsCacheToHash Include="AssemblyName=$(AssemblyName)" />
       <_CsWinRTProjectionRefGenInputsCacheToHash Include="$(CsWinRTGenerateReferenceProjection)" />
       <_CsWinRTProjectionRefGenInputsCacheToHash Include="$(CsWinRTPublicExclusiveToInterfaces)" />
+      <_CsWinRTProjectionRefGenInputsCacheToHash Include="$(CsWinRTImplementWinMDTypes)" />
       <_CsWinRTProjectionRefGenInputsCacheToHash Include="$(CsWinRTDynamicallyInterfaceCastableExclusiveTo)" />
+      <_CsWinRTProjectionRefGenInputsCacheToHash Include="IdicExclusiveToIncludes=$(CsWinRTDynamicallyInterfaceCastableExclusiveToIncludes)" />
+      <_CsWinRTProjectionRefGenInputsCacheToHash Include="IdicExclusiveToExcludes=$(CsWinRTDynamicallyInterfaceCastableExclusiveToExcludes)" />
       <_CsWinRTProjectionRefGenInputsCacheToHash Include="$(CsWinRTExeTFM)" />
       <_CsWinRTProjectionRefGenInputsCacheToHash Include="$(CsWinRTWindowsMetadata)" />
       <_CsWinRTProjectionRefGenInputsCacheToHash Include="$(CsWinRTGeneratedFilesDir)" />
       <_CsWinRTProjectionRefGenInputsCacheToHash Include="$(CsWinRTRefGenEffectiveToolsDirectory)" />
       <_CsWinRTProjectionRefGenInputsCacheToHash Include="$(CsWinRTToolsArchitecture)" />
       <_CsWinRTProjectionRefGenInputsCacheToHash Include="$(_CsWinRTRunProjectionRefGenerator)" />
+
+      <!--
+        The set of metadata inputs. The target's Inputs above already covers their contents, but a timestamp
+        check compares the newest input against the output, so it can never observe a removal (or an addition
+        that is older than the last output). Hashing the set turns that into a change it can see.
+      -->
+      <_CsWinRTProjectionRefGenInputsCacheToHash Include="@(CsWinRTInputs)" />
+      <_CsWinRTProjectionRefGenInputsCacheToHash Include="$(CsWinRTInteropMetadata)" />
     </ItemGroup>
 
     <Hash ItemsToHash="@(_CsWinRTProjectionRefGenInputsCacheToHash)">
@@ -412,8 +429,12 @@ Copyright (C) Microsoft Corporation. All rights reserved.
         Verbose="$(CsWinRTMessageImportance.Equals('high'))"
         Component="$(CsWinRTComponent)"
         PublicExclusiveTo="$(CsWinRTPublicExclusiveToInterfaces)"
+        ImplementWinMDTypes="$(CsWinRTImplementWinMDTypes)"
         IdicExclusiveTo="$(CsWinRTDynamicallyInterfaceCastableExclusiveTo)"
+        IdicExclusiveToIncludes="$(CsWinRTDynamicallyInterfaceCastableExclusiveToIncludes)"
+        IdicExclusiveToExcludes="$(CsWinRTDynamicallyInterfaceCastableExclusiveToExcludes)"
         ReferenceProjection="$(CsWinRTGenerateReferenceProjection)"
+        OutputAssemblyName="$(AssemblyName)"
         DebugReproDirectory="$(CsWinRTGeneratorDebugReproDirectory)"
         CsWinRTToolsDirectory="$(CsWinRTRefGenEffectiveToolsDirectory)"
         CsWinRTToolsArchitecture="$(CsWinRTToolsArchitecture)"
@@ -434,6 +455,14 @@ Copyright (C) Microsoft Corporation. All rights reserved.
       <Compile Include="$(CsWinRTGeneratedFilesDir)*.cs" Exclude="@(Compile)" />
     </ItemGroup>
   </Target>
+
+  <!--
+    Note: 'CsWinRTImplementWinMDTypes' turns a projection project into an *authoring* projection. Instead of
+    projecting the Windows Runtime types in its inputs, it emits the abstract 'ABI.<Ns>.<Class>' base classes
+    (and their exclusive-to interfaces) that let those types be implemented in C#. Use it together with
+    'CsWinRTGenerateReferenceProjection', so the result is a reference assembly carrying no implementation;
+    that implementation is regenerated into 'WinRT.Projection.dll' when an application is built.
+  -->
 
   <!--
     ============================================================
@@ -624,6 +653,8 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     <CsWinRTLoadComponentsInDefaultALC Condition="'$(CsWinRTLoadComponentsInDefaultALC)' == ''">false</CsWinRTLoadComponentsInDefaultALC>
     <CsWinRTEnableMarshalingTypeValidation Condition="'$(CsWinRTEnableMarshalingTypeValidation)' == ''">false</CsWinRTEnableMarshalingTypeValidation>
     <CsWinRTEnableMarshalingTypeMetadataSupport Condition="'$(CsWinRTEnableMarshalingTypeMetadataSupport)' == ''">true</CsWinRTEnableMarshalingTypeMetadataSupport>
+    <CsWinRTEnableDefaultCustomPropertyProviderSupport Condition="'$(CsWinRTEnableDefaultCustomPropertyProviderSupport)' == ''">true</CsWinRTEnableDefaultCustomPropertyProviderSupport>
+    <CsWinRTSuppressCustomPropertyNotSupportedException Condition="'$(CsWinRTSuppressCustomPropertyNotSupportedException)' == ''">false</CsWinRTSuppressCustomPropertyNotSupportedException>
 
     <!--
       Note: the 'CsWinRTUseWindowsUIXamlProjections' property and associated 'CSWINRT_USE_WINDOWS_UI_XAML_PROJECTIONS' feature
@@ -667,6 +698,16 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     <!-- CSWINRT_ENABLE_MARSHALING_TYPE_METADATA_SUPPORT switch -->
     <RuntimeHostConfigurationOption Include="CSWINRT_ENABLE_MARSHALING_TYPE_METADATA_SUPPORT"
                                     Value="$(CsWinRTEnableMarshalingTypeMetadataSupport)"
+                                    Trim="true" />
+
+    <!-- CSWINRT_ENABLE_DEFAULT_CUSTOM_PROPERTY_PROVIDER_SUPPORT switch -->
+    <RuntimeHostConfigurationOption Include="CSWINRT_ENABLE_DEFAULT_CUSTOM_PROPERTY_PROVIDER_SUPPORT"
+                                    Value="$(CsWinRTEnableDefaultCustomPropertyProviderSupport)"
+                                    Trim="true" />
+
+    <!-- CSWINRT_SUPPRESS_CUSTOM_PROPERTY_NOT_SUPPORTED_EXCEPTION switch -->
+    <RuntimeHostConfigurationOption Include="CSWINRT_SUPPRESS_CUSTOM_PROPERTY_NOT_SUPPORTED_EXCEPTION"
+                                    Value="$(CsWinRTSuppressCustomPropertyNotSupportedException)"
                                     Trim="true" />
   </ItemGroup>
 

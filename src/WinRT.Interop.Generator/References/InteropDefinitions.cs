@@ -1,10 +1,15 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using AsmResolver;
 using AsmResolver.DotNet;
+using WindowsRuntime.InteropGenerator.Errors;
 using WindowsRuntime.InteropGenerator.Factories;
+using WindowsRuntime.InteropGenerator.Models;
+using WindowsRuntime.InteropGenerator.Resolvers;
 
 namespace WindowsRuntime.InteropGenerator.References;
 
@@ -17,6 +22,11 @@ internal sealed class InteropDefinitions
     /// The <see cref="InteropReferences"/> instance to use.
     /// </summary>
     private readonly InteropReferences _interopReferences;
+
+    /// <summary>
+    /// The generated IID getters indexed by their unique names.
+    /// </summary>
+    private readonly ConcurrentDictionary<Utf8String, MethodDefinition> _interfaceIIDMethods = [];
 
     /// <summary>
     /// The map of generated COM interface entries types for user-defined types.
@@ -36,12 +46,14 @@ internal sealed class InteropDefinitions
     /// <param name="windowsRuntimeSdkXamlProjectionModule">The <see cref="ModuleDefinition"/> for the Windows Runtime projection assembly for the Windows SDK XAML types (i.e. <c>WinRT.Sdk.Xaml.Projection.dll</c>).</param>
     /// <param name="windowsRuntimeProjectionModule">The <see cref="ModuleDefinition"/> for the Windows Runtime projection assembly (i.e. <c>WinRT.Projection.dll</c>).</param>
     /// <param name="windowsRuntimeComponentModule">The <see cref="ModuleDefinition"/> for the Windows Runtime component assembly (i.e. <c>WinRT.Component.dll</c>).</param>
+    /// <param name="enableDefaultCustomPropertyProviderSupport">Whether generated CCWs should expose the default custom property provider.</param>
     public InteropDefinitions(
         InteropReferences interopReferences,
         ModuleDefinition windowsRuntimeSdkProjectionModule,
         ModuleDefinition? windowsRuntimeSdkXamlProjectionModule,
         ModuleDefinition? windowsRuntimeProjectionModule,
-        ModuleDefinition? windowsRuntimeComponentModule)
+        ModuleDefinition? windowsRuntimeComponentModule,
+        bool enableDefaultCustomPropertyProviderSupport)
     {
         _interopReferences = interopReferences;
         _userDefinedInterfaceEntries = [];
@@ -51,7 +63,13 @@ internal sealed class InteropDefinitions
         WindowsRuntimeSdkXamlProjectionModule = windowsRuntimeSdkXamlProjectionModule;
         WindowsRuntimeProjectionModule = windowsRuntimeProjectionModule;
         WindowsRuntimeComponentModule = windowsRuntimeComponentModule;
+        EnableDefaultCustomPropertyProviderSupport = enableDefaultCustomPropertyProviderSupport;
     }
+
+    /// <summary>
+    /// Gets whether generated CCWs should expose the default custom property provider.
+    /// </summary>
+    public bool EnableDefaultCustomPropertyProviderSupport { get; }
 
     /// <summary>
     /// Gets the <see cref="AsmResolver.DotNet.RuntimeContext"/> currently in use.
@@ -94,12 +112,54 @@ internal sealed class InteropDefinitions
     /// <summary>
     /// Gets the <see cref="TypeDefinition"/> for the <c>IIDRvaDataSize=16</c> type.
     /// </summary>
-    public TypeDefinition IIDRvaDataSize_16 => RvaFields.NestedTypes[0];
+    public TypeDefinition IIDRvaDataSize_16 => field ??= RvaFields.NestedTypes[0];
 
     /// <summary>
     /// Gets the <see cref="TypeDefinition"/> for the <c>InterfaceIIDs</c> type.
     /// </summary>
+    /// <remarks>
+    /// Use <see cref="AddInterfaceIID"/> and <see cref="GetInterfaceIIDMethod"/> to add and look up IIDs,
+    /// keeping the generated members and their lookup index in sync.
+    /// </remarks>
     public TypeDefinition InterfaceIIDs => field ??= WellKnownTypeDefinitionFactory.InterfaceIIDs(_interopReferences);
+
+    /// <summary>
+    /// Gets the shared key-value-pair accessor holder.
+    /// </summary>
+    /// <remarks>
+    /// Initialized by the key-value-pair emission step before other consumers access it after the emission barrier.
+    /// </remarks>
+    public TypeDefinition KeyValuePairMethods => field ??= WellKnownTypeDefinitionFactory.KeyValuePairMethods(this, _interopReferences);
+
+    /// <summary>
+    /// Adds an IID's generated members and indexes its getter for subsequent lookup.
+    /// </summary>
+    /// <param name="iidRvaField">The field containing the IID bytes.</param>
+    /// <param name="getIidMethod">The IID getter.</param>
+    /// <param name="iidProperty">The IID property.</param>
+    public void AddInterfaceIID(FieldDefinition iidRvaField, MethodDefinition getIidMethod, PropertyDefinition iidProperty)
+    {
+        // Name mangling (e.g. '.' to '-') can map distinct input names to the same getter name.
+        // Reject collisions rather than emitting ambiguous metadata and resolving the wrong interface IID.
+        if (!_interfaceIIDMethods.TryAdd(getIidMethod.Name!, getIidMethod))
+        {
+            throw WellKnownInteropExceptions.DuplicateGeneratedInterfaceIID(getIidMethod.Name!.ToString());
+        }
+
+        RvaFields.Fields.Add(iidRvaField);
+        InterfaceIIDs.Methods.Add(getIidMethod);
+        InterfaceIIDs.Properties.Add(iidProperty);
+    }
+
+    /// <summary>
+    /// Gets the generated IID getter with the specified name.
+    /// </summary>
+    /// <param name="name">The getter name.</param>
+    /// <returns>The generated IID getter.</returns>
+    public MethodDefinition GetInterfaceIIDMethod(Utf8String name)
+    {
+        return _interfaceIIDMethods[name];
+    }
 
     /// <summary>
     /// Gets the <see cref="TypeDefinition"/> for the <c>IUnknownVftbl</c> type.
@@ -124,7 +184,7 @@ internal sealed class InteropDefinitions
     /// <summary>
     /// Gets the <see cref="TypeDefinition"/> for the <c>DelegateInterfaceEntries</c> type.
     /// </summary>
-    public TypeDefinition DelegateInterfaceEntries => field ??= WellKnownTypeDefinitionFactory.DelegateInterfaceEntriesType(_interopReferences);
+    public TypeDefinition DelegateInterfaceEntries => field ??= WellKnownTypeDefinitionFactory.DelegateInterfaceEntriesType(_interopReferences, EnableDefaultCustomPropertyProviderSupport);
 
     /// <summary>
     /// Gets the <see cref="TypeDefinition"/> for the <c>IEnumerator1Vftbl</c> type.
@@ -164,7 +224,7 @@ internal sealed class InteropDefinitions
     /// <summary>
     /// Gets the <see cref="TypeDefinition"/> for the <c>IKeyValuePairInterfaceEntries</c> type.
     /// </summary>
-    public TypeDefinition IKeyValuePairInterfaceEntries => field ??= WellKnownTypeDefinitionFactory.IKeyValuePairInterfaceEntriesType(_interopReferences);
+    public TypeDefinition IKeyValuePairInterfaceEntries => field ??= WellKnownTypeDefinitionFactory.IKeyValuePairInterfaceEntriesType(_interopReferences, EnableDefaultCustomPropertyProviderSupport);
 
     /// <summary>
     /// Gets the <see cref="TypeDefinition"/> for the <c>IMapChangedEventArgsVftbl</c> type.
@@ -217,9 +277,22 @@ internal sealed class InteropDefinitions
     /// Gets the <see cref="TypeDefinition"/> for the COM interface entries type for user-defined types with the specified number of entries.
     /// </summary>
     /// <param name="numberOfEntries">The number of COM interface entries to generate in the type.</param>
+    /// <param name="vtableTypes">The interfaces explicitly implemented by the user-defined type.</param>
     /// <returns>The resulting <see cref="TypeDefinition"/> instance.</returns>
-    public TypeDefinition UserDefinedInterfaceEntries(int numberOfEntries)
+    /// <remarks>
+    /// A layout without additional entries requires an explicit <c>IStringable</c> implementation.
+    /// Types implementing only <c>IMarshal</c> are not exposed by Windows Runtime type discovery.
+    /// </remarks>
+    public TypeDefinition UserDefinedInterfaceEntries(int numberOfEntries, TypeSignatureEquatableSet vtableTypes)
     {
+        // Validate each request before consulting the count-keyed cache, including cache hits.
+        // Only an explicit implementation selected for the reserved slot permits a built-in-only layout.
+        if (numberOfEntries != InteropInterfaceEntriesResolver.NumberOfNativeComInterfaceEntries ||
+            !InteropInterfaceEntriesResolver.TryGetUserDefinedIStringableInterfaceImplementation(vtableTypes, _interopReferences, out _))
+        {
+            ArgumentOutOfRangeException.ThrowIfLessThan(numberOfEntries, InteropInterfaceEntriesResolver.NumberOfNativeComInterfaceEntries + 1);
+        }
+
         return _userDefinedInterfaceEntries.GetOrAdd(
             key: numberOfEntries,
             valueFactory: numberOfEntries => WellKnownTypeDefinitionFactory.UserDefinedInterfaceEntriesType(numberOfEntries, _interopReferences));

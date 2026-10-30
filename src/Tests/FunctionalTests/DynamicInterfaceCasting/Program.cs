@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using TestComponent;
 using Windows.Foundation;
+using Windows.Storage;
+using Windows.Storage.Streams;
 using WindowsRuntime.InteropServices;
 
 var instance = new Class();
@@ -57,13 +59,263 @@ if ((object)instance as IList<ManagedClass> != null)
     return 106;
 }
 
+// Use different element types so the three discovery paths cannot supply each other's marshalling
+if (!IsList<InputStreamOptions>(instance2.GetInputStreamOptionsVector()))
+{
+    return 107;
+}
+
+object genericCastVector = instance2.GetInputStreamOptionsVector();
+
+if (!ReferenceEquals(genericCastVector, AsList<InputStreamOptions>(genericCastVector)))
+{
+    return 108;
+}
+
+if (ReadCount<InputStreamOptions>(instance2.GetInputStreamOptionsVector()) != 3)
+{
+    return 109;
+}
+
+if (!Is<IList<FileAccessMode>>(instance2.GetFileAccessModeVector()))
+{
+    return 110;
+}
+
+object methodArgumentVector = instance2.GetFileAccessModeVector();
+
+if (!ReferenceEquals(methodArgumentVector, As<IList<FileAccessMode>>(methodArgumentVector)))
+{
+    return 111;
+}
+
+if (!OuterIsList<CreationCollisionOption>(instance2.GetCreationCollisionOptionVector()))
+{
+    return 112;
+}
+
+object nestedCastVector = instance2.GetCreationCollisionOptionVector();
+
+if (!ReferenceEquals(nestedCastVector, OuterAsList<CreationCollisionOption>(nestedCastVector)))
+{
+    return 113;
+}
+
+if (OuterReadCount<CreationCollisionOption>(instance2.GetCreationCollisionOptionVector()) != 3)
+{
+    return 114;
+}
+
+// Each operation gets a fresh opaque wrapper, so a successful type test cannot prime the cast
+int dispatchResult = RunGenericDispatchChecks(instance2, cast: false);
+
+if (dispatchResult != 100)
+{
+    return dispatchResult;
+}
+
+dispatchResult = RunGenericDispatchChecks(instance2, cast: true);
+
+if (dispatchResult != 100)
+{
+    return dispatchResult;
+}
+
+unsafe
+{
+    object value = ((IDefaultCollectionFactory)new DefaultCollectionFactory<TestComponentCSharp.InterfaceDispatchElement>()).Create();
+    void* pointer = WindowsRuntimeMarshal.ConvertToUnmanaged(value);
+    nint vector = 0;
+
+    try
+    {
+        // Existing enum-vector tests do not root this nested vector; typed assertions here would mask discovery
+
+        // pinterface({913337e9-11a1-4345-a3a2-4e7f956e222d};pinterface({9fc2b0bb-e446-44e2-aa61-9cab8f636af2};enum(TestComponentCSharp.InterfaceDispatchElement;i4)))
+        Guid iid = new("fa87665e-7544-5f82-bc73-a9517cd8c8c5");
+
+        if (Marshal.QueryInterface((nint)pointer, iid, out vector) != 0 || vector == 0)
+        {
+            return 129;
+        }
+    }
+    finally
+    {
+        if (vector != 0)
+        {
+            _ = Marshal.Release(vector);
+        }
+
+        WindowsRuntimeMarshal.Free(pointer);
+        GC.KeepAlive(value);
+    }
+}
+
+// These arguments differ from the instance-default test, and neither closed async collection is rooted elsewhere
+
+// pinterface({913337e9-11a1-4345-a3a2-4e7f956e222d};pinterface({9fc2b0bb-e446-44e2-aa61-9cab8f636af2};enum(TestComponentCSharp.DirectDispatchElement;i4)))
+if (!HasStaticCollectionVector(
+    CreateStaticCollection<StaticCollectionFactory<TestComponentCSharp.DirectDispatchElement>>(),
+    new Guid("8958cbbf-1e98-53ff-a747-92f4b5614187")))
+{
+    return 130;
+}
+
+// pinterface({913337e9-11a1-4345-a3a2-4e7f956e222d};pinterface({9fc2b0bb-e446-44e2-aa61-9cab8f636af2};enum(TestComponentCSharp.AbstractDispatchElement;i4)))
+if (!HasStaticCollectionVector(
+    GetStaticCollection<StaticCollectionCache<TestComponentCSharp.AbstractDispatchElement>>(),
+    new Guid("e9027f2f-5043-5447-ad65-775032182bfc")))
+{
+    return 131;
+}
+
 return 100;
+
+static object CreateStaticCollection<TFactory>() where TFactory : IStaticCollectionFactory => TFactory.Create();
+
+static object GetStaticCollection<TFactory>() where TFactory : IStaticCollectionCache => TFactory.Value;
+
+static unsafe bool HasStaticCollectionVector(object value, Guid iid)
+{
+    void* pointer = WindowsRuntimeMarshal.ConvertToUnmanaged(value);
+    nint vector = 0;
+
+    try
+    {
+        return Marshal.QueryInterface((nint)pointer, iid, out vector) == 0 && vector != 0;
+    }
+    finally
+    {
+        if (vector != 0)
+        {
+            _ = Marshal.Release(vector);
+        }
+
+        WindowsRuntimeMarshal.Free(pointer);
+        GC.KeepAlive(value);
+    }
+}
+
+static int RunGenericDispatchChecks(TestComponentCSharp.Class component, bool cast)
+{
+    GenericDispatch.IListChecker interfaceChecker = new GenericDispatch.ListChecker();
+
+    if (!interfaceChecker.Check<TestComponentCSharp.InterfaceDispatchElement>(
+        GenericDispatch.Wrap(component.GetInterfaceDispatchVector()), cast))
+    {
+        return cast ? 116 : 115;
+    }
+
+    GenericDispatch.IDirectChecker directChecker = new GenericDispatch.DirectChecker();
+
+    if (!directChecker.Check<TestComponentCSharp.DirectDispatchElement>(
+        GenericDispatch.Wrap(component.GetDirectDispatchVector()), cast))
+    {
+        return cast ? 118 : 117;
+    }
+
+    GenericDispatch.AbstractChecker abstractChecker = new GenericDispatch.AbstractCheckerImpl();
+
+    if (!abstractChecker.Check<TestComponentCSharp.AbstractDispatchElement>(
+        GenericDispatch.Wrap(component.GetAbstractDispatchVector()), cast))
+    {
+        return cast ? 120 : 119;
+    }
+
+    GenericDispatch.VirtualChecker virtualChecker = new GenericDispatch.VirtualCheckerImpl();
+
+    if (!virtualChecker.Check<TestComponentCSharp.VirtualDispatchElement>(
+        GenericDispatch.Wrap(component.GetVirtualDispatchVector()), cast))
+    {
+        return cast ? 122 : 121;
+    }
+
+    GenericDispatch.VirtualCheckerImpl sealedChecker = new GenericDispatch.VirtualCheckerImpl();
+
+    if (!sealedChecker.Check<TestComponentCSharp.SealedDispatchElement>(
+        GenericDispatch.Wrap(component.GetSealedDispatchVector()), cast))
+    {
+        return cast ? 124 : 123;
+    }
+
+    // Control: IList<E> is already an explicit call-site argument, independent of dispatch discovery
+    GenericDispatch.ITypeChecker typeChecker = new GenericDispatch.TypeChecker();
+
+    if (!typeChecker.Check<IList<TestComponentCSharp.ClosedArgumentElement>>(
+        GenericDispatch.Wrap(component.GetClosedArgumentVector()), cast))
+    {
+        return cast ? 126 : 125;
+    }
+
+    // Control: ordinary generic calls propagate the two-hop Cast<IList<T>> context
+    if (!GenericDispatch.Forward<TestComponentCSharp.StaticChainElement>(
+        GenericDispatch.Wrap(component.GetStaticChainVector()), cast))
+    {
+        return cast ? 128 : 127;
+    }
+
+    return 100;
+}
+
+static bool IsList<T>(object value) => value is IList<T>;
+
+static object AsList<T>(object value) => (IList<T>)value;
+
+static int ReadCount<T>(object value) => ((IList<T>)value).Count;
+
+static bool Is<T>(object value) => value is T;
+
+static object As<T>(object value) => (T)value;
+
+static bool OuterIsList<T>(object value) => IsList<T>(value);
+
+static object OuterAsList<T>(object value) => AsList<T>(value);
+
+static int OuterReadCount<T>(object value) => ReadCount<T>(value);
 
 object SetAndGetBoxedValue(TestComponentCSharp.Class instance, object val)
 {
     instance.ObjectProperty = val;
     return instance.ObjectProperty;
 }
+
+interface IDefaultCollectionFactory
+{
+    object Create();
+}
+
+interface IDefaultCollectionFactory<T> : IDefaultCollectionFactory
+{
+    object IDefaultCollectionFactory.Create() => new List<IAsyncOperation<T>>();
+}
+
+sealed class DefaultCollectionFactory<T> : IDefaultCollectionFactory<T>;
+
+interface IStaticCollectionFactory
+{
+    static abstract object Create();
+}
+
+interface IStaticCollectionFactory<T> : IStaticCollectionFactory
+{
+    static object IStaticCollectionFactory.Create() => new List<IAsyncOperation<T>>();
+}
+
+sealed class StaticCollectionFactory<T> : IStaticCollectionFactory<T>;
+
+interface IStaticCollectionCache
+{
+    static abstract object Value { get; }
+}
+
+interface IStaticCollectionCache<T> : IStaticCollectionCache
+{
+    private static readonly object Cached = new List<IAsyncOperation<T>>();
+
+    static object IStaticCollectionCache.Value => Cached;
+}
+
+sealed class StaticCollectionCache<T> : IStaticCollectionCache<T>;
 
 class ManagedClass
 {

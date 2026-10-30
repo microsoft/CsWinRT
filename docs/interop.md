@@ -8,6 +8,7 @@ CsWinRT 3.0 provides a complete COM interop layer for Windows Runtime types on .
 
 | Scenario | CsWinRT 3.0 API |
 |-|-|
+| [Interface identifiers](#interface-identifiers) | `WindowsRuntimeMarshal.GetIid<T>` |
 | [Object identity](#object-identity) | `WindowsRuntimeMarshal.NativeReferenceEquals` |
 | [COM object detection](#com-object-detection) | `obj is WindowsRuntimeObject`, `WindowsRuntimeMarshal.IsReferenceToManagedObject` |
 | [Unwrap native pointer](#unwrap-native-pointer) | `WindowsRuntimeMarshal.TryGetNativeObject` |
@@ -21,6 +22,21 @@ CsWinRT 3.0 provides a complete COM interop layer for Windows Runtime types on .
 ## WindowsRuntimeMarshal
 
 The `WindowsRuntimeMarshal` class (`WindowsRuntime.InteropServices`) is the primary public API for low-level marshalling of Windows Runtime objects.
+
+### Interface identifiers
+
+Use `GetIid<T>()` to obtain the native interface identifier associated with a projected or custom-mapped Windows Runtime type:
+
+```csharp
+Guid vectorIid = WindowsRuntimeMarshal.GetIid<IList<string>>();
+Guid classIid = WindowsRuntimeMarshal.GetIid<Windows.Foundation.Collections.PropertySet>();
+Guid inspectableIid = WindowsRuntimeMarshal.GetIid<object>();
+Guid referenceIid = WindowsRuntimeMarshal.GetIid<int?>();
+```
+
+Interfaces and delegates return their own IID; runtime classes return the IID of their default interface. For boxed Windows Runtime value types, use the nullable form: `GetIid<int?>()` returns the `IReference<Int32>` IID, while `GetIid<int>()` throws. `KeyValuePair<K,V>` returns its `IKeyValuePair<K,V>` IID, and supported single-dimensional arrays return their `IReferenceArray<T>` IID. Mapped XAML types follow the project's WinUI/UWP XAML configuration.
+
+The method throws `NotSupportedException` if the type has no Windows Runtime interface identity or its IID is unavailable. Fixed IIDs are compiled into `WinRT.Runtime` and the implementation projections alongside their marshalling metadata; reference projections contain no IID map entries. The interop sidecar supplies discovered generic/array entries and XAML-mode-dependent custom mappings, and generates these only when an input assembly references `GetIid<T>`. Reflection-only calls and calls from assemblies unavailable at build time are not guaranteed to work. Generic helpers are supported, but constructed types must be discoverable when the application is built.
 
 ### Object identity
 
@@ -94,6 +110,14 @@ finally
     WindowsRuntimeMarshal.Free(nativePtr);
 }
 ```
+
+Native code can also need a CCW **around a projected native object's managed wrapper**. For example, XAML uses reference tracking to obtain managed collection interfaces when a native collection does not expose the bindable or covariant interfaces it needs. Opt the projected class into CCW generation with an assembly attribute:
+
+```csharp
+[assembly: WindowsRuntimeNativeExposedType(typeof(Windows.UI.Xaml.DependencyObjectCollection))]
+```
+
+This supplies the wrapper's CCW vtables without replacing its RCW marshaller. Ordinary marshalling still unwraps the original native object, and native-to-managed conversion still creates the projected type. Collection adapters can wrap native enumerators when a required bindable or covariant iterator interface is unavailable; ordinary interface marshalling remains strict.
 
 ### Release native pointer
 

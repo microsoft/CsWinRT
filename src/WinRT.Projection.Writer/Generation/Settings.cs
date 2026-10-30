@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System;
+using System.Collections.Frozen;
 using System.Collections.Generic;
 using WindowsRuntime.ProjectionWriter.Errors;
 using WindowsRuntime.ProjectionWriter.Helpers;
@@ -17,7 +18,7 @@ namespace WindowsRuntime.ProjectionWriter.Generation;
 /// Callers populate the mutable input/include/exclude sets and <c>init</c> properties up
 /// front, then call <see cref="MakeReadOnly"/> exactly once before passing this instance
 /// to <see cref="ProjectionGenerator"/>. <see cref="MakeReadOnly"/> eagerly computes the
-/// derived <see cref="Filter"/> and <see cref="AdditionFilter"/> so subsequent parallel
+/// derived <see cref="Filter"/>, <see cref="AdditionFilter"/>, and <see cref="IdicExclusiveToFilter"/> so subsequent parallel
 /// reads from work items have a stable, non-racy view.
 /// </remarks>
 internal sealed class Settings
@@ -37,15 +38,18 @@ internal sealed class Settings
     /// </summary>
     public string OutputFolder { get; init; } = string.Empty;
 
+    /// <inheritdoc cref="ProjectionWriterOptions.OutputAssemblyName"/>
+    public string OutputAssemblyName { get; init; } = string.Empty;
+
     /// <summary>
     /// Gets or sets a value indicating whether verbose progress is logged to the console.
     /// </summary>
     public bool Verbose { get; init; }
 
     /// <summary>
-    /// Optional callback invoked for each verbose progress message. When <see langword="null"/>,
-    /// verbose messages are forwarded to <see cref="Console.Out"/>. Has no effect unless
-    /// <see cref="Verbose"/> is also set.
+    /// Optional callback invoked for each progress or informational message. When <see langword="null"/>,
+    /// messages are forwarded to <see cref="Console.Out"/>. Verbose progress messages are only logged
+    /// when <see cref="Verbose"/> is also set.
     /// </summary>
     public Action<string>? Logger { get; init; }
 
@@ -70,6 +74,12 @@ internal sealed class Settings
     /// Gets the namespace prefixes to exclude from projection.
     /// </summary>
     public HashSet<string> Exclude { get; } = [];
+
+    /// <summary>
+    /// Gets the fully qualified type names to exclude from the projection, matched exactly.
+    /// These win over every prefix rule; see <see cref="ProjectionWriterOptions.ExcludeTypes"/>.
+    /// </summary>
+    public HashSet<string> ExcludeTypes { get; } = [];
 
     /// <summary>
     /// Gets the namespace prefixes whose namespace-additions resources should be excluded.
@@ -117,14 +127,83 @@ internal sealed class Settings
     public HashSet<string> ComponentImplementationAssemblies { get; } = [];
 
     /// <summary>
+    /// Gets the simple names of the authored Windows Runtime component assemblies being projected. Each one
+    /// gets an activation entry point even when it contributes no activatable classes, because components
+    /// forward to that entry point unconditionally.
+    /// </summary>
+    public HashSet<string> ComponentAssemblyNames { get; } = [];
+
+    /// <summary>
     /// Gets or sets a value indicating whether <c>[ExclusiveTo]</c> interfaces are emitted as <c>public</c> rather than <c>internal</c>.
     /// </summary>
     public bool PublicExclusiveTo { get; init; }
 
     /// <summary>
+    /// Gets the fully qualified exclusive-to interface names to emit as public.
+    /// </summary>
+    public HashSet<string> PublicExclusiveToTypes { get; } = [];
+
+    /// <summary>
+    /// Gets or sets a value indicating whether the projection additionally emits the abstract
+    /// <c>ABI.&lt;Ns&gt;.&lt;Class&gt;</c> and <c>ABI.&lt;Ns&gt;.&lt;Class&gt;ActivationFactory</c> base classes
+    /// (and the exclusive-to interfaces they implement) that let its runtime classes be implemented in C#.
+    /// </summary>
+    public bool ImplementWinMDTypes { get; init; }
+
+    /// <summary>
+    /// Gets the full names of the runtime classes whose authoring surface must additionally be emitted into
+    /// an otherwise normal projection (see the option of the same name on <see cref="ProjectionWriterOptions"/>).
+    /// </summary>
+    public FrozenSet<string> ImplementableTypes { get; init; } = [];
+
+    /// <summary>
     /// Gets or sets a value indicating whether the IDIC pattern is applied to <c>[ExclusiveTo]</c> interfaces.
     /// </summary>
     public bool IdicExclusiveTo { get; init; }
+
+    /// <summary>
+    /// Gets the namespace or type-name prefixes to select for exclusive-to dynamic interface casting.
+    /// </summary>
+    public HashSet<string> IdicExclusiveToIncludes { get; } = [];
+
+    /// <summary>
+    /// Gets the namespace or type-name prefixes to exclude from exclusive-to dynamic interface casting.
+    /// </summary>
+    public HashSet<string> IdicExclusiveToExcludes { get; } = [];
+
+    /// <summary>
+    /// Gets the fully qualified exclusive-to interface names to select exactly for dynamic interface casting.
+    /// </summary>
+    public HashSet<string> IdicExclusiveToTypes { get; } = [];
+
+    /// <summary>
+    /// Gets the exclusive-to IDIC selection filter. Only valid after <see cref="MakeReadOnly"/>.
+    /// </summary>
+    public ExclusiveToInterfaceFilter IdicExclusiveToFilter
+    {
+        get => field ?? throw WellKnownProjectionWriterExceptions.SettingsNotReadOnly();
+        private set;
+    }
+
+    /// <summary>
+    /// Gets whether the exclusive-to interface with the given name should be public.
+    /// </summary>
+    /// <param name="typeName">The fully qualified interface name.</param>
+    /// <returns>Whether the global or per-type public-exclusive option is enabled.</returns>
+    public bool IsPublicExclusiveTo(string typeName)
+    {
+        return PublicExclusiveTo || PublicExclusiveToTypes.Contains(typeName);
+    }
+
+    /// <summary>
+    /// Gets whether the exclusive-to interface with the given name should support dynamic interface casting.
+    /// </summary>
+    /// <param name="typeName">The fully qualified interface name.</param>
+    /// <returns>Whether dynamic interface casting is enabled and the interface passes its selection filters.</returns>
+    public bool IsIdicExclusiveTo(string typeName)
+    {
+        return IdicExclusiveTo && IdicExclusiveToFilter.Includes(typeName);
+    }
 
     /// <summary>
     /// Gets or sets a value indicating whether reference-only projection mode is enabled (no implementation, no IID file).
@@ -133,7 +212,7 @@ internal sealed class Settings
 
     /// <summary>
     /// Finalizes the settings: eagerly builds the derived <see cref="Filter"/> and
-    /// <see cref="AdditionFilter"/> from the configured include/exclude sets, then marks
+    /// <see cref="AdditionFilter"/> and <see cref="IdicExclusiveToFilter"/> from the configured include/exclude sets, then marks
     /// the instance as read-only. Must be called exactly once before passing the instance
     /// to <see cref="ProjectionGenerator"/>.
     /// </summary>
@@ -147,8 +226,9 @@ internal sealed class Settings
             throw WellKnownProjectionWriterExceptions.SettingsAlreadyReadOnly();
         }
 
-        Filter = new TypeFilter(Include, Exclude, IncludeTypes);
-        AdditionFilter = new TypeFilter(Include, AdditionExclude, IncludeTypes);
+        Filter = new TypeFilter(Include, Exclude, IncludeTypes, ExcludeTypes);
+        AdditionFilter = new TypeFilter(Include, AdditionExclude, IncludeTypes, ExcludeTypes);
+        IdicExclusiveToFilter = new ExclusiveToInterfaceFilter(IdicExclusiveToIncludes, IdicExclusiveToExcludes, IdicExclusiveToTypes);
         _isReadOnly = true;
     }
 }

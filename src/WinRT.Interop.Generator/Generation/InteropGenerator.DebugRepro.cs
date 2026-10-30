@@ -173,12 +173,19 @@ internal partial class InteropGenerator
             WinRTComponentAssemblyPath = winRTComponentAssemblyPath,
             GeneratedAssemblyDirectory = tempDirectory,
             UseWindowsUIXamlProjections = args.UseWindowsUIXamlProjections,
+            EnableDefaultCustomPropertyProviderSupport = args.EnableDefaultCustomPropertyProviderSupport,
+            MarshallingMode = args.MarshallingMode,
+            AnalyzeNetStandardAssemblies = args.AnalyzeNetStandardAssemblies,
+            MarshallingEnabledAssemblyNames = args.MarshallingEnabledAssemblyNames,
+            MarshallingDisabledAssemblyNames = args.MarshallingDisabledAssemblyNames,
+            GenerateCollectionChangedListVtables = args.GenerateCollectionChangedListVtables,
             ValidateWinRTRuntimeAssemblyVersion = args.ValidateWinRTRuntimeAssemblyVersion,
             ValidateWinRTRuntimeDllVersion2References = args.ValidateWinRTRuntimeDllVersion2References,
             EnableIncrementalGeneration = args.EnableIncrementalGeneration,
             TreatWarningsAsErrors = args.TreatWarningsAsErrors,
             MaxDegreesOfParallelism = args.MaxDegreesOfParallelism,
             DebugReproDirectory = null,
+            LogDirectory = args.LogDirectory is null ? null : tempDirectory,
             Token = CancellationToken.None
         });
 
@@ -246,12 +253,19 @@ internal partial class InteropGenerator
             WinRTComponentAssemblyPath = winRTComponentAssemblyHashedName,
             GeneratedAssemblyDirectory = args.GeneratedAssemblyDirectory,
             UseWindowsUIXamlProjections = args.UseWindowsUIXamlProjections,
+            EnableDefaultCustomPropertyProviderSupport = args.EnableDefaultCustomPropertyProviderSupport,
+            MarshallingMode = args.MarshallingMode,
+            AnalyzeNetStandardAssemblies = args.AnalyzeNetStandardAssemblies,
+            MarshallingEnabledAssemblyNames = args.MarshallingEnabledAssemblyNames,
+            MarshallingDisabledAssemblyNames = args.MarshallingDisabledAssemblyNames,
+            GenerateCollectionChangedListVtables = args.GenerateCollectionChangedListVtables,
             ValidateWinRTRuntimeAssemblyVersion = args.ValidateWinRTRuntimeAssemblyVersion,
             ValidateWinRTRuntimeDllVersion2References = args.ValidateWinRTRuntimeDllVersion2References,
             EnableIncrementalGeneration = args.EnableIncrementalGeneration,
             TreatWarningsAsErrors = args.TreatWarningsAsErrors,
             MaxDegreesOfParallelism = args.MaxDegreesOfParallelism,
             DebugReproDirectory = args.DebugReproDirectory,
+            LogDirectory = args.LogDirectory is null ? null : ".",
             Token = CancellationToken.None
         });
 

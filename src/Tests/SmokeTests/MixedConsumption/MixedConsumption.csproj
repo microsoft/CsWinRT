@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Consume both Windows SDK projections and an authored component implementing an SDK interface,
+    including an SDK-typed constructor. This exercises component projection generation against
+    the SDK forwarders as well as the generated SDK and interop assemblies.
+  -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Keep the component managed; only this consuming app is published with Native AOT. -->
+    <ProjectReference Include="..\Authoring\Authoring.csproj" GlobalPropertiesToRemove="PublishAot" />
+  </ItemGroup>
+</Project>

@@ -29,3 +29,31 @@ CSWINRT2019 | WindowsRuntime.SourceGenerator | Warning | '[WindowsRuntimeNativeE
 CSWINRT2020 | WindowsRuntime.SourceGenerator | Warning | Duplicate '[WindowsRuntimeNativeExposedType]' target type
 CSWINRT2021 | WindowsRuntime.SourceGenerator | Warning | Unsupported '[Experimental]' target for Windows Runtime metadata
 CSWINRT2022 | WindowsRuntime.SourceGenerator | Warning | '[Obsolete]' on an authored API without '[Deprecated]'
+CSWINRT2023 | WindowsRuntime.SourceGenerator | Error | Invalid '[WindowsRuntimeActivationFactory]' target type
+CSWINRT2024 | WindowsRuntime.SourceGenerator | Error | Mismatched '[WindowsRuntimeActivationFactory]' runtime class type
+CSWINRT2025 | WindowsRuntime.SourceGenerator | Error | Duplicate activation factory for a Windows Runtime class
+CSWINRT2026 | WindowsRuntime.SourceGenerator | Warning | Implemented Windows Runtime class is not activatable
+CSWINRT2027 | WindowsRuntime.SourceGenerator | Error | Invalid '[GeneratedWindowsRuntimeActivationFactory]' target type
+CSWINRT2028 | WindowsRuntime.SourceGenerator | Error | Authored property requires a public getter
+CSWINRT2029 | WindowsRuntime.SourceGenerator | Error | Invalid authored type namespace
+CSWINRT2030 | WindowsRuntime.SourceGenerator | Error | Authored namespaces differ only by case
+CSWINRT2031 | WindowsRuntime.SourceGenerator | Error | Generic authored declaration
+CSWINRT2032 | WindowsRuntime.SourceGenerator | Error | Authored runtime class must be sealed
+CSWINRT2033 | WindowsRuntime.SourceGenerator | Error | Unsupported authored signature type
+CSWINRT2034 | WindowsRuntime.SourceGenerator | Error | Authored struct requires a public instance field
+CSWINRT2035 | WindowsRuntime.SourceGenerator | Error | Authored constructors have the same arity
+CSWINRT2036 | WindowsRuntime.SourceGenerator | Error | Non-public authored struct field
+CSWINRT2037 | WindowsRuntime.SourceGenerator | Error | Constant authored struct field
+CSWINRT2038 | WindowsRuntime.SourceGenerator | Error | Invalid authored struct field type
+CSWINRT2039 | WindowsRuntime.SourceGenerator | Error | Authored operator is not supported
+CSWINRT2040 | WindowsRuntime.SourceGenerator | Error | Multiple default authored overloads
+CSWINRT2041 | WindowsRuntime.SourceGenerator | Error | Authored overload group requires a default
+CSWINRT2042 | WindowsRuntime.SourceGenerator | Error | Jagged authored array
+CSWINRT2043 | WindowsRuntime.SourceGenerator | Error | Multidimensional authored array
+CSWINRT2044 | WindowsRuntime.SourceGenerator | Error | Unsupported authored inheritance
+CSWINRT2045 | WindowsRuntime.SourceGenerator | Error | Invalid by-reference authored array
+CSWINRT2046 | WindowsRuntime.SourceGenerator | Error | Invalid by-reference authored span
+CSWINRT2047 | WindowsRuntime.SourceGenerator | Error | Authored parameter name conflicts with generated code
+CSWINRT2048 | WindowsRuntime.SourceGenerator | Warning | Reading from a write-only 'Span<T>' parameter
+CSWINRT2049 | WindowsRuntime.SourceGenerator | Error | Invalid Windows Runtime metadata exclusion
+CSWINRT2050 | WindowsRuntime.SourceGenerator | Error | Ignored type in exported Windows Runtime signature

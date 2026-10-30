@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -84,6 +85,12 @@ public sealed class RunCsWinRTInteropGenerator : ToolTask
     public string? DebugReproDirectory { get; set; }
 
     /// <summary>
+    /// Gets or sets the directory where the interop generator JSON log will be produced.
+    /// </summary>
+    /// <remarks>If not set, no log will be produced.</remarks>
+    public string? LogDirectory { get; set; }
+
+    /// <summary>
     /// Gets or sets the tools directory where the 'cswinrtinteropgen' tool is located.
     /// </summary>
     [Required]
@@ -104,6 +111,12 @@ public sealed class RunCsWinRTInteropGenerator : ToolTask
     public bool UseWindowsUIXamlProjections { get; set; } = false;
 
     /// <summary>
+    /// Gets or sets whether to emit default custom property provider entries for generated managed CCWs.
+    /// </summary>
+    /// <remarks>If not set, it will default to <see langword="true"/>.</remarks>
+    public bool EnableDefaultCustomPropertyProviderSupport { get; set; } = true;
+
+    /// <summary>
     /// Gets or sets the marshalling mode, controlling which assemblies are analyzed to discover
     /// user-defined/CCW/generic types (one of <c>"all"</c>, <c>"minimal"</c>, or <c>"strict"</c>).
     /// </summary>
@@ -111,10 +124,22 @@ public sealed class RunCsWinRTInteropGenerator : ToolTask
     public string MarshallingMode { get; set; } = DefaultMarshallingMode;
 
     /// <summary>
+    /// Gets or sets whether .NET Standard assemblies participate in interop discovery, including explicit opt-ins.
+    /// </summary>
+    /// <remarks>If not set, it will default to <see langword="true"/>.</remarks>
+    public bool AnalyzeNetStandardAssemblies { get; set; } = true;
+
+    /// <summary>
     /// Gets or sets the names of assemblies explicitly opted in for analysis, regardless of the marshalling mode.
     /// </summary>
     /// <remarks>Each item is an assembly name (the <c>.dll</c> extension and any directory are ignored).</remarks>
     public ITaskItem[]? MarshallingEnabledAssemblies { get; set; }
+
+    /// <summary>
+    /// Gets or sets the names of assemblies explicitly excluded from analysis, regardless of the marshalling mode.
+    /// </summary>
+    /// <remarks>Each item is an assembly name (the <c>.dll</c> extension and any directory are ignored).</remarks>
+    public ITaskItem[]? MarshallingDisabledAssemblies { get; set; }
 
     /// <summary>
     /// Gets or sets whether to automatically generate the vtables for the list types used by 'NotifyCollectionChangedEventArgs'.
@@ -133,7 +158,7 @@ public sealed class RunCsWinRTInteropGenerator : ToolTask
     public bool ValidateWinRTRuntimeDllVersion2References { get; set; } = true;
 
     /// <summary>
-    /// Gets whether to enable incremental generation (i.e. with a cache file on disk saving the full set of types to generate).
+    /// Gets whether to reuse a verified interop assembly when discovery and its emission dependencies are unchanged.
     /// </summary>
     public bool EnableIncrementalGeneration { get; set; } = true;
 
@@ -147,6 +172,11 @@ public sealed class RunCsWinRTInteropGenerator : ToolTask
     /// </summary>
     /// <remarks>If not set, the default will match the number of available processor cores.</remarks>
     public int MaxDegreesOfParallelism { get; set; } = -1;
+
+    /// <summary>
+    /// Gets or sets whether the interop generator uses Server GC. Empty selects automatically.
+    /// </summary>
+    public string? EnableServerGC { get; set; }
 
     /// <summary>
     /// Gets or sets additional arguments to pass to the tool.
@@ -217,6 +247,13 @@ public sealed class RunCsWinRTInteropGenerator : ToolTask
             return false;
         }
 
+        if (LogDirectory is not null && !Directory.Exists(LogDirectory))
+        {
+            Log.LogError("Interop generator log directory '{0}' is invalid or does not exist.", LogDirectory);
+
+            return false;
+        }
+
         if (CsWinRTToolsDirectory is null || !Directory.Exists(CsWinRTToolsDirectory))
         {
             Log.LogWarning("Tools directory '{0}' is invalid or does not exist.", CsWinRTToolsDirectory);
@@ -253,7 +290,38 @@ public sealed class RunCsWinRTInteropGenerator : ToolTask
             return false;
         }
 
+        // The GC mode must be empty for automatic selection or a valid boolean override
+        if (!string.IsNullOrEmpty(EnableServerGC) && !bool.TryParse(EnableServerGC, out _))
+        {
+            Log.LogError("Invalid 'CsWinRTEnableInteropGeneratorServerGC' value '{0}'. It must be empty (automatic), 'true', or 'false'.", EnableServerGC);
+
+            return false;
+        }
+
         return true;
+    }
+
+    /// <inheritdoc/>
+    protected override ProcessStartInfo GetProcessStartInfo(string pathToTool, string commandLineCommands, string responseFileSwitch)
+    {
+        ProcessStartInfo startInfo = base.GetProcessStartInfo(pathToTool, commandLineCommands, responseFileSwitch);
+
+        // Set the child's GC mode: explicit property first, existing environment next, otherwise automatic selection
+        if (!string.IsNullOrEmpty(EnableServerGC))
+        {
+            startInfo.EnvironmentVariables["DOTNET_gcServer"] = bool.Parse(EnableServerGC) ? "1" : "0";
+        }
+        else if (!startInfo.EnvironmentVariables.ContainsKey("DOTNET_gcServer") ||
+                 string.IsNullOrEmpty(startInfo.EnvironmentVariables["DOTNET_gcServer"]))
+        {
+            bool enabled = InteropGeneratorGCPolicy.ShouldUseServerGC();
+
+            startInfo.EnvironmentVariables["DOTNET_gcServer"] = enabled ? "1" : "0";
+        }
+
+        Log.LogMessage(MessageImportance.Low, "Interop generator DOTNET_gcServer={0}.", startInfo.EnvironmentVariables["DOTNET_gcServer"]);
+
+        return startInfo;
     }
 
     /// <summary>
@@ -322,9 +390,13 @@ public sealed class RunCsWinRTInteropGenerator : ToolTask
         AppendResponseFileOptionalCommand(args, "--winrt-component-assembly-path", WinRTComponentAssemblyPath?.ItemSpec);
         AppendResponseFileCommand(args, "--generated-assembly-directory", InteropAssemblyDirectory!);
         AppendResponseFileOptionalCommand(args, "--debug-repro-directory", DebugReproDirectory);
+        AppendResponseFileOptionalCommand(args, "--log-directory", LogDirectory);
         AppendResponseFileCommand(args, "--use-windows-ui-xaml-projections", UseWindowsUIXamlProjections.ToString());
+        AppendResponseFileCommand(args, "--enable-default-custom-property-provider-support", EnableDefaultCustomPropertyProviderSupport.ToString());
         AppendResponseFileCommand(args, "--marshalling-mode", MarshallingMode);
+        AppendResponseFileCommand(args, "--analyze-net-standard-assemblies", AnalyzeNetStandardAssemblies.ToString());
         AppendResponseFileOptionalCommand(args, "--marshalling-enabled-assembly-names", MarshallingEnabledAssemblies);
+        AppendResponseFileOptionalCommand(args, "--marshalling-disabled-assembly-names", MarshallingDisabledAssemblies);
         AppendResponseFileCommand(args, "--generate-collection-changed-list-vtables", GenerateCollectionChangedListVtables.ToString());
         AppendResponseFileCommand(args, "--validate-winrt-runtime-assembly-version", ValidateWinRTRuntimeAssemblyVersion.ToString());
         AppendResponseFileCommand(args, "--validate-winrt-runtime-dll-version-2-references", ValidateWinRTRuntimeDllVersion2References.ToString());

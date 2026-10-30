@@ -43,6 +43,7 @@ internal partial class InteropTypeDefinitionBuilder
         /// <param name="emitState">The emit state for this invocation.</param>
         /// <param name="module">The module that will contain the type being created.</param>
         /// <param name="useWindowsUIXamlProjections">Whether to use <c>Windows.UI.Xaml</c> projections.</param>
+        /// <param name="orderedVtableTypes">The prepared interface order for this shared set.</param>
         /// <param name="interfaceEntriesType">The resulting interface entries type.</param>
         /// <param name="interfaceEntriesImplType">The resulting implementation type.</param>
         public static void InterfaceEntriesImpl(
@@ -53,6 +54,7 @@ internal partial class InteropTypeDefinitionBuilder
             InteropGeneratorEmitState emitState,
             ModuleDefinition module,
             bool useWindowsUIXamlProjections,
+            IReadOnlyList<TypeSignature> orderedVtableTypes,
             out TypeDefinition interfaceEntriesType,
             out TypeDefinition interfaceEntriesImplType)
         {
@@ -62,13 +64,27 @@ internal partial class InteropTypeDefinitionBuilder
             // It's not guaranteed that the list is empty, so we must always reset it first
             entriesList.Clear();
 
+            // Covariant reference arrays that are not Windows Runtime types are handled as user-defined types, but still
+            // need 'IReferenceArray<Object>' and 'IPropertyValue' to support native array unboxing. These entries are
+            // added first, to match the ordering used for the other SZ array types.
+            entriesList.AddRange(InteropInterfaceEntriesResolver.EnumerateCovariantSzArrayInterfaceEntries(
+                type: userDefinedType,
+                interopReferences: interopReferences));
+
+            // Add the default 'ICustomPropertyProvider' unless it is disabled or explicitly implemented
+            entriesList.AddRange(InteropInterfaceEntriesResolver.EnumerateDefaultCustomPropertyProviderInterfaceEntries(
+                vtableTypes: vtableTypes,
+                interopDefinitions: interopDefinitions,
+                interopReferences: interopReferences));
+
             // Add all entries for explicitly implemented interfaces
             entriesList.AddRange(InteropInterfaceEntriesResolver.EnumerateMetadataInterfaceEntries(
                 vtableTypes: vtableTypes,
                 interopDefinitions: interopDefinitions,
                 interopReferences: interopReferences,
                 emitState: emitState,
-                useWindowsUIXamlProjections: useWindowsUIXamlProjections));
+                useWindowsUIXamlProjections: useWindowsUIXamlProjections,
+                orderedVtableTypes: orderedVtableTypes));
 
             // Add entries for authored struct types, if needed
             entriesList.AddRange(InteropInterfaceEntriesResolver.EnumerateComponentInterfaceEntries(
@@ -82,11 +98,11 @@ internal partial class InteropTypeDefinitionBuilder
                 interopReferences: interopReferences));
 
             // Get or create the interface entries type for this user-defined type (we reuse them based on number of entries)
-            interfaceEntriesType = interopDefinitions.UserDefinedInterfaceEntries(entriesList.Count);
+            interfaceEntriesType = interopDefinitions.UserDefinedInterfaceEntries(entriesList.Count, vtableTypes);
 
             InteropTypeDefinitionBuilder.InterfaceEntriesImpl(
                 ns: "WindowsRuntime.Interop.UserDefinedTypes"u8,
-                name: InteropUtf8NameFactory.TypeName(userDefinedType, interopDefinitions, "InterfaceEntriesImpl"),
+                name: InteropUtf8NameFactory.TypeName(userDefinedType, interopDefinitions, "InterfaceEntriesImpl", includeNamespace: true),
                 entriesFieldType: interfaceEntriesType,
                 interopReferences: interopReferences,
                 module: module,
@@ -116,7 +132,7 @@ internal partial class InteropTypeDefinitionBuilder
             // We're declaring an 'internal sealed class' type
             marshallerType = new(
                 ns: "WindowsRuntime.Interop.UserDefinedTypes"u8,
-                name: InteropUtf8NameFactory.TypeName(userDefinedType, interopDefinitions, "ComWrappersMarshallerAttribute"),
+                name: InteropUtf8NameFactory.TypeName(userDefinedType, interopDefinitions, "ComWrappersMarshallerAttribute", includeNamespace: true),
                 attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.BeforeFieldInit,
                 baseType: interopReferences.WindowsRuntimeComWrappersMarshallerAttribute);
 
@@ -208,11 +224,29 @@ internal partial class InteropTypeDefinitionBuilder
                 _ = userDefinedType.Resolve(module.RuntimeContext);
             }
 
-            // If the user-defined type has '[WindowsRuntimeClassName]', then it means it's using a custom runtime
-            // class name, which we want to preserve. In this case, just emit '[WindowsRuntimeMappedType]' on the
-            // proxy, so the runtime lookup will find the original type and read the name from the attribute on it.
-            if (userDefinedTypeDefinition?.HasCustomAttribute(interopReferences.WindowsRuntimeClassNameAttribute) is true)
+            // Special-case covariant arrays and report 'IReferenceArray<Object>' as their runtime class name, so that when marshalling
+            // this CCW it will be correctly recognized as an array by consumers and unboxed, rather than being treated as an arbitrary
+            // custom object collection.
+            if (userDefinedType is SzArrayTypeSignature szArrayType && szArrayType.IsCovariantSzArrayType(interopReferences))
             {
+                InteropTypeDefinitionBuilder.Proxy(
+                    ns: InteropUtf8NameFactory.TypeNamespace(userDefinedType, interopReferences.RuntimeContext),
+                    name: InteropUtf8NameFactory.TypeName(userDefinedType, interopDefinitions),
+                    mappedMetadata: null,
+                    runtimeClassName: "Windows.Foundation.IReferenceArray`1<Object>",
+                    metadataTypeName: null,
+                    mappedType: null,
+                    referenceType: null,
+                    comWrappersMarshallerAttributeType: comWrappersMarshallerAttributeType,
+                    interopReferences: interopReferences,
+                    module: module,
+                    out proxyType);
+            }
+            else if (userDefinedTypeDefinition?.HasCustomAttribute(interopReferences.WindowsRuntimeClassNameAttribute, interopReferences.SignatureComparer) is true)
+            {
+                // The user-defined type has '[WindowsRuntimeClassName]', which specifies a custom runtime class
+                // name that we want to preserve. Emit '[WindowsRuntimeMappedType]' on the proxy, so runtime lookup
+                // finds the original type and reads the name from its '[WindowsRuntimeClassName]' attribute.
                 InteropTypeDefinitionBuilder.Proxy(
                     ns: InteropUtf8NameFactory.TypeNamespace(userDefinedType, interopReferences.RuntimeContext),
                     name: InteropUtf8NameFactory.TypeName(userDefinedType, interopDefinitions),
@@ -226,7 +260,26 @@ internal partial class InteropTypeDefinitionBuilder
                     module: module,
                     out proxyType);
             }
-            else if (userDefinedTypeDefinition is { IsPublic: true, DeclaringModule.Assembly.IsWindowsRuntimeComponentAssembly: true })
+            else if (userDefinedTypeDefinition?.TryGetImplementedRuntimeClassName(interopReferences, out string? implementedRuntimeClassName) is true)
+            {
+                // The type implements a Windows Runtime class declared in existing metadata (it derives from one of
+                // the abstract base classes CsWinRT generates for that purpose). Its runtime class name must be that
+                // of the implemented class, not of the deriving type: native callers must not be able to tell an
+                // authored implementation apart from the real thing, and the class name carries that identity.
+                InteropTypeDefinitionBuilder.Proxy(
+                    ns: InteropUtf8NameFactory.TypeNamespace(userDefinedType, interopReferences.RuntimeContext),
+                    name: InteropUtf8NameFactory.TypeName(userDefinedType, interopDefinitions),
+                    mappedMetadata: null,
+                    runtimeClassName: implementedRuntimeClassName,
+                    metadataTypeName: null,
+                    mappedType: null,
+                    referenceType: null,
+                    comWrappersMarshallerAttributeType: comWrappersMarshallerAttributeType,
+                    interopReferences: interopReferences,
+                    module: module,
+                    out proxyType);
+            }
+            else if (userDefinedTypeDefinition?.IsComponentWindowsRuntimeType(interopReferences.WindowsRuntimeComponentModule) is true)
             {
                 // For authored component types, the runtime class name is the type's own fully-qualified name.
                 InteropTypeDefinitionBuilder.Proxy(

@@ -2,6 +2,7 @@
 
 #include "Class.g.h"
 #include "winrt/Windows.Foundation.Collections.h"
+#include <functional>
 
 namespace winrt::TestComponentCSharp::implementation
 {
@@ -74,6 +75,7 @@ namespace winrt::TestComponentCSharp::implementation
         std::atomic<int32_t> _asyncResult;
         std::atomic<int32_t> _asyncProgress;
         std::atomic<bool> _failingCompletedHandlerInvoked{ false };
+        std::function<bool(int32_t)> _completeWrlAsync;
         Windows::Foundation::Point _point{};
         Windows::Foundation::Rect _rect{};
         Windows::Foundation::Size _size{};
@@ -116,6 +118,8 @@ namespace winrt::TestComponentCSharp::implementation
         static void StaticReadWriteProperty(int32_t value);
         static Windows::Foundation::TimeSpan FromSeconds(int32_t seconds);
         static Windows::Foundation::DateTime Now();
+        static TestComponentCSharp::Class CreateFromString(hstring const& value);
+        static TestComponentCSharp::NonBlittableStringStruct CreateStructFromString(hstring const& value);
         winrt::event_token Event0(TestComponentCSharp::EventHandler0 const& handler);
         void Event0(winrt::event_token const& token) noexcept;
         void InvokeEvent0();
@@ -283,6 +287,16 @@ namespace winrt::TestComponentCSharp::implementation
         Windows::Foundation::IAsyncOperationWithProgress<hstring, int32_t> GetStringAsync();
 
         Windows::Foundation::Collections::IVectorView<int32_t> GetIntVector();
+        Windows::Foundation::IInspectable GetInputStreamOptionsVector();
+        Windows::Foundation::IInspectable GetFileAccessModeVector();
+        Windows::Foundation::IInspectable GetCreationCollisionOptionVector();
+        Windows::Foundation::IInspectable GetInterfaceDispatchVector();
+        Windows::Foundation::IInspectable GetDirectDispatchVector();
+        Windows::Foundation::IInspectable GetAbstractDispatchVector();
+        Windows::Foundation::IInspectable GetVirtualDispatchVector();
+        Windows::Foundation::IInspectable GetSealedDispatchVector();
+        Windows::Foundation::IInspectable GetClosedArgumentVector();
+        Windows::Foundation::IInspectable GetStaticChainVector();
         Windows::Foundation::Collections::IVectorView<bool> GetBoolVector();
         Windows::Foundation::Collections::IVectorView<hstring> GetStringVector();
         Windows::Foundation::Collections::IVectorView<TestComponentCSharp::ComposedBlittableStruct> GetBlittableStructVector();
@@ -304,6 +318,9 @@ namespace winrt::TestComponentCSharp::implementation
         Windows::Foundation::Collections::IMap<TestComponentCSharp::ComposedBlittableStruct, Windows::Foundation::IInspectable> GetBlittableToObjectDictionary();
         Windows::Foundation::Collections::IMap<int32_t, Windows::Foundation::Collections::IVector<TestComponentCSharp::EnumValue>> GetIntToListDictionary();
         Windows::Foundation::Collections::IMap<Windows::Foundation::TimeSpan, Windows::Foundation::TimeSpan> GetTimeSpanToTimeSpanDictionary();
+
+        static Windows::Foundation::Collections::IObservableMap<hstring, hstring> CreateObservableStringMap(bool allowEventCalls);
+        static Windows::Foundation::Collections::IObservableMap<int32_t, int32_t> CreateObservableIntMap(bool allowEventCalls);
 
         // Test IIDOptimizer -- testing the windows projection covers most code paths, and these two types exercise the rest.
         Windows::Foundation::Collections::IVectorView<Microsoft::UI::Xaml::Data::DataErrorsChangedEventArgs> GetEventArgsVector();
@@ -358,6 +375,10 @@ namespace winrt::TestComponentCSharp::implementation
         Windows::Foundation::IAsyncActionWithProgress<int32_t> DoitAsyncWithProgress();
         Windows::Foundation::IAsyncOperation<int32_t> AddAsync(int32_t lhs, int32_t rhs);
         Windows::Foundation::IAsyncOperationWithProgress<int32_t, int32_t> AddAsyncWithProgress(int32_t lhs, int32_t rhs);
+        Windows::Foundation::IAsyncOperationWithProgress<uint32_t, uint32_t> WrlAddAsyncWithProgress(uint32_t lhs, uint32_t rhs);
+        Windows::Foundation::IAsyncOperationWithProgress<uint32_t, uint32_t> WrlAddAsyncWithProgress(uint32_t lhs, uint32_t rhs,
+            Windows::Foundation::AsyncOperationWithProgressCompletedHandler<uint32_t, uint32_t> const& observer);
+        bool TryCompleteWrlAsync(int32_t hr);
 
         void SetFailingCompletedHandler(Windows::Foundation::IAsyncAction const& action, int32_t hr);
         bool FailingCompletedHandlerInvoked();
@@ -423,6 +444,7 @@ namespace winrt::TestComponentCSharp::implementation
         static com_array<int32_t> UnboxInt32Array(IInspectable const& obj);
         static com_array<bool> UnboxBooleanArray(IInspectable const& obj);
         static com_array<hstring> UnboxStringArray(IInspectable const& obj);
+        static com_array<Windows::Foundation::IInspectable> UnboxObjectArray(IInspectable const& obj);
 
         static int32_t UnboxInt32UsingPropertyValue(IInspectable const& obj);
         static hstring UnboxStringUsingPropertyValue(IInspectable const& obj);
@@ -430,6 +452,7 @@ namespace winrt::TestComponentCSharp::implementation
         static com_array<int32_t> UnboxInt32ArrayUsingPropertyValue(IInspectable const& obj);
         static com_array<bool> UnboxBooleanArrayUsingPropertyValue(IInspectable const& obj);
         static com_array<Windows::Foundation::Point> UnboxPointArrayUsingPropertyValue(IInspectable const& obj);
+        static com_array<Windows::Foundation::IInspectable> UnboxObjectArrayUsingPropertyValue(IInspectable const& obj);
  
         static void UnboxAndCallProgressHandler(IInspectable const& httpProgressHandler);
         double Calculate(winrt::Windows::Foundation::Collections::IVector<winrt::Windows::Foundation::IReference<double>> const& values);

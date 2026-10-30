@@ -8,6 +8,7 @@ using AsmResolver.DotNet.Code.Cil;
 using AsmResolver.DotNet.Signatures;
 using AsmResolver.PE.DotNet.Cil;
 using AsmResolver.PE.DotNet.Metadata.Tables;
+using WindowsRuntime.InteropGenerator.Models;
 using static AsmResolver.PE.DotNet.Cil.CilOpCodes;
 
 namespace WindowsRuntime.InteropGenerator;
@@ -232,6 +233,144 @@ internal static class MethodDefinitionExtensions
                 }
 
                 yield return elementType;
+            }
+        }
+
+        /// <summary>
+        /// Enumerates operand types used by casts, type tests, boxing, unboxing, and type tokens.
+        /// </summary>
+        /// <returns>The types referenced by the operands.</returns>
+        public IEnumerable<ITypeDefOrRef> EnumerateCastAndTypeTokenOperandTypes()
+        {
+            // Make sure that we do have some instructions to analyze
+            if (method.CilMethodBody is not { Instructions: CilInstructionCollection instructions })
+            {
+                yield break;
+            }
+
+            foreach (CilInstruction instruction in instructions)
+            {
+                // Only inspect operations that can expose types absent from signatures, locals, and allocations
+                if (instruction.OpCode.Code is not (
+                    CilCode.Castclass or
+                    CilCode.Isinst or
+                    CilCode.Box or
+                    CilCode.Unbox_Any or
+                    CilCode.Ldtoken))
+                {
+                    continue;
+                }
+
+                if (instruction.Operand is not ITypeDefOrRef operandType)
+                {
+                    continue;
+                }
+
+                yield return operandType;
+            }
+        }
+
+        /// <summary>
+        /// Enumerates operands of method instructions and member-token loads.
+        /// </summary>
+        /// <returns>The referenced methods with their dispatch opcodes and receiver constraints.</returns>
+        public IEnumerable<MethodOperand> EnumerateMethodOperands()
+        {
+            // Make sure that we do have some instructions to analyze
+            if (method.CilMethodBody is not { Instructions: CilInstructionCollection instructions })
+            {
+                yield break;
+            }
+
+            ITypeDefOrRef? constraint = null;
+
+            foreach (CilInstruction instruction in instructions)
+            {
+                // Preserve a constrained receiver across other prefixes, but only for the next instruction
+                if (instruction.OpCode.Code == CilCode.Constrained)
+                {
+                    constraint = instruction.Operand as ITypeDefOrRef;
+
+                    continue;
+                }
+
+                if (instruction.OpCode.OpCodeType == CilOpCodeType.Prefix)
+                {
+                    continue;
+                }
+
+                // Only inspect invocations, method-pointer loads, and member tokens
+                if (instruction.OpCode.Code is not (
+                    CilCode.Call or
+                    CilCode.Callvirt or
+                    CilCode.Newobj or
+                    CilCode.Jmp or
+                    CilCode.Ldftn or
+                    CilCode.Ldvirtftn or
+                    CilCode.Ldtoken))
+                {
+                    constraint = null;
+
+                    continue;
+                }
+
+                if (instruction.Operand is not IMethodDescriptor descriptor)
+                {
+                    constraint = null;
+
+                    continue;
+                }
+
+                yield return new MethodOperand(
+                    Descriptor: descriptor,
+                    Constraint: constraint,
+                    IsVirtual: instruction.OpCode.Code is CilCode.Callvirt or CilCode.Ldvirtftn,
+                    IsStaticDispatch: constraint is not null && instruction.OpCode.Code is CilCode.Call or CilCode.Ldftn);
+
+                constraint = null;
+            }
+        }
+
+        /// <summary>
+        /// Enumerates the declaring types and value types of fields accessed by a method.
+        /// </summary>
+        /// <param name="runtimeContext">The context to assume when resolving types.</param>
+        /// <returns>The types visible through field accesses.</returns>
+        public IEnumerable<TypeSignature> EnumerateFieldAccessTypes(RuntimeContext? runtimeContext)
+        {
+            if (method.CilMethodBody is not { Instructions: CilInstructionCollection instructions })
+            {
+                yield break;
+            }
+
+            foreach (CilInstruction instruction in instructions)
+            {
+                if (instruction.OpCode.OperandType is not CilOperandType.InlineField ||
+                    instruction.Operand is not IFieldDescriptor { Signature.FieldType: { } fieldType } field)
+                {
+                    continue;
+                }
+
+                // A constructed generic declaring type is encoded as a type specification and can
+                // contribute closed type arguments. Ordinary declaring types cannot contribute any
+                // generic or array signatures, and resolving them would make unrelated private
+                // dependencies a prerequisite for discovery. This is analogous logic as what
+                // we use when discovering 'newobj' instantiations when scanning method bodies.
+                if (field.DeclaringType?.TryGetTypeSignature(
+                    context: runtimeContext,
+                    throwOnResolutionFailure: false,
+                    typeSignature: out TypeSignature? declaringTypeSignature) is true)
+                {
+                    yield return declaringTypeSignature;
+
+                    // Field parameters belong to the declaring type, not the accessing method's type
+                    if (declaringTypeSignature is GenericInstanceTypeSignature genericType)
+                    {
+                        fieldType = fieldType.InstantiateGenericTypes(new GenericContext(genericType, null));
+                    }
+                }
+
+                yield return fieldType;
             }
         }
     }

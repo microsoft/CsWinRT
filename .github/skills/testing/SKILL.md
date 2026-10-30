@@ -13,7 +13,7 @@ Before adding tests, always check whether tests for the same functionality alrea
 
 ## Test project overview
 
-CsWinRT 3.0 has 7 primary test project areas, each serving a different purpose. Additional specialized test projects also exist under `src/Tests/`:
+CsWinRT 3.0 has 9 primary test project areas, each serving a different purpose. Additional specialized test projects also exist under `src/Tests/`:
 
 ### 1. Unit tests (`src/Tests/UnitTest/`)
 
@@ -25,8 +25,9 @@ CsWinRT 3.0 has 7 primary test project areas, each serving a different purpose. 
 - **Test framework:** MSTest (`[TestClass]`, `[TestMethod]`, `Assert.*`)
 - **TFM:** Variable via `$(AppBuildTFMs)`, multi-platform (x86/x64)
 - **Output type:** Exe, self-contained, AOT-enabled
-- **Key dependencies:** MSTest.TestFramework, MSTest.Engine, MSTest.SourceGeneration, Microsoft.Windows.CsWin32, Newtonsoft.Json, Microsoft.VCRTForwarders.140
+- **Key dependencies:** MSTest.TestFramework, MSTest.TestAdapter, MSTest.SourceGeneration, Microsoft.Windows.CsWin32, Newtonsoft.Json, Microsoft.VCRTForwarders.140
 - **References:** WinRT.SourceGenerator2 (as analyzer), Test/TestSubset/Windows/WinAppSDK projections
+- **Runner:** The MSTest projects use `MSTest.Sdk`, pinned in `global.json`. The SDK supplies the runner and matching MSTest/MTP packages, using its default extension profile (TRX reporting and code coverage). Shared `Directory.Build.props` enables source generation for CoreCLR as well as Native AOT. Do not add redundant runner properties or MSTest package references.
 
 **Test organization:**
 - Single namespace: `UnitTest`
@@ -76,6 +77,9 @@ public class TestWinRT
 | `DerivedClassAsBaseClass/` | Base class polymorphism, casting |
 | `DynamicInterfaceCasting/` | Dynamic casting, interface queries, CCW interface casting |
 | `Events/` | Event handlers, property changed notifications |
+| `ForwardedTypeIdentities/` | Cross-framework `ReadOnlyDictionary` identities, native QI and ABI callbacks, `IMap.GetView` fallback, and unrelated `IStringable`/`IDisposable` CCWs under CoreCLR/AOT |
+| `ForwardedTypeIdentitiesLibrary/` | Plain netstandard1.3 helper supplying the `System.ObjectModel` identity to the net10.0 forwarded-type regression |
+| `ForwardedTypeIdentitiesNetStandard/` | Plain netstandard2.0 helper supplying `netstandard`-scoped dictionaries and an `IDisposable` callback through explicit interop discovery opt-in |
 | `JsonValueFunctionCalls/` | Windows.Data.Json API calls, static methods, boxed enums |
 | `NonWinRT/` | Compile-time validation for non-WinRT scenarios |
 | `OptInMode/` | Opt-in external type marshalling |
@@ -203,6 +207,13 @@ public async Task InvalidType_Warns()
 - **Type:** WinExe (desktop XAML application)
 - **Test framework:** MSTest (runs inside a WinUI application)
 - **Dependencies:** Microsoft.WindowsAppSDK.WinUI, Windows/WinAppSDK projections
+- **Runner:** `MSTest.Sdk` supplies the generated `MicrosoftTestingPlatformApplication.RunAsync` helper. The app retains its custom STA entry point to avoid the XAML compiler's CsWinRT 2.x initialization code and runs MTP on a worker thread because `AsyncQueue.Run` blocks while dispatching work to the UI thread. Do not change these tests to `[UITestMethod]`: they already dispatch their UI work explicitly.
+- **CsWinRT 3.0 compatibility:** The project redirects MSTest's WinUI-specific adapter, platform services, and framework extension to the ordinary assemblies, avoiding their CsWinRT 2.x dependencies. Keep the existing projection/XAML reference workarounds.
+- **Execution:** The self-contained host defaults to unpackaged (`WindowsPackageType=None`), with a `Project` launch profile, so MTP can launch its executable directly without the legacy `.appxrecipe` container. From the repo root, build with `dotnet build src\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted.csproj -c Release -p:Platform=x64`, then run `dotnet test --project src\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted.csproj -c Release -p:Platform=x64 --no-build`. `build\scripts\Run-ObjectLifetimeInProcess.ps1` retains its existing filename and layout-directory interface for callers but invokes MTP and produces TRX reports.
+- **Optional MSIX execution:** Restore and build with `/p:WindowsPackageType=MSIX`, then use `InvokeTestingPlatform` with the same property, concrete `TargetFramework`, configuration, and platform, or pass `-WindowsPackageType MSIX` to the launch script. Restore again when switching modes so the SDK selects the matching launcher assets. The SDK's separate Windows sidecar handles registration/activation. Do not force the Windows `.0` `Microsoft.Testing.Extensions.PackagedApp` asset into the CsWinRT 3.0 `.1` host: NuGet deliberately rejects that incompatible projection contract. The selected plain asset can act as the activated child but cannot register/activate the package during direct native CLI startup. The packaged sidecar also does not support `--list-tests` or the MSTest-specific `--filter` option.
+- **Native AOT:** Restore with `PublishAot=true`, then publish Release x64 with the same property, `RuntimeIdentifier=win-x64`, `TargetFramework=net10.0-windows10.0.26100.1`, and `WindowsPackageType=None`. Set `PublishDir` to the normal `win-x64` layout's `publish` subfolder, then pass the normal layout to `Run-ObjectLifetimeInProcess.ps1 -NativeAot`. The script streams detailed per-test output for both JIT and AOT. The explicit `Microsoft.Windows.SDK.BuildTools.MSIX` 1.7.260930100 reference supplies the MRT Core resource-publishing fix; no custom PRI/XBF copy target is needed. Restore again when returning to a non-AOT build. CI runs these tests only in the main matrix: JIT on x64 Debug/Release and one additional Native AOT publish/run on x64 Release, reusing the existing project-reference outputs. Test steps continue on error so the other suites can run; the final failure-aggregation step fails the job if a test step failed.
+- **Packaged Native AOT:** Restore with `PublishAot=true` and `WindowsPackageType=MSIX`, then publish with those properties and `GenerateAppxPackageOnBuild=true` (`AppxPackageSigningEnabled=false` for an unsigned development package). Use the SDK's `makeappx unpack` to stage the complete generated `.msix` in the normal layout's `publish` subfolder, then run the script with `-NativeAot -WindowsPackageType MSIX`. The plain .NET publish output is not a complete package layout; package activation also needs the manifest, images, and other package payload.
+- **MSIX tooling versions:** Keep the central `Microsoft.Windows.SDK.BuildTools.MSIX` version, native `packages.config` pins, and `.vcxproj` imports/package checks aligned. Mixed versions in one MSBuild process can load an older task DLL for newer targets and fail with unsupported task parameters.
 
 **Key patterns:**
 - `WeakReference` tracking to verify objects are collected
@@ -226,7 +237,7 @@ public async Task InvalidType_Warns()
 
 **When to add tests here:** For verifying that the produced NuGet package works in a real, isolated environment (correct `ref`/`lib` assemblies referenced, generators running). Keep these minimal — they are smoke tests, not feature coverage. Use `UnitTest/` or `FunctionalTests/` for marshalling/feature coverage instead.
 
-**Project structure:** Five standalone projects, intentionally kept out of `cswinrt.slnx` (the package they consume only exists after the build packs it). They are isolated from the repo build infrastructure via blank `Directory.Build.props`/`.targets` and a local `Directory.Packages.props` (central package management disabled). All shared configuration lives in `Directory.Build.props`, so each `.csproj` only carries what makes it different; the two Windows SDK projection tests additionally share `WindowsSdkContracts.targets` (which stages the SDK `.winmd` inputs).
+**Project structure:** Standalone projects, intentionally kept out of `cswinrt.slnx` (the package they consume only exists after the build packs it). They are isolated from the repo build infrastructure via blank `Directory.Build.props`/`.targets` and a local `Directory.Packages.props` (central package management disabled). All shared configuration lives in `Directory.Build.props`, so each `.csproj` only carries what makes it different; the two Windows SDK projection tests additionally share `WindowsSdkContracts.targets` (which stages the SDK `.winmd` inputs).
 
 **Existing tests:**
 | Project | Tests |
@@ -234,6 +245,8 @@ public async Task InvalidType_Warns()
 | `Consumption/` | An `Exe` that calls `JsonObject.Parse(...)` then `Stringify()` from `Windows.Data.Json`, exercising the Windows SDK projection, the interop generator, and the `WinRT.Runtime` ref/impl assemblies |
 | `Authoring/` | A `CsWinRTComponent` library exposing a `Greeter` class plus a richer catalog of authored type shapes in `Thermometer.cs` (enums, a flags enum, a struct, a delegate, an interface, and a sealed runtime class with constructors, properties, an event, and static members), exercising WinMD generation, the reference projection, and the forwarder assembly. The breadth deliberately gives the `Projection` smoke test more projection shapes to cover |
 | `Projection/` | A `CsWinRTGenerateReferenceProjection` library that generates a reference projection for the `Authoring` component's `.winmd` (reused via a build-ordering `ProjectReference`), exercising `cswinrtprojectionrefgen` and `cswinrtimplgen`, exactly as a NuGet projection author would |
+| `ProjectionLibrary/` | A plain library referencing the `Projection` reference projection (and using one of its types), so its project reference metadata can be verified |
+| `ProjectionLibraryConsumption/` | A library only referencing `ProjectionLibrary`, so it resolves the `Projection` reference projection transitively |
 | `WindowsSdkProjection/` | A `CsWinRTGenerateReferenceProjection` library that generates the base Windows SDK reference projection from the `Microsoft.Windows.SDK.Contracts` `.winmd` files (staged by `WindowsSdkContracts.targets`), exactly as the `Microsoft.Windows.SDK.NET.Ref` projection package is produced. Catches reference-projection codegen regressions against the full Windows SDK surface |
 | `WindowsSdkXamlProjection/` | As `WindowsSdkProjection`, but for the `Windows.UI.Xaml` surface; it references the `WindowsSdkProjection` reference assembly, mirroring how the UWP XAML projection package depends on the base Windows SDK projection package |
 
@@ -242,7 +255,7 @@ public async Task InvalidType_Warns()
 - `RestoreSources` overrides all inherited NuGet sources: the local CsWinRT build output (`CsWinRTPackageSource`) plus the `CsWinRTDependencies` feed (`CsWinRTDependenciesSource`), which provides the preview Windows SDK ref pack and `Microsoft.Windows.SDK.Contracts`
 - `CsWinRTPackageVersion`/`CsWinRTPackageSource` default to the local `build.cmd x64 Release` output and are overridden by the build/CI that produced the package
 
-**How they run:** `run-smoke-tests.ps1` (parameterized by `-Test` and `-Runtime`) builds and runs the consumption app (asserting a clean exit code), builds the authoring component and verifies the generated `Authoring.winmd` defines `Authoring.Greeter`, and builds each reference-projection library (`Projection`, `WindowsSdkProjection`, `WindowsSdkXamlProjection`) verifying it produces both a forwarder and a `ref` reference assembly, and that the forwarder ships embedded symbols (shared verification). The consumption and authoring tests run on both CoreCLR and Native AOT (`-Runtime`); the three reference-projection tests are build-only and run on CoreCLR only. It is invoked after the `nuget pack` step in `src/build.cmd` (x64 only; skippable via `cswinrt_run_smoke_tests=false`) and as individual steps in `build/AzurePipelineTemplates/CsWinRT-PublishToNuGet-Steps.yml`.
+**How they run:** `run-smoke-tests.ps1` (parameterized by `-Test` and `-Runtime`) builds and runs the consumption app (asserting a clean exit code), builds the authoring component and verifies the generated `Authoring.winmd` defines `Authoring.Greeter`, and builds each reference-projection library (`Projection`, `WindowsSdkProjection`, `WindowsSdkXamlProjection`) verifying it produces both a forwarder and a `ref` reference assembly, and that the forwarder ships embedded symbols (shared verification). It also queries the project output items and resolved references (with `dotnet msbuild -getTargetResult`/`-getItem`) to verify that the output of a reference projection, and only that, is marked with `CsWinRTGenerateReferenceProjection=true` on every route consumers resolve it through (`GetTargetPath` and `GetTargetPathWithTargetPlatformMoniker` before and after building, and `ReferencePath`/`ReferencePathWithRefAssemblies` with and without `BuildProjectReferences`), directly (`ExclusiveToConsumption`), transitively (`ProjectionReferences`), and not for components or other libraries (`MixedConsumption`, `ProjectionReferences`). The consumption and authoring tests run on both CoreCLR and Native AOT (`-Runtime`); the reference-projection tests and the reference metadata checks are build-only and run on CoreCLR only. It is invoked after the `nuget pack` step in `src/build.cmd` (x64 only; skippable via `cswinrt_run_smoke_tests=false`) and as individual steps in `build/AzurePipelineTemplates/CsWinRT-PublishToNuGet-Steps.yml`.
 
 ### 7. WinMD generator tests (`src/Tests/WinMDGeneratorTest/`)
 
@@ -299,6 +312,16 @@ public void RefArrayParameter_IsRejected()
 **Test helper (in `Helpers/`):**
 - `ImplGeneratorRunner` — compiles a C# input assembly (optionally with symbols), runs the actual tool as a subprocess, and exposes PE/PDB inspection helpers (`GetDebugDirectoryEntryTypes`, `GetEmbeddedPortablePdbDocumentNames`, `GetEmbeddedPortablePdbDocumentText`, `GetCompilationOptionValue`, `IsCodeViewEntryConsistent`, `IsPdbChecksumValid`, `RunTwice`).
 
+### 9. Projection writer tests (`src/Tests/ProjectionWriterTest/`)
+
+**What it tests:** Metadata-driven projection source generation and generated code executed through real projection and interop generators.
+
+**When to add tests here:** For projection-writer output, generated accessor contracts, or isolated native-backed code-generation regressions.
+
+**Native-backed coverage:** `Test_NonGenericEnumeration` covers opaque collection enumeration and adapter round-trips; `Test_GenericMarshallerNames` covers generic marshaller accessors. `NativeProjectionFixture` builds their metadata, projections, consumers, and interop sidecars.
+
+**Execution:** Every Release CI job runs the generic-marshaller consumer and both enumeration consumers with Native AOT, using an x64 harness. `FALLBACK_ONLY` removes other enumeration scenarios to avoid masking missing trimming roots; discovery and publishing use the same symbols without rooting the whole sidecar. Enabled by default in x64 Release; use `CSWINRT_TEST_GENERIC_MARSHALLERS_AOT=1` elsewhere. Native compilation requires Visual Studio C++ tools.
+
 ## Deciding where to add tests
 
 | You want to test... | Add test to... |
@@ -315,6 +338,7 @@ public void RefArrayParameter_IsRejected()
 | WinRT component authoring patterns | `AuthoringTest/` |
 | A WinMD generator failure mode (a `CSWINRTWINMDGEN` error) | `WinMDGeneratorTest/` (add to `Test_ParameterConventions` or `Test_InvalidInputs`) |
 | The forwarder assembly's PE shape, symbols, or determinism | `ImplGeneratorTest/` (add to `Test_DebugDirectory`) |
+| Projection-writer output or isolated native-backed generated code | `ProjectionWriterTest/` |
 | The produced NuGet package works end-to-end (real `ref`/`lib` assemblies, generators) | `SmokeTests/` (`Consumption/`, `Authoring/`, or a reference-projection project) |
 | Generated projection code patterns or cross-ABI control flow | Update `TestComponentCSharp/` and add tests in `UnitTest/` or `FunctionalTests/` |
 
@@ -333,4 +357,5 @@ A **WinRT test component** (defined in `TestComponentCSharp.idl`, implemented in
 - Test naming: `DescriptiveCondition_ExpectedBehavior` for analyzer/generator tests
 - Use raw string literals (`"""..."""`) for inline source code in generator/analyzer tests
 - Use `[DataRow]` for parameterized MSTest tests
+- In `UnitTest`, use `[DynamicData]` for array `Type` arguments to avoid the Native AOT argument-packing failures observed with `[DataRow]`. The stable MSTest source generator omits direct `typeof(T[])` arguments from generated attribute metadata and falls back to reflection; this omission does not cause failures in every test project. Use `typeof(T[])` in the provider; its IL type token is visible to WinRT interop discovery.
 - Keep test methods focused — one scenario per test

@@ -10,9 +10,8 @@ using WindowsRuntime.InteropServices;
 using WindowsRuntime.InteropServices.Marshalling;
 using static System.Runtime.InteropServices.ComWrappers;
 
-#pragma warning disable IDE0008, IDE1006, CA1416
+#pragma warning disable IL2026, IDE0008, IDE1006, CA1416
 
-#pragma warning disable IL2026 // Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code
 [assembly: TypeMap<WindowsRuntimeMetadataTypeMapGroup>(
     value: "Guid",
     target: typeof(ABI.System.Guid),
@@ -22,11 +21,21 @@ using static System.Runtime.InteropServices.ComWrappers;
     value: "Windows.Foundation.IReference`1<Guid>",
     target: typeof(ABI.System.Guid),
     trimTarget: typeof(Guid))]
-#pragma warning restore IL2026 // Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code
+
+[assembly: TypeMap<WindowsRuntimeIidTypeMapGroup>(
+    value: "[#System]System.Nullable`1[[#System]System.Guid]",
+    target: typeof(ABI.System.GuidIidProvider),
+    trimTarget: typeof(Guid))]
 
 [assembly: TypeMapAssociation<WindowsRuntimeComWrappersTypeMapGroup>(typeof(Guid), typeof(ABI.System.Guid))]
 
 namespace ABI.System;
+
+/// <summary>
+/// IID metadata for the nullable projection of <see cref="global::System.Guid"/>.
+/// </summary>
+[Guid("7D50F649-632C-51F9-849A-EE49428933EA")]
+file static class GuidIidProvider;
 
 /// <summary>
 /// ABI type for <see cref="global::System.Guid"/>.

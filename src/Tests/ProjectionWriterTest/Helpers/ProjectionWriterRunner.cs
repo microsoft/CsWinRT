@@ -3,10 +3,20 @@
 
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Reflection.PortableExecutable;
+using System.Runtime.InteropServices;
+using System.Threading;
+using System.Threading.Tasks;
+using Basic.Reference.Assemblies;
+using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.Emit;
+using WindowsRuntime;
 
 namespace ProjectionWriterTest.Helpers;
 
@@ -75,6 +85,65 @@ internal static class ProjectionWriterRunner
     }
 
     /// <summary>
+    /// Runs the generator with every path involved in projection generation exceeding the Windows <c>MAX_PATH</c> limit.
+    /// </summary>
+    /// <param name="useInputDirectory">Whether the input argument is the containing directory rather than the WinMD file itself.</param>
+    /// <returns>The paths and process result needed to verify the scenario.</returns>
+    internal static LongPathRunResult RunLongPathScenario(bool useInputDirectory)
+    {
+        string executablePath = Path.ChangeExtension(GetRequiredFilePath("ProjectionRefGeneratorAssemblyPath"), ".exe");
+        string workingDirectory = Path.Combine(Path.GetTempPath(), $"ProjectionWriterLongPathTest_{Guid.NewGuid():N}");
+        string expectedOutputPath;
+
+        do
+        {
+            workingDirectory = Path.Combine(workingDirectory, "segment123456789");
+            expectedOutputPath = Path.Combine(workingDirectory, "output", "Windows.Foundation.Collections.cs");
+        }
+        while (Path.Combine(workingDirectory, "projection.rsp").Length <= 260 ||
+               Path.Combine(workingDirectory, "input").Length <= 260 ||
+               Path.Combine(workingDirectory, "input", "Windows.Foundation.FoundationContract.winmd").Length <= 260 ||
+               expectedOutputPath.Length <= 260);
+
+        string inputDirectory = Path.Combine(workingDirectory, "input");
+        string outputDirectory = Path.Combine(workingDirectory, "output");
+
+        _ = Directory.CreateDirectory(inputDirectory);
+        _ = Directory.CreateDirectory(outputDirectory);
+
+        try
+        {
+            string inputWinmdPath = Path.Combine(inputDirectory, "Windows.Foundation.FoundationContract.winmd");
+            string responseFilePath = Path.Combine(workingDirectory, "projection.rsp");
+            string inputPath = useInputDirectory ? inputDirectory : inputWinmdPath;
+
+            File.Copy(FindWindowsFoundationWinmd(), inputWinmdPath);
+            File.WriteAllLines(responseFilePath,
+            [
+                $"--input-paths {inputPath}",
+                $"--output-directory {outputDirectory}",
+                "--target-framework net10.0",
+                "--include-namespaces Windows.Foundation.Collections",
+                "--reference-projection true"
+            ]);
+
+            (int exitCode, string output) = RunExecutable(executablePath, $"@{responseFilePath}");
+
+            return new(
+                ResponseFilePathLength: responseFilePath.Length,
+                InputPathLength: inputPath.Length,
+                OutputPathLength: expectedOutputPath.Length,
+                ExitCode: exitCode,
+                Output: output,
+                OutputExists: File.Exists(expectedOutputPath));
+        }
+        finally
+        {
+            TryDeleteDirectory(workingDirectory);
+        }
+    }
+
+    /// <summary>
     /// Generates a projection for the requested mode and returns all generated sources, concatenated.
     /// </summary>
     /// <remarks>
@@ -88,10 +157,24 @@ internal static class ProjectionWriterRunner
     /// <returns>The concatenated contents of every generated <c>.cs</c> file.</returns>
     private static string Generate(bool referenceProjection, bool useWinUI)
     {
-        string toolPath = GetRequiredFilePath("ProjectionRefGeneratorAssemblyPath");
         string inputPaths = useWinUI ? $"sdk,{GetRequiredFilePath("WinUIMetadataPath")}" : "sdk";
         string xamlNamespace = useWinUI ? "Microsoft.UI.Xaml" : "Windows.UI.Xaml";
         string includeNamespaces = $"Windows.Foundation,{xamlNamespace}.DependencyObjectCollection,{xamlNamespace}.Controls.ItemCollection";
+
+        return string.Join(Environment.NewLine, GenerateSources(referenceProjection, inputPaths, includeNamespaces));
+    }
+
+    /// <summary>
+    /// Generates individual source files for custom metadata inputs, so tests can compile the result.
+    /// </summary>
+    /// <param name="referenceProjection">Whether to generate a reference projection.</param>
+    /// <param name="inputPaths">The comma-separated metadata input paths or SDK tokens.</param>
+    /// <param name="includeNamespaces">The comma-separated namespace or type filters.</param>
+    /// <param name="outputAssemblyName">The simple name of the assembly compiling the generated sources.</param>
+    /// <returns>The contents of each generated source file.</returns>
+    public static string[] GenerateSources(bool referenceProjection, string inputPaths, string includeNamespaces, string outputAssemblyName = "Projection")
+    {
+        string toolPath = GetRequiredFilePath("ProjectionRefGeneratorAssemblyPath");
         string workingDirectory = Path.Combine(Path.GetTempPath(), $"ProjectionWriterTest_{Guid.NewGuid():N}");
         string outputDirectory = Path.Combine(workingDirectory, "Generated");
 
@@ -107,6 +190,7 @@ internal static class ProjectionWriterRunner
             [
                 $"--input-paths {inputPaths}",
                 $"--output-directory {outputDirectory}",
+                $"--assembly-name {outputAssemblyName}",
                 "--target-framework net10.0",
                 $"--include-namespaces {includeNamespaces}",
                 $"--reference-projection {(referenceProjection ? "true" : "false")}"
@@ -120,7 +204,7 @@ internal static class ProjectionWriterRunner
 
             Assert.AreNotEqual(0, sourceFiles.Length, "The projection writer produced no sources.");
 
-            return string.Join(Environment.NewLine, sourceFiles.Select(File.ReadAllText));
+            return sourceFiles.Select(File.ReadAllText).ToArray();
         }
         finally
         {
@@ -129,12 +213,61 @@ internal static class ProjectionWriterRunner
     }
 
     /// <summary>
+    /// Compiles generated projection sources or a consumer against the runtime implementation.
+    /// </summary>
+    public static string CompileSources(
+        IEnumerable<string> sources,
+        string assemblyPath,
+        bool referenceProjection = false,
+        OutputKind outputKind = OutputKind.DynamicallyLinkedLibrary,
+        string[]? preprocessorSymbols = null,
+        params string[] additionalReferences)
+    {
+        CSharpParseOptions parseOptions = new(LanguageVersion.CSharp14,
+            preprocessorSymbols: [.. referenceProjection ? new[] { "CSWINRT_REFERENCE_PROJECTION" } : [],
+                .. preprocessorSymbols ?? []]);
+        CSharpCompilation compilation = CSharpCompilation.Create(
+            Path.GetFileNameWithoutExtension(assemblyPath),
+            sources.Select((source, index) => CSharpSyntaxTree.ParseText(source, parseOptions, path: $"Source{index}.cs")),
+            [
+                .. Net100.References.All,
+                MetadataReference.CreateFromFile(typeof(WindowsRuntimeObject).Assembly.Location),
+                .. additionalReferences.Select(path => MetadataReference.CreateFromFile(path))
+            ],
+            new CSharpCompilationOptions(outputKind, allowUnsafe: true,
+                specificDiagnosticOptions: [new("CS9091", ReportDiagnostic.Error)]));
+        using FileStream stream = File.Create(assemblyPath);
+        EmitResult result = compilation.Emit(stream,
+            options: new EmitOptions(metadataOnly: referenceProjection, includePrivateMembers: !referenceProjection));
+        Assert.IsTrue(result.Success, $"Projection compilation failed:\n{string.Join("\n", result.Diagnostics)}");
+        return assemblyPath;
+    }
+
+    /// <summary>
+    /// Gets the runtime implementation assemblies needed by the post-build generators.
+    /// </summary>
+    public static string[] GetRuntimeReferencePaths()
+    {
+        return
+        [
+            typeof(WindowsRuntimeObject).Assembly.Location,
+            .. Directory.GetFiles(RuntimeEnvironment.GetRuntimeDirectory(), "*.dll").Where(static path =>
+            {
+                using FileStream stream = File.OpenRead(path);
+                using PEReader reader = new(stream);
+                return reader.HasMetadata;
+            })
+        ];
+    }
+
+    /// <summary>
     /// Runs the projection generator tool with a single argument.
     /// </summary>
     /// <param name="toolPath">The path of the tool assembly to run.</param>
     /// <param name="argument">The single command line argument to pass.</param>
+    /// <param name="timeout">An optional timeout, after which the tool process is terminated.</param>
     /// <returns>The process exit code and its combined standard output and error.</returns>
-    private static (int ExitCode, string Output) Run(string toolPath, string argument)
+    public static (int ExitCode, string Output) Run(string toolPath, string argument, TimeSpan? timeout = null)
     {
         ProcessStartInfo startInfo = new("dotnet")
         {
@@ -150,12 +283,48 @@ internal static class ProjectionWriterRunner
 
         using Process process = Process.Start(startInfo) ?? throw new InvalidOperationException("Failed to start the projection generator process.");
 
-        string standardOutput = process.StandardOutput.ReadToEnd();
-        string standardError = process.StandardError.ReadToEnd();
+        Task<string> standardOutput = process.StandardOutput.ReadToEndAsync();
+        Task<string> standardError = process.StandardError.ReadToEndAsync();
+
+        if (!process.WaitForExit(timeout ?? Timeout.InfiniteTimeSpan))
+        {
+            process.Kill(entireProcessTree: true);
+            process.WaitForExit();
+
+            throw new TimeoutException($"The tool '{toolPath}' exceeded its timeout of '{timeout}'.\n{standardOutput.GetAwaiter().GetResult()}{standardError.GetAwaiter().GetResult()}");
+        }
+
+        return (process.ExitCode, standardOutput.GetAwaiter().GetResult() + standardError.GetAwaiter().GetResult());
+    }
+
+    /// <summary>
+    /// Runs the projection generator executable directly so its application manifest is exercised.
+    /// </summary>
+    private static (int ExitCode, string Output) RunExecutable(string executablePath, string argument)
+    {
+        if (!File.Exists(executablePath))
+        {
+            throw new FileNotFoundException("The projection generator executable was not found.", executablePath);
+        }
+
+        ProcessStartInfo startInfo = new(executablePath)
+        {
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            UseShellExecute = false,
+            CreateNoWindow = true,
+        };
+
+        startInfo.ArgumentList.Add(argument);
+
+        using Process process = Process.Start(startInfo) ?? throw new InvalidOperationException("Failed to start the projection generator executable.");
+
+        Task<string> standardOutput = process.StandardOutput.ReadToEndAsync();
+        Task<string> standardError = process.StandardError.ReadToEndAsync();
 
         process.WaitForExit();
 
-        return (process.ExitCode, standardOutput + standardError);
+        return (process.ExitCode, standardOutput.GetAwaiter().GetResult() + standardError.GetAwaiter().GetResult());
     }
 
     /// <summary>
@@ -163,7 +332,7 @@ internal static class ProjectionWriterRunner
     /// </summary>
     /// <param name="metadataName">The assembly metadata key containing the path.</param>
     /// <returns>The full path of the required file.</returns>
-    private static string GetRequiredFilePath(string metadataName)
+    public static string GetRequiredFilePath(string metadataName)
     {
         string? path = typeof(ProjectionWriterRunner).Assembly
             .GetCustomAttributes<AssemblyMetadataAttribute>()
@@ -176,6 +345,25 @@ internal static class ProjectionWriterRunner
         Assert.IsTrue(File.Exists(fullPath), $"The file specified by '{metadataName}' was not found at '{fullPath}'.");
 
         return fullPath;
+    }
+
+    /// <summary>
+    /// Finds the installed Windows Foundation contract used as the explicit long-path WinMD input.
+    /// </summary>
+    private static string FindWindowsFoundationWinmd()
+    {
+        string referencesDirectory = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86),
+            "Windows Kits",
+            "10",
+            "References");
+
+        string? winmdPath = Directory
+            .EnumerateFiles(referencesDirectory, "Windows.Foundation.FoundationContract.winmd", SearchOption.AllDirectories)
+            .OrderByDescending(static path => path, StringComparer.OrdinalIgnoreCase)
+            .FirstOrDefault();
+
+        return winmdPath ?? throw new FileNotFoundException($"No Windows Foundation contract was found under '{referencesDirectory}'.");
     }
 
     /// <summary>
@@ -213,4 +401,15 @@ internal static class ProjectionWriterRunner
             // Best effort cleanup; a leftover temp directory must not fail the test
         }
     }
+
+    /// <summary>
+    /// Captures the observable result of a long-path generator invocation.
+    /// </summary>
+    internal sealed record LongPathRunResult(
+        int ResponseFilePathLength,
+        int InputPathLength,
+        int OutputPathLength,
+        int ExitCode,
+        string Output,
+        bool OutputExists);
 }

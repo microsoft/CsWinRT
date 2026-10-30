@@ -185,6 +185,39 @@ internal sealed class AbiTypeKindResolver(MetadataCache cache)
         => IsBlittablePrimitive(signature) || IsBlittableStruct(signature);
 
     /// <summary>
+    /// Gets whether the managed projection is known to contain GC references, or <see langword="null"/>
+    /// when the runtime intrinsic must determine its reference content.
+    /// </summary>
+    public bool? ContainsManagedReferences(TypeSignature signature)
+    {
+        if (signature.IsObject() || signature.IsString() || signature.IsSystemType())
+        {
+            return true;
+        }
+
+        if (signature is GenericInstanceTypeSignature)
+        {
+            return null;
+        }
+
+        if (signature is TypeDefOrRefSignature type)
+        {
+            (string ns, string name) = type.Type.Names();
+            if (MappedTypes.IsMapped(ns, name))
+            {
+                return null;
+            }
+        }
+
+        return Resolve(signature) switch
+        {
+            AbiTypeKind.BlittablePrimitive or AbiTypeKind.Enum or AbiTypeKind.BlittableStruct => false,
+            AbiTypeKind.RuntimeClassOrInterface or AbiTypeKind.Delegate => true,
+            _ => null
+        };
+    }
+
+    /// <summary>
     /// Returns whether <paramref name="signature"/> is an SZ-array element shape that flows across the
     /// ABI without per-element marshalling — either a blittable element (blittable primitive or
     /// blittable struct, see <see cref="IsBlittableAbiElement"/>) or a mapped value type (e.g.
@@ -198,46 +231,56 @@ internal sealed class AbiTypeKindResolver(MetadataCache cache)
 
     /// <summary>
     /// Returns whether <paramref name="signature"/> is a recognised SZ-array element shape for which
-    /// the projection has an ABI marshalling story. This is the union of all five concrete element
+    /// the projection has an ABI marshalling story. This is the union of the concrete element
     /// shapes that the receive-array paths know how to handle:
     /// <list type="bullet">
     ///   <item>Blittable element (primitive or blittable struct) — see <see cref="IsBlittableAbiElement"/></item>
-    ///   <item>Ref-like (string / runtime class / interface / object) — see <see cref="TypeSignatureExtensions.IsAbiArrayElementRefLike"/></item>
+    ///   <item>Ref-like (string / runtime class / interface / object / generic instance) — see <see cref="TypeSignatureExtensions.IsAbiArrayElementRefLike"/></item>
+    ///   <item><see cref="System.Type"/> (mapped from WinRT <c>TypeName</c>) — see <see cref="TypeSignatureExtensions.IsSystemType"/></item>
     ///   <item>Complex struct — see <see cref="IsNonBlittableStruct"/></item>
     ///   <item><see cref="System.Exception"/> (mapped from WinRT <c>HResult</c>) — see <see cref="TypeSignatureExtensions.IsHResultException"/></item>
     ///   <item>Mapped value type (e.g. WinRT <c>DateTime</c> / <c>TimeSpan</c>) — see <see cref="IsMappedAbiValueType"/></item>
     /// </list>
-    /// Element types outside this set (e.g. generic instances, <see cref="System.Type"/>, unresolved
-    /// references) cannot be returned as a receive-array.
+    /// Element types outside this set (e.g. unresolved references) cannot be returned as a receive-array.
     /// </summary>
     /// <param name="signature">The element type to classify.</param>
     /// <returns><see langword="true"/> when the element is one of the recognised receive-array shapes; otherwise <see langword="false"/>.</returns>
     public bool IsRecognizedReceiveArrayElement(TypeSignature signature)
         => IsBlittableAbiElement(signature)
             || signature.IsAbiArrayElementRefLike(this)
+            || signature.IsSystemType()
             || IsNonBlittableStruct(signature)
             || signature.IsHResultException()
             || IsMappedAbiValueType(signature);
 
     /// <summary>
-    /// Returns whether <paramref name="signature"/> identifies a parameter type that, when received
-    /// via an <c>Out</c> parameter, holds a resource which the caller must release in a <c>finally</c>
-    /// block. This includes:
-    /// <list type="bullet">
-    ///   <item>SZ-array element ref-like types (HSTRING / IInspectable* slots) — see <see cref="TypeSignatureExtensions.IsAbiArrayElementRefLike"/></item>
-    ///   <item><see cref="System.Type"/> (whose ABI form is an HSTRING that must be freed) — see <see cref="TypeSignatureExtensions.IsSystemType"/></item>
-    ///   <item>Complex structs (per-field cleanup via the <c>*Marshaller</c>) — see <see cref="IsNonBlittableStruct"/></item>
-    ///   <item>Generic instances (need <c>WindowsRuntimeObjectReferenceValue</c> dispose) — see <see cref="TypeSignatureExtensions.IsGenericInstance"/></item>
-    /// </list>
-    /// Callers should pass the already-stripped parameter type (via <see cref="Generator.TypeSignatureExtensions.StripByRefAndCustomModifiers"/>).
+    /// Returns whether the ABI representation owns resources that must be disposed.
     /// </summary>
-    /// <param name="signature">The stripped (non-byref) parameter type to classify.</param>
-    /// <returns><see langword="true"/> when the type requires finally-block cleanup on receive; otherwise <see langword="false"/>.</returns>
-    public bool RequiresOutParameterCleanup(TypeSignature signature)
-        => signature.IsAbiArrayElementRefLike(this)
-            || signature.IsSystemType()
-            || IsNonBlittableStruct(signature)
-            || signature.IsGenericInstance();
+    /// <param name="signature">The type signature to classify.</param>
+    /// <returns><see langword="true"/> if the ABI value requires disposal.</returns>
+    public bool RequiresAbiDisposal(TypeSignature signature)
+    {
+        if (signature.IsString() || IsReferenceTypeOrGenericInstance(signature) || signature.IsSystemType())
+        {
+            return true;
+        }
+
+        if (IsNonBlittableStruct(signature) &&
+            signature is TypeDefOrRefSignature structType &&
+            AbiTypeHelpers.TryResolveStructTypeDef(Cache, structType) is { } definition)
+        {
+            foreach (FieldDefinition field in definition.Fields)
+            {
+                if (!field.IsStatic && field.Signature is { } fieldSignature &&
+                    RequiresAbiDisposal(fieldSignature.FieldType))
+                {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
 
     /// <summary>
     /// Returns whether a scalar input parameter (a WinRT by-value <c>in</c> or <c>in T</c> parameter)
@@ -257,7 +300,7 @@ internal sealed class AbiTypeKindResolver(MetadataCache cache)
         => Resolve(signature) is AbiTypeKind.NonBlittableStruct or AbiTypeKind.MappedAbiValueType or AbiTypeKind.HResultException;
 
     /// <summary>
-    /// Classifies <paramref name="elementType"/> into one of the six
+    /// Classifies <paramref name="elementType"/> into one of the
     /// <see cref="AbiArrayElementKind"/> values used by the per-element pointer-type ladders.
     /// This is the discriminator-only form -- callers translate the kind into the per-site
     /// emission output.
@@ -270,6 +313,11 @@ internal sealed class AbiTypeKindResolver(MetadataCache cache)
         if (elementType.IsAbiArrayElementRefLike(this))
         {
             return AbiArrayElementKind.RefLikeVoidStar;
+        }
+
+        if (elementType.IsSystemType())
+        {
+            return AbiArrayElementKind.SystemType;
         }
 
         if (elementType.IsHResultException())

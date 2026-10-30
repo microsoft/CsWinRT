@@ -56,6 +56,16 @@ internal static class WindowsRuntimeFeatureSwitches
     private const string EnableMarshalingTypeMetadataSupportPropertyName = "CSWINRT_ENABLE_MARSHALING_TYPE_METADATA_SUPPORT";
 
     /// <summary>
+    /// The configuration property name for <see cref="EnableDefaultCustomPropertyProviderSupport"/>.
+    /// </summary>
+    private const string EnableDefaultCustomPropertyProviderSupportPropertyName = "CSWINRT_ENABLE_DEFAULT_CUSTOM_PROPERTY_PROVIDER_SUPPORT";
+
+    /// <summary>
+    /// The configuration property name for <see cref="SuppressCustomPropertyNotSupportedException"/>.
+    /// </summary>
+    private const string SuppressCustomPropertyNotSupportedExceptionPropertyName = "CSWINRT_SUPPRESS_CUSTOM_PROPERTY_NOT_SUPPORTED_EXCEPTION";
+
+    /// <summary>
     /// Gets a value indicating whether or not manifest free WinRT activation is supported (defaults to <see langword="true"/>).
     /// </summary>
     [FeatureSwitchDefinition(EnableManifestFreeActivationPropertyName)]
@@ -96,6 +106,18 @@ internal static class WindowsRuntimeFeatureSwitches
     /// </summary>
     [FeatureSwitchDefinition(EnableMarshalingTypeMetadataSupportPropertyName)]
     public static bool EnableMarshalingTypeMetadataSupport { get; } = GetConfigurationValue(EnableMarshalingTypeMetadataSupportPropertyName, defaultValue: true);
+
+    /// <summary>
+    /// Gets the default custom property provider support configuration value (defaults to <see langword="true"/>).
+    /// </summary>
+    [FeatureSwitchDefinition(EnableDefaultCustomPropertyProviderSupportPropertyName)]
+    public static bool EnableDefaultCustomPropertyProviderSupport { get; } = GetConfigurationValue(EnableDefaultCustomPropertyProviderSupportPropertyName, defaultValue: true);
+
+    /// <summary>
+    /// Gets a value indicating whether missing custom property support returns <see langword="null"/> instead of reporting <see cref="NotSupportedException"/> (defaults to <see langword="false"/>).
+    /// </summary>
+    [FeatureSwitchDefinition(SuppressCustomPropertyNotSupportedExceptionPropertyName)]
+    public static bool SuppressCustomPropertyNotSupportedException { get; } = GetConfigurationValue(SuppressCustomPropertyNotSupportedExceptionPropertyName, defaultValue: false);
 
     /// <summary>
     /// Gets a configuration value for a specified property.

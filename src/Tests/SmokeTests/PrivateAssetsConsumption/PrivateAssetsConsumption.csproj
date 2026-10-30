@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <RestoreAdditionalProjectSources>$(PrivateAssetsPackageSource)</RestoreAdditionalProjectSources>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="CsWinRT.SmokeTests.PrivateAssetsLibrary"
+                      Version="$(PrivateAssetsPackageVersion)" />
+  </ItemGroup>
+</Project>

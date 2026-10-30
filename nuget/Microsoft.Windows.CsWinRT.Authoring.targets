@@ -19,6 +19,11 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     <CsWinRTGenerateOverridedClassNameActivationFactory Condition="'$(CsWinRTGenerateOverridedClassNameActivationFactory)' != 'true'">false</CsWinRTGenerateOverridedClassNameActivationFactory>
   </PropertyGroup>
 
+  <ItemGroup Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net11.0'))">
+    <RuntimeHostConfigurationOption Include="System.Runtime.InteropServices.TypeMappingEntryAssembly"
+                                    Value="WinRT.Component" />
+  </ItemGroup>
+
   <PropertyGroup>
     <CsWinRTAuthoring_Platform Condition="'$(Platform)'=='AnyCPU'">x86</CsWinRTAuthoring_Platform>
     <CsWinRTAuthoring_Platform Condition="'$(Platform)'!='AnyCPU'">$(Platform)</CsWinRTAuthoring_Platform>

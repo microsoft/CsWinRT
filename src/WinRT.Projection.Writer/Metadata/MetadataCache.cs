@@ -200,6 +200,14 @@ internal sealed class MetadataCache
     }
 
     /// <summary>
+    /// Gets the source <c>.winmd</c> filename stem shared by metadata entries and interop accessor names.
+    /// </summary>
+    public string GetSourceStem(TypeDefinition type)
+    {
+        return Path.GetFileNameWithoutExtension(GetSourcePath(type));
+    }
+
+    /// <summary>
     /// Looks up a type by full name (namespace + "." + name).
     /// </summary>
     public TypeDefinition? Find(string fullName)

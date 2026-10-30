@@ -864,7 +864,7 @@ internal sealed class WellKnownInteropExceptions : IGeneratorErrorFactory
     public static WellKnownGeneratorMessage MarshallingEnabledAssemblyTargetsWindowsMessage(string name)
     {
         return Message(99,
-            $"The assembly '{name}' specified via 'CsWinRTMarshallingEnabledAssembly' already targets Windows and is therefore always analyzed. " +
+            $"The assembly '{name}' specified via 'CsWinRTMarshallingEnabledAssembly' already targets Windows and is analyzed unless explicitly excluded. " +
             $"This entry is redundant and can be removed.");
     }
 
@@ -875,7 +875,7 @@ internal sealed class WellKnownInteropExceptions : IGeneratorErrorFactory
     {
         return Message(100,
             "One or more assemblies were specified via 'CsWinRTMarshallingEnabledAssembly', but the 'CsWinRTMarshallingMode' is set to 'all', " +
-            "which already analyzes every assembly. These entries are redundant and will not affect compilation.");
+            "which already analyzes every non-excluded assembly. These entries are redundant and will not affect compilation.");
     }
 
     /// <summary>
@@ -900,6 +900,151 @@ internal sealed class WellKnownInteropExceptions : IGeneratorErrorFactory
     public static WellKnownInteropException DiscoverCollectionChangedListTypesError(Exception exception)
     {
         return Exception(103, "Failed to discover the list types used by 'NotifyCollectionChangedEventArgs' (e.g. 'SingleItemReadOnlyList').", exception);
+    }
+
+    /// <summary>
+    /// Generic member discovery exceeded the maximum traversal depth.
+    /// </summary>
+    public static WellKnownInteropWarning GenericTypeDiscoveryRecursionLimitExceededWarning(TypeSignature type, ModuleDefinition module, int limit, bool supplemental = false)
+    {
+        string phase = GetGenericDiscoveryPhaseName(supplemental);
+
+        return Warning(104,
+            $"{phase} reached the maximum depth of {limit} while processing type '{type}' in module '{module}': " +
+            "its members will not be analyzed further. Marshalling support for types only reachable through those members may be incomplete.");
+    }
+
+    /// <summary>
+    /// Generic method discovery exceeded the maximum traversal depth.
+    /// </summary>
+    public static WellKnownInteropWarning GenericMethodDiscoveryRecursionLimitExceededWarning(MethodDefinition method, ModuleDefinition module, int limit, bool supplemental = false)
+    {
+        string phase = GetGenericDiscoveryPhaseName(supplemental);
+
+        return Warning(104,
+            $"{phase} reached the maximum depth of {limit} while processing method '{method}' in module '{module}': " +
+            "its body will not be analyzed further. Marshalling support for types only reachable through that body may be incomplete.");
+    }
+
+    /// <summary>
+    /// Generic member discovery encountered an excessively complex expanded signature.
+    /// </summary>
+    public static WellKnownInteropWarning GenericTypeDiscoveryComplexityLimitExceededWarning(ModuleDefinition module, int limit, bool supplemental = false)
+    {
+        string phase = GetGenericDiscoveryPhaseName(supplemental);
+
+        return Warning(105,
+            $"{phase} encountered a type signature with more than {limit} elements in module '{module}': " +
+            "the expanded signature will not be analyzed further. Marshalling support for types only reachable through that signature may be incomplete.");
+    }
+
+    /// <summary>
+    /// Generic member discovery exceeded the number of transitive type or method instantiations to analyze.
+    /// </summary>
+    public static WellKnownInteropWarning GenericTypeDiscoveryTransitiveTypeLimitExceededWarning(ModuleDefinition module, int limit)
+    {
+        return Warning(106,
+            $"Generic member discovery reached the maximum of {limit} reservations for transitive type or method instantiations eligible for member analysis while processing module '{module}': " +
+            "additional instantiations will not have their members analyzed. Marshalling support for types only reachable through those members may be incomplete.");
+    }
+
+    /// <summary>
+    /// The isolated supplemental allowance for additive generic discovery was exhausted.
+    /// </summary>
+    public static WellKnownInteropWarning SupplementalGenericDiscoveryLimitExceededWarning(ModuleDefinition module, int limit)
+    {
+        return Warning(106,
+            $"Supplemental generic discovery reached the maximum of {limit} reservations for transitive type or method instantiations while processing module '{module}': " +
+            "additional dispatch-derived or shorter-depth contexts will not have their members analyzed. " +
+            "Primary discovery results are preserved, but supplemental marshalling support may be incomplete.");
+    }
+
+    /// <summary>
+    /// Gets the phase label shared by generic-discovery diagnostics.
+    /// </summary>
+    /// <param name="supplemental">Whether the warning originated in supplemental discovery.</param>
+    /// <returns>The phase label used in diagnostic text.</returns>
+    private static string GetGenericDiscoveryPhaseName(bool supplemental)
+    {
+        return supplemental ? "Supplemental generic discovery" : "Generic member discovery";
+    }
+
+    /// <summary>
+    /// An assembly specified via 'CsWinRTMarshallingDisabledAssembly' could not be found among the referenced assemblies.
+    /// </summary>
+    public static WellKnownInteropWarning MarshallingDisabledAssemblyNotFoundWarning(string name)
+    {
+        return Warning(107,
+            $"The assembly '{name}' specified via 'CsWinRTMarshallingDisabledAssembly' could not be found among the referenced assemblies. " +
+            "Ensure the value matches the name of a referenced assembly (the '.dll' extension is optional), or remove the entry.");
+    }
+
+    /// <summary>
+    /// An assembly was both opted in and explicitly excluded from marshalling discovery.
+    /// </summary>
+    public static WellKnownInteropWarning MarshallingAssemblySelectionConflictWarning(string name)
+    {
+        return Warning(108,
+            $"The assembly '{name}' is specified via both 'CsWinRTMarshallingEnabledAssembly' and 'CsWinRTMarshallingDisabledAssembly'. " +
+            "The explicit exclusion takes precedence; remove the opt-in entry if it is not needed.");
+    }
+
+    /// <summary>
+    /// The requested interop generator log directory does not exist.
+    /// </summary>
+    public static WellKnownInteropException LogDirectoryDoesNotExist(string path)
+    {
+        return Exception(109, $"The interop generator log directory '{path}' does not exist.");
+    }
+
+    /// <summary>
+    /// Failed to write the interop generator log.
+    /// </summary>
+    public static WellKnownInteropException WriteLogError(string path, Exception exception)
+    {
+        return Exception(110, $"Failed to write the interop generator log to '{path}'.", exception);
+    }
+
+    /// <summary>
+    /// Failed to compute the interop generation fingerprint.
+    /// </summary>
+    public static WellKnownInteropException GenerationFingerprintError(Exception exception)
+    {
+        return Exception(111, "Failed to compute the interop generation fingerprint.", exception);
+    }
+
+    /// <summary>
+    /// More than one interface IID maps to the same generated getter name.
+    /// </summary>
+    public static WellKnownInteropException DuplicateGeneratedInterfaceIID(string name)
+    {
+        return Exception(112, $"The generated IID getter name '{name}' is not unique. Multiple interface IIDs map to the same name; the interop assembly cannot be generated safely.");
+    }
+
+    /// <summary>
+    /// Conflicting IIDs were generated for the same structural type key.
+    /// </summary>
+    public static WellKnownInteropException ConflictingIidTypeNames(string key, Guid first, Guid second)
+    {
+        return Exception(113,
+            $"Conflicting Windows Runtime IIDs '{first}' and '{second}' were generated for structural type key '{key}'. " +
+            "Structural type keys must identify one runtime type across the application's projections.");
+    }
+
+    /// <summary>
+    /// Failed to generate the external type map entries for IID lookups.
+    /// </summary>
+    public static WellKnownInteropException IidTypeMapEntriesCodeGenerationError(Exception exception)
+    {
+        return Exception(114, "Failed to generate the external Windows Runtime IID type map entries.", exception);
+    }
+
+    /// <summary>
+    /// Invalid reference metadata prevented determining whether IID lookup metadata is required.
+    /// </summary>
+    public static WellKnownInteropWarning IidReferenceInspectionWarning(ModuleDefinition module, Exception exception)
+    {
+        return Warning(115, $"Could not inspect IID lookup references in module '{module.Name}': {exception.Message}");
     }
 
     /// <summary>

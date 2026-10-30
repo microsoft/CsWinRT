@@ -90,13 +90,17 @@ internal static partial class ReferenceProjectionGenerator
         {
             InputPaths = inputPaths,
             OutputFolder = args.OutputDirectory,
+            OutputAssemblyName = args.OutputAssemblyName,
             Include = args.IncludeNamespaces,
             Exclude = args.ExcludeNamespaces,
             AdditionExclude = args.AdditionExcludeNamespaces,
             Verbose = args.Verbose,
             Component = args.Component,
             PublicExclusiveTo = args.PublicExclusiveTo,
+            ImplementWinMDTypes = args.ImplementWinMDTypes,
             IdicExclusiveTo = args.IdicExclusiveTo,
+            IdicExclusiveToIncludes = args.IdicExclusiveToIncludes,
+            IdicExclusiveToExcludes = args.IdicExclusiveToExcludes,
             ReferenceProjection = args.ReferenceProjection,
             CancellationToken = args.Token,
         };

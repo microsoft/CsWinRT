@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <PublishAot>true</PublishAot>
+    <IlcGenerateMstatFile>true</IlcGenerateMstatFile>
+    <IlcGenerateMapFile>true</IlcGenerateMapFile>
+    <!-- .NET 10's composed MSTAT/map dumper omits folded-method aliases. Keep every body observable. -->
+    <StackTraceSupport>true</StackTraceSupport>
+    <IlcFoldIdenticalMethodBodies>false</IlcFoldIdenticalMethodBodies>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <Nullable>enable</Nullable>
+    <UseUwp>true</UseUwp>
+    <UseUwpTools>false</UseUwpTools>
+    <IlcResilient>false</IlcResilient>
+    <ILLinkTreatWarningsAsErrors>true</ILLinkTreatWarningsAsErrors>
+    <TrimmerSingleWarn>false</TrimmerSingleWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- The PowerShell checker compiles its metadata readers separately from the AOT application. -->
+    <Compile Remove="MetadataNames.cs;MstatReader.cs" />
+
+    <!-- Consume reference projections, not the managed component, to exercise WinRT.Projection.dll. -->
+    <ProjectReference Include="..\Projection\Projection.csproj"
+                      GlobalPropertiesToRemove="PublishAot;RuntimeIdentifier;SelfContained;IlcGenerateMstatFile" />
+  </ItemGroup>
+</Project>

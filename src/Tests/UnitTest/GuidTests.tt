@@ -27,6 +27,7 @@ using Microsoft.UI.Xaml.Media.Media3D;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using TestComponentCSharp;
+using WindowsRuntime.InteropServices;
 
 namespace UnitTest;
 
@@ -186,6 +187,7 @@ for (int i = 0; i < tests.Length; i++)
         Use(default!);
 
         Assert.AreEqual(new Guid("<#=tests[i].IID#>"), GetIID(null));
+        Assert.AreEqual(new Guid("<#=tests[i].IID#>"), WindowsRuntimeMarshal.GetIid<<#=tests[i].Type#>>());
     }
 <#
 }

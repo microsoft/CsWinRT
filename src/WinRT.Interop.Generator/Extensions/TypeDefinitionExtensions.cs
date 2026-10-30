@@ -8,7 +8,6 @@ using AsmResolver;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
 using AsmResolver.PE.DotNet.Metadata.Tables;
-using WindowsRuntime.Generator;
 
 #pragma warning disable IDE0046
 
@@ -70,9 +69,11 @@ internal static class TypeDefinitionExtensions
         /// <returns>Whether the type has or inherits an attribute with the specified type.</returns>
         public bool HasOrInheritsAttribute(ITypeDescriptor attributeType, RuntimeContext? runtimeContext)
         {
+            SignatureComparer signatureComparer = new(runtimeContext, SignatureComparisonFlags.VersionAgnostic);
+
             foreach (TypeDefinition currentType in type.EnumerateBaseTypesAndSelf(runtimeContext))
             {
-                if (currentType.HasCustomAttribute(attributeType))
+                if (currentType.HasCustomAttribute(attributeType, signatureComparer))
                 {
                     return true;
                 }
@@ -95,6 +96,31 @@ internal static class TypeDefinitionExtensions
             foreach (InterfaceImplementation interfaceImpl in type.Interfaces)
             {
                 if (comparer.Equals(interfaceImpl.Interface, interfaceType))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Checks whether a method is identified as a 'MethodImpl' body on this type.
+        /// </summary>
+        /// <param name="method">The possible implementation body.</param>
+        /// <param name="runtimeContext">The context to assume when resolving implementation bodies.</param>
+        /// <returns>Whether a 'MethodImpl' entry on this type identifies the method as its body.</returns>
+        public bool IsExplicitImplementationBody(MethodDefinition method, RuntimeContext? runtimeContext)
+        {
+            // Explicit bodies need not have the slot's name; 'MethodImpl' metadata supplies their identity
+            foreach (MethodImplementation implementation in type.MethodImplementations)
+            {
+                if (implementation.Body?.TryResolve(runtimeContext, out MethodDefinition? body) is not true)
+                {
+                    continue;
+                }
+
+                if (ReferenceEquals(body, method))
                 {
                     return true;
                 }
@@ -199,6 +225,28 @@ internal static class TypeDefinitionExtensions
             }
 
             return [.. methods];
+        }
+
+        /// <summary>
+        /// Tries to get the static constructor of the specified type.
+        /// </summary>
+        /// <param name="constructor">The resulting static constructor, if found.</param>
+        /// <returns>Whether <paramref name="constructor"/> was successfully found.</returns>
+        public bool TryGetStaticConstructor([NotNullWhen(true)] out MethodDefinition? constructor)
+        {
+            foreach (MethodDefinition candidate in type.Methods)
+            {
+                if (candidate.IsStatic && candidate.Name?.AsSpan().SequenceEqual(".cctor"u8) is true)
+                {
+                    constructor = candidate;
+
+                    return true;
+                }
+            }
+
+            constructor = null;
+
+            return false;
         }
 
         /// <summary>
@@ -315,7 +363,7 @@ internal static class TypeDefinitionExtensions
             }
 
             // Verify the provided signature is valid
-            if (!SignatureComparer.IgnoreVersion.Equals(type, typeSignature.GenericType))
+            if (!new SignatureComparer(runtimeContext, SignatureComparisonFlags.VersionAgnostic).Equals(type, typeSignature.GenericType))
             {
                 throw new ArgumentException("The input type signature does not match the type definition.", nameof(typeSignature));
             }

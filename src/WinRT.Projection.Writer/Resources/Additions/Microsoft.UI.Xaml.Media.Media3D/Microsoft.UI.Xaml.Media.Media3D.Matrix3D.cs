@@ -6,6 +6,7 @@ namespace Microsoft.UI.Xaml.Media.Media3D
 #if !CSWINRT_REFERENCE_PROJECTION
     [WindowsRuntimeType]
     [WindowsRuntimeClassName("Windows.Foundation.IReference`1<Microsoft.UI.Xaml.Media.Media3D.Matrix3D>")]
+    [WindowsRuntimeReferenceType(typeof(Matrix3D?))]
     [ABI.Microsoft.UI.Xaml.Media.Media3D.Matrix3DComWrappersMarshaller]
 #endif
     public struct Matrix3D : IFormattable, IEquatable<Matrix3D>

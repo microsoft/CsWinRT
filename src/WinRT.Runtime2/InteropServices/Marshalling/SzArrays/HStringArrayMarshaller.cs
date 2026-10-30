@@ -39,7 +39,8 @@ public static unsafe class HStringArrayMarshaller
     ///     is the same. In particular, if the size of <paramref name="hstringHeaders"/> is incorrect, this will result in undefined behavior.
     ///   </item>
     ///   <item>The <paramref name="hstringHeaders"/> array remains pinned as long as <paramref name="hstrings"/> is in use.</item>
-    ///   <item>The values in <paramref name="pinnedGCHandles"/> are disposed by calling <see cref="Dispose(ReadOnlySpan{nint})"/>.</item>
+    ///   <item>The <paramref name="pinnedGCHandles"/> span is initialized to <see langword="default"/> before this method is called.</item>
+    ///   <item>The values in <paramref name="pinnedGCHandles"/> are disposed by calling <see cref="Dispose(ReadOnlySpan{nint})"/>, even if conversion throws.</item>
     /// </list>
     /// </para>
     /// </remarks>
@@ -49,60 +50,36 @@ public static unsafe class HStringArrayMarshaller
         Span<nint> hstrings,
         Span<nint> pinnedGCHandles)
     {
-        int i = 0;
-
-        try
+        // Create the fast-pass 'HSTRING' for each string in values
+        for (int i = 0; i < source.Length; i++)
         {
-            // Create the fast-pass 'HSTRING' for each string in values
-            for (; i < source.Length; i++)
+            string? value = source[i];
+
+            // If the value is 'null', we can avoid the overhead of creating the GC handle
+            // entirely, on top of also skipping the call to 'WindowsCreateStringReference'.
+            if (value is null)
             {
-                string? value = source[i];
-
-                // If the value is 'null', we can avoid the overhead of creating the GC handle
-                // entirely, on top of also skipping the call to 'WindowsCreateStringReference'.
-                if (value is null)
-                {
-                    pinnedGCHandles[i] = default;
-                    hstrings[i] = default;
-                }
-                else
-                {
-                    PinnedGCHandle<string?> pinnedGCHandle = new(value);
-
-                    // Create the GC handle first to pin the 'string' and store it for later
-                    pinnedGCHandles[i] = PinnedGCHandle<string?>.ToIntPtr(pinnedGCHandle);
-
-                    HSTRING hstring;
-
-                    // Create the fast-pass 'HSTRING' value (this is why we need the GC handles)
-                    WindowsRuntimeImports.WindowsCreateStringReference(
-                        sourceString: pinnedGCHandle.GetAddressOfStringData(),
-                        length: (uint)value.Length,
-                        hstringHeader: (HSTRING_HEADER*)&hstringHeaders[i],
-                        @string: &hstring).Assert();
-
-                    hstrings[i] = (nint)hstring;
-                }
+                pinnedGCHandles[i] = default;
+                hstrings[i] = default;
             }
-        }
-        catch
-        {
-            // We don't need to release the fast-pass 'HSTRING' values in case of exceptions,
-            // however we need to make sure that all GC handles are disposed, to avoid leaks.
-            for (int j = 0; j < i; j++)
+            else
             {
-                PinnedGCHandle<string>.FromIntPtr(pinnedGCHandles[j]).Dispose();
+                PinnedGCHandle<string?> pinnedGCHandle = new(value);
+
+                // Create the GC handle first to pin the 'string' and store it for later
+                pinnedGCHandles[i] = PinnedGCHandle<string?>.ToIntPtr(pinnedGCHandle);
+
+                HSTRING hstring;
+
+                // Create the fast-pass 'HSTRING' value (this is why we need the GC handles)
+                WindowsRuntimeImports.WindowsCreateStringReference(
+                    sourceString: pinnedGCHandle.GetAddressOfStringData(),
+                    length: (uint)value.Length,
+                    hstringHeader: (HSTRING_HEADER*)&hstringHeaders[i],
+                    @string: &hstring).Assert();
+
+                hstrings[i] = (nint)hstring;
             }
-
-            // Because the caller will also try to dispose the GC handles as part of its cleanup,
-            // we must clear the span from here in case of exceptions, as we have already disposed
-            // all handles ourselves. This ensures that there can't be accidental double disposal
-            // of any handles, and that callers don't try to dispose handles that are created over
-            // uninitialized memory, leading to undefined behavior. Because this is an edge case,
-            // we do this additional cleanup here in the exceptional case, and not always in the caller.
-            pinnedGCHandles.Clear();
-
-            throw;
         }
     }
 
@@ -179,25 +156,9 @@ public static unsafe class HStringArrayMarshaller
 
         ArgumentNullException.ThrowIfNull(destination);
 
-        int i = 0;
-
-        try
+        for (int i = 0; i < source.Length; i++)
         {
-            // Marshal the items in the input span
-            for (; i < source.Length; i++)
-            {
-                destination[i] = HStringMarshaller.ConvertToUnmanaged(source[i]);
-            }
-        }
-        catch
-        {
-            // Release resources for any items, if we failed
-            for (int j = 0; j < i; j++)
-            {
-                HStringMarshaller.Free(destination[j]);
-            }
-
-            throw;
+            destination[i] = HStringMarshaller.ConvertToUnmanaged(source[i]);
         }
     }
 

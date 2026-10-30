@@ -10,14 +10,17 @@ using WindowsRuntime.InteropServices;
 using WindowsRuntime.InteropServices.Marshalling;
 using static System.Runtime.InteropServices.ComWrappers;
 
-#pragma warning disable IDE0008
+#pragma warning disable IL2026, IDE0008
 
-#pragma warning disable IL2026 // Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code
 [assembly: TypeMap<WindowsRuntimeMetadataTypeMapGroup>(
     value: "Windows.Foundation.IClosable",
     target: typeof(ABI.System.IDisposable),
     trimTarget: typeof(IDisposable))]
-#pragma warning restore IL2026 // Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code
+
+[assembly: TypeMap<WindowsRuntimeIidTypeMapGroup>(
+    value: "[#System]System.IDisposable",
+    target: typeof(ABI.System.IDisposableIidProvider),
+    trimTarget: typeof(IDisposable))]
 
 [assembly: TypeMapAssociation<WindowsRuntimeMetadataTypeMapGroup>(
     source: typeof(IDisposable),
@@ -28,6 +31,12 @@ using static System.Runtime.InteropServices.ComWrappers;
     proxy: typeof(ABI.System.IDisposableInterfaceImpl))]
 
 namespace ABI.System;
+
+/// <summary>
+/// IID metadata for <see cref="global::System.IDisposable"/>.
+/// </summary>
+[Guid("30D5A829-7FA4-4026-83BB-D75BAE4EA99E")]
+file static class IDisposableIidProvider;
 
 /// <summary>
 /// ABI type for <see cref="global::System.IDisposable"/>.

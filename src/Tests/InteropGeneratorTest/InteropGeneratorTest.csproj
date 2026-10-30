@@ -1,0 +1,69 @@
+<Project Sdk="MSTest.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Platforms>x64;x86</Platforms>
+    <Nullable>enable</Nullable>
+    <CsWinRTEnabled>false</CsWinRTEnabled>
+
+    <!-- Match the netstandard task's runtime marshalling for CsWin32's SetLastError handling -->
+    <GenerateDisableRuntimeMarshallingAttribute>false</GenerateDisableRuntimeMarshallingAttribute>
+
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Platform)' == 'x86' or '$(Platform)' == 'x64'">
+    <RuntimeIdentifier>win-$(Platform)</RuntimeIdentifier>
+    <PlatformTarget>$(Platform)</PlatformTarget>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="AsmResolver.DotNet" />
+    <PackageReference Include="Basic.Reference.Assemblies.Net100" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" />
+    <PackageReference Include="Microsoft.Windows.CsWin32" PrivateAssets="all" />
+    <PackageDownload Include="NETStandard.Library" Version="[2.0.3]" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\..\WinRT.Interop.Generator\Models\TypeSignatureEquatableSet.cs" Link="Helpers\TypeSignatureEquatableSet.cs" />
+    <Compile Include="..\..\WinRT.Interop.Generator\Helpers\Comparers\TypeDescriptorComparer.cs" Link="Helpers\TypeDescriptorComparer.cs" />
+    <Compile Include="..\..\WinRT.Interop.Generator\Generation\OrderedVtableTypes.cs" Link="Helpers\OrderedVtableTypes.cs" />
+    <Compile Include="..\..\WinRT.Interop.Generator\Generation\InteropGenerationWorkQueue.cs" Link="Helpers\InteropGenerationWorkQueue.cs" />
+    <Compile Include="..\..\WinRT.Interop.Generator\Generation\MetadataCollectionOrdering.cs" Link="Helpers\MetadataCollectionOrdering.cs" />
+    <Compile Include="..\..\WinRT.Interop.Generator\Extensions\ParallelExtensions.cs" Link="Helpers\ParallelExtensions.cs" />
+    <Compile Include="..\..\WinRT.Interop.Generator\Helpers\Comparers\ByteSequenceComparer.cs" Link="Helpers\ByteSequenceComparer.cs" />
+    <Compile Include="..\..\WinRT.Interop.Generator\Writers\MemoizingMetadataTokenProvider.cs" Link="Helpers\Writers\MemoizingMetadataTokenProvider.cs" />
+    <Compile Include="..\..\WinRT.Interop.Generator\Writers\MemoizingMethodBodySerializer.cs" Link="Helpers\Writers\MemoizingMethodBodySerializer.cs" />
+    <Compile Include="..\..\WinRT.Interop.Generator\Writers\CustomAttributePayloadCache.cs" Link="Helpers\Writers\CustomAttributePayloadCache.cs" />
+    <Compile Include="..\..\WinRT.Interop.Generator\Writers\InteropModuleWriter.cs" Link="Helpers\Writers\InteropModuleWriter.cs" />
+    <Compile Include="..\..\WinRT.Generator.Tasks\InteropGeneratorGCPolicy.cs" Link="Helpers\InteropGeneratorGCPolicy.cs" />
+    <AdditionalFiles Include="..\..\WinRT.Generator.Tasks\NativeMethods.txt" Link="NativeMethods.txt" />
+    <AdditionalFiles Include="..\..\WinRT.Generator.Tasks\NativeMethods.json" Link="NativeMethods.json" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\WinRT.Runtime2\WinRT.Runtime.csproj"
+                      UndefineProperties="BuildToolArch;PublishBuildTool;RuntimeIdentifier;SelfContained;Platform" />
+    <ProjectReference Include="..\..\WinRT.Generator.Tasks\WinRT.Generator.Tasks.csproj"
+                      ReferenceOutputAssembly="false"
+                      UndefineProperties="BuildToolArch;PublishBuildTool;RuntimeIdentifier;SelfContained;Platform"
+                      Private="false" />
+    <ProjectReference Include="..\..\WinRT.Interop.Generator\WinRT.Interop.Generator.csproj"
+                      ReferenceOutputAssembly="false"
+                      OutputItemType="_CsWinRTToolReference"
+                      UndefineProperties="BuildToolArch;PublishBuildTool;RuntimeIdentifier;SelfContained;Platform"
+                      Private="false" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <AssemblyMetadata Include="InteropGeneratorAssemblyPath"
+                      Value="$(MSBuildThisFileDirectory)..\..\WinRT.Interop.Generator\bin\$(Configuration)\net10.0\cswinrtinteropgen.dll" />
+    <AssemblyMetadata Include="NetStandard20ReferenceDirectory"
+                      Value="$(NuGetPackageRoot)netstandard.library\2.0.3\build\netstandard2.0\ref" />
+    <AssemblyMetadata Include="GeneratorTasksAssemblyPath"
+                      Value="$(MSBuildThisFileDirectory)..\..\WinRT.Generator.Tasks\bin\$(Configuration)\netstandard2.0\WinRT.Generator.Tasks.dll" />
+    <AssemblyMetadata Include="CsWinRTTargetsPath"
+                      Value="$(MSBuildThisFileDirectory)..\..\..\nuget\Microsoft.Windows.CsWinRT.CsWinRTGen.targets" />
+    <Using Include="Microsoft.VisualStudio.TestTools.UnitTesting" />
+    <Using Include="System" />
+  </ItemGroup>
+</Project>

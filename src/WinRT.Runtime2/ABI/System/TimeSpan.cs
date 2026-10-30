@@ -10,9 +10,8 @@ using WindowsRuntime.InteropServices;
 using WindowsRuntime.InteropServices.Marshalling;
 using static System.Runtime.InteropServices.ComWrappers;
 
-#pragma warning disable IDE1006, CA1416
+#pragma warning disable IL2026, IDE1006, CA1416
 
-#pragma warning disable IL2026 // Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code
 [assembly: TypeMap<WindowsRuntimeMetadataTypeMapGroup>(
     value: "Windows.Foundation.TimeSpan",
     target: typeof(ABI.System.TimeSpan),
@@ -22,11 +21,21 @@ using static System.Runtime.InteropServices.ComWrappers;
     value: "Windows.Foundation.IReference`1<Windows.Foundation.TimeSpan>",
     target: typeof(ABI.System.TimeSpan),
     trimTarget: typeof(TimeSpan))]
-#pragma warning restore IL2026 // Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code
+
+[assembly: TypeMap<WindowsRuntimeIidTypeMapGroup>(
+    value: "[#System]System.Nullable`1[[#System]System.TimeSpan]",
+    target: typeof(ABI.System.TimeSpanIidProvider),
+    trimTarget: typeof(TimeSpan))]
 
 [assembly: TypeMapAssociation<WindowsRuntimeComWrappersTypeMapGroup>(typeof(TimeSpan), typeof(ABI.System.TimeSpan))]
 
 namespace ABI.System;
+
+/// <summary>
+/// IID metadata for the nullable projection of <see cref="global::System.TimeSpan"/>.
+/// </summary>
+[Guid("604D0C4C-91DE-5C2A-935F-362F13EAF800")]
+file static class TimeSpanIidProvider;
 
 /// <summary>
 /// ABI type for <see cref="global::System.TimeSpan"/>.

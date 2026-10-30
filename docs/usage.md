@@ -76,6 +76,63 @@ flowchart TD
     build --> nupkg
 ```
 
+### Projecting standalone exclusive interfaces
+
+A reference projection can expose selected `[ExclusiveTo]` interfaces without also projecting their owning runtime classes. For example, a supplemental UWP XAML projection can expose an interface from the Windows SDK while its owner remains in `WinRT.Sdk.Xaml.Projection.dll`:
+
+```xml
+<PropertyGroup>
+  <UseUwp>true</UseUwp>
+  <UseUwpTools>false</UseUwpTools>
+  <CsWinRTGenerateReferenceProjection>true</CsWinRTGenerateReferenceProjection>
+  <CsWinRTIncludes>Windows.UI.Xaml.IFrameworkElementProtected7</CsWinRTIncludes>
+  <CsWinRTPublicExclusiveToInterfaces>true</CsWinRTPublicExclusiveToInterfaces>
+  <CsWinRTDynamicallyInterfaceCastableExclusiveTo>true</CsWinRTDynamicallyInterfaceCastableExclusiveTo>
+</PropertyGroup>
+```
+
+The two switches are independent. `CsWinRTPublicExclusiveToInterfaces` controls public visibility; it does **not** enable dynamic interface casting. `CsWinRTDynamicallyInterfaceCastableExclusiveTo` enables IDIC support without making an internal interface public. Both default to `false`. Public-only interfaces still have the ABI helpers and CCW implementations needed for managed implementations; disabling IDIC does not remove this infrastructure, default interfaces, or overridable interfaces.
+
+To narrow the IDIC opt-in while keeping all projected exclusive interfaces public, set dedicated filters on the projection project:
+
+```xml
+<PropertyGroup>
+  <CsWinRTPublicExclusiveToInterfaces>true</CsWinRTPublicExclusiveToInterfaces>
+  <CsWinRTDynamicallyInterfaceCastableExclusiveTo>true</CsWinRTDynamicallyInterfaceCastableExclusiveTo>
+  <CsWinRTDynamicallyInterfaceCastableExclusiveToIncludes>Contoso.IWidget;Contoso.Controls</CsWinRTDynamicallyInterfaceCastableExclusiveToIncludes>
+  <CsWinRTDynamicallyInterfaceCastableExclusiveToExcludes>Contoso.IWidget3</CsWinRTDynamicallyInterfaceCastableExclusiveToExcludes>
+</PropertyGroup>
+```
+
+**Filter rules:**
+
+| IDIC switch | Includes | Excludes | IDIC selection |
+|-------------|----------|----------|----------------|
+| `false` or unset | Any | Any | None |
+| `true` | Empty | Empty | All otherwise eligible exclusive interfaces |
+| `true` | Empty | B | All eligible exclusives except B |
+| `true` | A | Empty | Only eligible matches of A |
+| `true` | A;B | B | Only eligible matches of A that do not match B |
+| `true` | A specific type | Its namespace | None; exclusions always win |
+
+Lists are semicolon-separated and use the same **case-sensitive namespace/type-name prefix matching** as projection filters, not wildcard or regular-expression syntax. For example, `Contoso.IWidget` also matches `Contoso.IWidget2`; use narrower prefixes and exclusions where necessary. Outer whitespace is trimmed, empty entries are ignored, and duplicates are removed. Invalid prefixes (such as `Contoso.*`, `Contoso..IWidget`, or embedded whitespace) produce `CSWINRTPROJECTIONGEN5022`; valid unmatched prefixes are harmless. The CLI equivalents are `--idic-exclusive-to-includes` and `--idic-exclusive-to-excludes`, with comma-separated lists in the response file.
+
+These filters affect casting support only, not public visibility or which APIs are selected by `CsWinRTIncludes` / `CsWinRTExcludes`. Ordinary, non-exclusive interfaces are unaffected. For a native wrapper that does not statically implement an excluded interface, `is` returns `false`, `as` returns `null`, and an explicit cast throws `InvalidCastException`. Ordinary casts to interfaces already implemented by an object are unaffected. Enabled dynamic casts still require the native object to support the interface IID and the runtime's `CsWinRTEnableIDynamicInterfaceCastableSupport` switch to remain enabled.
+
+**Reference packages and consumers:** the producer records the sorted, exact effective IDIC type names as `WindowsRuntimeReferenceAssemblyMetadataAttribute` key/value pairs, one per selected interface. This WinRT-specific attribute has the same shape as `AssemblyMetadataAttribute`: a `(string key, string? value)` constructor and read-only `Key` / `Value` properties, with repeated keys supported. The reference assembly marker `WindowsRuntimeReferenceAssemblyAttribute` is unchanged. For example, generated reference metadata can contain:
+
+```csharp
+[assembly: WindowsRuntimeReferenceAssembly]
+[assembly: WindowsRuntimeReferenceAssemblyMetadata("CsWinRT.IdicExclusiveTo.v1", "Contoso.IWidget2")]
+[assembly: WindowsRuntimeReferenceAssemblyMetadata("CsWinRT.IdicExclusiveTo.v1", "Contoso.IWidget3")]
+```
+
+These are generator-owned attributes, not annotations to write manually. String names preserve intent even for internal interfaces omitted by reference-assembly compilation. The metadata remains in the packed `ref/<tfm>` assembly, not the forwarder; the consumer restores exactly that selection independently of the actual public reference surface. Unknown keys are ignored, and ordinary `AssemblyMetadataAttribute` entries do not opt interfaces into IDIC. Prefixes are not reapplied to other packages. No selection entries means no exclusive-interface IDIC; **regenerate older preview projection packages that need IDIC support**. There is no public-visibility inference or consumer-side policy override.
+
+Consumers do not need to repeat the producer's exclusive-interface options. Projected runtime type identities must be globally unique: duplicate definitions across reference projections fail with `CSWINRTPROJECTIONGEN0015`, regardless of whether their policies agree. Metadata-only attribute projections do not contribute interop type-map keys and are exempt from this check. Malformed IDIC metadata fails with `CSWINRTPROJECTIONGEN0014`.
+
+A projection over Windows SDK metadata alone does not need to redistribute that metadata or add it to `CsWinRTInputs`: the app-time generator uses the configured Windows SDK metadata. The standalone `IFrameworkElementProtected7` example above therefore keeps its owner in `WinRT.Sdk.Xaml.Projection.dll` while preserving both public visibility and IDIC for the selected interface.
+
 ### Distributing the projection
 
 The reference and forwarder assembly is typically distributed along with the implementation assemblies as a NuGet package for applications to reference.
@@ -137,9 +194,31 @@ Below are the most commonly used MSBuild properties. For a full list, refer to t
 | `CsWinRTGenerateReferenceProjection` | `false` | Generate reference-only projections (for NuGet distribution). |
 | `CsWinRTComponent` | `false` | Enable Windows Runtime component authoring mode. |
 | `CsWinRTMarshallingMode` | `minimal` | Controls which assemblies the interop generator analyzes for marshalling code (`all`, `minimal`, or `strict`). See below. |
+| `CsWinRTAnalyzeNetStandardAssemblies` | `true` | Allows .NET Standard assemblies to participate in interop discovery. Set to `false` to skip them, including explicitly opted-in assemblies. |
+| `CsWinRTMarshallingEnabledAssembly` | *(item)* | Explicitly include named assemblies in discovery, subject to framework exclusions and explicit opt-outs. |
+| `CsWinRTMarshallingDisabledAssembly` | *(item)* | Explicitly exclude named assemblies from discovery in every mode. |
+| `CsWinRTGeneratorEnableIncrementalGeneration` | `true` | Reuse a previously generated interop assembly when its emission inputs are unchanged. Set to `false` to always emit. |
 | `CsWinRTIncludes` | *(empty)* | Semicolon-separated namespaces to include in the projection. |
 | `CsWinRTExcludes` | `Windows;Microsoft` | Semicolon-separated namespaces to exclude from the projection. |
 | `CsWinRTMessageImportance` | `normal` | Build message verbosity (`normal` or `high`). |
+
+### Incremental interop generation
+
+The interop generator always runs discovery and input validation. It then compares a deterministic fingerprint of the discovered types, interface sets, type hierarchy, assembly identities, relevant type metadata, and generator options with `WinRT.Interop.cache` beside the generated `WinRT.Interop.dll`. The generator build and the contents of the runtime, framework, and projection dependencies are also part of the fingerprint, including projection IID data and other implementation details.
+
+Custom attributes on fingerprinted types do not require their defining assemblies to be available merely for caching. For example, a consuming application might not receive an attribute dependency that a library's package reference marks `PrivateAssets="all"`. The fingerprint preserves the attribute's type and assembly identity, constructor signature, and raw metadata payload without decoding its arguments. Changes to that metadata conservatively invalidate the cache even for attributes unrelated to marshalling. Interfaces that discovery skips with an unresolved-type warning also retain their scoped reference identity without making caching fail. This does not relax resolution requirements for types or metadata that discovery or emission actually needs.
+
+When the fingerprint matches and the cached DLL passes a content checksum, emission is skipped. Application method-body changes and unrelated managed types therefore need not regenerate marshalling code. The cached DLL's MVID is refreshed from the current inputs, preserving byte-for-byte equivalence with a fresh generation, including after interop-neutral edits. Its timestamp is updated so MSBuild can consider the output up to date. Missing, damaged, or incompatible cache records and outputs cause normal generation; the cache record is published only after successful emission and is removed on clean. When `CsWinRTGeneratorLogDirectory` is set, the generator emits normally instead of reusing the cache so its report includes the generated type and IL counts.
+
+To bypass cache reads and writes (without disabling the generator), use:
+
+```xml
+<PropertyGroup>
+  <CsWinRTGeneratorEnableIncrementalGeneration>false</CsWinRTGeneratorEnableIncrementalGeneration>
+</PropertyGroup>
+```
+
+Direct tool invocations use `--enable-incremental-generation False` in the response file. Replaying a debug-repro ZIP creates a new extraction directory each time; use a fixed, extracted response file and output directory when measuring incremental generation.
 
 ### Marshalling mode
 
@@ -158,11 +237,23 @@ generated interop assembly small.
 | `minimal` (default) | Same as `all`, but skip assemblies from the .NET base class library (BCL) to reduce binary size. |
 | `strict` | Only analyze assemblies referencing the Windows Runtime assembly (i.e. those targeting a Windows TFM). |
 
-Assemblies that reference the Windows Runtime assembly are always analyzed, regardless of the mode. Assemblies targeting a legacy or portable runtime (i.e. .NET Standard or .NET Framework) are never analyzed, since the interop generator can only marshal types declared against a modern .NET runtime.
+Assemblies that reference the Windows Runtime assembly are analyzed regardless of the mode unless explicitly excluded, subject to the framework exclusions below. .NET Standard libraries (including `netstandard2.0`) follow the same mode and explicit inclusion/exclusion rules as other libraries by default. Set `CsWinRTAnalyzeNetStandardAssemblies` to `false` to skip their discovery in every mode, even if listed in `CsWinRTMarshallingEnabledAssembly`. Assemblies targeting .NET Framework are not analyzed.
+
+```xml
+<PropertyGroup>
+  <CsWinRTAnalyzeNetStandardAssemblies>false</CsWinRTAnalyzeNetStandardAssemblies>
+</PropertyGroup>
+```
+
+Changing this property invalidates the interop generator's property-input cache. It controls assembly discovery, not whether a type referenced by another analyzed assembly can be marshalled.
+
+Interop discovery compares signatures using the application's runtime context, following type forwarding while ignoring assembly versions. References from older libraries, portable libraries, and implementation assemblies that resolve to the same type therefore share a type-map entry, including when used in generic arguments, nested types, or arrays. Genuinely different assembly identities remain distinct. Generated helper names, ordering, and type-valued attribute serialization use resolved identities so output does not depend on which equivalent reference was discovered first.
+
+Marshalling discovery supports generic helpers, interface implementations, virtual overrides, and default or static interface members, including across analyzed assemblies. It is conservative and may generate support for more implementations than are used at runtime. Discovery uses constructed types visible in analyzed code; types or generic combinations available only through reflection are not guaranteed to be discovered, and assembly exclusions still apply. The [depth](diagnostics/CSWINRTINTEROPGEN0104.md), [signature complexity](diagnostics/CSWINRTINTEROPGEN0105.md), and [transitive discovery](diagnostics/CSWINRTINTEROPGEN0106.md) limits can leave some indirectly required marshalling support incomplete.
 
 ### Opting in specific assemblies
 
-The `CsWinRTMarshallingEnabledAssembly` item lets you force the interop generator to analyze specific assemblies, regardless of the marshalling mode. This is useful for fine-tuning binary size: for example, you can keep the `strict` mode (the smallest option) while opting in just the few assemblies you know need marshalling support:
+The `CsWinRTMarshallingEnabledAssembly` item lets you analyze specific assemblies regardless of the marshalling mode, unless explicitly excluded. This is useful for fine-tuning binary size: for example, you can keep the `strict` mode (the smallest option) while opting in just the few assemblies you know need marshalling support:
 
 ```xml
 <PropertyGroup>
@@ -175,7 +266,21 @@ The `CsWinRTMarshallingEnabledAssembly` item lets you force the interop generato
 </ItemGroup>
 ```
 
-Each item is an assembly name (the `.dll` extension is optional). The interop generator reports a warning if an entry doesn't match any referenced assembly, and an informational message if an entry is redundant (e.g. it already targets Windows, or the mode is `all` and thus already analyzes everything).
+Each item is an assembly name (the `.dll` extension is optional; paths and casing are ignored). The interop generator reports a warning if an entry doesn't match any referenced assembly (except in `all` mode, where all opt-ins are redundant), and an informational message if an entry is redundant (e.g. it already targets Windows, or the mode is `all`).
+
+### Excluding specific assemblies
+
+The `CsWinRTMarshallingDisabledAssembly` item skips discovery of named assemblies even if the selected mode would analyze them, they reference the Windows Runtime assembly, or they are also listed in `CsWinRTMarshallingEnabledAssembly`. This can avoid scanning a dependency with many unused generic instantiations:
+
+```xml
+<ItemGroup>
+  <CsWinRTMarshallingDisabledAssembly Include="MyApp.LargeDependency" />
+</ItemGroup>
+```
+
+Like opt-ins, entries match the assembly's simple name, case-insensitively (the directory and `.dll` extension are ignored). An unknown name produces a warning; if the same assembly is both enabled and disabled, the exclusion wins and a warning reports the conflict. Both warnings honor `CsWinRTGeneratorTreatWarningsAsErrors`. Changing these items invalidates the interop generator's property-input cache.
+
+Exclusion skips the assembly's normal type and member scans, plus indirect member expansion in that assembly, including static initializers. It does **not** remove the assembly from type resolution, suppress signatures used directly by analyzed code (including explicit generic type specifications and method calls), or prevent the generator from loading required WinRT projection modules and discovering component activation factories. If excluded code requires marshalling that no analyzed code exposes, **you are responsible for ensuring the necessary interop is generated**; otherwise publishing or runtime marshalling can fail.
 
 ## Author and consume a C#/WinRT component
 

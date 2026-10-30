@@ -12,6 +12,7 @@ using WindowsRuntime.InteropGenerator.Factories;
 using WindowsRuntime.InteropGenerator.Generation;
 using WindowsRuntime.InteropGenerator.Helpers;
 using WindowsRuntime.InteropGenerator.References;
+using WindowsRuntime.InteropGenerator.Resolvers;
 using static AsmResolver.PE.DotNet.Cil.CilOpCodes;
 
 namespace WindowsRuntime.InteropGenerator.Builders;
@@ -25,34 +26,9 @@ internal partial class InteropTypeDefinitionBuilder
     public static class KeyValuePair
     {
         /// <summary>
-        /// Creates a new type definition for the <c>KeyValuePairMethods</c> type to contain shared accessor
-        /// methods for <see cref="System.Collections.Generic.KeyValuePair{TKey, TValue}"/> types.
-        /// </summary>
-        /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
-        /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
-        /// <param name="module">The module that will contain the type being created.</param>
-        /// <param name="methodsType">The resulting methods type.</param>
-        public static void Methods(
-            InteropDefinitions interopDefinitions,
-            InteropReferences interopReferences,
-            ModuleDefinition module,
-            out TypeDefinition methodsType)
-        {
-            // We're declaring an 'internal static class' type
-            methodsType = new TypeDefinition(
-                ns: InteropUtf8NameFactory.TypeNamespace(interopReferences.KeyValuePair.ToReferenceTypeSignature(), interopReferences.RuntimeContext),
-                name: InteropUtf8NameFactory.TypeName(interopReferences.KeyValuePair.ToReferenceTypeSignature(), interopDefinitions, "Methods"),
-                attributes: TypeAttributes.AutoLayout | TypeAttributes.Sealed | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit,
-                baseType: interopReferences.Object.ToTypeDefOrRef());
-
-            module.TopLevelTypes.Add(methodsType);
-        }
-
-        /// <summary>
         /// Gets or creates the accessor methods for a <see cref="System.Collections.Generic.KeyValuePair{TKey, TValue}"/> type.
         /// </summary>
         /// <param name="keyValuePairType">The <see cref="TypeSignature"/> for a <see cref="System.Collections.Generic.KeyValuePair{TKey, TValue}"/> type.</param>
-        /// <param name="methodsType">The <see cref="TypeDefinition"/> instance returned by <see cref="Methods"/>.</param>
         /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
         /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
         /// <param name="emitState">The emit state for this invocation.</param>
@@ -60,13 +36,13 @@ internal partial class InteropTypeDefinitionBuilder
         /// <param name="valueAccessorMethod">The resulting accessor method for the value.</param>
         public static void Accessors(
             GenericInstanceTypeSignature keyValuePairType,
-            TypeDefinition methodsType,
             InteropDefinitions interopDefinitions,
             InteropReferences interopReferences,
             InteropGeneratorEmitState emitState,
             out MethodDefinition keyAccessorMethod,
             out MethodDefinition valueAccessorMethod)
         {
+            TypeDefinition methodsType = interopDefinitions.KeyValuePairMethods;
             TypeSignature keyType = keyValuePairType.TypeArguments[0];
             TypeSignature valueType = keyValuePairType.TypeArguments[1];
 
@@ -282,13 +258,17 @@ internal partial class InteropTypeDefinitionBuilder
                 module: module,
                 implType: out implType,
                 implTypes: [
-                    (get_IidMethod, keyValuePairTypeImplType.GetMethod("get_Vtable"u8)),
-                    (interopReferences.WellKnownInterfaceIIDsget_IID_IStringable, interopReferences.IStringableImplget_Vtable),
-                    (interopReferences.WellKnownInterfaceIIDsget_IID_IWeakReferenceSource, interopReferences.IWeakReferenceSourceImplget_Vtable),
-                    (interopReferences.WellKnownInterfaceIIDsget_IID_IMarshal, interopReferences.IMarshalImplget_Vtable),
-                    (interopReferences.WellKnownInterfaceIIDsget_IID_IAgileObject, interopReferences.IAgileObjectImplget_Vtable),
-                    (interopReferences.WellKnownInterfaceIIDsget_IID_IInspectable, interopReferences.IInspectableImplget_Vtable),
-                    (interopReferences.WellKnownInterfaceIIDsget_IID_IUnknown, interopReferences.IUnknownImplget_Vtable)]);
+                    InteropInterfaceEntriesResolver.Create(get_IidMethod, keyValuePairTypeImplType.GetMethod("get_Vtable"u8)),
+                    .. InteropInterfaceEntriesResolver.EnumerateDefaultCustomPropertyProviderInterfaceEntries(
+                        vtableTypes: null,
+                        interopDefinitions: interopDefinitions,
+                        interopReferences: interopReferences),
+                    InteropInterfaceEntriesResolver.Create(interopReferences.WellKnownInterfaceIIDsget_IID_IStringable, interopReferences.IStringableImplget_Vtable),
+                    InteropInterfaceEntriesResolver.Create(interopReferences.WellKnownInterfaceIIDsget_IID_IWeakReferenceSource, interopReferences.IWeakReferenceSourceImplget_Vtable),
+                    InteropInterfaceEntriesResolver.Create(interopReferences.WellKnownInterfaceIIDsget_IID_IMarshal, interopReferences.IMarshalImplget_Vtable),
+                    InteropInterfaceEntriesResolver.Create(interopReferences.WellKnownInterfaceIIDsget_IID_IAgileObject, interopReferences.IAgileObjectImplget_Vtable),
+                    InteropInterfaceEntriesResolver.Create(interopReferences.WellKnownInterfaceIIDsget_IID_IInspectable, interopReferences.IInspectableImplget_Vtable),
+                    InteropInterfaceEntriesResolver.Create(interopReferences.WellKnownInterfaceIIDsget_IID_IUnknown, interopReferences.IUnknownImplget_Vtable)]);
         }
 
         /// <summary>

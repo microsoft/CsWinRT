@@ -96,8 +96,8 @@ public struct Rect : IEquatable<Rect>, IFormattable
     /// <exception cref="ArgumentOutOfRangeException">Thrown if <paramref name="width"/> or <paramref name="height"/> are less than zero.</exception>
     public Rect(float x, float y, float width, float height)
     {
-        ArgumentOutOfRangeException.ThrowIfNegative(width);
-        ArgumentOutOfRangeException.ThrowIfNegative(height);
+        ArgumentOutOfRangeException.ThrowIfLessThanZero(width);
+        ArgumentOutOfRangeException.ThrowIfLessThanZero(height);
 
         X = x;
         Y = y;

@@ -154,6 +154,46 @@ internal static class WellKnownProjectionWriterExceptions
         return Exception(5021, "Settings have not been finalized via MakeReadOnly; the derived state is not yet available.");
     }
 
+    /// <summary>
+    /// An exclusive-to IDIC filter is not a namespace or type-name prefix.
+    /// </summary>
+    public static WellKnownProjectionWriterException InvalidIdicExclusiveToFilter(string optionName, string? filter)
+    {
+        return Exception(5022, $"Invalid exclusive-to IDIC filter '{filter ?? "<null>"}' in '{optionName}'. Use case-sensitive namespace or type-name prefixes, without wildcards or regular expressions.");
+    }
+
+    /// <summary>
+    /// An abstract <c>[WindowsRuntimeActivationFactory]</c> class extending a generated activation factory cannot be derived from.
+    /// </summary>
+    public static WellKnownProjectionWriterException InvalidActivationFactoryExtension(string typeName, string runtimeClassName)
+    {
+        return Exception(5023, $"The activation factory for '{runtimeClassName}' cannot extend '{typeName}': it must be a public, non-generic abstract class (in public containing types, if nested) with a public or protected parameterless constructor.");
+    }
+
+    /// <summary>
+    /// More than one abstract <c>[WindowsRuntimeActivationFactory]</c> class extends the activation factory for the same runtime class.
+    /// </summary>
+    public static WellKnownProjectionWriterException DuplicateActivationFactoryExtension(string runtimeClassName, string firstTypeName, string secondTypeName)
+    {
+        return Exception(5024, $"The activation factory for '{runtimeClassName}' can only extend one class, but both '{firstTypeName}' and '{secondTypeName}' are declared for it.");
+    }
+
+    /// <summary>
+    /// An implementation projection has no destination assembly identity for its IID map keys.
+    /// </summary>
+    public static WellKnownProjectionWriterException MissingOutputAssemblyName()
+    {
+        return Exception(5025, "An output assembly simple name must be provided for implementation projections.");
+    }
+
+    /// <summary>
+    /// Two projection types claim the same IID key with conflicting identities or trim dependencies.
+    /// </summary>
+    public static WellKnownProjectionWriterException ConflictingIidTypeNames(string key)
+    {
+        return Exception(5026, $"Conflicting IID registrations were generated for the type key '{key}'.");
+    }
+
     private static WellKnownProjectionWriterException Exception(int id, string message, Exception? innerException = null)
     {
         return new WellKnownProjectionWriterException($"{ErrorPrefix}{id:0000}", message, innerException);

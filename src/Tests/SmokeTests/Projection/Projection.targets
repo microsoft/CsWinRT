@@ -1,0 +1,13 @@
+<Project>
+
+  <!--
+    Shipped inside the 'Projection' smoke test package. A Windows Runtime projection package has to hand
+    its '.winmd' files to the consuming project so the consumer's projection generator can regenerate the
+    implementation the packaged reference assembly only declares. This mirrors what the real WinUI and
+    Windows App SDK projection packages do.
+  -->
+  <ItemGroup>
+    <CsWinRTInputs Include="$(MSBuildThisFileDirectory)..\..\metadata\*.winmd" />
+  </ItemGroup>
+
+</Project>

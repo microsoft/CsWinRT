@@ -16,6 +16,7 @@
 
   <ItemGroup>
     <PackageReference Include="AsmResolver.DotNet" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" />
   </ItemGroup>
 
   <ItemGroup>
@@ -27,5 +28,6 @@
 
     <!-- The projection writer library consumes shared helpers (e.g. SignatureComparer.IgnoreVersion). -->
     <InternalsVisibleTo Include="WinRT.Projection.Writer" />
+    <InternalsVisibleTo Include="ProjectionWriterTest" />
   </ItemGroup>
 </Project>

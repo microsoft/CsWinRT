@@ -32,6 +32,56 @@ namespace TestComponentCSharp
         Two,
     };
 
+    // Each discovery path and control needs an element type that no other test can root
+    enum InterfaceDispatchElement
+    {
+        First,
+        Second,
+        Third,
+    };
+
+    enum DirectDispatchElement
+    {
+        First,
+        Second,
+        Third,
+    };
+
+    enum AbstractDispatchElement
+    {
+        First,
+        Second,
+        Third,
+    };
+
+    enum VirtualDispatchElement
+    {
+        First,
+        Second,
+        Third,
+    };
+
+    enum SealedDispatchElement
+    {
+        First,
+        Second,
+        Third,
+    };
+
+    enum ClosedArgumentElement
+    {
+        First,
+        Second,
+        Third,
+    };
+
+    enum StaticChainElement
+    {
+        First,
+        Second,
+        Third,
+    };
+
     struct EnumStruct
     {
         EnumValue value;
@@ -47,6 +97,7 @@ namespace TestComponentCSharp
         BlittableStruct blittable;
     };
 
+    [createfromstring("TestComponentCSharp.Class.CreateStructFromString")]
     struct NonBlittableStringStruct
     {
         String str;
@@ -110,6 +161,16 @@ namespace TestComponentCSharp
     {
         Windows.UI.Xaml.Interop.TypeName TypeProperty{ get; set; };
     };
+
+    interface IArrayMarshalling
+    {
+        Windows.Foundation.IReference<Int32>[] NullableValues;
+        Windows.Foundation.Collections.IKeyValuePair<String, String>[] PairValues;
+        Windows.UI.Xaml.Interop.TypeName[] TypeValues;
+        void FillNullableValues(ref Windows.Foundation.IReference<Int32>[] values);
+        void FillPairValues(ref Windows.Foundation.Collections.IKeyValuePair<String, String>[] values);
+        void FillTypeValues(ref Windows.UI.Xaml.Interop.TypeName[] values);
+    }
 
     interface IProperties1
     {
@@ -195,6 +256,7 @@ namespace TestComponentCSharp
     }
 
     [default_interface, gc_pressure(Windows.Foundation.Metadata.GCPressureAmount.High)]
+    [createfromstring("TestComponentCSharp.Class.CreateFromString")]
     runtimeclass Class :
         Windows.Foundation.IStringable
         //, ICowboy
@@ -231,6 +293,8 @@ namespace TestComponentCSharp
         static Int32 StaticReadWriteProperty{ set; };
         static Windows.Foundation.TimeSpan FromSeconds(Int32 seconds);
         static Windows.Foundation.DateTime Now();
+        static Class CreateFromString(String value);
+        static NonBlittableStringStruct CreateStructFromString(String value);
 
         // class
         event EventHandler0 Event0;
@@ -373,6 +437,16 @@ namespace TestComponentCSharp
         Windows.Foundation.IAsyncOperation<Int32> GetIntAsync();
         Windows.Foundation.IAsyncOperationWithProgress<String, Int32> GetStringAsync();
         Windows.Foundation.Collections.IVectorView<Int32> GetIntVector();
+        Object GetInputStreamOptionsVector();
+        Object GetFileAccessModeVector();
+        Object GetCreationCollisionOptionVector();
+        Object GetInterfaceDispatchVector();
+        Object GetDirectDispatchVector();
+        Object GetAbstractDispatchVector();
+        Object GetVirtualDispatchVector();
+        Object GetSealedDispatchVector();
+        Object GetClosedArgumentVector();
+        Object GetStaticChainVector();
         Windows.Foundation.Collections.IVectorView<Boolean> GetBoolVector();
         Windows.Foundation.Collections.IVectorView<String> GetStringVector();
         Windows.Foundation.Collections.IVectorView<ComposedBlittableStruct> GetBlittableStructVector();
@@ -394,6 +468,9 @@ namespace TestComponentCSharp
         Windows.Foundation.Collections.IMap<ComposedBlittableStruct, Object> GetBlittableToObjectDictionary();
         Windows.Foundation.Collections.IMap<Int32, Windows.Foundation.Collections.IVector<EnumValue> > GetIntToListDictionary();
         Windows.Foundation.Collections.IMap<Windows.Foundation.TimeSpan, Windows.Foundation.TimeSpan> GetTimeSpanToTimeSpanDictionary();
+
+        static Windows.Foundation.Collections.IObservableMap<String, String> CreateObservableStringMap(Boolean allowEventCalls);
+        static Windows.Foundation.Collections.IObservableMap<Int32, Int32> CreateObservableIntMap(Boolean allowEventCalls);
 
         // Test IIDOptimizer
         Windows.Foundation.Collections.IVectorView<Microsoft.UI.Xaml.Data.DataErrorsChangedEventArgs> GetEventArgsVector();
@@ -447,6 +524,10 @@ namespace TestComponentCSharp
         Windows.Foundation.IAsyncActionWithProgress<Int32> DoitAsyncWithProgress();
         Windows.Foundation.IAsyncOperation<Int32> AddAsync(Int32 lhs, Int32 rhs);
         Windows.Foundation.IAsyncOperationWithProgress<Int32, Int32> AddAsyncWithProgress(Int32 lhs, Int32 rhs);
+        Windows.Foundation.IAsyncOperationWithProgress<UInt32, UInt32> WrlAddAsyncWithProgress(UInt32 lhs, UInt32 rhs);
+        Windows.Foundation.IAsyncOperationWithProgress<UInt32, UInt32> WrlAddAsyncWithProgress(UInt32 lhs, UInt32 rhs,
+            Windows.Foundation.AsyncOperationWithProgressCompletedHandler<UInt32, UInt32> observer);
+        Boolean TryCompleteWrlAsync(Int32 hr);
 
         // Registers a 'Completed' handler on the supplied async action that always fails with the
         // specified HRESULT, and a flag that is set right before the handler throws (so that tests
@@ -504,6 +585,7 @@ namespace TestComponentCSharp
         static Int32[] UnboxInt32Array(Object obj);
         static Boolean[] UnboxBooleanArray(Object obj);
         static String[] UnboxStringArray(Object obj);
+        static Object[] UnboxObjectArray(Object obj);
         static Object BoxedDelegate{ get; };
         static Object BoxedEnum{ get; };
         static Object BoxedEventHandler{ get; };
@@ -519,6 +601,7 @@ namespace TestComponentCSharp
         static Int32[] UnboxInt32ArrayUsingPropertyValue(Object obj);
         static Boolean[] UnboxBooleanArrayUsingPropertyValue(Object obj);
         static Windows.Foundation.Point[] UnboxPointArrayUsingPropertyValue(Object obj);
+        static Object[] UnboxObjectArrayUsingPropertyValue(Object obj);
 
         static Int32 GetPropertyType(Object obj);
         static String GetName(Object obj);
@@ -672,9 +755,12 @@ namespace TestComponentCSharp
     delegate Windows.Foundation.HResult HandleResult(Windows.Foundation.HResult value);
 
     [default_interface]
-    runtimeclass MarshalledValuesTest : IMarshalledValues
+    runtimeclass MarshalledValuesTest : IMarshalledValues, IArrayMarshalling
     {
         MarshalledValuesTest();
+        MarshalledValuesTest(Windows.Foundation.IReference<Int32>[] nullableValues, Windows.Foundation.Collections.IKeyValuePair<String, String>[] pairValues, Windows.UI.Xaml.Interop.TypeName[] typeValues);
+        // Forward calls through native code to exercise the RCW and managed CCW on the same array buffer.
+        MarshalledValuesTest(IArrayMarshalling target);
 
         // Invoke each 'IMarshalledValues' member from native code, so that tests can validate the
         // marshalling of every parameter shape it covers independently. Passing a managed

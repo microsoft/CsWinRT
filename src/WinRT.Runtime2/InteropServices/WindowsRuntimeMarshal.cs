@@ -18,6 +18,32 @@ namespace WindowsRuntime.InteropServices;
 public static unsafe class WindowsRuntimeMarshal
 {
     /// <summary>
+    /// Gets the Windows Runtime interface identifier associated with <typeparamref name="T"/>.
+    /// </summary>
+    /// <typeparam name="T">The projected or custom-mapped Windows Runtime type.</typeparam>
+    /// <returns>The interface identifier associated with <typeparamref name="T"/>.</returns>
+    /// <remarks>
+    /// Interfaces and delegates return their own IID, and runtime classes return their default-interface IID.
+    /// Nullable Windows Runtime value types represent <c>IReference&lt;T&gt;</c>, while unboxed values have no IID.
+    /// Constructed generic types and single-dimensional arrays are supported when discoverable while generating the interop assembly.
+    /// <see cref="System.Collections.Generic.KeyValuePair{TKey, TValue}"/> returns its
+    /// <c>IKeyValuePair</c> IID because it projects a Windows Runtime interface. Its nullable form is not supported.
+    /// IID metadata for constructed types is generated only when an input assembly references this method. Reflection-only calls and
+    /// calls from assemblies unavailable at build time are not guaranteed to work.
+    /// </remarks>
+    /// <exception cref="NotSupportedException">
+    /// The type has no Windows Runtime interface identifier or has no precomputed IID entry.
+    /// </exception>
+    public static Guid GetIid<T>()
+    {
+#if WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
+        throw null;
+#elif WINDOWS_RUNTIME_IMPLEMENTATION_ASSEMBLY
+        return WindowsRuntimeIidInfo.GetInfo(typeof(T)).GetIid();
+#endif
+    }
+
+    /// <summary>
     /// Checks whether two objects are the same, or represent the same underlying native object.
     /// </summary>
     /// <param name="left">The first object to compare.</param>
@@ -154,8 +180,15 @@ public static unsafe class WindowsRuntimeMarshal
     /// <returns>The resulting managed object, or <see langword="null"/> if <paramref name="value"/> is <see langword="null"/>.</returns>
     /// <exception cref="ArgumentException">Thrown if <paramref name="value"/> is not a recognized managed CCW and does not implement <c>IInspectable</c>.</exception>
     /// <remarks>
+    /// <para>
     /// Native objects must implement <c>IInspectable</c>, which is queried before creating or retrieving an RCW.
     /// This method does not take ownership of the input pointer: the caller remains responsible for releasing it.
+    /// </para>
+    /// <para>
+    /// A CCW for a C# implementation of a Windows Runtime class declared in existing metadata is not unwrapped: it
+    /// produces the projected type for that class instead, exactly like every other marshalling path does. Use
+    /// <see cref="TryGetManagedObject"/> to retrieve the implementation itself.
+    /// </para>
     /// </remarks>
     /// <seealso cref="System.Runtime.InteropServices.Marshalling.ComInterfaceMarshaller{T}.ConvertToManaged"/>
     public static object? ConvertToManaged(void* value)
@@ -169,7 +202,8 @@ public static unsafe class WindowsRuntimeMarshal
         }
 
         // Unwrap recognized managed CCWs before requiring 'IInspectable', which they might not implement
-        if (TryGetManagedObject(value, out object? managedObject))
+        if (WindowsRuntimeMarshal.TryGetManagedObject(value, out object? managedObject) &&
+            !WindowsRuntimeImplementationMarshal.IsImplementationObject(managedObject))
         {
             return managedObject;
         }

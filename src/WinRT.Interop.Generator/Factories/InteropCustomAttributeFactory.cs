@@ -6,6 +6,7 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
+using WindowsRuntime.InteropGenerator.Generation;
 using WindowsRuntime.InteropGenerator.Helpers;
 using WindowsRuntime.InteropGenerator.References;
 
@@ -16,6 +17,33 @@ namespace WindowsRuntime.InteropGenerator.Factories;
 /// </summary>
 internal static class InteropCustomAttributeFactory
 {
+    /// <summary>
+    /// Creates the association between a collection implementation and its constructed generic enumerable.
+    /// </summary>
+    /// <param name="elementType">The element type of the constructed generic enumerable interface.</param>
+    /// <param name="emitState">The emit state containing the specialized attribute types.</param>
+    /// <returns>The enumerable association attribute.</returns>
+    public static CustomAttribute DynamicInterfaceCastableEnumerable(TypeSignature elementType, InteropGeneratorEmitState emitState)
+    {
+        TypeDefinition attributeType = emitState.LookupTypeDefinition(elementType, "EnumerableAttribute");
+
+        return new(attributeType.GetMethod(".ctor"u8), new CustomAttributeSignature());
+    }
+
+    /// <summary>
+    /// Creates a type-valued argument using its resolved identity rather than a discovery-order-dependent alias.
+    /// </summary>
+    /// <param name="type">The type being serialized.</param>
+    /// <param name="interopReferences">The references for the output module.</param>
+    /// <returns>The type-valued attribute argument.</returns>
+    public static CustomAttributeArgument TypeArgument(TypeSignature type, InteropReferences interopReferences)
+    {
+        ModuleDefinition module = interopReferences.CorLibTypeFactory.CorLibScope.ContextModule!;
+        ReferenceImporter importer = module.DefaultImporter;
+
+        return new(interopReferences.Type.ToReferenceTypeSignature(), importer.ImportTypeSignature(type));
+    }
+
     /// <summary>
     /// Creates a new custom attribute value for <see cref="GuidAttribute"/> (and imports all metadata elements for it).
     /// </summary>
@@ -183,12 +211,8 @@ internal static class InteropCustomAttributeFactory
                 new CustomAttributeArgument(
                     argumentType: interopReferences.String,
                     value: value),
-                new CustomAttributeArgument(
-                    argumentType: interopReferences.Type.ToReferenceTypeSignature(),
-                    value: target),
-                new CustomAttributeArgument(
-                    argumentType: interopReferences.Type.ToReferenceTypeSignature(),
-                    value: trimTarget)]));
+                TypeArgument(target, interopReferences),
+                TypeArgument(trimTarget, interopReferences)]));
     }
 
     /// <summary>
@@ -208,12 +232,8 @@ internal static class InteropCustomAttributeFactory
         // [TypeMap<WindowsRuntimeComWrappersTypeMapGroup>(<SOURCE>, <PROXY>)]
         return new(interopReferences.TypeMapAssociationAttributeWindowsRuntimeComWrappersTypeMapGroup_ctor, new CustomAttributeSignature(
             fixedArguments: [
-                new CustomAttributeArgument(
-                    argumentType: interopReferences.Type.ToReferenceTypeSignature(),
-                    value: source),
-                new CustomAttributeArgument(
-                    argumentType: interopReferences.Type.ToReferenceTypeSignature(),
-                    value: proxy)]));
+                TypeArgument(source, interopReferences),
+                TypeArgument(proxy, interopReferences)]));
     }
 
     /// <summary>
@@ -238,12 +258,30 @@ internal static class InteropCustomAttributeFactory
                 new CustomAttributeArgument(
                     argumentType: interopReferences.String,
                     value: value),
-                new CustomAttributeArgument(
-                    argumentType: interopReferences.Type.ToReferenceTypeSignature(),
-                    value: target),
-                new CustomAttributeArgument(
-                    argumentType: interopReferences.Type.ToReferenceTypeSignature(),
-                    value: trimTarget)]));
+                TypeArgument(target, interopReferences),
+                TypeArgument(trimTarget, interopReferences)]));
+    }
+
+    /// <summary>
+    /// Creates an external IID type map entry, conditional on the public type being retained.
+    /// </summary>
+    /// <param name="value">The assembly-qualified structural name used to locate the provider.</param>
+    /// <param name="target">The IID provider type.</param>
+    /// <param name="trimTarget">The public type controlling retention.</param>
+    /// <param name="interopReferences">The references for this invocation.</param>
+    /// <returns>The external type map entry.</returns>
+    public static CustomAttribute TypeMapWindowsRuntimeIidTypeMapGroup(
+        string value,
+        TypeSignature target,
+        TypeSignature trimTarget,
+        InteropReferences interopReferences)
+    {
+        // '[TypeMap<WindowsRuntimeIidTypeMapGroup>(<VALUE>, <TARGET>, <TRIM_TARGET>)]'
+        return new(interopReferences.TypeMapAttributeWindowsRuntimeIidTypeMapGroup_ctor_TrimTarget, new CustomAttributeSignature(
+            fixedArguments: [
+                new CustomAttributeArgument(interopReferences.String, value),
+                TypeArgument(target, interopReferences),
+                TypeArgument(trimTarget, interopReferences)]));
     }
 
     /// <summary>
@@ -263,12 +301,8 @@ internal static class InteropCustomAttributeFactory
         // [TypeMap<WindowsRuntimeMetadataTypeMapGroup>(<SOURCE>, <PROXY>)]
         return new(interopReferences.TypeMapAssociationAttributeWindowsRuntimeMetadataTypeMapGroup_ctor, new CustomAttributeSignature(
             fixedArguments: [
-                new CustomAttributeArgument(
-                    argumentType: interopReferences.Type.ToReferenceTypeSignature(),
-                    value: source),
-                new CustomAttributeArgument(
-                    argumentType: interopReferences.Type.ToReferenceTypeSignature(),
-                    value: proxy)]));
+                TypeArgument(source, interopReferences),
+                TypeArgument(proxy, interopReferences)]));
     }
 
     /// <summary>
@@ -288,11 +322,7 @@ internal static class InteropCustomAttributeFactory
         // [TypeMap<DynamicInterfaceCastableImplementationTypeMapGroup>(<SOURCE>, <PROXY>)]
         return new(interopReferences.TypeMapAssociationAttributeDynamicInterfaceCastableImplementationTypeMapGroup_ctor, new CustomAttributeSignature(
             fixedArguments: [
-                new CustomAttributeArgument(
-                    argumentType: interopReferences.Type.ToReferenceTypeSignature(),
-                    value: source),
-                new CustomAttributeArgument(
-                    argumentType: interopReferences.Type.ToReferenceTypeSignature(),
-                    value: proxy)]));
+                TypeArgument(source, interopReferences),
+                TypeArgument(proxy, interopReferences)]));
     }
 }

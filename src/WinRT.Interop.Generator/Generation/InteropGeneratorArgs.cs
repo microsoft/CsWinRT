@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System;
 using System.ComponentModel;
 using System.Threading;
 using WindowsRuntime.Generator;
@@ -49,11 +50,23 @@ internal sealed class InteropGeneratorArgs : IGeneratorArgs
     [CommandLineArgumentName("--use-windows-ui-xaml-projections")]
     public required bool UseWindowsUIXamlProjections { get; init; }
 
+    /// <summary>Gets whether to emit default custom property provider entries for generated managed CCWs.</summary>
+    /// <remarks>Defaults to <see langword="true"/> when not specified in the response file.</remarks>
+    [CommandLineArgumentName("--enable-default-custom-property-provider-support")]
+    [DefaultValue(true)]
+    public bool EnableDefaultCustomPropertyProviderSupport { get; init; }
+
     /// <summary>Gets the marshalling mode, controlling which assemblies are analyzed to discover user-defined/CCW/generic types.</summary>
     /// <remarks>Defaults to <see cref="CsWinRTMarshallingMode.Minimal"/> when not specified in the response file.</remarks>
     [CommandLineArgumentName("--marshalling-mode")]
     [DefaultValue(CsWinRTMarshallingMode.Minimal)]
     public CsWinRTMarshallingMode MarshallingMode { get; init; }
+
+    /// <summary>Gets whether .NET Standard assemblies participate in interop discovery, including explicit opt-ins.</summary>
+    /// <remarks>Defaults to <see langword="true"/> when not specified in the response file.</remarks>
+    [CommandLineArgumentName("--analyze-net-standard-assemblies")]
+    [DefaultValue(true)]
+    public bool AnalyzeNetStandardAssemblies { get; init; } = true;
 
     /// <summary>Gets the names of assemblies explicitly opted in for analysis, regardless of the marshalling mode.</summary>
     /// <remarks>
@@ -62,6 +75,14 @@ internal sealed class InteropGeneratorArgs : IGeneratorArgs
     /// </remarks>
     [CommandLineArgumentName("--marshalling-enabled-assembly-names")]
     public string[] MarshallingEnabledAssemblyNames { get; init; } = [];
+
+    /// <summary>Gets the names of assemblies explicitly excluded from discovery, regardless of the marshalling mode.</summary>
+    /// <remarks>
+    /// Each entry is an assembly name (the <c>.dll</c> extension and any directory are ignored).
+    /// Exclusions take precedence over explicit opt-ins. Defaults to an empty array.
+    /// </remarks>
+    [CommandLineArgumentName("--marshalling-disabled-assembly-names")]
+    public string[] MarshallingDisabledAssemblyNames { get; init; } = [];
 
     /// <summary>Gets whether to automatically generate the vtables for the list types used by <c>NotifyCollectionChangedEventArgs</c>.</summary>
     /// <remarks>Defaults to <see langword="true"/> when not specified in the response file.</remarks>
@@ -77,7 +98,7 @@ internal sealed class InteropGeneratorArgs : IGeneratorArgs
     [CommandLineArgumentName("--validate-winrt-runtime-dll-version-2-references")]
     public required bool ValidateWinRTRuntimeDllVersion2References { get; init; }
 
-    /// <summary>Gets whether to enable incremental generation (i.e. with a cache file on disk saving the full set of types to generate).</summary>
+    /// <summary>Gets whether to reuse a verified interop assembly when discovery and its emission dependencies are unchanged.</summary>
     [CommandLineArgumentName("--enable-incremental-generation")]
     public required bool EnableIncrementalGeneration { get; init; }
 
@@ -95,5 +116,17 @@ internal sealed class InteropGeneratorArgs : IGeneratorArgs
     /// <inheritdoc/>
     [CommandLineArgumentName("--debug-repro-directory")]
     public string? DebugReproDirectory { get; init; }
-}
 
+    /// <summary>Gets the directory in which to write a JSON report of the generated interop code, if requested.</summary>
+    [CommandLineArgumentName("--log-directory")]
+    public string? LogDirectory { get; init; }
+
+    /// <summary>
+    /// Gets the effective worker limit, resolving the default to the processor count.
+    /// </summary>
+    /// <returns>The configured limit, or <see cref="Environment.ProcessorCount"/> when it is -1.</returns>
+    public int GetEffectiveMaxDegreesOfParallelism()
+    {
+        return MaxDegreesOfParallelism == -1 ? Environment.ProcessorCount : MaxDegreesOfParallelism;
+    }
+}

@@ -41,6 +41,24 @@ internal static class ITypeSymbolExtensions
         }
 
         /// <summary>
+        /// Checks whether a type inherits from a specified base type (not including the type itself).
+        /// </summary>
+        /// <param name="baseType">The <see cref="ITypeSymbol"/> instance for the base type to look for.</param>
+        /// <returns>Whether <paramref name="symbol"/> has <paramref name="baseType"/> in its base type chain.</returns>
+        public bool InheritsFromType(ITypeSymbol baseType)
+        {
+            for (INamedTypeSymbol? current = symbol.BaseType; current is not null; current = current.BaseType)
+            {
+                if (SymbolEqualityComparer.Default.Equals(current, baseType))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        /// <summary>
         /// Enumerates all members of a given <see cref="ITypeSymbol"/> instance, including inherited ones.
         /// </summary>
         /// <returns>The sequence of all member symbols for <paramref name="symbol"/>.</returns>
@@ -87,6 +105,18 @@ internal static class ITypeSymbolExtensions
         public bool HasAnyImplementedMembersForInterface(INamedTypeSymbol interfaceType)
         {
             return symbol.EnumerateImplementedMembersForInterface(interfaceType).Any();
+        }
+
+        /// <summary>
+        /// Gets the name of a given <see cref="ITypeSymbol"/> instance, formatted to be used in an XML documentation <c>cref</c> attribute.
+        /// </summary>
+        /// <returns>The formatted type name for <paramref name="symbol"/>, with generic arguments in <c>{}</c> instead of <c>&lt;&gt;</c>.</returns>
+        public string GetCrefTypeName()
+        {
+            // Nullable value types are expanded (e.g. 'Nullable{int}'), as 'int?' is not valid in a 'cref'
+            SymbolDisplayFormat format = SymbolDisplayFormat.FullyQualifiedFormat.AddMiscellaneousOptions(SymbolDisplayMiscellaneousOptions.ExpandNullable);
+
+            return symbol.ToDisplayString(format).Replace('<', '{').Replace('>', '}');
         }
 
         /// <summary>

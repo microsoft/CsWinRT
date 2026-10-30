@@ -5,7 +5,6 @@ using AsmResolver.DotNet;
 using AsmResolver.DotNet.Code.Cil;
 using AsmResolver.DotNet.Signatures;
 using AsmResolver.PE.DotNet.Cil;
-using WindowsRuntime.Generator;
 using WindowsRuntime.InteropGenerator.Errors;
 using WindowsRuntime.InteropGenerator.Generation;
 using WindowsRuntime.InteropGenerator.References;
@@ -69,7 +68,7 @@ internal partial class InteropMethodRewriter
                     // For 'Nullable<T>' parameters (i.e. we have an 'IReference<T>' interface pointer), we unbox the underlying type
                     body.Instructions.ReferenceReplaceRange(marker, new CilInstruction(Call, marshallerType.UnboxToManaged()));
                 }
-                else if (SignatureComparer.IgnoreVersion.Equals(parameterType, interopReferences.ReadOnlySpanChar))
+                else if (interopReferences.SignatureComparer.Equals(parameterType, interopReferences.ReadOnlySpanChar))
                 {
                     // When marshalling 'ReadOnlySpan<char>' values, we also use 'HStringMarshaller', but without materializing the 'string' object
                     body.Instructions.ReferenceReplaceRange(marker, new CilInstruction(Call, interopReferences.HStringMarshallerConvertToManagedUnsafe));

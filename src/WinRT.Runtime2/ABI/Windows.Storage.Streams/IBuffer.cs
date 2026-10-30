@@ -12,20 +12,29 @@ using WindowsRuntime.InteropServices;
 using WindowsRuntime.InteropServices.Marshalling;
 using static System.Runtime.InteropServices.ComWrappers;
 
-#pragma warning disable IDE0008, IDE1006
+#pragma warning disable IL2026, IDE0008, IDE1006
 
-#pragma warning disable IL2026 // Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code
 [assembly: TypeMap<WindowsRuntimeMetadataTypeMapGroup>(
     value: "Windows.Storage.Streams.IBuffer",
     target: typeof(IBuffer),
     trimTarget: typeof(IBuffer))]
-#pragma warning restore IL2026 // Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code
+
+[assembly: TypeMap<WindowsRuntimeIidTypeMapGroup>(
+    value: "[WinRT.Runtime]Windows.Storage.Streams.IBuffer",
+    target: typeof(ABI.Windows.Storage.Streams.IBufferIidProvider),
+    trimTarget: typeof(IBuffer))]
 
 [assembly: TypeMapAssociation<DynamicInterfaceCastableImplementationTypeMapGroup>(
     source: typeof(IBuffer),
     proxy: typeof(ABI.Windows.Storage.Streams.IBufferInterfaceImpl))]
 
 namespace ABI.Windows.Storage.Streams;
+
+/// <summary>
+/// IID metadata for <see cref="global::Windows.Storage.Streams.IBuffer"/>.
+/// </summary>
+[Guid("905A0FE0-BC53-11DF-8C49-001E4FC686DA")]
+file static class IBufferIidProvider;
 
 /// <summary>
 /// Marshaller for <see cref="IBuffer"/>.

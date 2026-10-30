@@ -30,15 +30,27 @@ C#/WinRT behavior can be customized with these project properties:
 |-|-|-|
 | CsWinRTEnabled | *true \| false | Master switch — enables/disables all CsWinRT processing |
 | CsWinRTGenerateProjection | *true \| false | Generate C# projection sources from `.winmd` metadata |
-| CsWinRTGenerateReferenceProjection | true \| *false | Generate reference-only projections (for NuGet distribution) |
+| CsWinRTGenerateReferenceProjection | true \| *false | Generate reference-only projections (for NuGet distribution). The project's output item is also marked with `CsWinRTGenerateReferenceProjection` metadata set to `true`, so consuming projects can identify it among their resolved project references (e.g. `%(ReferencePath.CsWinRTGenerateReferenceProjection)`) |
+| CsWinRTPublicExclusiveToInterfaces | true \| *false | Make projected `[ExclusiveTo]` interfaces public, independently of dynamic interface casting. App-time generation preserves the actual public reference surface |
+| CsWinRTDynamicallyInterfaceCastableExclusiveTo | true \| *false | Opt eligible exclusive interfaces into dynamic interface casting, independently of visibility. Required even when IDIC filters are supplied; reference projections preserve the effective selection for app-time generation |
+| CsWinRTDynamicallyInterfaceCastableExclusiveToIncludes | "" | Semicolon-separated, case-sensitive namespace or type-name prefixes that narrow the IDIC opt-in. Empty selects all eligible exclusives when the boolean is `true` |
+| CsWinRTDynamicallyInterfaceCastableExclusiveToExcludes | "" | Semicolon-separated prefixes excluded from exclusive-interface IDIC. Any matching exclusion wins, even over a longer include; public visibility and required ABI/CCW support are unchanged |
 | CsWinRTPackReferenceProjection | *true \| false | When generating a reference projection, adds its reference assembly to the NuGet package under `ref/<tfm>` (the forwarder in `lib/<tfm>` has no API surface to compile against). Set to `false` to lay out the package manually |
 | CsWinRTPackedWinMD | *(item)* | An item listing the `.winmd` files to add to the NuGet package under `metadata/`, so consumers can pass them back as `CsWinRTInputs` to generate the merged projection. List only the metadata the package owns: `CsWinRTInputs` also contains dependency `.winmd` files that belong to other packages. Requires `CsWinRTPackReferenceProjection` |
 | CsWinRTGenerateInteropAssembly | auto | Generate interop assemblies at build time (defaults to `true` for Exe/WinExe, or Library with `PublishAot=true`) |
+| CsWinRTGeneratorEnableIncrementalGeneration | *true \| false | Reuse `WinRT.Interop.dll` after discovery when its emission fingerprint and output checksum match `WinRT.Interop.cache`. Set to `false` to bypass cache reads and writes. See [incremental interop generation](../docs/usage.md#incremental-interop-generation) |
+| CsWinRTEnableInteropGeneratorServerGC | *"" \| true \| false | Select the interop generator's startup GC mode. Empty selects automatically from processor count and system memory; `true`/`false` force Server/workstation GC. See [GC selection](#interop-generator-gc-selection) |
 | CsWinRTComponent | true \| *false | Enable Windows Runtime component authoring mode |
+| CsWinRTImplementWinMDTypes | true \| *false | Additionally emit, into the projection, the abstract base classes that let its Windows Runtime types be implemented (authored) in C#. See the [documentation on implementing Windows Runtime types defined in an existing .winmd](../docs/implementing-winmd-types.md) |
 | CsWinRTMarshallingMode | all \| *minimal \| strict | Controls which assemblies the interop generator analyzes for marshalling code. `all` analyzes every assembly (including the .NET base class library), `minimal` analyzes every assembly except the .NET base class library (BCL), and `strict` only analyzes assemblies referencing the Windows Runtime assembly |
-| CsWinRTMarshallingEnabledAssembly | *(item)* | An item listing specific assemblies (by name, `.dll` optional) to always analyze for marshalling code, regardless of `CsWinRTMarshallingMode`. Useful for fine-tuning binary size (e.g. using `strict` and opting in a few assemblies) |
+| CsWinRTAnalyzeNetStandardAssemblies | *true \| false | Controls whether .NET Standard assemblies participate in interop discovery. Set to `false` to skip them in every marshalling mode, even when listed in `CsWinRTMarshallingEnabledAssembly`. Changes invalidate the generator's property-input cache |
+| CsWinRTMarshallingEnabledAssembly | *(item)* | An item listing specific assemblies (by name, `.dll` optional) to analyze for marshalling code regardless of `CsWinRTMarshallingMode`, subject to framework exclusions, `CsWinRTAnalyzeNetStandardAssemblies`, and explicit exclusions. Useful for fine-tuning binary size (e.g. using `strict` and opting in a few assemblies) |
+| CsWinRTMarshallingDisabledAssembly | *(item)* | An item listing assemblies to exclude from automatic discovery in every mode, even if they target Windows or are explicitly enabled. Matches case-insensitive simple names (directory and `.dll` extension ignored); exclusion wins on conflicts. Direct references from analyzed code and required WinRT projection/activation infrastructure still participate. Missing interop required only by excluded code is the application's responsibility. Changes invalidate the generator's property-input cache. See [excluding specific assemblies](../docs/usage.md#excluding-specific-assemblies) |
+| CsWinRTGeneratorDebugReproDirectory | "" | Existing directory for generator debug repro archives. For the interop generator, `interop-debug-repro.zip` is an incremental output: deleting it triggers regeneration on the next build |
+| CsWinRTGeneratorLogDirectory | "" | Existing directory in which the interop generator writes an opt-in `interop-log.json` report. When unset, no log is collected or written. When set, the generator emits normally instead of reusing its DLL cache so the report contains emitted type and IL counts. Changing the directory invalidates the MSBuild generator cache |
 | CsWinRTGenerateCollectionChangedListVtables | *true \| false | Controls whether the interop generator automatically generates the vtables for the optimized list types that `NotifyCollectionChangedEventArgs` stores its changed items in. These types are internal to the framework, so they are registered by name: set this to `false` to opt out of them, should one ever be renamed or removed in a future .NET version (note: marshalling those objects will then fail at runtime) |
 | CsWinRTUseWindowsUIXamlProjections | true \| *false | Use UWP XAML (`Windows.UI.Xaml`) instead of WinUI (`Microsoft.UI.Xaml`) |
+| CsWinRTGenerateGetIidInterceptors | *true \| false | Controls whether the source generator replaces statically computable `WindowsRuntimeMarshal.GetIid<T>()` calls with precomputed IIDs. Set to `false` to opt out, so all calls use the runtime lookup. Interception also requires `WindowsRuntime.Generated` in `InterceptorsNamespaces`, which the CsWinRT targets add automatically unless you opt out: if a project overwrites that property, calls silently fall back to the runtime lookup |
 | CsWinRTMergeReferencedActivationFactories | true \| *false | Makes `DllGetActivationFactory` forward activation calls to all referenced WinRT components, allowing them to be merged into a single executable |
 | CsWinRTIncludes | "" | Semicolon-separated namespaces to include in projection output |
 | CsWinRTExcludes | "Windows;Microsoft" | Semicolon-separated namespaces to exclude from projection output |
@@ -50,9 +62,17 @@ C#/WinRT behavior can be customized with these project properties:
 
 \*Default value
 
+Set `<CsWinRTGeneratorLogDirectory>$(IntermediateOutputPath)</CsWinRTGeneratorLogDirectory>` to inspect interop output. The versioned JSON report (`schema: 1`) contains the actual `WinRT.Interop.dll` size in bytes, the runtime-class-to-base-class hierarchy, discovered generic instantiations by category, user-defined and array types with their COM interfaces, and every emitted type with its method, field, and IL instruction counts. Type names in the discovery sections use `Assembly:Namespace.Type` to distinguish identically named types from different assemblies. The counts describe generated code, not exact per-type on-disk byte sizes. The report is written only after successful assembly generation; if it is deleted, the next incremental build regenerates it.
+
+The version 1 fields are `schema`, `assemblySizeBytes`, `typeHierarchy` (objects with `type` and `baseType`), `genericInstantiations` (arrays of type names under `genericDelegates`, `enumerators`, `enumerables`, `lists`, `readOnlyLists`, `dictionaries`, `readOnlyDictionaries`, `observableVectors`, `observableMaps`, `mapChangedEventArgs`, `asyncActionsWithProgress`, `asyncOperations`, `asyncOperationsWithProgress`, and `keyValuePairs`), `userDefinedTypes` and `arrayTypes` (objects with `type` and `interfaces`), and `generatedTypes` (objects with `name`, `methodCount`, `fieldCount`, and `ilInstructionCount`). Entries are sorted for reproducible output; empty categories remain present.
+
 **If CsWinRTFilters is not defined, the following effective value is used:
 * -exclude $(CsWinRTExcludes)
 * -include $(CsWinRTIncludes)
+
+The IDIC-exclusive filters are separate from `CsWinRTIncludes` / `CsWinRTExcludes`: they select casting support, not projection APIs. They use prefix matching (no wildcards or regular expressions), trim outer whitespace, ignore empty entries, and deduplicate entries. Valid prefixes with no matches select nothing; invalid syntax produces `CSWINRTPROJECTIONGEN5022`. Filters alone never enable IDIC.
+
+Set these options on the **projection producer**. Its reference assembly records the exact effective IDIC selection in `WindowsRuntimeReferenceAssemblyMetadataAttribute` key/value entries, independently of public visibility, and consumers use that metadata without repeating the options. Missing metadata does not enable IDIC; regenerate older preview projection packages that require it. Projected runtime type identities must be globally unique; duplicates are rejected with `CSWINRTPROJECTIONGEN0015`, rather than merging their policies. Metadata-only attribute projections are exempt because they do not contribute interop type-map keys. See [exclusive interface configuration](../docs/usage.md#projecting-standalone-exclusive-interfaces) for examples, precedence, and package propagation.
 
 ## Runtime feature switches
 
@@ -96,11 +116,19 @@ Component references are picked up from two sources, treated as equivalent input
   `CsWinRTComponent=true` automatically expose this metadata.
 * `@(CsWinRTNativeComponent)` items contributed by component-package targets files (see below).
 
+`<ProjectReference>` items to managed executables using CsWinRT are included in the aggregator as well. Each
+referenced project is copied to the consumer's output directory, so all of them are hosted from that one folder,
+and the merged bundle there has to cover every one of them. An executable still generates its own `WinRT.*`
+set for its own output, and uses the merged one when it is run from the consumer's output directory instead.
+This only applies to project references built normally (with JIT): a published (e.g. trimmed, ReadyToRun or
+Native AOT) executable carries its own self-contained set, and should be deployed in its own folder.
+
 Consumer-side properties:
 
 | Property | Description |
 |-|-|
 | `CsWinRTDisableNativeComponentInterop` | Set to `true` to disable aggregator generation. |
+| `CsWinRTEnableInteropGeneratorServerGC` | Forwarded to the aggregator's interop generator; empty selects Auto. |
 | `CsWinRTComponentTargetFrameworkOverride` | TFM to use for the aggregator project. Required when referenced components disagree on TFM, or when no referenced component supplies a TFM. |
 | `CsWinRTNativeConsumerWindowsSdkPackageVersion` | `WindowsSdkPackageVersion` to pass to the aggregator. Falls back to a value picked from any component reference, then to the SDK default. |
 | `CsWinRTSkipNativeHostingAssetsOverride` | Set to `true` to opt out of the arch-correct replacement of `WinRT.Host.dll` / `.mui` in the consumer's reference closure. |
@@ -137,6 +165,20 @@ The component author runs `dotnet publish -p:PublishAot=true` on the component t
 the resulting native dll. Native consumers load that binary directly through whatever activation mechanism
 they prefer; they do not go through the aggregator.
 
+## Interop generator GC selection
+
+`CsWinRTEnableInteropGeneratorServerGC` controls the build-time interop generator, not your application. Leave it empty/unset (the default) to use Server GC on systems with at least four processors and 16 GiB of memory, and workstation GC otherwise. Set `true` or `false` to force Server or workstation GC; the literal `auto` is not a valid value.
+
+```xml
+<PropertyGroup>
+  <CsWinRTEnableInteropGeneratorServerGC>true</CsWinRTEnableInteropGeneratorServerGC>
+</PropertyGroup>
+```
+
+Server GC can improve build times but increases CPU and peak memory usage. Consider `false` for memory-constrained or highly concurrent build agents.
+
+An explicit property value overrides `DOTNET_gcServer`; automatic selection preserves an existing environment setting. The selected mode is logged at detailed MSBuild verbosity. Changes take effect the next time the generator runs and do not force an up-to-date build to regenerate output.
+
 ## Troubleshooting
 
 The MSBuild verbosity level maps to MSBuild message importance as follows:
@@ -157,4 +199,3 @@ Example:
 > msbuild project.vcxproj /verbosity:minimal /property:CsWinRTMessageImportance=high ...
 
 For more complex analysis of build errors, the [MSBuild Binary and Structured Log Viewer](http://msbuildlog.com/) is highly recommended.
-

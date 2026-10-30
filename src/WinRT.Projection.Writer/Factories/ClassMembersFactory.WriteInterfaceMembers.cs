@@ -242,7 +242,7 @@ internal static partial class ClassMembersFactory
         {
             string projectedParent = TypedefNameWriter.WriteTypeName(context, TypeSemanticsFactory.Get(currentInstance), TypedefNameType.Projected, true).Format();
             genericParentEncoded = IidExpressionGenerator.EscapeTypeNameForIdentifier(projectedParent, stripGlobal: true);
-            genericInteropType = InteropTypeNameWriter.GetInteropAssemblyQualifiedName(currentInstance, TypedefNameType.StaticAbiClass);
+            genericInteropType = InteropTypeNameWriter.GetInteropAssemblyQualifiedName(context, currentInstance, TypedefNameType.StaticAbiClass);
         }
 
         // Compute the platform attribute string from the interface type's '[ContractVersion]'
@@ -500,7 +500,7 @@ internal static partial class ClassMembersFactory
 
             // The "interop" type name string for the EventSource UnsafeAccessor (only needed for generic events).
             string eventSourceInteropType = isGenericEvent
-                ? InteropTypeNameWriter.GetInteropAssemblyQualifiedName(evtSig, TypedefNameType.EventSource)
+                ? InteropTypeNameWriter.GetInteropAssemblyQualifiedName(context, evtSig, TypedefNameType.EventSource)
                 : string.Empty;
 
             // Compute vtable index = method index in the interface vtable + 6 (for IInspectable methods).

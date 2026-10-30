@@ -34,7 +34,8 @@ internal sealed partial record HierarchyInfo(string FullyQualifiedMetadataName, 
             hierarchy.Add(new TypeInfo(
                 parent.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat),
                 parent.TypeKind,
-                parent.IsRecord));
+                parent.IsRecord,
+                !parent.TypeParameters.IsEmpty));
         }
 
         return new(
@@ -111,24 +112,38 @@ internal sealed partial record HierarchyInfo(string FullyQualifiedMetadataName, 
     }
 
     /// <summary>
-    /// Gets the fully qualified type name for the current instance.
+    /// Gets a type name that can be used from within the current type.
     /// </summary>
-    /// <returns>The fully qualified type name for the current instance.</returns>
-    public string GetFullyQualifiedTypeName()
+    /// <returns>The type name qualified without rebinding shadowed generic parameters.</returns>
+    public string GetTypeNameInScope()
     {
         using PooledArrayBuilder<char> fullyQualifiedTypeName = new();
 
-        fullyQualifiedTypeName.AddRange("global::".AsSpan());
+        int outermostTypeIndex = 0;
 
-        if (Namespace.Length > 0)
+        // Start at the nearest generic declaration, whose parameters are still in scope.
+        // A fully qualified name could bind an outer parameter to a shadowing inner one.
+        while (outermostTypeIndex < Hierarchy.Length && !Hierarchy[outermostTypeIndex].HasTypeParameters)
         {
-            fullyQualifiedTypeName.AddRange(Namespace.AsSpan());
-            fullyQualifiedTypeName.Add('.');
+            outermostTypeIndex++;
         }
 
-        fullyQualifiedTypeName.AddRange(Hierarchy[^1].QualifiedName.AsSpan());
+        if (outermostTypeIndex == Hierarchy.Length)
+        {
+            fullyQualifiedTypeName.AddRange("global::".AsSpan());
 
-        for (int i = Hierarchy.Length - 2; i >= 0; i--)
+            if (Namespace.Length > 0)
+            {
+                fullyQualifiedTypeName.AddRange(Namespace.AsSpan());
+                fullyQualifiedTypeName.Add('.');
+            }
+
+            outermostTypeIndex--;
+        }
+
+        fullyQualifiedTypeName.AddRange(Hierarchy[outermostTypeIndex].QualifiedName.AsSpan());
+
+        for (int i = outermostTypeIndex - 1; i >= 0; i--)
         {
             fullyQualifiedTypeName.Add('.');
             fullyQualifiedTypeName.AddRange(Hierarchy[i].QualifiedName.AsSpan());

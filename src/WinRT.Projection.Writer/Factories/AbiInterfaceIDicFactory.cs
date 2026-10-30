@@ -21,16 +21,24 @@ namespace WindowsRuntime.ProjectionWriter.Factories;
 internal static class AbiInterfaceIDicFactory
 {
     /// <summary>
+    /// Gets whether an interface is eligible and selected for an IDIC implementation and type-map association.
+    /// </summary>
+    /// <param name="context">The active emit context.</param>
+    /// <param name="type">The interface definition.</param>
+    /// <returns>Whether to emit IDIC support.</returns>
+    public static bool IsEnabled(ProjectionEmitContext context, TypeDefinition type)
+    {
+        return type.GenericParameters.Count == 0 &&
+            !type.IsProjectionInternal &&
+            (!type.IsExclusiveTo || context.Settings.IsIdicExclusiveTo(type.FullName));
+    }
+
+    /// <summary>
     /// Emits the IDIC (IDynamicInterfaceCastable) impl class that lets user types implement the projected interface via dynamic dispatch through the projected runtime class instance.
     /// </summary>
     public static void WriteInterfaceIdicImpl(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type)
     {
-        if (type.IsExclusiveTo && !context.Settings.IdicExclusiveTo)
-        {
-            return;
-        }
-
-        if (type.GenericParameters.Count > 0)
+        if (!IsEnabled(context, type))
         {
             return;
         }
@@ -38,11 +46,15 @@ internal static class AbiInterfaceIDicFactory
         string nameStripped = type.GetStrippedName();
         IndentedTextWriterCallback parent = TypedefNameWriter.WriteTypedefNameWithTypeParams(context, type, TypedefNameType.Projected, true);
         IndentedTextWriterCallback guidAttr = InterfaceFactory.WriteGuidAttribute(type);
+        string? enumerableElement = EnumerableInterfaceHelpers.GetUnambiguousElementType(context, type);
+        string enumerableAttributeName = nameStripped + "EnumerableAttribute";
+        string? enumerableAttr = enumerableElement is not null ? $"[{enumerableAttributeName}]" : null;
 
         writer.WriteLine();
         writer.WriteLine(isMultiline: true, $$"""
             [DynamicInterfaceCastableImplementation]
             {{guidAttr}}
+            {{enumerableAttr}}
             file interface {{nameStripped}} : {{parent}}
             """);
         using (writer.WriteBlock())
@@ -50,6 +62,28 @@ internal static class AbiInterfaceIDicFactory
             // Emit DIM bodies that dispatch through the static ABI Methods class.
             WriteInterfaceIdicImplMembers(writer, context, type);
             writer.WriteLine();
+        }
+
+        // Preserve the required interface's element type so non-generic enumeration can dispatch
+        // through IEnumerable<T> even when only this projected interface has been cached on the RCW.
+        if (enumerableElement is not null)
+        {
+            writer.WriteLine();
+            writer.WriteLine(isMultiline: true, $$"""
+                file sealed class {{enumerableAttributeName}} : global::WindowsRuntime.InteropServices.DynamicInterfaceCastableEnumerableAttribute
+                {
+                    public override bool TryGetEnumerator(WindowsRuntimeObject thisObject, out global::System.Collections.IEnumerator enumerator)
+                    {
+                        if (thisObject is global::System.Collections.Generic.IEnumerable<{{enumerableElement}}> enumerable)
+                        {
+                            enumerator = enumerable.GetEnumerator();
+                            return true;
+                        }
+                        enumerator = null;
+                        return false;
+                    }
+                }
+                """);
         }
     }
 
@@ -72,6 +106,11 @@ internal static class AbiInterfaceIDicFactory
         foreach (InterfaceImplementation impl in type.Interfaces)
         {
             if (!impl.TryResolveTypeDef(context.Cache, out TypeDefinition? required))
+            {
+                continue;
+            }
+
+            if (!InterfaceFactory.ShouldIncludeInterfaceInInheritance(impl, required.IsExclusiveTo, includeExclusiveInterface: false))
             {
                 continue;
             }
@@ -439,7 +478,7 @@ internal static class AbiInterfaceIDicFactory
                         """);
                 }
                 else if (setter is not null
-                    && InterfaceFactory.TryFindPropertyInBaseInterfaces(context.Cache, type, pname, out TypeDefinition? baseIfaceWithGetter))
+                    && InterfaceFactory.TryFindPropertyGetterInterface(context.Cache, type, pname, out TypeDefinition? baseIfaceWithGetter))
                 {
                     IndentedTextWriterCallback iface = ClassMembersFactory.WriteInterfaceTypeNameForCcw(context, baseIfaceWithGetter);
                     writer.Write($"get {{ return (({iface})(WindowsRuntimeObject)this).{pname}; }}");

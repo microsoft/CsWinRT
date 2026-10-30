@@ -22,6 +22,25 @@ steps:
         --no-build
       testRunTitle: Unit Tests
 
+# Run unpackaged UI tests on x64.
+  - task: PowerShell@2
+    displayName: Run Object Lifetime Tests (JIT)
+    condition: and(succeeded(), eq(variables['BuildPlatform'], 'x64'))
+    continueOnError: true
+    inputs:
+      targetType: filePath
+      filePath: $(Build.SourcesDirectory)\build\scripts\Run-ObjectLifetimeInProcess.ps1
+      arguments: -LayoutDir "$(Build.SourcesDirectory)\src\Tests\ObjectLifetimeTests\bin\$(BuildPlatform)\$(BuildConfiguration)\net10.0-windows10.0.26100.1\win-$(BuildPlatform)" -OutputDir "$(StagingFolder)\ObjectLifetime-MTP"
+
+  - task: PublishTestResults@2
+    displayName: Publish Object Lifetime JIT Results
+    condition: and(succeededOrFailed(), eq(variables['BuildPlatform'], 'x64'))
+    inputs:
+      testResultsFormat: VSTest
+      testResultsFiles: '*.trx'
+      searchFolder: $(StagingFolder)\ObjectLifetime-MTP
+      testRunTitle: Object Lifetime Tests JIT ($(BuildPlatform), $(BuildConfiguration))
+
 # Run Source Generator 2 Tests. Gated to x64 only: these are Roslyn analyzer/source-generator tests,
 # which are architecture-independent (the compiler runs the analyzer the same regardless of the target
 # platform), so running them x86 adds no coverage. The x86 (32-bit) test host loads the full .NET 10
@@ -54,6 +73,7 @@ steps:
 
 # Run Projection Writer Tests. Gated to x64 only: these drive the projection writer through the
 # 'cswinrtprojectionrefgen' tool as a separate process, so the target platform adds no coverage.
+# Release also enables the native collection and generic marshaller AOT tests.
   - task: DotNetCoreCLI@2
     displayName: Run Projection Writer Tests
     condition: and(succeeded(), eq(variables['BuildPlatform'], 'x64'))
@@ -64,6 +84,21 @@ steps:
         /p:platform=$(BuildPlatform);configuration=$(BuildConfiguration)
         --no-build
       testRunTitle: Projection Writer Tests
+
+# Run the same AOT regressions in the other Release jobs without repeating the full writer suite.
+# Build the x64 harness here rather than changing the solution's per-platform mappings.
+  - task: DotNetCoreCLI@2
+    displayName: Run Projection Writer Native AOT Tests
+    condition: and(succeeded(), eq(variables['BuildConfiguration'], 'release'), ne(variables['BuildPlatform'], 'x64'))
+    inputs:
+      command: test
+      projects: 'src/Tests/ProjectionWriterTest/ProjectionWriterTest.csproj'
+      arguments: >
+        /p:platform=x64;configuration=$(BuildConfiguration)
+        /p:VersionNumber=$(VersionNumber);VersionString=$(Build.BuildNumber);AssemblyVersionNumber=$(WinRT.Runtime.AssemblyVersion)
+        --filter "TestCategory=NativeAOT"
+        --minimum-expected-tests 3
+      testRunTitle: Projection Writer Native AOT Tests
 
 # Run Impl Generator Tests. Gated to x64 only for the same reason as the other generator tests: these
 # run the 'cswinrtimplgen' tool end-to-end as a separate process (which is always built for the build
@@ -78,6 +113,18 @@ steps:
         /p:platform=$(BuildPlatform);configuration=$(BuildConfiguration)
         --no-build
       testRunTitle: Impl Generator Tests
+
+# Run the interop generator end-to-end; like the other generator tests, one host architecture is sufficient.
+  - task: DotNetCoreCLI@2
+    displayName: Run Interop Generator Tests
+    condition: and(succeeded(), eq(variables['BuildPlatform'], 'x64'))
+    inputs:
+      command: test
+      projects: 'src/Tests/InteropGeneratorTest/InteropGeneratorTest.csproj'
+      arguments: >
+        /p:platform=$(BuildPlatform);configuration=$(BuildConfiguration)
+        --no-build
+      testRunTitle: Interop Generator Tests
 
 # Run Host Tests
   - task: CmdLine@2
@@ -189,6 +236,33 @@ steps:
       testResultsFiles: '**/UNITTEST-AOT-$(Build.BuildNumber).trx'
       searchFolder: $(Build.SourcesDirectory)\src\Tests\UnitTest\bin\$(BuildPlatform)\$(BuildConfiguration)\net10.0\win-$(BuildPlatform)\publish\TestResults
       testRunTitle: Unit Tests AOT (net10.0)
+
+  - task: MSBuild@1
+    displayName: Publish Object Lifetime Tests (Native AOT)
+    condition: and(succeeded(), eq(variables['BuildPlatform'], 'x64'), eq(variables['BuildConfiguration'], 'release'))
+    inputs:
+      solution: $(Build.SourcesDirectory)\src\Tests\ObjectLifetimeTests\ObjectLifetimeTests.Lifted.csproj
+      msbuildArguments: /restore /t:Publish /p:RestoreRecursive=false,PublishAot=true,WindowsPackageType=None,RuntimeIdentifier=win-x64,TargetFramework=net10.0-windows10.0.26100.1,PublishDir=$(Build.SourcesDirectory)\src\Tests\ObjectLifetimeTests\bin\$(BuildPlatform)\$(BuildConfiguration)\net10.0-windows10.0.26100.1\win-x64\publish\,BuildProjectReferences=false,GenerateTestProjection=false,PublishBuildTool=false,BuildToolArch=$(CsWinRTBuildToolsArch),solutiondir=$(Build.SourcesDirectory)\src\,CIBuildReason=CI,VersionNumber=$(VersionNumber),VersionString=$(Build.BuildNumber),AssemblyVersionNumber=$(WinRT.Runtime.AssemblyVersion),AllowedReferenceRelatedFileExtensions=".xml;.pri;.dll.config;.exe.config"
+      platform: $(BuildPlatform)
+      configuration: $(BuildConfiguration)
+
+  - task: PowerShell@2
+    displayName: Run Object Lifetime Tests (Native AOT)
+    condition: and(succeeded(), eq(variables['BuildPlatform'], 'x64'), eq(variables['BuildConfiguration'], 'release'))
+    continueOnError: true
+    inputs:
+      targetType: filePath
+      filePath: $(Build.SourcesDirectory)\build\scripts\Run-ObjectLifetimeInProcess.ps1
+      arguments: -LayoutDir "$(Build.SourcesDirectory)\src\Tests\ObjectLifetimeTests\bin\$(BuildPlatform)\$(BuildConfiguration)\net10.0-windows10.0.26100.1\win-x64" -OutputDir "$(StagingFolder)\ObjectLifetime-AOT" -NativeAot
+
+  - task: PublishTestResults@2
+    displayName: Publish Object Lifetime Native AOT Results
+    condition: and(succeededOrFailed(), eq(variables['BuildPlatform'], 'x64'), eq(variables['BuildConfiguration'], 'release'))
+    inputs:
+      testResultsFormat: VSTest
+      testResultsFiles: '*.trx'
+      searchFolder: $(StagingFolder)\ObjectLifetime-AOT
+      testRunTitle: Object Lifetime Tests Native AOT ($(BuildPlatform), $(BuildConfiguration))
 
 # Run Functional Tests
   - template: CsWinRT-FunctionalTest-Steps.yml@self

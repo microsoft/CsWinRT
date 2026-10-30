@@ -3,6 +3,7 @@
 
 using System.IO;
 using System.Threading;
+using AsmResolver.DotNet;
 using ConsoleAppFramework;
 using WindowsRuntime.Generator;
 using WindowsRuntime.Generator.Parsing;
@@ -39,11 +40,37 @@ internal static partial class InteropGenerator
             logMessage: $"Processing {runner.Args.ReferenceAssemblyPaths.Length + runner.Args.ImplementationAssemblyPaths.Length + 1} module(s)",
             body: Discover);
 
+        // Prepare the output module (normalizing references first, so the fingerprint sees the same metadata as emit)
+        (ModuleDefinition module, ModuleDefinition windowsRuntimeModule) = runner.RunPhase(
+            phaseName: "prepare emission",
+            state: discoveryState,
+            body: PrepareEmission);
+
+        byte[]? fingerprint = null;
+
+        // The optional report includes emitted type and IL counts, so it requires fresh emission
+        if (runner.Args.EnableIncrementalGeneration && runner.Args.LogDirectory is null)
+        {
+            // Compute the fingerprint of the emission inputs
+            fingerprint = runner.RunPhase(
+                phaseName: "fingerprint",
+                logMessage: "Checking interop generation cache",
+                body: args => InteropGenerationFingerprint.Create(args, discoveryState));
+
+            // Reuse the previously generated interop assembly, if its emission inputs are unchanged
+            if (runner.RunPhase("cache lookup", args => InteropGenerationCache.TryReuse(args, fingerprint, module.Mvid)))
+            {
+                ConsoleApp.Log($"Cached interop code -> {Path.Combine(runner.Args.GeneratedAssemblyDirectory, InteropNames.WindowsRuntimeInteropDllName)}");
+
+                return;
+            }
+        }
+
         // Emit the resulting interop assembly
         runner.RunPhase(
             phaseName: "emit",
             logMessage: "Generating interop code",
-            body: args => Emit(args, discoveryState));
+            body: args => Emit(args, discoveryState, module, windowsRuntimeModule, fingerprint));
 
         // Notify the user that generation was successful
         ConsoleApp.Log($"Interop code generated -> {Path.Combine(runner.Args.GeneratedAssemblyDirectory, InteropNames.WindowsRuntimeInteropDllName)}");

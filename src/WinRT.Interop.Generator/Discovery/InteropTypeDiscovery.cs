@@ -7,7 +7,6 @@ using System.Collections.Generic;
 using System.Linq;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
-using WindowsRuntime.Generator;
 using WindowsRuntime.InteropGenerator.Errors;
 using WindowsRuntime.InteropGenerator.Generation;
 using WindowsRuntime.InteropGenerator.Helpers;
@@ -21,11 +20,6 @@ namespace WindowsRuntime.InteropGenerator.Discovery;
 /// </summary>
 internal static partial class InteropTypeDiscovery
 {
-    /// <summary>
-    /// A pool of <see cref="TypeSignatureEquatableSet.Builder"/> instances that can be reused by discovery logic.
-    /// </summary>
-    private static readonly ConcurrentBag<TypeSignatureEquatableSet.Builder> TypeSignatureBuilderPool = [];
-
     /// <summary>
     /// A pool of <see cref="HashSet{T}"/> instances used to validate duplicate IIDs.
     /// </summary>
@@ -169,10 +163,7 @@ internal static partial class InteropTypeDiscovery
         // discovery logic, we'll also be tracking the additional 'ReadOnlyCollection<T>' type, as that's
         // needed from the 'IListAdapter<T>.GetView' method. That type will itself be analyzed here just
         // like any other user-define type, and so on. So the pool is needed to avoid creating conflicts.
-        if (!TypeSignatureBuilderPool.TryTake(out TypeSignatureEquatableSet.Builder? interfaces))
-        {
-            interfaces = new TypeSignatureEquatableSet.Builder();
-        }
+        TypeSignatureEquatableSet.Builder interfaces = discoveryState.RentInterfaceSetBuilder();
 
         // Since we're reusing the builder for all types, make sure to clear it first
         interfaces.Clear();
@@ -213,7 +204,7 @@ internal static partial class InteropTypeDiscovery
         {
             // Make sure we can resolve the interface type fully, which we should always be able to do.
             // This can really only fail for some constructed generics, for invalid type arguments.
-            if (!interfaceSignature.TryResolve(interopReferences.RuntimeContext, out TypeDefinition? interfaceDefinition))
+            if (!interfaceSignature.IsFullyResolvable(interopReferences.RuntimeContext, out TypeDefinition? interfaceDefinition))
             {
                 WellKnownInteropExceptions.InterfaceImplementationTypeNotResolvedWarning(interfaceSignature, typeSignature).LogOrThrow(args.TreatWarningsAsErrors);
 
@@ -248,7 +239,7 @@ internal static partial class InteropTypeDiscovery
                 // unnecessary binary size increase, since nobody would ever use them from here.
                 // We also have an additional check to include overridable interfaces (see notes above).
                 if (covariantInterfaceSignature.IsNotExclusiveToWindowsRuntimeType(interopReferences) ||
-                    (isInterfaceWindowsRuntime && SignatureComparer.IgnoreVersion.Equals(covariantInterfaceSignature, interfaceSignature)))
+                    (isInterfaceWindowsRuntime && interopReferences.SignatureComparer.Equals(covariantInterfaceSignature, interfaceSignature)))
                 {
                     hasAnyProjectedWindowsRuntimeInterfaces = true;
 
@@ -337,16 +328,17 @@ internal static partial class InteropTypeDiscovery
 
         // If the user-defined type implements at least a Windows Runtime interface, then it's considered exposed.
         // We don't want to handle marshalling code for types with only '[GeneratedComInterface]' interfaces.
-        // We also unconditionally track public value types from component assemblies, as they may need CCW
+        // We also unconditionally track exported value types from component assemblies, as they may need CCW
         // support when boxed (e.g. as 'IReference<T>' for generic type arguments), even without interfaces.
         if (hasAnyProjectedWindowsRuntimeInterfaces ||
-            typeDefinition is { IsComponentWindowsRuntimeType: true, IsValueType: true, IsEnum: false, IsPublic: true, DeclaringType: null })
+            (typeDefinition is { IsValueType: true, IsEnum: false } &&
+             typeDefinition.IsComponentWindowsRuntimeType(interopDefinitions.WindowsRuntimeComponentModule)))
         {
             discoveryState.TrackUserDefinedType(typeSignature, interfaces.ToEquatableSet());
         }
 
         // Return the builder and set to the pool for reuse
-        TypeSignatureBuilderPool.Add(interfaces);
+        discoveryState.ReturnInterfaceSetBuilder(interfaces);
         IidHashSetPool.Add(iids);
     }
 
@@ -403,10 +395,7 @@ internal static partial class InteropTypeDiscovery
         }
 
         // Get or create a builder (see additional notes above)
-        if (!TypeSignatureBuilderPool.TryTake(out TypeSignatureEquatableSet.Builder? interfaces))
-        {
-            interfaces = new TypeSignatureEquatableSet.Builder();
-        }
+        TypeSignatureEquatableSet.Builder interfaces = discoveryState.RentInterfaceSetBuilder();
 
         // Make sure to clear the builder first (see additional notes above)
         interfaces.Clear();
@@ -418,7 +407,7 @@ internal static partial class InteropTypeDiscovery
         {
             // Validate that we can resolve the interface. In this case we should be pretty confident
             // that this won't possibly fail, since we expect to only see well-known interfaces here.
-            if (!interfaceSignature.TryResolve(interopReferences.RuntimeContext, out TypeDefinition? interfaceDefinition))
+            if (!interfaceSignature.IsFullyResolvable(interopReferences.RuntimeContext, out TypeDefinition? interfaceDefinition))
             {
                 WellKnownInteropExceptions.InterfaceImplementationTypeNotResolvedWarning(interfaceSignature, typeSignature).LogOrThrow(args.TreatWarningsAsErrors);
 
@@ -467,14 +456,25 @@ internal static partial class InteropTypeDiscovery
         }
         else
         {
-            // Track the array as a user-defined type. Note that for SZ arrays that don't have an element type
-            // that is a Windows Runtime type, they're effectively just like any other normal user-defined type.
-            // That is, some 'Foo[]' type will behave conceptually the same as some 'List<Foo>' instantiation.
+            // Reference arrays that are not Windows Runtime types are boxed as 'IReferenceArray<Object>', so also discover
+            // 'object[]' to provide the runtime class name lookup and marshalling code needed to unbox them on return.
+            if (typeSignature.IsCovariantSzArrayType(interopReferences))
+            {
+                TryTrackSzArrayType(
+                    typeSignature: interopReferences.Object.MakeSzArrayType(),
+                    args: args,
+                    discoveryState: discoveryState,
+                    interopDefinitions: interopDefinitions,
+                    interopReferences: interopReferences,
+                    module: module);
+            }
+
+            // Arrays that are not Windows Runtime types use user-defined marshalling, with inspectable-array boxing for reference elements
             discoveryState.TrackUserDefinedType(typeSignature, interfaces.ToEquatableSet());
         }
 
         // Return the builder to the pool for reuse
-        TypeSignatureBuilderPool.Add(interfaces);
+        discoveryState.ReturnInterfaceSetBuilder(interfaces);
     }
 
     /// <summary>
@@ -501,21 +501,17 @@ internal static partial class InteropTypeDiscovery
             return true;
         }
 
-        // If the type is not from an authored component, we can stop immediately
-        if (typeDefinition.DeclaringModule is not { Assembly.IsWindowsRuntimeComponentAssembly: true })
+        ModuleDefinition? componentModule = interopDefinitions.WindowsRuntimeComponentModule;
+
+        // Managed helpers in a component do not have authored exclusive interfaces
+        if (!typeDefinition.IsComponentWindowsRuntimeType(componentModule))
         {
             return true;
         }
 
-        // We're going to need the 'WinRT.Component.dll' assembly, so make sure it was generated and passed in
-        if (interopDefinitions.WindowsRuntimeComponentModule is null)
-        {
-            throw WellKnownInteropExceptions.EnsureWindowsRuntimeComponentModuleError();
-        }
-
         // Use the centralized lookup from '[WindowsRuntimeExclusiveToInterface]' attributes (they're all on the
         // 'WindowsRuntimeExclusiveToInterfaces' type). This avoids scanning all types in the component assembly.
-        if (!interopDefinitions.WindowsRuntimeComponentModule.GetExclusiveToInterfacesLookup().TryGetValue(
+        if (!componentModule.GetExclusiveToInterfacesLookup().TryGetValue(
             key: (typeSignature.Namespace, typeSignature.Name),
             value: out System.Collections.Frozen.FrozenSet<TypeSignature>? exclusiveInterfaces))
         {

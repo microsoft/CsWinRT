@@ -41,6 +41,7 @@ using Windows.UI.Notifications;
 using WindowsRuntime;
 using WindowsRuntime.InteropServices;
 using WindowsRuntime.InteropServices.Marshalling;
+using ApiContractAttribute = Windows.Foundation.Metadata.ApiContractAttribute;
 using static UnitTest.UnitTestHelper;
 
 // Test SupportedOSPlatform warnings for APIs targeting 10.0.19041.0:
@@ -65,6 +66,101 @@ namespace UnitTest
         public struct Estruct
         {
             public E value;
+        }
+
+        [TestMethod]
+        public unsafe void TestGetIidQueryInterface()
+        {
+            Check<Class>(TestObject);
+            Check<EventHandler0>(new EventHandler0(() => { }));
+            Check<int?>(42);
+            Check<Point?>(new Point(1, 2));
+            Check<BlittableStruct?>(default(BlittableStruct));
+            Check<EnumValue?>(EnumValue.One);
+            Check<CornerRadius?>(new CornerRadius(1));
+            Check<int[]>(new[] { 1, 2, 3 });
+            Check<IList<int>>(new List<int>());
+            Check<KeyValuePair<string, int>>(new KeyValuePair<string, int>("key", 42));
+            Check<EventHandler<int>>(new EventHandler<int>((sender, value) => { }));
+
+            static void Check<T>(object value)
+            {
+                void* pointer = WindowsRuntimeMarshal.ConvertToUnmanaged(value);
+                try
+                {
+                    Guid iid = WindowsRuntimeMarshal.GetIid<T>();
+                    Marshal.ThrowExceptionForHR(Marshal.QueryInterface((nint)pointer, in iid, out nint result));
+                    WindowsRuntimeMarshal.Free((void*)result);
+                }
+                finally
+                {
+                    WindowsRuntimeMarshal.Free(pointer);
+                }
+            }
+        }
+
+        [TestMethod]
+        public void TestGetIidMappedTypes()
+        {
+            Assert.AreEqual(WellKnownInterfaceIIDs.IID_IInspectable, WindowsRuntimeMarshal.GetIid<object>());
+            Assert.AreEqual(WellKnownInterfaceIIDs.IID_IStringable, WindowsRuntimeMarshal.GetIid<IStringable>());
+            Assert.AreEqual(new Guid("30d5a829-7fa4-4026-83bb-d75bae4ea99e"), WindowsRuntimeMarshal.GetIid<IDisposable>());
+            Assert.AreEqual(new Guid("9e365e57-48b2-4160-956f-c7385120bbfc"), WindowsRuntimeMarshal.GetIid<Uri>());
+            Assert.AreEqual(new Guid("e5af3542-ca67-4081-995b-709dd13792df"), WindowsRuntimeMarshal.GetIid<ICommand>());
+            Assert.AreEqual(new Guid("90b17601-b065-586e-83d9-9adc3a695284"), WindowsRuntimeMarshal.GetIid<INotifyPropertyChanged>());
+        }
+
+        [TestMethod]
+        public void TestGetIidUnsupportedTypes()
+        {
+            Assert.ThrowsExactly<NotSupportedException>(() => WindowsRuntimeMarshal.GetIid<int>());
+            Assert.ThrowsExactly<NotSupportedException>(() => WindowsRuntimeMarshal.GetIid<int>());
+            Assert.ThrowsExactly<NotSupportedException>(() => WindowsRuntimeMarshal.GetIid<string>());
+            Assert.ThrowsExactly<NotSupportedException>(() => WindowsRuntimeMarshal.GetIid<Guid>());
+            Assert.ThrowsExactly<NotSupportedException>(() => WindowsRuntimeMarshal.GetIid<Exception>());
+            Assert.ThrowsExactly<NotSupportedException>(() => WindowsRuntimeMarshal.GetIid<ArgumentException>());
+            Assert.ThrowsExactly<NotSupportedException>(() => WindowsRuntimeMarshal.GetIid<Type>());
+            Assert.ThrowsExactly<NotSupportedException>(() => WindowsRuntimeMarshal.GetIid<BlittableStruct>());
+            Assert.ThrowsExactly<NotSupportedException>(() => WindowsRuntimeMarshal.GetIid<EnumValue>());
+            Assert.ThrowsExactly<NotSupportedException>(() => WindowsRuntimeMarshal.GetIid<KeyValuePair<string, int>?>());
+            Assert.ThrowsExactly<NotSupportedException>(() => WindowsRuntimeMarshal.GetIid<sbyte?>());
+            Assert.ThrowsExactly<NotSupportedException>(() => WindowsRuntimeMarshal.GetIid<nint>());
+            Assert.ThrowsExactly<NotSupportedException>(() => WindowsRuntimeMarshal.GetIid<UnitTestCSharp>());
+            Assert.ThrowsExactly<NotSupportedException>(() => WindowsRuntimeMarshal.GetIid<Estruct?>());
+            Assert.ThrowsExactly<NotSupportedException>(() => WindowsRuntimeMarshal.GetIid<IStringableInterop>());
+            Assert.ThrowsExactly<NotSupportedException>(() => WindowsRuntimeMarshal.GetIid<IList<UnitTestCSharp>>());
+            Assert.ThrowsExactly<NotSupportedException>(() => WindowsRuntimeMarshal.GetIid<EventHandler>());
+            Assert.ThrowsExactly<NotSupportedException>(() => WindowsRuntimeMarshal.GetIid<EventHandler[]>());
+            Assert.ThrowsExactly<NotSupportedException>(() => WindowsRuntimeMarshal.GetIid<IList<EventHandler>>());
+            Assert.ThrowsExactly<NotSupportedException>(() => WindowsRuntimeMarshal.GetIid<ICollection<KeyValuePair<string, int>>>());
+            Assert.ThrowsExactly<NotSupportedException>(() => WindowsRuntimeMarshal.GetIid<int[,]>());
+            Assert.ThrowsExactly<NotSupportedException>(() => WindowsRuntimeMarshal.GetIid<int[][]>());
+            Assert.ThrowsExactly<NotSupportedException>(() => WindowsRuntimeMarshal.GetIid<ApiContractAttribute>());
+        }
+
+        [TestMethod]
+        public void TestGetIidGenericContexts()
+        {
+            Assert.AreEqual(new Guid("b939af5b-b45d-5489-9149-61442c1905fe"), ListIid<int>());
+            Assert.AreEqual(new Guid("548cefbd-bc8a-5fa0-8df2-957440fc8bf4"), ReferenceIid<int>());
+
+            IIidQueries queries = new IidQueries();
+            Assert.AreEqual(new Guid("0d82bd8d-fe62-5d67-a7b9-7886dd75bc4e"), queries.List<Uri>());
+            Assert.AreEqual(new Guid("3766c9f9-c6ae-5bd6-aca3-19efd66f89ae"), queries.List<InputStreamOptions>());
+
+            static Guid ListIid<T>() => WindowsRuntimeMarshal.GetIid<IList<T>>();
+            static Guid ReferenceIid<T>() where T : struct => WindowsRuntimeMarshal.GetIid<T?>();
+        }
+
+        private interface IIidQueries
+        {
+            Guid List<T>();
+        }
+
+        private sealed class IidQueries : IIidQueries
+        {
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            public Guid List<T>() => WindowsRuntimeMarshal.GetIid<IList<T>>();
         }
 
         [TestMethod]
@@ -549,7 +645,7 @@ namespace UnitTest
             var buffer = arr.AsBuffer();
 
             Assert.IsTrue(WindowsRuntimeBufferMarshal.TryGetArray(buffer, out ArraySegment<byte> array));
-            Assert.AreEqual(arr, array.Array);
+            Assert.AreSame(arr, array.Array);
         }
 
         [TestMethod]
@@ -559,7 +655,7 @@ namespace UnitTest
             var buffer = arr.AsBuffer(1, 2);
 
             Assert.IsTrue(WindowsRuntimeBufferMarshal.TryGetArray(buffer, out ArraySegment<byte> array));
-            Assert.AreEqual(arr, array.Array);
+            Assert.AreSame(arr, array.Array);
             Assert.AreEqual(1, array.Offset);
             Assert.AreEqual(2, array.Count);
         }
@@ -647,7 +743,6 @@ namespace UnitTest
         [DataRow(typeof(TestComponentCSharp.EnumValue?), "Windows.Foundation.IReference`1<TestComponentCSharp.EnumValue>", "Metadata")]
         [DataRow(typeof(TestComponentCSharp.BlittableStruct?), "Windows.Foundation.IReference`1<TestComponentCSharp.BlittableStruct>", "Metadata")]
         [DataRow(typeof(IList<Int32?>), "Windows.Foundation.Collections.IVector`1<Windows.Foundation.IReference`1<Int32>>", "Metadata")]
-        [DataRow(typeof(Int32?[]), "Windows.Foundation.IReferenceArray`1<Windows.Foundation.IReference`1<Int32>>", "Metadata")]
         // Generic Types
         [DataRow(typeof(IList<long>), "Windows.Foundation.Collections.IVector`1<Int64>", "Metadata")]
         [DataRow(typeof(IList<TestComponentCSharp.EventWithGuid>), "Windows.Foundation.Collections.IVector`1<TestComponentCSharp.EventWithGuid>", "Metadata")] // Using the fully qualified asssembly name
@@ -678,29 +773,30 @@ namespace UnitTest
         [DataRow(typeof(ICollection<object>), "System.Collections.Generic.ICollection`1[[System.Object, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e", "Custom")]
         [DataRow(typeof(KeyValuePair<Object, Object>?), "System.Nullable`1[[System.Collections.Generic.KeyValuePair`2[[System.Object, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Object, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e", "Custom")]
         [DataRow(typeof(KeyValuePair<Object, Object[]>), "System.Collections.Generic.KeyValuePair`2[[System.Object, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Object[], System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e", "Custom")]
-        [DataRow(typeof(long[][]), "System.Int64[][], System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e", "Custom")]
-        // Arrays
-        [DataRow(typeof(Object[]), "Windows.Foundation.IReferenceArray`1<Object>", "Metadata")]
-        [DataRow(typeof(long[]), "Windows.Foundation.IReferenceArray`1<Int64>", "Metadata")]
-        [DataRow(typeof(TestComponentCSharp.Class[]), "Windows.Foundation.IReferenceArray`1<TestComponentCSharp.Class>", "Metadata")]
-        [DataRow(typeof(TestComponentCSharp.ComposedBlittableStruct[]), "Windows.Foundation.IReferenceArray`1<TestComponentCSharp.ComposedBlittableStruct>", "Metadata")]
-        [DataRow(typeof(TestComponentCSharp.IArtist[]), "Windows.Foundation.IReferenceArray`1<TestComponentCSharp.IArtist>", "Metadata")]
-        [DataRow(typeof(TestComponentCSharp.EnumValue[]), "Windows.Foundation.IReferenceArray`1<TestComponentCSharp.EnumValue>", "Metadata")]
-        [DataRow(typeof(TestComponentCSharp.EventHandler0[]), "Windows.Foundation.IReferenceArray`1<TestComponentCSharp.EventHandler0>", "Metadata")]
-        [DataRow(typeof(Point[]), "Windows.Foundation.IReferenceArray`1<Windows.Foundation.Point>", "Metadata")]
-        [DataRow(typeof(IList<long>[]), "Windows.Foundation.IReferenceArray`1<Windows.Foundation.Collections.IVector`1<Int64>>", "Metadata")]
-        [DataRow(typeof(IList<long?>[]), "Windows.Foundation.IReferenceArray`1<Windows.Foundation.Collections.IVector`1<Windows.Foundation.IReference`1<Int64>>>", "Metadata")]
-        [DataRow(typeof(KeyValuePair<Object, Object>[]), "Windows.Foundation.IReferenceArray`1<Windows.Foundation.Collections.IKeyValuePair`2<Object, Object>>", "Metadata")]
+        [DynamicData(nameof(GetArrayTypePropertyData))]
         public void TestTypePropertyConvertToUnmanaged(Type type, string name, string kind)
         {
             TestObject.TypeProperty = type;
             Assert.AreEqual(name, TestObject.GetTypePropertyAbiName());
             Assert.AreEqual(kind, TestObject.GetTypePropertyKind());
         }
-        
-        [MethodImpl(MethodImplOptions.NoInlining)]
-        static void KeepType([DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] Type type)
+
+        // MSTest cannot generate attribute metadata for array Type arguments in DataRow.
+        public static IEnumerable<object[]> GetArrayTypePropertyData()
         {
+            yield return [typeof(Int32?[]), "Windows.Foundation.IReferenceArray`1<Windows.Foundation.IReference`1<Int32>>", "Metadata"];
+            yield return [typeof(long[][]), "System.Int64[][], System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e", "Custom"];
+            yield return [typeof(Object[]), "Windows.Foundation.IReferenceArray`1<Object>", "Metadata"];
+            yield return [typeof(long[]), "Windows.Foundation.IReferenceArray`1<Int64>", "Metadata"];
+            yield return [typeof(TestComponentCSharp.Class[]), "Windows.Foundation.IReferenceArray`1<TestComponentCSharp.Class>", "Metadata"];
+            yield return [typeof(TestComponentCSharp.ComposedBlittableStruct[]), "Windows.Foundation.IReferenceArray`1<TestComponentCSharp.ComposedBlittableStruct>", "Metadata"];
+            yield return [typeof(TestComponentCSharp.IArtist[]), "Windows.Foundation.IReferenceArray`1<TestComponentCSharp.IArtist>", "Metadata"];
+            yield return [typeof(TestComponentCSharp.EnumValue[]), "Windows.Foundation.IReferenceArray`1<TestComponentCSharp.EnumValue>", "Metadata"];
+            yield return [typeof(TestComponentCSharp.EventHandler0[]), "Windows.Foundation.IReferenceArray`1<TestComponentCSharp.EventHandler0>", "Metadata"];
+            yield return [typeof(Point[]), "Windows.Foundation.IReferenceArray`1<Windows.Foundation.Point>", "Metadata"];
+            yield return [typeof(IList<long>[]), "Windows.Foundation.IReferenceArray`1<Windows.Foundation.Collections.IVector`1<Int64>>", "Metadata"];
+            yield return [typeof(IList<long?>[]), "Windows.Foundation.IReferenceArray`1<Windows.Foundation.Collections.IVector`1<Windows.Foundation.IReference`1<Int64>>>", "Metadata"];
+            yield return [typeof(KeyValuePair<Object, Object>[]), "Windows.Foundation.IReferenceArray`1<Windows.Foundation.Collections.IKeyValuePair`2<Object, Object>>", "Metadata"];
         }
         
         // Some types will fail due to trimming when testing in AOT so it is necessary to
@@ -711,6 +807,11 @@ namespace UnitTest
         {
             KeepType(typeof(INotifyCollectionChanged));
             KeepType(typeof(INotifyPropertyChanged));
+
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            static void KeepType([DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] Type type)
+            {
+            }
         }
 
         class CustomDictionary : Dictionary<string, string> { }
@@ -1661,7 +1762,7 @@ namespace UnitTest
             Assert.AreEqual(map.Count, valueSet.Count);
             foreach (var item in map)
             {
-                Assert.AreEqual(valueSet[item.Key], item.Value);
+                Assert.AreSame(valueSet[item.Key], item.Value);
             }
         }
 
@@ -2378,7 +2479,12 @@ namespace UnitTest
         }
 
         [TestMethod]
-        public void TestNonBlittableArrayConstructor()
+        [DataRow(1)]
+        [DataRow(16)]
+        [DataRow(17)]
+        [DataRow(33)]
+        [DataRow(64)]
+        public void TestNonBlittableArrayConstructor(int count)
         {
             // Activation factory taking arrays of non-blittable struct, mapped value-type, and
             // HResult/Exception elements by value (constructor PassArray marshalling).
@@ -2394,14 +2500,38 @@ namespace UnitTest
 
             var instance = new Class(
                 9,
-                new[] { structVal },
-                new[] { dateTime },
-                new Exception[] { exception });
+                Enumerable.Repeat(structVal, count).ToArray(),
+                Enumerable.Repeat(dateTime, count).ToArray(),
+                Enumerable.Repeat<Exception>(exception, count).ToArray());
 
             Assert.AreEqual(9, instance.IntProperty);
             Assert.AreEqual("I like tacos", instance.ComposedNonBlittableStructProperty.strings.str);
             Assert.AreEqual(dateTime, instance.DateTimeProperty);
             Assert.IsNotNull(instance.HResultProperty);
+            Assert.AreEqual(exception.HResult, instance.HResultProperty.HResult);
+        }
+
+        [TestMethod]
+        [DataRow(16)]
+        [DataRow(17)]
+        [DataRow(33)]
+        [DataRow(64)]
+        public void TestMappedArrays_Pooled(int count)
+        {
+            DateTimeOffset[] dates = Enumerable.Range(0, count)
+                .Select(i => DateTimeOffset.FromUnixTimeSeconds(i)).ToArray();
+            Exception[] errors = Enumerable.Range(0, count)
+                .Select(i => (Exception)(i % 2 == 0 ? new ArgumentException() : new NotImplementedException())).ToArray();
+            Uri[] uris = Enumerable.Range(0, count)
+                .Select(i => new Uri($"https://example.com/{i}")).ToArray();
+
+            for (int iteration = 0; iteration < 3; iteration++)
+            {
+                CollectionAssert.AreEqual(dates, TestObject.GetAndSetDateTimes(dates));
+                CollectionAssert.AreEqual(uris, TestObject.GetAndSetUris(uris));
+                CollectionAssert.AreEqual(errors.Select(error => error.HResult).ToArray(),
+                    TestObject.GetAndSetHResults(errors).Select(error => error.HResult).ToArray());
+            }
         }
 
         [TestMethod]
@@ -2655,7 +2785,7 @@ namespace UnitTest
             var expected = new int[] { 0, 1, 2 };
 
             TestObject.BindableIterableProperty = expected;
-            Assert.AreEqual(expected, TestObject.BindableIterableProperty);
+            Assert.AreSame(expected, TestObject.BindableIterableProperty);
             TestObject.CallForBindableIterable(() => expected);
             TestObject.BindableIterablePropertyChanged +=
                 (object sender, IEnumerable value) => CollectionAssert.AreEqual(expected, value.Cast<int>().ToArray());
@@ -2702,7 +2832,7 @@ namespace UnitTest
             // Values must be sequential from 0 because the native bindable setter validates them
             IReadOnlyList<int> bindable = [0, 1, 2];
             TestObject.BindableIterableProperty = bindable;
-            Assert.AreEqual(bindable, TestObject.BindableIterableProperty);
+            Assert.AreSame(bindable, TestObject.BindableIterableProperty);
 
             int SumViaIterator(IEnumerable<int> values)
             {
@@ -4039,6 +4169,64 @@ namespace UnitTest
         }
 
         [TestMethod]
+        public void TestReferenceArrayBoxing()
+        {
+            object[] objectArray = [new Class(), new Class()];
+            Class[] classArray = [new Class(), new Class()];
+            IProperties1[] interfaceArray = [new Class(), new Class()];
+            ManagedType[] nonProjectedArray = [new ManagedType(), new ManagedType()];
+
+            Assert.AreEqual((int)PropertyType.InspectableArray, Class.GetPropertyType(objectArray));
+            Assert.AreEqual((int)PropertyType.InspectableArray, Class.GetPropertyType(classArray));
+            Assert.AreEqual((int)PropertyType.InspectableArray, Class.GetPropertyType(interfaceArray));
+            Assert.AreEqual((int)PropertyType.InspectableArray, Class.GetPropertyType(nonProjectedArray));
+
+            Assert.AreEqual("Windows.Foundation.IReferenceArray`1<Object>", Class.GetName(objectArray));
+            Assert.AreEqual("Windows.Foundation.IReferenceArray`1<TestComponentCSharp.Class>", Class.GetName(classArray));
+            Assert.AreEqual("Windows.Foundation.IReferenceArray`1<TestComponentCSharp.IProperties1>", Class.GetName(interfaceArray));
+            Assert.AreEqual("Windows.Foundation.IReferenceArray`1<Object>", Class.GetName(nonProjectedArray));
+
+            string[] stringArray = ["a", "b"];
+            Assert.AreEqual((int)PropertyType.StringArray, Class.GetPropertyType(stringArray));
+            Assert.AreEqual("Windows.Foundation.IReferenceArray`1<String>", Class.GetName(stringArray));
+        }
+
+        [TestMethod]
+        public void TestReferenceArrayValueRoundTrip()
+        {
+            var element0 = new Class { IntProperty = 42 };
+            var element1 = new Class { IntProperty = 123 };
+            object[][] arrays =
+            [
+                new object[] { element0, element1 },
+                new Class[] { element0, element1 },
+                new IProperties1[] { element0, element1 }
+            ];
+
+            foreach (object[] array in arrays)
+            {
+                object[] unboxed = Class.UnboxObjectArray(array);
+                Assert.HasCount(2, unboxed);
+                Assert.AreSame(element0, unboxed[0]);
+                Assert.AreSame(element1, unboxed[1]);
+                Assert.AreEqual(42, ((Class)unboxed[0]).IntProperty);
+                Assert.AreEqual(123, ((Class)unboxed[1]).IntProperty);
+
+                object[] propertyValues = Class.UnboxObjectArrayUsingPropertyValue(array);
+                Assert.HasCount(2, propertyValues);
+                Assert.AreSame(element0, propertyValues[0]);
+                Assert.AreSame(element1, propertyValues[1]);
+            }
+
+            ManagedProperties managed = new(42);
+            ManagedProperties[] managedArray = [managed];
+            Assert.AreSame(managed, Class.UnboxObjectArray(managedArray)[0]);
+            Assert.AreSame(managed, Class.UnboxObjectArrayUsingPropertyValue(managedArray)[0]);
+            Assert.IsEmpty(Class.UnboxObjectArray(Array.Empty<Class>()));
+            Assert.IsEmpty(Class.UnboxObjectArrayUsingPropertyValue(Array.Empty<Class>()));
+        }
+
+        [TestMethod]
         public void TestValueBoxing()
         {
             int i = 42;
@@ -4928,11 +5116,9 @@ namespace UnitTest
         //    }
         //}
 
-        // 'TestPnpPropertiesInLoop' is a manual stress helper kept 'private' so MSTest doesn't auto-run it
-        // (PnP enumeration is environment-dependent). The '[TestMethod]' is retained for easy ad-hoc runs, so
-        // suppress MSTEST0003 ("test method signature is invalid") for this intentionally-private method.
-#pragma warning disable MSTEST0003
-        [TestMethod]
+        // Manual stress test: PnP enumeration depends on the devices available on the machine.
+        // To run it with MSTest, uncomment [TestMethod] and make the method public.
+        // [TestMethod]
         private async Task TestPnpPropertiesInLoop()
         {
             for (int i = 0; i < 10; i++)
@@ -4940,7 +5126,6 @@ namespace UnitTest
                 await TestPnpPropertiesAsync();
             }
         }
-#pragma warning restore MSTEST0003
 
         private async Task TestPnpPropertiesAsync()
         {

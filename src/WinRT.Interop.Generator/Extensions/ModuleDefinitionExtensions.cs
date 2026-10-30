@@ -5,11 +5,12 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using System.Threading;
 using AsmResolver;
 using AsmResolver.DotNet;
 using AsmResolver.DotNet.Signatures;
-using AsmResolver.PE.DotNet.Metadata.Tables;
 using WindowsRuntime.Generator;
+using WindowsRuntime.InteropGenerator.Discovery;
 using WindowsRuntime.InteropGenerator.Helpers;
 using WindowsRuntime.InteropGenerator.Visitors;
 
@@ -154,141 +155,74 @@ internal static partial class ModuleDefinitionExtensions
     /// Enumerates all generic instance type signatures in the module.
     /// </summary>
     /// <param name="module">The input <see cref="ModuleDefinition"/> instance.</param>
+    /// <param name="signatureComparer">The comparer for discovered signatures.</param>
+    /// <param name="shouldProcessModule">Determines whether to transitively discover members in a referenced module.</param>
+    /// <param name="isMarshallingDisabledModule">Determines whether a module was explicitly excluded from member discovery.</param>
+    /// <param name="treatWarningsAsErrors">Whether to promote discovery warnings to errors.</param>
+    /// <param name="token">The cancellation token for discovery.</param>
+    /// <param name="dispatchIndex">The invocation's complete dispatch metadata index.</param>
+    /// <param name="dispatchContexts">The write-only cross-module context registry.</param>
+    /// <param name="completeCrossModuleJoins">Whether to join published contexts rather than scan module roots.</param>
     /// <returns>All (unique) generic type signatures in the module.</returns>
-    public static IEnumerable<GenericInstanceTypeSignature> EnumerateGenericInstanceTypeSignatures(this ModuleDefinition module)
+    public static IEnumerable<GenericInstanceTypeSignature> EnumerateGenericInstanceTypeSignatures(
+        this ModuleDefinition module,
+        SignatureComparer signatureComparer,
+        Func<ModuleDefinition, bool> shouldProcessModule,
+        Func<ModuleDefinition, bool> isMarshallingDisabledModule,
+        bool treatWarningsAsErrors,
+        CancellationToken token,
+        MethodDispatchIndex dispatchIndex,
+        DispatchContextRegistry dispatchContexts,
+        bool completeCrossModuleJoins)
     {
-        return EnumerateTypeSignatures(module, AllGenericTypesVisitor.Instance);
+        return TypeSignatureDiscovery<GenericInstanceTypeSignature>.Enumerate(
+            module: module,
+            visitor: AllGenericTypesVisitor.Instance,
+            signatureComparer: signatureComparer,
+            shouldProcessModule: shouldProcessModule,
+            isMarshallingDisabledModule: isMarshallingDisabledModule,
+            treatWarningsAsErrors: treatWarningsAsErrors,
+            token: token,
+            dispatchIndex: dispatchIndex,
+            dispatchContexts: dispatchContexts,
+            completeCrossModuleJoins: completeCrossModuleJoins);
     }
 
     /// <summary>
     /// Enumerates all SZ array type signatures in the module.
     /// </summary>
     /// <param name="module">The input <see cref="ModuleDefinition"/> instance.</param>
+    /// <param name="signatureComparer">The comparer for discovered signatures.</param>
+    /// <param name="shouldProcessModule">Determines whether to transitively discover members in a referenced module.</param>
+    /// <param name="isMarshallingDisabledModule">Determines whether a module was explicitly excluded from member discovery.</param>
+    /// <param name="treatWarningsAsErrors">Whether to promote discovery warnings to errors.</param>
+    /// <param name="token">The cancellation token for discovery.</param>
+    /// <param name="dispatchIndex">The invocation's complete dispatch metadata index.</param>
+    /// <param name="dispatchContexts">The write-only cross-module context registry.</param>
+    /// <param name="completeCrossModuleJoins">Whether to join published contexts rather than scan module roots.</param>
     /// <returns>All (unique) generic type signatures in the module.</returns>
-    public static IEnumerable<SzArrayTypeSignature> EnumerateSzArrayTypeSignatures(this ModuleDefinition module)
+    public static IEnumerable<SzArrayTypeSignature> EnumerateSzArrayTypeSignatures(
+        this ModuleDefinition module,
+        SignatureComparer signatureComparer,
+        Func<ModuleDefinition, bool> shouldProcessModule,
+        Func<ModuleDefinition, bool> isMarshallingDisabledModule,
+        bool treatWarningsAsErrors,
+        CancellationToken token,
+        MethodDispatchIndex dispatchIndex,
+        DispatchContextRegistry dispatchContexts,
+        bool completeCrossModuleJoins)
     {
-        return EnumerateTypeSignatures(module, AllSzArrayTypesVisitor.Instance);
-    }
-
-    /// <summary>
-    /// Enumerates all target type signatures in the module.
-    /// </summary>
-    /// <param name="module">The input <see cref="ModuleDefinition"/> instance.</param>
-    /// <param name="visitor">The <see cref="ITypeSignatureVisitor{TResult}"/> instance to use to discover type signatures of interest.</param>
-    /// <returns>All (unique) type signatures of interest in the module.</returns>
-    public static IEnumerable<TResult> EnumerateTypeSignatures<TResult>(this ModuleDefinition module, ITypeSignatureVisitor<IEnumerable<TResult>> visitor)
-        where TResult : TypeSignature
-    {
-        HashSet<TResult> results = new(SignatureComparer.IgnoreVersion);
-
-        // Helper to crawl a signature, recursively
-        static IEnumerable<TResult> EnumerateTypeSignatures(
-            TypeSignature? type,
-            HashSet<TResult> results,
-            ITypeSignatureVisitor<IEnumerable<TResult>> visitor)
-        {
-            foreach (TResult result in type?.AcceptVisitor(visitor) ?? [])
-            {
-                if (results.Add(result))
-                {
-                    yield return result;
-                }
-            }
-        }
-
-        // Enumerate the fields table. This is needed because field definitions can have type signatures inline,
-        // without them appearing in the type specification table. This ensures that we're not missing those.
-        foreach (FieldDefinition field in module.EnumerateTableMembers<FieldDefinition>(TableIndex.Field))
-        {
-            foreach (TResult result in EnumerateTypeSignatures(field.Signature?.FieldType, results, visitor))
-            {
-                yield return result;
-            }
-        }
-
-        // Enumerate the method table, to ensure we can detect signatures for return types and parameter types.
-        // In each method, we also walk the method body to find local variable types, 'newobj' and 'newarr' types.
-        // Note that methods in this table might require type arguments, which we don't have from here. However,
-        // rather than just ignoring them here, we rely on types not fully constructed to be filtered out later.
-        // This is still useful even in those cases, as we might see partially constructed signatures where
-        // one or more type arguments is statically known, and which might be a type relevant for marshalling.
-        foreach (MethodDefinition method in module.EnumerateTableMembers<MethodDefinition>(TableIndex.Method))
-        {
-            foreach (TypeSignature visibleType in method.EnumerateAllVisibleTypes(module.RuntimeContext))
-            {
-                foreach (TResult result in EnumerateTypeSignatures(visibleType, results, visitor))
-                {
-                    yield return result;
-                }
-            }
-        }
-
-        // Enumerate the type specification table. This will contain all type signatures for types that are
-        // referenced by a metadata token anywhere in the module. This will also include things such as base
-        // types (for generic types or not), as well as implemented (generic) interfaces.
-        foreach (TypeSpecification specification in module.EnumerateTableMembers<TypeSpecification>(TableIndex.TypeSpec))
-        {
-            foreach (TResult result in EnumerateTypeSignatures(specification.Signature, results, visitor))
-            {
-                yield return result;
-            }
-
-            // Resolve the type definition to be able to process its methods
-            if (!specification.TryResolve(module.RuntimeContext, out TypeDefinition? type))
-            {
-                continue;
-            }
-
-            GenericContext genericContext = new(specification.Signature as GenericInstanceTypeSignature, null);
-
-            // Also manually enumerate all methods from the types we have the specification for. The reason for doing this
-            // is that it might allow us to see more constructed types than we can from just the methods table, and the
-            // method specification table. For instance:
-            //
-            // class C<T>
-            // {
-            //     List<T> M() => [];
-            // }
-            //
-            // If we have a 'C<int>' type specification, we can resolve 'C<T>', enumerate its methods, which will give us
-            // the definition for 'M()', and then we'll be able to instantiate its return type with the generic context
-            // from the type specification, so we'll be able to construct 'List<int>'. If we only saw 'C<T>.M()' from the
-            // methods table, we wouldn't have the necessary generic context. And because 'M()' is not itself generic,
-            // it also wouldn't appear in the method specification table. So this is the only way to cover these cases.
-            foreach (MethodDefinition method in type.Methods)
-            {
-                foreach (TypeSignature visibleType in method.EnumerateAllVisibleTypes(module.RuntimeContext))
-                {
-                    foreach (TResult result in EnumerateTypeSignatures(visibleType.InstantiateGenericTypes(genericContext), results, visitor))
-                    {
-                        yield return result;
-                    }
-                }
-            }
-        }
-
-        // Enumerate method specifications as well. These are used to detect generic instantiations of methods being invoked
-        // or passed around in some way (eg. as delegates). Crucially, this allows us to catch constructed delegates that
-        // don't appear anywhere else, as they're just a result of specific instantiations of a generic method. For instance:
-        //
-        // static List<T> M<T>() => [];
-        // static object N() => M<int>();
-        //
-        // This will correctly detect that constructed 'List<int>' on the constructed return for the 'M<int>()' invocation.
-        foreach (MethodSpecification specification in module.EnumerateTableMembers<MethodSpecification>(TableIndex.MethodSpec))
-        {
-            GenericContext genericContext = new(
-                type: specification.DeclaringType?.ToTypeSignature(module.RuntimeContext) as GenericInstanceTypeSignature,
-                method: specification.Signature);
-
-            foreach (TypeSignature visibleType in specification.Method!.EnumerateAllVisibleTypes(module.RuntimeContext))
-            {
-                foreach (TResult result in EnumerateTypeSignatures(visibleType.InstantiateGenericTypes(genericContext), results, visitor))
-                {
-                    yield return result;
-                }
-            }
-        }
+        return TypeSignatureDiscovery<SzArrayTypeSignature>.Enumerate(
+            module: module,
+            visitor: AllSzArrayTypesVisitor.Instance,
+            signatureComparer: signatureComparer,
+            shouldProcessModule: shouldProcessModule,
+            isMarshallingDisabledModule: isMarshallingDisabledModule,
+            treatWarningsAsErrors: treatWarningsAsErrors,
+            token: token,
+            dispatchIndex: dispatchIndex,
+            dispatchContexts: dispatchContexts,
+            completeCrossModuleJoins: completeCrossModuleJoins);
     }
 
     /// <summary>

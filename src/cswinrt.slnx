@@ -102,6 +102,13 @@
       <Platform Solution="*|x86" Project="x86" />
       <Build Project="false" />
     </Project>
+    <Project Path="Projections/TestImplementWinMDTypes/TestImplementWinMDTypes.csproj">
+      <BuildDependency Project="WinRT.Projection.Ref.Generator/WinRT.Projection.Ref.Generator.csproj" />
+      <Platform Solution="*|ARM64" Project="ARM64" />
+      <Platform Solution="*|x64" Project="x64" />
+      <Platform Solution="*|x86" Project="x86" />
+      <Build Solution="*|ARM64" Project="false" />
+    </Project>
     <Project Path="Projections/TestPublicExclusiveTo/TestPublicExclusiveTo.csproj">
       <BuildDependency Project="WinRT.Projection.Ref.Generator/WinRT.Projection.Ref.Generator.csproj" />
       <Platform Solution="*|ARM64" Project="ARM64" />
@@ -159,6 +166,7 @@
     <Project Path="Tests/AuthoringConsumptionTest2/AuthoringConsumptionTest2.vcxproj" Id="8a4b1f2a-9c2e-4d3a-bf68-2a4f5b7c8d9e">
       <BuildDependency Project="Tests/AuthoringTest3/AuthoringTest3.csproj" />
       <BuildDependency Project="Tests/AuthoringTest2/AuthoringTest2.csproj" />
+      <BuildDependency Project="Tests/AuthoringTestExe/AuthoringTestExe.csproj" />
       <BuildDependency Project="Tests/AuthoringConsumptionTest2.AOT/AuthoringConsumptionTest2.AOT.csproj" />
       <Build Solution="*|ARM64" Project="false" />
     </Project>
@@ -173,6 +181,18 @@
       <Build Solution="*|ARM64" Project="false" />
       <Build Solution="*|x86" Project="false" />
     </Project>
+    <Project Path="Tests/AuthoringImplementWinMDTypesTest/AuthoringImplementWinMDTypesTest.csproj">
+      <Platform Solution="*|ARM64" Project="ARM64" />
+      <Platform Solution="*|x64" Project="x64" />
+      <Platform Solution="*|x86" Project="x86" />
+      <Build Solution="*|ARM64" Project="false" />
+    </Project>
+    <Project Path="Tests/AuthoringMixedWinMDTypesTest/AuthoringMixedWinMDTypesTest.csproj">
+      <Platform Solution="*|ARM64" Project="ARM64" />
+      <Platform Solution="*|x64" Project="x64" />
+      <Platform Solution="*|x86" Project="x86" />
+      <Build Solution="*|ARM64" Project="false" />
+    </Project>
     <Project Path="Tests/AuthoringTest/AuthoringTest.csproj">
       <Platform Solution="*|ARM64" Project="ARM64" />
       <Platform Solution="*|x64" Project="x64" />
@@ -186,6 +206,12 @@
       <Build Solution="*|ARM64" Project="false" />
     </Project>
     <Project Path="Tests/AuthoringTest3/AuthoringTest3.csproj">
+      <Platform Solution="*|ARM64" Project="ARM64" />
+      <Platform Solution="*|x64" Project="x64" />
+      <Platform Solution="*|x86" Project="x86" />
+      <Build Solution="*|ARM64" Project="false" />
+    </Project>
+    <Project Path="Tests/AuthoringTestExe/AuthoringTestExe.csproj">
       <Platform Solution="*|ARM64" Project="ARM64" />
       <Platform Solution="*|x64" Project="x64" />
       <Platform Solution="*|x86" Project="x86" />
@@ -247,6 +273,12 @@
       <Platform Solution="*|x86" Project="x86" />
       <Build Solution="*|ARM64" Project="false" />
     </Project>
+    <Project Path="Tests/InteropGeneratorTest/InteropGeneratorTest.csproj">
+      <Platform Solution="*|ARM64" Project="ARM64" />
+      <Platform Solution="*|x64" Project="x64" />
+      <Platform Solution="*|x86" Project="x86" />
+      <Build Solution="*|ARM64" Project="false" />
+    </Project>
     <Project Path="Tests/ObjectLifetimeTests/ObjectLifetimeTests.Lifted.csproj">
       <Platform Solution="*|ARM64" Project="arm64" />
       <Platform Solution="*|x64" Project="x64" />
@@ -266,6 +298,7 @@
       <Platform Solution="*|x64" Project="x64" />
       <Platform Solution="*|x86" Project="x86" />
       <Build Solution="*|ARM64" Project="false" />
+      <Build Solution="*|x86" Project="false" />
     </Project>
     <Project Path="Tests/SourceGenerator2Test/SourceGenerator2Test.csproj">
       <Platform Solution="*|ARM64" Project="ARM64" />
@@ -332,6 +365,36 @@
       <Platform Solution="*|x86" Project="x86" />
       <Build Project="false" />
     </Project>
+    <Project Path="Tests/FunctionalTests/CustomPropertyProvider/CustomPropertyProvider.csproj">
+      <Platform Solution="*|ARM64" Project="ARM64" />
+      <Platform Solution="*|x64" Project="x64" />
+      <Platform Solution="*|x86" Project="x86" />
+      <Build Solution="*|ARM64" Project="false" />
+    </Project>
+    <Project Path="Tests/FunctionalTests/CustomPropertyProviderLibrary/CustomPropertyProviderLibrary.csproj">
+      <Platform Solution="*|ARM64" Project="ARM64" />
+      <Platform Solution="*|x64" Project="x64" />
+      <Platform Solution="*|x86" Project="x86" />
+      <Build Solution="*|ARM64" Project="false" />
+    </Project>
+    <Project Path="Tests/FunctionalTests/DefaultCustomPropertyProviderDisabled/DefaultCustomPropertyProviderDisabled.csproj">
+      <Platform Solution="*|ARM64" Project="ARM64" />
+      <Platform Solution="*|x64" Project="x64" />
+      <Platform Solution="*|x86" Project="x86" />
+      <Build Solution="*|ARM64" Project="false" />
+    </Project>
+    <Project Path="Tests/FunctionalTests/DefaultCustomPropertyProviderSuppressed/DefaultCustomPropertyProviderSuppressed.csproj">
+      <Platform Solution="*|ARM64" Project="ARM64" />
+      <Platform Solution="*|x64" Project="x64" />
+      <Platform Solution="*|x86" Project="x86" />
+      <Build Solution="*|ARM64" Project="false" />
+    </Project>
+    <Project Path="Tests/FunctionalTests/DefaultCustomPropertyProviderWinUI/DefaultCustomPropertyProviderWinUI.csproj">
+      <Platform Solution="*|ARM64" Project="ARM64" />
+      <Platform Solution="*|x64" Project="x64" />
+      <Platform Solution="*|x86" Project="x86" />
+      <Build Solution="*|ARM64" Project="false" />
+    </Project>
     <Project Path="Tests/FunctionalTests/DerivedClassActivation/DerivedClassActivation.csproj">
       <Platform Solution="*|ARM64" Project="ARM64" />
       <Platform Solution="*|x64" Project="x64" />
@@ -351,6 +414,42 @@
       <Build Solution="*|ARM64" Project="false" />
     </Project>
     <Project Path="Tests/FunctionalTests/Events/Events.csproj">
+      <Platform Solution="*|ARM64" Project="ARM64" />
+      <Platform Solution="*|x64" Project="x64" />
+      <Platform Solution="*|x86" Project="x86" />
+      <Build Solution="*|ARM64" Project="false" />
+    </Project>
+    <Project Path="Tests/FunctionalTests/ForwardedTypeIdentities/ForwardedTypeIdentities.csproj">
+      <Platform Solution="*|ARM64" Project="ARM64" />
+      <Platform Solution="*|x64" Project="x64" />
+      <Platform Solution="*|x86" Project="x86" />
+      <Build Solution="*|ARM64" Project="false" />
+    </Project>
+    <Project Path="Tests/FunctionalTests/GetIidInterceptors/GetIidInterceptors.csproj">
+      <Platform Solution="*|ARM64" Project="ARM64" />
+      <Platform Solution="*|x64" Project="x64" />
+      <Platform Solution="*|x86" Project="x86" />
+      <Build Solution="*|ARM64" Project="false" />
+    </Project>
+    <Project Path="Tests/FunctionalTests/GetIidInterceptorsFallback/GetIidInterceptorsFallback.csproj">
+      <Platform Solution="*|ARM64" Project="ARM64" />
+      <Platform Solution="*|x64" Project="x64" />
+      <Platform Solution="*|x86" Project="x86" />
+      <Build Solution="*|ARM64" Project="false" />
+    </Project>
+    <Project Path="Tests/FunctionalTests/ForwardedTypeIdentitiesLibrary/ForwardedTypeIdentitiesLibrary.csproj">
+      <Platform Solution="*|ARM64" Project="ARM64" />
+      <Platform Solution="*|x64" Project="x64" />
+      <Platform Solution="*|x86" Project="x86" />
+      <Build Solution="*|ARM64" Project="false" />
+    </Project>
+    <Project Path="Tests/FunctionalTests/ForwardedTypeIdentitiesNetStandard/ForwardedTypeIdentitiesNetStandard.csproj">
+      <Platform Solution="*|ARM64" Project="ARM64" />
+      <Platform Solution="*|x64" Project="x64" />
+      <Platform Solution="*|x86" Project="x86" />
+      <Build Solution="*|ARM64" Project="false" />
+    </Project>
+    <Project Path="Tests/FunctionalTests/ImplementWinMDTypes/ImplementWinMDTypes.csproj">
       <Platform Solution="*|ARM64" Project="ARM64" />
       <Platform Solution="*|x64" Project="x64" />
       <Platform Solution="*|x86" Project="x86" />
@@ -386,12 +485,6 @@
       <Platform Solution="*|x86" Project="x86" />
       <Build Solution="*|ARM64" Project="false" />
     </Project>
-    <Project Path="Tests/FunctionalTests/TestImplementExclusiveTo/TestImplementExclusiveTo.csproj">
-      <Platform Solution="*|ARM64" Project="ARM64" />
-      <Platform Solution="*|x64" Project="x64" />
-      <Platform Solution="*|x86" Project="x86" />
-      <Build Solution="*|ARM64" Project="false" />
-    </Project>
     <Project Path="Tests/FunctionalTests/TestLibrary/Test-Library.csproj">
       <Platform Solution="*|ARM64" Project="ARM64" />
       <Platform Solution="*|x64" Project="x64" />
@@ -399,6 +492,12 @@
       <Build Solution="*|ARM64" Project="false" />
     </Project>
     <Project Path="Tests/FunctionalTests/TypeMarshaling/TypeMarshaling.csproj">
+      <Platform Solution="*|ARM64" Project="ARM64" />
+      <Platform Solution="*|x64" Project="x64" />
+      <Platform Solution="*|x86" Project="x86" />
+      <Build Solution="*|ARM64" Project="false" />
+    </Project>
+    <Project Path="Tests/FunctionalTests/UserDefinedTypeNames/UserDefinedTypeNames.csproj">
       <Platform Solution="*|ARM64" Project="ARM64" />
       <Platform Solution="*|x64" Project="x64" />
       <Platform Solution="*|x86" Project="x86" />

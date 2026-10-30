@@ -1,16 +1,20 @@
 <Project ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
   <!-- Set common MSBuild properties and item metadata for CsWinRT tool and tests -->
+  <PropertyGroup Condition="'$(UsingMSTestSdk)' == 'true'">
+    <EnableMSTestSourceGeneration>true</EnableMSTestSourceGeneration>
+  </PropertyGroup>
+
   <PropertyGroup Label="Globals">
     <MinimalCoreWin>true</MinimalCoreWin>
     <VCProjectVersion>15.0</VCProjectVersion>
-    <MinimumVisualStudioVersion>16.0</MinimumVisualStudioVersion>
+    <MinimumVisualStudioVersion>18.0</MinimumVisualStudioVersion>
     <CppWinRTVerbosity>high</CppWinRTVerbosity>
     <CsWinRTVerbosity>high</CsWinRTVerbosity>
-    <MicrosoftWinAppSDKWinUIVersion>1.8.251105000</MicrosoftWinAppSDKWinUIVersion>
-    <MicrosoftWinAppSDKIxpVersion>1.8.251104001</MicrosoftWinAppSDKIxpVersion>
-    <MicrosoftWinAppSDKFoundationVersion>1.8.251104000</MicrosoftWinAppSDKFoundationVersion>
-    <MicrosoftWebWebView2Version>1.0.3179.45</MicrosoftWebWebView2Version>
+    <MicrosoftWinAppSDKWinUIVersion>2.3.9</MicrosoftWinAppSDKWinUIVersion>
+    <MicrosoftWinAppSDKIxpVersion>2.1.9</MicrosoftWinAppSDKIxpVersion>
+    <MicrosoftWinAppSDKFoundationVersion>2.3.12</MicrosoftWinAppSDKFoundationVersion>
+    <MicrosoftWebWebView2Version>1.0.3719.77</MicrosoftWebWebView2Version>
 
     <!-- Debug symbol properties -->
     <DebugType>embedded</DebugType>
@@ -21,8 +25,7 @@
     <CsWinRTGenerateProjection>$(GenerateTestProjection)</CsWinRTGenerateProjection>
     <CsWinRTWindowsMetadata Condition="'$(CsWinRTWindowsMetadata)' == ''">$(WindowsSDKVersion.TrimEnd('\'))</CsWinRTWindowsMetadata>
     <CsWinRTWindowsMetadata Condition="'$(CsWinRTWindowsMetadata)' == ''">sdk</CsWinRTWindowsMetadata>
-    <PlatformToolset>v143</PlatformToolset>
-    <PlatformToolset Condition="'$(VisualStudioVersion)' == '18.0'">v145</PlatformToolset>
+    <PlatformToolset>v145</PlatformToolset>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
     <AssetTargetFallback>netcoreapp5.0</AssetTargetFallback>
     <IsTargetFrameworkNet5OrGreater>true</IsTargetFrameworkNet5OrGreater>
@@ -56,6 +59,9 @@
 
     <!-- Enforce the same language version for all projects -->
     <LangVersion>14.0</LangVersion>
+
+    <!-- Run CsWin32 code generation as an MSBuild task rather than a source generator -->
+    <CsWin32RunAsBuildTask>true</CsWin32RunAsBuildTask>
 
     <!-- Allow unsafe code in all projects (the runtime and build tools rely heavily on pointers and other unsafe constructs for interop) -->
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
