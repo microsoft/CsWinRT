@@ -1,6 +1,9 @@
 name: CsWinRT build
 
 on:
+  push:
+    branches:
+      - staging/3.0
   pull_request:
   workflow_dispatch:
     inputs:
@@ -23,7 +26,6 @@ env:
 jobs:
   build:
     name: CsWinRT (Release ${{ matrix.platform }})
-    if: github.event_name == 'workflow_dispatch' || github.event.pull_request.head.repo.full_name != github.repository
     runs-on: windows-2025-vs2026
     timeout-minutes: 180
     strategy:
@@ -67,7 +69,7 @@ jobs:
         env:
           BUILD_PLATFORM: ${{ matrix.platform }}
           cswinrt_skip_package: true
-          cswinrt_generate_sdk_projection: ${{ inputs.sdk_projections }}
+          cswinrt_generate_sdk_projection: ${{ github.event_name == 'push' || inputs.sdk_projections }}
         run: |
           call src\build.cmd %BUILD_PLATFORM% Release 3.0.0.0 %PackageVersion% 3.0.0.0 product
       - name: Upload product payload
@@ -75,6 +77,19 @@ jobs:
         with:
           name: product-${{ matrix.platform }}
           path: artifacts\product
+          if-no-files-found: error
+          retention-days: 7
+      - name: Build test projections
+        if: matrix.platform == 'x64'
+        shell: cmd
+        run: |
+          call src\build.cmd x64 Release 3.0.0.0 %PackageVersion% 3.0.0.0 testprojections
+      - name: Upload test projections
+        if: matrix.platform == 'x64'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: TestProjections
+          path: artifacts\test-projections
           if-no-files-found: error
           retention-days: 7
       - name: Upload build logs
@@ -104,7 +119,7 @@ jobs:
       - name: Pack Microsoft.Windows.CsWinRT
         shell: cmd
         env:
-          cswinrt_generate_sdk_projection: ${{ inputs.sdk_projections }}
+          cswinrt_generate_sdk_projection: ${{ github.event_name == 'push' || inputs.sdk_projections }}
         run: |
           call src\build.cmd x64 Release 3.0.0.0 %PackageVersion% 3.0.0.0 productpackage
       - name: Upload NuGet
@@ -117,7 +132,7 @@ jobs:
 
   unit-test:
     name: UnitTest (${{ matrix.runtime }}, x64 Release)
-    if: (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != github.repository) || inputs.unit_tests
+    if: github.event_name == 'push' || github.event_name == 'pull_request' || inputs.unit_tests
     runs-on: windows-2025-vs2026
     timeout-minutes: 120
     strategy:

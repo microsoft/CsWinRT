@@ -42,6 +42,7 @@ if "%cswinrt_platform%"=="" set cswinrt_platform=x64
 
 if /I "%cswinrt_label%"=="product" goto :product
 if /I "%cswinrt_label%"=="productpackage" goto :productpackage
+if /I "%cswinrt_label%"=="testprojections" goto :testprojections
 
 if /I "%cswinrt_platform%" equ "all" (
   if "%cswinrt_configuration%"=="" (
@@ -417,6 +418,49 @@ call :stageproduct
 if errorlevel 1 exit /b !errorlevel!
 if /I "%cswinrt_skip_package%"=="true" exit /b 0
 goto :productpackage
+
+:testprojections
+call :productsettings
+if errorlevel 1 exit /b !errorlevel!
+call :setupvisualstudio
+if errorlevel 1 exit /b !errorlevel!
+rem Write the Windows SDK public key to a file for delay signing the test projections
+set "cswinrt_sdk_public_key=%cswinrt_artifacts_dir%\sdk-public.snk"
+powershell -NoProfile -Command ^
+  "$ErrorActionPreference='Stop';" ^
+  "[IO.File]::WriteAllBytes($env:cswinrt_sdk_public_key, [Convert]::FromBase64String('ACQAAASAAACUAAAABgIAAAAkAABSU0ExAAQAAAEAAQC1/JDnAn9nhx53Oo/eiTjIHdQCumW5IB1gWT6WxJJlHoicwT8UFeu1P6wRMa4L0zPF7mAhZy2XGOoxqK69DaAHLyXYfbpvyQ/9WY7U2jXkTDmMRUMH6OM7hCYUPa7J9ZaDb5fI90dQ5ZdcZOIYn0Xe9GsqKxJHrcNlK/XDCAVdqQ=='));"
+if errorlevel 1 exit /b !errorlevel!
+rem Reuse the product dependencies and shared Contracts inputs, building base before XAML
+for %%p in (
+  "Windows,Microsoft.Windows.SDK.NET,10.0.26100.82"
+  "Windows.UI.Xaml,Microsoft.Windows.UI.Xaml,10.0.26100.52"
+) do (
+  for /f "tokens=1,2,3 delims=," %%d in ("%%~p") do (
+    call :exec msbuild.exe %cswinrt_build_params% ^
+      /restore /m /nr:false /nologo /v:minimal ^
+      /p:Configuration=%cswinrt_configuration% ^
+      /p:Platform=AnyCPU ^
+      /p:LibBuildTFMs=net10.0 ^
+      /p:BuildProjectReferences=false ^
+      /p:BuildToolArch=x64 ^
+      /p:GenerateTestProjection=true ^
+      /p:GenerateInternalsVisibleToAttributes=false ^
+      /p:CustomAfterMicrosoftCommonTargets="%this_dir%Tests\SmokeTests\WindowsSdkContracts.targets" ^
+      /p:CsWinRTResolveWindowsMetadata=false ^
+      /p:CsWinRTWindowsMetadata= ^
+      /p:SignAssembly=true ^
+      /p:DelaySign=true ^
+      /p:AssemblyOriginatorKeyFile="%cswinrt_sdk_public_key%" ^
+      /p:AssemblyVersion=%%f ^
+      /p:InformationalVersion=%cswinrt_version_string%-testprojections ^
+      "%this_dir%Projections\%%d\%%d.csproj" ^
+      /bl:"%cswinrt_artifacts_dir%\logs\test-projections-%%d.binlog"
+    if errorlevel 1 exit /b !errorlevel!
+    call :copyproduct "%this_dir%Projections\%%d\bin\%cswinrt_configuration%\net10.0\ref\%%e.dll" "%cswinrt_artifacts_dir%\test-projections\ref\cswinrt3"
+    if errorlevel 1 exit /b !errorlevel!
+  )
+)
+exit /b 0
 
 :productpackage
 rem Packaging consumes merged artifacts and does not need the compiler environment
