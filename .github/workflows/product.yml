@@ -1,0 +1,178 @@
+name: CsWinRT build
+
+on:
+  push:
+    branches:
+      - staging/3.0
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      unit_tests:
+        description: Run UnitTest on both JIT and Native AOT (x64 Release)
+        type: boolean
+        default: false
+      sdk_projections:
+        description: Include precompiled Windows SDK and UWP XAML projections
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+env:
+  DotNetSdkVersion: 10.0.402
+  PackageVersion: 3.0.0-ci-actions.${{ github.run_number }}.${{ github.run_attempt }}
+
+jobs:
+  build:
+    name: CsWinRT (Release ${{ matrix.platform }})
+    runs-on: windows-2025-vs2026
+    timeout-minutes: 180
+    strategy:
+      fail-fast: false
+      matrix:
+        platform: [x86, x64, arm64]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      # Required by the repo-wide dependency check, even for product-only builds.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: microsoft/TestWinRT
+          ref: d15a32b2f7c22b022e01e09d893a19fe0b3043f8
+          path: src/TestWinRT
+          persist-credentials: false
+      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          dotnet-version: ${{ env.DotNetSdkVersion }}
+      - name: Select build SDK
+        shell: pwsh
+        run: |
+          $globalJson = Get-Content .\global.json -Raw | ConvertFrom-Json
+          $globalJson.sdk | Add-Member -NotePropertyName version -NotePropertyValue $env:DotNetSdkVersion -Force
+          $globalJson.sdk | Add-Member -NotePropertyName rollForward -NotePropertyValue disable -Force
+          $globalJson | ConvertTo-Json -Depth 10 | Set-Content .\global.json
+      # WinRT.Host resolves nethost from the matching architecture's SDK installation.
+      - name: Install target architecture SDK
+        if: matrix.platform != 'x64'
+        shell: pwsh
+        env:
+          BUILD_PLATFORM: ${{ matrix.platform }}
+        run: |
+          $installer = "$env:RUNNER_TEMP\dotnet-install.ps1"
+          Invoke-WebRequest https://dot.net/v1/dotnet-install.ps1 -OutFile $installer
+          & $installer -Version $env:DotNetSdkVersion -Architecture $env:BUILD_PLATFORM -InstallDir "$env:DOTNET_ROOT\$env:BUILD_PLATFORM" -NoPath
+      - name: Build and stage product
+        shell: cmd
+        env:
+          BUILD_PLATFORM: ${{ matrix.platform }}
+          cswinrt_skip_package: true
+          cswinrt_generate_sdk_projection: ${{ github.event_name == 'push' || inputs.sdk_projections }}
+        run: |
+          call src\build.cmd %BUILD_PLATFORM% Release 3.0.0.0 %PackageVersion% 3.0.0.0 product
+      - name: Upload product payload
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: product-${{ matrix.platform }}
+          path: artifacts\product
+          if-no-files-found: error
+          retention-days: 7
+      - name: Build test projections
+        if: matrix.platform == 'x64'
+        shell: cmd
+        run: |
+          call src\build.cmd x64 Release 3.0.0.0 %PackageVersion% 3.0.0.0 testprojections
+      - name: Upload test projections
+        if: matrix.platform == 'x64'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: TestProjections
+          path: artifacts\test-projections
+          if-no-files-found: error
+          retention-days: 7
+      - name: Upload build logs
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: build-logs-${{ matrix.platform }}
+          path: artifacts\logs
+          if-no-files-found: ignore
+          retention-days: 7
+
+  pack:
+    name: Create NuGet artifact
+    needs: build
+    runs-on: windows-2025-vs2026
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          pattern: product-*
+          merge-multiple: true
+          path: artifacts\product
+      - uses: NuGet/setup-nuget@d105a947828025cd7a980103c35ba2bfae586d0f # v2
+      - name: Pack Microsoft.Windows.CsWinRT
+        shell: cmd
+        env:
+          cswinrt_generate_sdk_projection: ${{ github.event_name == 'push' || inputs.sdk_projections }}
+        run: |
+          call src\build.cmd x64 Release 3.0.0.0 %PackageVersion% 3.0.0.0 productpackage
+      - name: Upload NuGet
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: Microsoft.Windows.CsWinRT
+          path: artifacts\packages\*.nupkg
+          if-no-files-found: error
+          retention-days: 7
+
+  unit-test:
+    name: UnitTest (${{ matrix.runtime }}, x64 Release)
+    if: github.event_name == 'push' || github.event_name == 'pull_request' || inputs.unit_tests
+    runs-on: windows-2025-vs2026
+    timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      matrix:
+        runtime: [jit, aot]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: microsoft/TestWinRT
+          ref: d15a32b2f7c22b022e01e09d893a19fe0b3043f8
+          path: src/TestWinRT
+          persist-credentials: false
+      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          dotnet-version: ${{ env.DotNetSdkVersion }}
+      - name: Select build SDK
+        shell: pwsh
+        run: |
+          $globalJson = Get-Content .\global.json -Raw | ConvertFrom-Json
+          $globalJson.sdk | Add-Member -NotePropertyName version -NotePropertyValue $env:DotNetSdkVersion -Force
+          $globalJson.sdk | Add-Member -NotePropertyName rollForward -NotePropertyValue disable -Force
+          $globalJson | ConvertTo-Json -Depth 10 | Set-Content .\global.json
+      - name: Build and run UnitTest
+        shell: pwsh
+        env:
+          TEST_RUNTIME: ${{ matrix.runtime }}
+        run: |
+          & .\build\scripts\Test-CsWinRTUnitTest.ps1 -Runtime $env:TEST_RUNTIME -PackageVersion $env:PackageVersion
+      - name: Upload test results and build logs
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: unit-test-${{ matrix.runtime }}
+          path: |
+            artifacts\test-results
+            artifacts\logs
+          if-no-files-found: ignore
+          retention-days: 7
