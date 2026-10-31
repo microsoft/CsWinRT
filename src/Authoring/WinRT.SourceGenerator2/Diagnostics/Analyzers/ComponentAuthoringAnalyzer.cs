@@ -126,23 +126,34 @@ public sealed class ComponentAuthoringAnalyzer : DiagnosticAnalyzer
                     Report(context, DiagnosticDescriptors.AuthoredClassRequiresSealed, type, type);
                 }
 
-                // The WinMD generator replaces abstract managed bases with System.Object, so allow them
+                // The WinMD generator replaces abstract and excluded managed bases with 'System.Object', so allow them
                 if (type.BaseType is { SpecialType: not SpecialType.System_Object, TypeKind: not TypeKind.Error } baseType &&
                     !baseType.IsAbstract &&
+                    validation.FindIgnoredType(baseType) is null &&
                     !validation.IsProjected(baseType))
                 {
                     Report(context, DiagnosticDescriptors.AuthoredUnsupportedInheritance, type, type, baseType);
                 }
 
-                foreach (INamedTypeSymbol iface in type.Interfaces)
+                foreach (INamedTypeSymbol iface in validation.EnumerateProjectedInterfaceDeclarations(type)
+                    .Distinct<INamedTypeSymbol>(SymbolEqualityComparer.Default))
                 {
-                    // Non-public managed implementation interfaces are not emitted as Windows Runtime contracts
-                    if (type.TypeKind is TypeKind.Class && !iface.IsPubliclyAccessible)
+                    // Only mapped contracts are flattened from non-excluded bases by the metadata writer
+                    if (!type.Interfaces.Contains(iface, SymbolEqualityComparer.Default) && !validation.IsMapped(iface))
                     {
                         continue;
                     }
 
-                    if (!AuthoringTypeValidation.IsOmittedInterface(iface) && !validation.IsSupported(iface, allowArray: false))
+                    // Non-public or excluded managed interfaces are not emitted as Windows Runtime contracts
+                    if (type.TypeKind is TypeKind.Class &&
+                        (!iface.IsPubliclyAccessible || iface.IsExcludedFromWindowsMetadata(validation.ExcludeAttributeType)))
+                    {
+                        continue;
+                    }
+
+                    if (!AuthoringTypeValidation.IsOmittedInterface(iface) &&
+                        validation.FindIgnoredType(iface) is null &&
+                        !validation.IsSupported(iface, allowArray: false))
                     {
                         Report(context, DiagnosticDescriptors.AuthoredUnsupportedInheritance, type, type, iface);
                     }
@@ -156,7 +167,10 @@ public sealed class ComponentAuthoringAnalyzer : DiagnosticAnalyzer
                 {
                     context.CancellationToken.ThrowIfCancellationRequested();
 
-                    if (member.IsImplicitlyDeclared || member.DeclaredAccessibility is not Accessibility.Public || omittedMembers.Contains(member))
+                    if (member.IsImplicitlyDeclared ||
+                        member.DeclaredAccessibility is not Accessibility.Public ||
+                        member.IsExcludedFromWindowsMetadata(validation.ExcludeAttributeType) ||
+                        omittedMembers.Contains(member))
                     {
                         continue;
                     }
@@ -233,6 +247,14 @@ public sealed class ComponentAuthoringAnalyzer : DiagnosticAnalyzer
                 continue;
             }
 
+            if (field.IsExcludedFromWindowsMetadata(validation.ExcludeAttributeType))
+            {
+                // Excluding an instance field is invalid and reported separately; do not also report the struct as empty
+                hasPublicField |= !field.IsStatic && field.DeclaredAccessibility is Accessibility.Public;
+
+                continue;
+            }
+
             if (field.IsConst)
             {
                 Report(context, DiagnosticDescriptors.AuthoredStructConstantField, field, field);
@@ -247,7 +269,7 @@ public sealed class ComponentAuthoringAnalyzer : DiagnosticAnalyzer
                 {
                     hasPublicField = true;
 
-                    if (!validation.IsStructFieldType(field.Type))
+                    if (validation.FindIgnoredType(field.Type) is null && !validation.IsStructFieldType(field.Type))
                     {
                         Report(context, DiagnosticDescriptors.AuthoredStructInvalidFieldType, field, field, field.Type);
                     }
@@ -457,6 +479,11 @@ public sealed class ComponentAuthoringAnalyzer : DiagnosticAnalyzer
         AuthoringTypeValidation validation,
         bool arrayElement = false)
     {
+        if (validation.FindIgnoredType(type) is not null)
+        {
+            return;
+        }
+
         if (type is IArrayTypeSymbol array)
         {
             if (!array.IsSZArray)
@@ -533,7 +560,7 @@ public sealed class ComponentAuthoringAnalyzer : DiagnosticAnalyzer
     {
         HashSet<ISymbol> members = new(SymbolEqualityComparer.Default);
 
-        foreach (INamedTypeSymbol iface in type.AllInterfaces)
+        foreach (INamedTypeSymbol iface in validation.EnumerateProjectedInterfaces(type))
         {
             if (!validation.IsMapped(iface) && !AuthoringTypeValidation.IsOmittedInterface(iface))
             {

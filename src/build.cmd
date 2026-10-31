@@ -78,7 +78,7 @@ set cswinrt_solution_build_params=
 set cswinrt_reference_build_params=
 set cswinrt_reference_output=
 
-set cswinrt_functional_tests=JsonValueFunctionCalls, ClassActivation, CustomPropertyProvider, DefaultCustomPropertyProviderDisabled, DefaultCustomPropertyProviderSuppressed, DefaultCustomPropertyProviderWinUI, Structs, Events, DynamicInterfaceCasting, Collections, Async, DerivedClassActivation, DerivedClassAsBaseClass, CCW, NativeExposedType, ForwardedTypeIdentities
+set cswinrt_functional_tests=JsonValueFunctionCalls, ClassActivation, CustomPropertyProvider, DefaultCustomPropertyProviderDisabled, DefaultCustomPropertyProviderSuppressed, DefaultCustomPropertyProviderWinUI, Structs, Events, DynamicInterfaceCasting, Collections, Async, DerivedClassActivation, DerivedClassAsBaseClass, CCW, NativeExposedType, ForwardedTypeIdentities, GetIidInterceptors, GetIidInterceptorsFallback
 
 if "%cswinrt_platform%" EQU "x86" set run_functional_tests=true
 if "%cswinrt_platform%" EQU "x64" set run_functional_tests=true

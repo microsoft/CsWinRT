@@ -50,6 +50,7 @@ var entries = new (string ProjectedFullyQualifiedName, string WindowsRuntimeFull
     ("Windows.Foundation.Collections.IVectorChangedEventArgs", null, false),
     ("Windows.Foundation.IAsyncAction", null, false),
     ("Windows.Foundation.IAsyncInfo", null, false),
+    ("Windows.Foundation.IMemoryBufferReference", null, false),
     ("Windows.Storage.Streams.IBuffer", null, false),
     ("Windows.Storage.Streams.IInputStream", null, false),
     ("Windows.Storage.Streams.IOutputStream", null, false),

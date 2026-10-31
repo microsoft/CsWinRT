@@ -13,6 +13,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     <CsWinRTGenerateProjection Condition="!$(CsWinRTEnabled)">false</CsWinRTGenerateProjection>
     <CsWinRTGenerateProjection Condition="'$(CsWinRTGenerateProjection)' == ''">true</CsWinRTGenerateProjection>
     <AllowUnsafeBlocks Condition="$(CsWinRTEnabled)">true</AllowUnsafeBlocks>
+    <InterceptorsNamespaces Condition="'$(CsWinRTGenerateGetIidInterceptors)' != 'false'">$(InterceptorsNamespaces);WindowsRuntime.Generated</InterceptorsNamespaces>
 
     <!--
       Making sure ResolveAssemblyReferences runs before CoreCompile runs as we have seen it not run
@@ -57,9 +58,13 @@ Copyright (C) Microsoft Corporation. All rights reserved.
 
     <!-- Generate a C# version of DllGetActivationFactory which matches the native export. -->
     <CsWinRTGenerateManagedDllGetActivationFactory Condition="'$(CsWinRTGenerateManagedDllGetActivationFactory)' != 'true'">false</CsWinRTGenerateManagedDllGetActivationFactory>
+
+    <!-- Intercept statically computable 'WindowsRuntimeMarshal.GetIid<T>()' calls with precomputed IIDs. -->
+    <CsWinRTGenerateGetIidInterceptors Condition="'$(CsWinRTGenerateGetIidInterceptors)' == ''">true</CsWinRTGenerateGetIidInterceptors>
   </PropertyGroup>
 
   <ItemGroup>
+    <CompilerVisibleProperty Include="CsWinRTGenerateGetIidInterceptors" />
     <CompilerVisibleProperty Include="CsWinRTAotOptimizerEnabled" />
     <CompilerVisibleProperty Include="CsWinRTAotExportsEnabled" />
     <CompilerVisibleProperty Include="CsWinRTRcwFactoryFallbackGeneratorForceOptIn" />

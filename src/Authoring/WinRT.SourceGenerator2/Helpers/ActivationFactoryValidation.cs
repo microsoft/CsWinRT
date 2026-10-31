@@ -237,19 +237,22 @@ internal static class ActivationFactoryValidation
             return "is not declared in this project, so it is not a Windows Runtime class authored by this component.";
         }
 
+        INamedTypeSymbol? excludeAttributeType = compilation.GetTypeByMetadataName("WindowsRuntime.InteropServices.ExcludeFromWindowsMetadataAttribute");
+
         // These mirror the types the WinMD generator exports as authored Windows Runtime classes
         if (runtimeClassType.TypeKind is not TypeKind.Class ||
             runtimeClassType.DeclaredAccessibility is not Accessibility.Public ||
             runtimeClassType.ContainingType is not null ||
             runtimeClassType.IsGenericType ||
             runtimeClassType.IsInAbiNamespace ||
+            runtimeClassType.IsExcludedFromWindowsMetadata(excludeAttributeType) ||
             runtimeClassType.HasAttributeWithType(activationFactoryAttributeType) ||
             implementableClasses.GetInstanceBase(runtimeClassType) is not null)
         {
             return "is not a Windows Runtime class authored by this component (a public, non-generic, top-level class).";
         }
 
-        if (!HasActivationFactory(runtimeClassType))
+        if (!HasActivationFactory(runtimeClassType, excludeAttributeType))
         {
             return "has no public constructors and no public static members, so no activation factory is generated for it.";
         }
@@ -261,17 +264,29 @@ internal static class ActivationFactoryValidation
     /// Checks whether an authored Windows Runtime class gets an activation factory, i.e. whether it has public constructors or public static members.
     /// </summary>
     /// <param name="type">The authored Windows Runtime class.</param>
+    /// <param name="excludeAttributeType">The metadata exclusion marker, if available.</param>
     /// <returns>Whether <paramref name="type"/> gets an activation factory.</returns>
-    private static bool HasActivationFactory(INamedTypeSymbol type)
+    private static bool HasActivationFactory(
+        INamedTypeSymbol type,
+        INamedTypeSymbol? excludeAttributeType)
     {
-        if (!type.IsAbstract && !type.IsStatic && type.InstanceConstructors.Any(static constructor => constructor.DeclaredAccessibility is Accessibility.Public))
+        if (!type.IsAbstract && !type.IsStatic)
         {
-            return true;
+            foreach (IMethodSymbol constructor in type.InstanceConstructors)
+            {
+                if (constructor.DeclaredAccessibility is Accessibility.Public &&
+                    !constructor.IsExcludedFromWindowsMetadata(excludeAttributeType))
+                {
+                    return true;
+                }
+            }
         }
 
         foreach (ISymbol member in type.GetMembers())
         {
-            if (!member.IsStatic || member.DeclaredAccessibility is not Accessibility.Public)
+            if (!member.IsStatic ||
+                member.DeclaredAccessibility is not Accessibility.Public ||
+                member.IsExcludedFromWindowsMetadata(excludeAttributeType))
             {
                 continue;
             }

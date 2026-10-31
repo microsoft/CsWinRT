@@ -68,9 +68,18 @@ internal static class GuidGenerator
         bool useWindowsUIXamlProjections,
         out Guid iid)
     {
-        // Reject non-WinRT types and the non-generic 'EventHandler', which is a special custom mapping
-        if (!type.IsWindowsRuntimeType(interopReferences) ||
-            interopReferences.SignatureComparer.Equals(type, interopReferences.EventHandler))
+        // Types that are not Windows Runtime types have no Windows Runtime metadata, so they can't have a valid IID
+        if (!type.IsWindowsRuntimeType(interopReferences))
+        {
+            iid = default;
+
+            return false;
+        }
+
+        // The non-generic 'EventHandler' is a special custom mapping that only exists to support marshalling, and
+        // is not a real Windows Runtime type with an IID. This also applies to constructed types containing it
+        // (e.g. 'IList<EventHandler>' or 'EventHandler[]'), as the resulting signature would not be valid either.
+        if (type.IsOrContainsNonGenericEventHandlerType(interopReferences))
         {
             iid = default;
 

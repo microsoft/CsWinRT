@@ -111,6 +111,11 @@ internal sealed partial class WinMDWriter
         // Add enum members
         foreach (FieldDefinition field in inputType.Fields)
         {
+            if (field.IsExcludedFromWindowsMetadata())
+            {
+                continue;
+            }
+
             if (field.IsSpecialName)
             {
                 continue; // Skip 'value__'
@@ -281,7 +286,7 @@ internal sealed partial class WinMDWriter
         // Add methods (skip property/event accessors — they're added by property/event processing below)
         foreach (MethodDefinition method in inputType.Methods)
         {
-            if (!method.IsPublic || method.IsSpecialName)
+            if (!method.IsPublic || method.IsSpecialName || method.IsExcludedFromWindowsMetadata())
             {
                 continue;
             }
@@ -420,9 +425,9 @@ internal sealed partial class WinMDWriter
         ITypeDefOrRef? baseType;
         if (inputType.BaseType is not null && inputType.BaseType.FullName != "System.Object")
         {
-            // Check if the base type is abstract; Windows Runtime doesn't support projecting abstract classes
-            TypeDefinition? baseTypeDef = SafeResolve(inputType.BaseType);
-            baseType = baseTypeDef is not null && baseTypeDef.IsAbstract
+            // Abstract managed bases cannot be retained as WinMD bases; explicitly excluded bases must also be erased
+            // Both become System.Object in metadata without changing the actual managed inheritance
+            baseType = IsErasedBaseType(inputType.BaseType)
                 ? GetOrCreateTypeReference("System", "Object", "mscorlib")
                 : ImportTypeReference(inputType.BaseType);
         }
@@ -446,7 +451,7 @@ internal sealed partial class WinMDWriter
 
         bool hasConstructor = false;
         bool hasDefaultConstructor = false;
-        bool hasAtLeastOneNonPublicConstructor = false;
+        bool hasNonExportedConstructor = false;
         bool isStaticClass = inputType.IsAbstract && inputType.IsSealed;
 
         // Collect members from custom mapped interfaces and unmapped interfaces to exclude from the class
@@ -455,11 +460,19 @@ internal sealed partial class WinMDWriter
         // Add methods (non-property/event accessors)
         foreach (MethodDefinition method in inputType.Methods)
         {
+            if (method.IsExcludedFromWindowsMetadata())
+            {
+                hasNonExportedConstructor |= method.IsConstructor;
+
+                continue;
+            }
+
             if (method.IsConstructor)
             {
                 if (!method.IsPublic)
                 {
-                    hasAtLeastOneNonPublicConstructor = true;
+                    hasNonExportedConstructor = true;
+
                     continue;
                 }
 
@@ -484,7 +497,7 @@ internal sealed partial class WinMDWriter
         foreach (PropertyDefinition property in inputType.Properties)
         {
             // Skip properties that belong to custom mapped or unmapped interfaces
-            if (customMappedMembers.Contains(property.Name?.Value ?? ""))
+            if (property.IsExcludedFromWindowsMetadata() || customMappedMembers.Contains(property.Name?.Value ?? ""))
             {
                 continue;
             }
@@ -503,7 +516,7 @@ internal sealed partial class WinMDWriter
         foreach (EventDefinition @event in inputType.Events)
         {
             // Skip events that belong to custom mapped or unmapped interfaces
-            if (customMappedMembers.Contains(@event.Name?.Value ?? ""))
+            if (@event.IsExcludedFromWindowsMetadata() || customMappedMembers.Contains(@event.Name?.Value ?? ""))
             {
                 continue;
             }
@@ -518,7 +531,7 @@ internal sealed partial class WinMDWriter
         }
 
         // Implicit constructor if none defined
-        if (!hasConstructor && !hasAtLeastOneNonPublicConstructor && !isStaticClass)
+        if (!hasConstructor && !hasNonExportedConstructor && !isStaticClass)
         {
             MethodDefinition defaultCtor = new(
                 name: ".ctor",
@@ -536,7 +549,9 @@ internal sealed partial class WinMDWriter
         // Add interface implementations (excluding mapped and unmappable interfaces)
         foreach (InterfaceImplementation interfaceImplementation in inputType.Interfaces)
         {
-            if (interfaceImplementation.Interface is null || !IsPubliclyAccessible(interfaceImplementation.Interface))
+            if (interfaceImplementation.Interface is null ||
+                !IsPubliclyAccessible(interfaceImplementation.Interface) ||
+                ResolveInterface(interfaceImplementation.Interface)?.IsExcludedFromWindowsMetadata() == true)
             {
                 continue;
             }
@@ -644,7 +659,10 @@ internal sealed partial class WinMDWriter
 
         foreach (MethodDefinition method in inputType.Methods)
         {
-            if (method.IsPublic || method.Name?.Value?.Contains('.') != true)
+            if (method.IsPublic ||
+                method.IsExcludedFromWindowsMetadata() ||
+                method.Name?.Value?.Contains('.') != true ||
+                IsIgnoredInterfaceImplementation(inputType, method))
             {
                 continue;
             }

@@ -23,10 +23,31 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\Authoring\WinRT.SourceGenerator2\WinRT.SourceGenerator2.csproj" />
+    <ProjectReference Include="..\..\Authoring\WinRT.SourceGenerator2\WinRT.SourceGenerator2.csproj" SetPlatform="Platform=AnyCPU" />
     <ProjectReference Include="..\..\Projections\Windows\Windows.csproj" />
     <ProjectReference Include="..\..\Projections\WinAppSDK\WinAppSDK.csproj" />
     <ProjectReference Include="..\..\WinRT.Runtime2\WinRT.Runtime.csproj" />
+  </ItemGroup>
+
+  <!--
+    The whole-SDK audit tests read the reference projection assemblies (under 'ref') and the WinUI metadata from disk. The UWP XAML projection
+    is only built, not referenced: it can't be referenced next to the WinUI one, as they both define some of the same 'Windows.UI.Xaml' types.
+  -->
+  <ItemGroup>
+    <ProjectReference Include="..\..\Projections\Windows.UI.Xaml\Windows.UI.Xaml.csproj" ReferenceOutputAssembly="false" Private="false" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageDownload Include="Microsoft.WindowsAppSDK.Foundation" Version="[$(MicrosoftWinAppSDKFoundationVersion)]" />
+    <PackageDownload Include="Microsoft.WindowsAppSDK.InteractiveExperiences" Version="[$(MicrosoftWinAppSDKIxpVersion)]" />
+    <PackageDownload Include="Microsoft.WindowsAppSDK.WinUI" Version="[$(MicrosoftWinAppSDKWinUIVersion)]" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <AssemblyMetadata Include="ProjectionsDirectory" Value="$(MSBuildThisFileDirectory)..\..\Projections" />
+    <AssemblyMetadata Include="BuildConfiguration" Value="$(Configuration)" />
+    <AssemblyMetadata Include="WinUIMetadataDirectories"
+                      Value="$(NuGetPackageRoot)microsoft.windowsappsdk.winui\$(MicrosoftWinAppSDKWinUIVersion)\metadata;$(NuGetPackageRoot)microsoft.windowsappsdk.foundation\$(MicrosoftWinAppSDKFoundationVersion)\metadata;$(NuGetPackageRoot)microsoft.windowsappsdk.interactiveexperiences\$(MicrosoftWinAppSDKIxpVersion)\metadata\10.0.18362.0" />
   </ItemGroup>
 
   <ItemGroup>

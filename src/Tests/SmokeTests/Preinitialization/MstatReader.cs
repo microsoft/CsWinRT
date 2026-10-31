@@ -20,6 +20,10 @@ public sealed class MstatReader
 
     public int TypeCount { get; private set; }
 
+    public HashSet<string> Methods { get; } = new(StringComparer.Ordinal);
+
+    public HashSet<string> Types { get; } = new(StringComparer.Ordinal);
+
     // MSTAT 2.2 stores records as synthetic IL, not text or ordinary executable method bodies.
     // Contract: dotnet/runtime v10.0.0, ILCompiler.Compiler/Compiler/MstatObjectDumper.cs.
     public static MstatReader Read(string path)
@@ -68,6 +72,7 @@ public sealed class MstatReader
             _ = ReadNonnegativeInt(ref methods); // EH info.
             ValidateName(names, ReadNonnegativeInt(ref methods));
             result.MethodCount++;
+            result.Methods.Add($"{method.Owner}::{method.Name}");
             if (method.Name == ".cctor")
             {
                 result.Constructors[method.Owner] = $"{codeSize} native bytes";
@@ -77,7 +82,7 @@ public sealed class MstatReader
         BlobReader types = pe.GetMethodBody(streams["Types"].RelativeVirtualAddress).GetILReader();
         while (types.RemainingBytes > 0)
         {
-            _ = MetadataNames.GetTypeName(reader, ReadToken(ref types));
+            result.Types.Add(MetadataNames.GetTypeName(reader, ReadToken(ref types)));
             _ = ReadNonnegativeInt(ref types);
             ValidateName(names, ReadNonnegativeInt(ref types));
             result.TypeCount++;
@@ -88,6 +93,7 @@ public sealed class MstatReader
         while (aliases.RemainingBytes > 0)
         {
             var method = ReadMethod(reader, ReadToken(ref aliases));
+            result.Methods.Add($"{method.Owner}::{method.Name}");
             int count = ReadNonnegativeInt(ref aliases);
             if (count == 0)
             {

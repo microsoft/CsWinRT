@@ -44,11 +44,13 @@ public sealed class PublicTypeRequiresVersioningAnalyzer : DiagnosticAnalyzer
 
             // Get the '[ApiContract]' symbol (used to skip API contract types, which are validated by a different analyzer)
             INamedTypeSymbol? apiContractAttributeType = context.Compilation.GetTypeByMetadataName("Windows.Foundation.Metadata.ApiContractAttribute");
+            INamedTypeSymbol? excludeAttributeType = context.Compilation.GetTypeByMetadataName("WindowsRuntime.InteropServices.ExcludeFromWindowsMetadataAttribute");
 
             context.RegisterSymbolAction(context =>
             {
                 // Only consider top-level public types
-                if (context.Symbol is not INamedTypeSymbol { DeclaredAccessibility: Accessibility.Public, ContainingType: null } typeSymbol)
+                if (context.Symbol is not INamedTypeSymbol { DeclaredAccessibility: Accessibility.Public, ContainingType: null } typeSymbol ||
+                    typeSymbol.IsExcludedFromWindowsMetadata(excludeAttributeType))
                 {
                     return;
                 }

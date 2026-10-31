@@ -6,6 +6,7 @@ using System.Globalization;
 using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
 using AsmResolver.DotNet;
+using WindowsRuntime.Generator.Helpers;
 using WindowsRuntime.ProjectionWriter.Errors;
 using WindowsRuntime.ProjectionWriter.Factories;
 using WindowsRuntime.ProjectionWriter.Generation;
@@ -103,15 +104,6 @@ internal static partial class IidExpressionGenerator
         }
 
         WriteGuid(writer, guid, lowerCase);
-    }
-
-    /// <inheritdoc cref="WriteGuid(IndentedTextWriter, TypeDefinition, bool)"/>
-    /// <returns>The formatted GUID as a string.</returns>
-    public static string FormatGuid(TypeDefinition type, bool lowerCase)
-    {
-        using IndentedTextWriterOwner owner = IndentedTextWriterPool.GetOrCreate();
-        WriteGuid(owner.Writer, type, lowerCase);
-        return owner.Writer.ToString();
     }
 
     /// <summary>

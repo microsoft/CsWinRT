@@ -11,6 +11,35 @@ namespace WindowsRuntime.SourceGenerator;
 /// </summary>
 internal static class WindowsRuntimeExtensions
 {
+    extension(ISymbol symbol)
+    {
+        /// <summary>
+        /// Gets whether a declaration is excluded from component metadata, directly or by its containing type.
+        /// </summary>
+        /// <param name="excludeAttributeType">The metadata exclusion marker, if available.</param>
+        /// <returns>Whether the declaration is excluded from component metadata.</returns>
+        public bool IsExcludedFromWindowsMetadata(INamedTypeSymbol? excludeAttributeType)
+        {
+            if (excludeAttributeType is null)
+            {
+                return false;
+            }
+
+            // Containment propagates exclusion; inheritance does not
+            for (ISymbol? current = symbol; current is not null; current = current.ContainingType)
+            {
+                if (current.HasAttributeWithType(excludeAttributeType))
+                {
+                    return true;
+                }
+            }
+
+            // Accessors also follow exclusions applied to their property or event
+            return symbol is IMethodSymbol { AssociatedSymbol: { } associated } &&
+                   associated.IsExcludedFromWindowsMetadata(excludeAttributeType);
+        }
+    }
+
     extension(INamedTypeSymbol symbol)
     {
         /// <summary>

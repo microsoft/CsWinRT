@@ -2,9 +2,11 @@
 // Licensed under the MIT License.
 
 using System;
+using System.Runtime.InteropServices;
 using Windows.Foundation;
 using Windows.Storage.Streams;
 using WindowsRuntime.InteropServices;
+using WindowsRuntime.InteropServices.Marshalling;
 
 namespace UnitTest;
 
@@ -128,6 +130,82 @@ public class BufferMarshalTests
     }
 
     [TestMethod]
+    public void MemoryBufferReference_Closed_NotifiesSubscribedHandler()
+    {
+        using var buffer = new MemoryBuffer(4);
+        using var reference = buffer.CreateReference();
+        IMemoryBufferReference sender = null;
+        int calls = 0;
+
+        reference.Closed += (s, _) =>
+        {
+            sender = s;
+            calls++;
+        };
+
+        reference.Dispose();
+
+        Assert.AreEqual(1, calls);
+        Assert.AreSame(reference, sender);
+    }
+
+    [TestMethod]
+    public void MemoryBufferReference_Closed_DoesNotNotifyUnsubscribedHandler()
+    {
+        using var buffer = new MemoryBuffer(4);
+        using var reference = buffer.CreateReference();
+        int calls = 0;
+        int removedCalls = 0;
+        EventHandler<IMemoryBufferReference, object> handler = (_, _) => removedCalls++;
+
+        reference.Closed += handler;
+        reference.Closed += (_, _) => calls++;
+        reference.Closed -= handler;
+
+        reference.Dispose();
+
+        Assert.AreEqual(1, calls);
+        Assert.AreEqual(0, removedCalls);
+    }
+
+    [TestMethod]
+    public unsafe void MemoryBufferReference_Closed_ManagedImplementationSupportsNativeSubscription()
+    {
+        using var reference = new ManagedMemoryBufferReference();
+        IMemoryBufferReference sender = null;
+        int calls = 0;
+        EventHandler<IMemoryBufferReference, object> handler = (s, _) =>
+        {
+            sender = s;
+            calls++;
+        };
+
+        using var ccw = WindowsRuntimeInterfaceMarshaller<IMemoryBufferReference>.ConvertToUnmanaged(
+            reference, typeof(IMemoryBufferReference).GUID);
+        using var handlerCcw = WindowsRuntimeDelegateMarshaller.ConvertToUnmanaged(
+            handler, WindowsRuntimeMarshal.GetIid<EventHandler<IMemoryBufferReference, object>>());
+
+        void* thisPtr = ccw.GetThisPtrUnsafe();
+        void* handlerPtr = handlerCcw.GetThisPtrUnsafe();
+        EventRegistrationToken token;
+
+        Marshal.ThrowExceptionForHR(
+            ((delegate* unmanaged[MemberFunction]<void*, void*, EventRegistrationToken*, int>)(*(void***)thisPtr)[7])(thisPtr, handlerPtr, &token));
+
+        reference.RaiseClosed();
+
+        Assert.AreEqual(1, calls);
+        Assert.AreSame(reference, sender);
+
+        Marshal.ThrowExceptionForHR(
+            ((delegate* unmanaged[MemberFunction]<void*, EventRegistrationToken, int>)(*(void***)thisPtr)[8])(thisPtr, token));
+
+        reference.RaiseClosed();
+
+        Assert.AreEqual(1, calls);
+    }
+
+    [TestMethod]
     public unsafe void GetDataUnsafe_NullMemoryBufferReference_ThrowsArgumentNullException()
     {
         Assert.IsFalse(WindowsRuntimeBufferMarshal.TryGetDataUnsafe(null, out byte* data, out uint capacity));
@@ -157,6 +235,19 @@ public class BufferMarshalTests
         });
 
         Assert.AreEqual("buffer", exception.ParamName);
+    }
+
+    private sealed class ManagedMemoryBufferReference : IMemoryBufferReference
+    {
+        public uint Capacity => 4;
+
+        public event EventHandler<IMemoryBufferReference, object> Closed;
+
+        public void RaiseClosed() => Closed?.Invoke(this, null);
+
+        public void Dispose()
+        {
+        }
     }
 
     [WindowsRuntimeManagedOnlyType]
