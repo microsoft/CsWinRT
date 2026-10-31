@@ -700,6 +700,9 @@ The MSBuild integration is orchestrated through several `.props` and `.targets` 
 ### Documentation
 
 - Do not manually wrap Markdown prose. Keep each paragraph on a single source line and let the viewer handle visual wrapping.
+- Use complete XML documentation for new or changed runtime members, including private fields and helpers, and follow the same style in build tools. Describe contracts and ownership rather than giving instructions.
+- Comment non-obvious intent, invariants, and tradeoffs without restating the code. Preserve useful explanations of performance and lifetime requirements when refactoring.
+- Single-line implementation `//` comments omit trailing periods; multi-line comments retain normal sentence punctuation. Put symbol names and special identifiers in single quotes within implementation comments (e.g. `'ICollection<T>.Count'`). XML documentation and file headers retain normal punctuation.
 
 ### C# projects
 
@@ -727,6 +730,39 @@ The MSBuild integration is orchestrated through several `.props` and `.targets` 
 - ABI types live under `ABI.{OriginalNamespace}` (e.g., `ABI.System.Collections.Generic`)
 - CLI tool assembly names are short: `cswinrtprojectionrefgen`, `cswinrtprojectiongen`, `cswinrtimplgen`, `cswinrtinteropgen`, `cswinrtwinmdgen`
 - C# keywords in generated identifiers are escaped with `@` prefix
+- Use precise, descriptive identifiers rather than ad-hoc abbreviations. Preserve established terminology and conventional generic parameter names.
+
+### C# formatting
+
+- Follow neighbouring code for formatting and control-flow shape. Prefer explicit blocks and early returns when they improve clarity; do not mechanically compress multi-step logic.
+- Split long signatures, calls, and conditions for readability, use consistent named arguments in multiline calls, and separate conceptual operations with blank lines.
+
+### Reuse and code organization
+
+- Before adding an abstraction or helper, inspect the closest equivalent implementation. Reuse existing repository helpers and dependency APIs rather than duplicating their logic.
+- Place code with its semantic peers. Keep scenario-specific policy private or in its domain helper; general extensions belong with their receiver type. Follow existing naming and specialization patterns.
+- Shared build-tool infrastructure belongs in `WinRT.Generator.Core`; do not create unrelated project dependencies merely to reuse a general helper. Respect existing transitive dependencies.
+- Use the existing code-writing infrastructure, such as `IndentedTextWriter`, and consistent qualification conventions rather than inventing a parallel emission mechanism.
+
+### Generator and metadata correctness
+
+- Keep incremental generators narrowly filtered before semantic analysis. Use `ForAttributeWithMetadataName` for attribute-driven discovery rather than scanning all assembly symbols or broadly materializing declaration symbols.
+- Share eligibility and validation rules between analyzers and generators so diagnostics and emitted behavior agree. Follow established attribute and metadata conventions instead of introducing parallel policies.
+- Use consistent type identity, generic substitution, projected member names, and filtering across discovery and emission. Keep reference and implementation surfaces aligned, and ensure generated identifiers cannot collide with input names.
+
+### Performance, native lifetime, and error handling
+
+- Keep features pay-for-play. Resolve choices at generation time when possible, and avoid adding common-path or startup costs for rare scenarios.
+- Share type-independent generated work rather than emitting duplicate implementations. Retain specialization when a shared abstraction would add ABI or runtime overhead; document the tradeoff and keep related implementations consistent.
+- Avoid unnecessary allocations, copies, and metadata resolution by following existing caching and low-level helper patterns. Justify unsafe shortcuts with documented invariants rather than applying micro-optimizations indiscriminately.
+- Preserve exact ABI contracts and make native ownership and synchronization requirements explicit. Balance acquisition and release on success and failure, including partial initialization; distinguish releasing resources from clearing storage.
+- Preserve errors from required operations. Tolerate failures only in deliberately scoped optional cases with a documented rationale; do not add speculative recovery or caching to hide underlying failures.
+
+### Validation and build output
+
+- Test the changed behavior through the actual affected paths, including relevant failure and lifetime cases. For code-generation changes, validate the emitted code, not just the generator's output text, and prefer existing test infrastructure.
+- Explain observable generated-code changes with a small before/after example when useful for review.
+- Keep normal build output concise. Avoid duplicate status messages and reserve implementation details for verbose or diagnostic output.
 
 ### Build tool patterns
 
