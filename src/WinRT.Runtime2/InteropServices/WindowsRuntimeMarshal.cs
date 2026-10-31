@@ -173,6 +173,68 @@ public static unsafe class WindowsRuntimeMarshal
     }
 
     /// <summary>
+    /// Marshals a managed object to a native object, unwrapping it or creating a CCW for it as needed,
+    /// and returns a pointer to the interface with the specified IID (via <c>QueryInterface</c>).
+    /// </summary>
+    /// <param name="managedObject">The managed object to marshal.</param>
+    /// <param name="iid">The IID of the interface to query the marshalled object for.</param>
+    /// <returns>
+    /// A pointer to the <paramref name="iid"/> interface of the marshalled object, or <see langword="null"/> if <paramref name="managedObject"/> is <see langword="null"/>.
+    /// </returns>
+    /// <exception cref="InvalidCastException">Thrown if the marshalled object does not implement the interface with the specified IID.</exception>
+    /// <remarks>
+    /// <para>
+    /// This method is equivalent to calling <see cref="ConvertToUnmanaged(object?)"/> followed by a <c>QueryInterface</c> call
+    /// for <paramref name="iid"/> on the result, with the intermediate pointer being released. Use it to avoid having to
+    /// manually perform (and correctly clean up after) the additional <c>QueryInterface</c> call.
+    /// </para>
+    /// <para>
+    /// The returned native object will own an additional reference for the queried interface of the marshalled
+    /// <paramref name="managedObject"/> instance. It is responsibility of the caller to always make sure that the
+    /// returned native object is disposed, for instance by using <see cref="Free"/>.
+    /// </para>
+    /// <para>
+    /// Additionally, it is responsibility of the caller to perform proper reference tracking or to handle different
+    /// COM contexts, in case the returned pointer is stored on a class field or passed across different threads.
+    /// </para>
+    /// </remarks>
+    /// <seealso cref="ConvertToUnmanaged(object?)"/>
+    public static void* ConvertToUnmanaged(object? managedObject, in Guid iid)
+    {
+#if WINDOWS_RUNTIME_REFERENCE_ASSEMBLY
+        throw null;
+#elif WINDOWS_RUNTIME_IMPLEMENTATION_ASSEMBLY
+        if (managedObject is null)
+        {
+            return null;
+        }
+
+        // Marshal the object as an 'IUnknown' first, and then 'QueryInterface' for the requested interface
+        using WindowsRuntimeObjectReferenceValue unknownValue = WindowsRuntimeUnknownMarshaller.ConvertToUnmanaged(managedObject);
+
+        HRESULT hresult = IUnknownVftbl.QueryInterfaceUnsafe(unknownValue.GetThisPtrUnsafe(), in iid, out void* interfacePtr);
+
+        if (hresult == WellKnownErrorCodes.E_NOINTERFACE)
+        {
+            [DoesNotReturn]
+            [StackTraceHidden]
+            static void ThrowInvalidCastException(object managedObject, in Guid iid)
+            {
+                throw new InvalidCastException(
+                    $"Failed to resolve a native interface pointer from an object of type '{managedObject.GetType()}' " +
+                    $"for IID '{iid.ToString().ToUpperInvariant()}': the specified cast is not valid.");
+            }
+
+            ThrowInvalidCastException(managedObject, in iid);
+        }
+
+        hresult.Assert();
+
+        return interfacePtr;
+#endif
+    }
+
+    /// <summary>
     /// Converts an unmanaged pointer to a COM object to a managed object, either by unwrapping the
     /// original managed object that was previously marshalled, or retrieving or creating an RCW for it.
     /// </summary>
