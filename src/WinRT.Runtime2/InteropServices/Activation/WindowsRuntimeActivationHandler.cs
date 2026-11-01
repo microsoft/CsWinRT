@@ -14,7 +14,7 @@ namespace WindowsRuntime.InteropServices;
 /// <returns>The <c>HRESULT</c> for the operation.</returns>
 /// <remarks>
 /// <para>
-/// Instances of this type can be used with <see cref="WindowsRuntimeActivationFactory.SetWindowsRuntimeActivationHandler"/>.
+/// Instances of this type can be used with <see cref="WindowsRuntimeActivationFactory.SetWindowsRuntimeActivationHandler"/> and <see cref="WindowsRuntimeActivationFactory.RegisterFallbackActivationHandler"/>.
 /// </para>
 /// <para>
 /// Instances are assumed to behave like <c>DllGetActivationFactory</c>, return <c>HRESULT</c>-s for failures, without throwing exceptions.
