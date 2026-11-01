@@ -1,0 +1,20 @@
+{
+  "solution": {
+    "path": "cswinrt.slnx",
+    "projects": [
+      "Authoring\\WinRT.Host\\WinRT.Host.vcxproj",
+      "Authoring\\WinRT.Host.Shim\\WinRT.Host.Shim.csproj",
+      "Authoring\\WinRT.SourceGenerator2\\WinRT.SourceGenerator2.csproj",
+      "WinRT.Generator.Core\\WinRT.Generator.Core.csproj",
+      "WinRT.Generator.Tasks\\WinRT.Generator.Tasks.csproj",
+      "WinRT.Impl.Generator\\WinRT.Impl.Generator.csproj",
+      "WinRT.Internal\\WinRT.Internal.csproj",
+      "WinRT.Interop.Generator\\WinRT.Interop.Generator.csproj",
+      "WinRT.Projection.Generator\\WinRT.Projection.Generator.csproj",
+      "WinRT.Projection.Ref.Generator\\WinRT.Projection.Ref.Generator.csproj",
+      "WinRT.Projection.Writer\\WinRT.Projection.Writer.csproj",
+      "WinRT.Runtime2\\WinRT.Runtime.csproj",
+      "WinRT.WinMD.Generator\\WinRT.WinMD.Generator.csproj"
+    ]
+  }
+}
