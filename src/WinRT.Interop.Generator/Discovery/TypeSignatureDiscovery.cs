@@ -24,7 +24,7 @@ internal sealed partial class TypeSignatureDiscovery<TResult>
     /// <summary>The maximum signature element count for a transitive signature or method context.</summary>
     private const int MaxSignatureComplexity = 256;
 
-    /// <summary>The shared reservation budget, excluding ordinary same-family transitions at an unchanged closed substitution.</summary>
+    /// <summary>The shared reservation budget, excluding ordinary same-module transitions at an unchanged closed substitution.</summary>
     private const int MaxTransitiveTypes = 1024;
 
     /// <summary>The root module, also used for resolution and diagnostics.</summary>

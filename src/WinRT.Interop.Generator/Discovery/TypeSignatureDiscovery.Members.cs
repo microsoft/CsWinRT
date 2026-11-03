@@ -49,7 +49,7 @@ internal partial class TypeSignatureDiscovery<TResult>
                     }
                 }
 
-                MemberScanContext? scanContext = CreateMemberScanContext(currentMethod.DeclaringType, current.Context);
+                MemberScanContext? scanContext = CreateMemberScanContext(currentMethod.DeclaringModule, current.Context);
 
                 // A method item's context already counts at its own depth, so only its callees advance it
                 foreach (TResult result in EnumerateMethodBodyTypes(
@@ -83,7 +83,7 @@ internal partial class TypeSignatureDiscovery<TResult>
 
             _coveredTypes[typeSignature] = current.Depth;
 
-            MemberScanContext? typeScanContext = CreateMemberScanContext(type, genericContext);
+            MemberScanContext? typeScanContext = CreateMemberScanContext(type.DeclaringModule, genericContext);
 
             // The type's arguments can close member signatures that are open in the method table
             foreach (MethodDefinition method in GetMethodsToScan(typeSignature, type))
