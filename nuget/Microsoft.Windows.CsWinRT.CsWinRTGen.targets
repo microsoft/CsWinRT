@@ -20,7 +20,8 @@ Copyright (C) Microsoft Corporation. All rights reserved.
       We only enable this automatically if the project is explicitly targeting CsWinRT 3.0.
     -->
     <CsWinRTGenerateInteropAssembly Condition="'$(CsWinRTGenerateInteropAssembly)' == '' and '$(_TargetPlatformVersionUsesCsWinRT3)' == 'true' and ('$(OutputType)' == 'Exe' or '$(OutputType)' == 'Winexe')">true</CsWinRTGenerateInteropAssembly>
-    <CsWinRTGenerateInteropAssembly Condition="'$(CsWinRTGenerateInteropAssembly)' == '' and '$(_TargetPlatformVersionUsesCsWinRT3)' == 'true' and '$(OutputType)' == 'Library' and '$(PublishAOT)' == 'true'">true</CsWinRTGenerateInteropAssembly>
+    <!-- Reference-projection libraries contain no implementation code, so PublishAot must not automatically enable interop generation for them -->
+    <CsWinRTGenerateInteropAssembly Condition="'$(CsWinRTGenerateInteropAssembly)' == '' and '$(_TargetPlatformVersionUsesCsWinRT3)' == 'true' and '$(OutputType)' == 'Library' and '$(PublishAOT)' == 'true' and '$(CsWinRTGenerateReferenceProjection)' != 'true'">true</CsWinRTGenerateInteropAssembly>
     <CsWinRTGenerateInteropAssembly Condition="'$(CsWinRTGenerateInteropAssembly)' == '' and '$(CsWinRTComponent)' == 'true' and '$(CsWinRTBuildForNativeConsumer)' == 'true'">true</CsWinRTGenerateInteropAssembly>
     <CsWinRTGenerateInteropAssembly Condition="'$(CsWinRTGenerateInteropAssembly)' == ''">false</CsWinRTGenerateInteropAssembly>
 
