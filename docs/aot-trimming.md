@@ -31,6 +31,7 @@ Feature switches are set as MSBuild properties in your project file:
 | `CsWinRTEnableMarshalingTypeValidation` | `false` | Validates the `MarshalingType` to determine whether the metadata is the same as the implementation. |
 | `CsWinRTEnableDefaultCustomPropertyProviderSupport` | `true` | Adds a default, type-only `ICustomPropertyProvider` to generated managed CCWs and the runtime's shared opaque-object CCW, without replacing explicit providers. |
 | `CsWinRTSuppressCustomPropertyNotSupportedException` | `false` | Returns null instead of reporting `NotSupportedException` when the default provider cannot supply a property or indexer. |
+| `CsWinRTEnableOpaqueRcwMarshalling` | `false` | Allows projected runtime class instances (RCWs) that are not native-exposed to be marshalled to native code as opaque CCWs, instead of reporting `NotSupportedException`. |
 
 ## Selecting dynamic casting for exclusive interfaces
 
@@ -39,6 +40,31 @@ Feature switches are set as MSBuild properties in your project file:
 Reference projection packages preserve the exact effective selection as generator-owned `WindowsRuntimeReferenceAssemblyMetadataAttribute` key/value entries, independently of the public API surface. These entries remain in the reference assembly and are not copied to the forwarder. Applications consume that policy automatically. Missing metadata does not imply IDIC, so older preview projection packages that need dynamic casting must be regenerated. The runtime switch `CsWinRTEnableIDynamicInterfaceCastableSupport` remains the separate, application-wide switch for all dynamic interface casting.
 
 Opting out avoids the selected interface's IDIC shim and type-map association, but does not remove ABI helpers or CCW implementations still needed by public/default/overridable interfaces. In the single-method exclusive-interface regression fixture, opting in adds exactly one shim type, one DIM method, and one assembly type-map association. Final binary size depends on trimming and reachability.
+
+## Marshalling projected runtime classes as opaque CCWs
+
+Projected runtime classes are backed by native objects, so passing one to native code unwraps the native object and no CCW is involved. Native code can still ask the runtime for a CCW around the managed wrapper (RCW) through `ComWrappers`. For example, on some Windows versions XAML asks the reference tracker host to wrap a projected object it was handed, such as a `Frame` or a `Grid` set as `Window.Content`. A projected class has no CCW vtables unless it is [native-exposed](interop.md#create-ccw), so by default this request is reported as a `NotSupportedException`, and the native caller can fail fast.
+
+To expose these objects to native code as opaque CCWs instead, opt in by setting the following property in the project file:
+
+```xml
+<PropertyGroup>
+  <CsWinRTEnableOpaqueRcwMarshalling>true</CsWinRTEnableOpaqueRcwMarshalling>
+</PropertyGroup>
+```
+
+This defaults to `false` and sets the `CSWINRT_ENABLE_OPAQUE_RCW_MARSHALLING` runtime feature switch. The CCW is then the runtime's shared opaque-object CCW, the same one used for plain managed objects, so the generated marshalling code does not change and no type needs to be annotated. The behavior is as follows:
+
+- The CCW implements `IInspectable`, `IStringable`, `IWeakReferenceSource`, `IMarshal` and `IAgileObject`, plus `ICustomPropertyProvider` when `CsWinRTEnableDefaultCustomPropertyProviderSupport` is enabled. `GetIids` reports only these interfaces and `IUnknown`.
+- Queries for any other interface, including the interfaces of the projected type, are forwarded by the RCW to the native object, so native code can still reach the interfaces that the native object implements. They fail if the native object does not implement them.
+- `GetRuntimeClassName` reports the full name of the projected type, such as `Windows.Data.Json.JsonObject`. A plain opaque object reports `Object`.
+- Native-exposed projected types are not affected. They keep the CCW vtables from their own `[WindowsRuntimeNativeExposedType]` annotation.
+- Only `ComWrappers` requests are affected. Ordinary marshalling, such as passing the RCW to a projected method, still unwraps the native object and keeps the same object identity.
+- Only projected runtime classes are covered, not interfaces, delegates or other types.
+
+The opaque CCW does not implement the interfaces of the projected type, and only forwards queries for them to the native object. Scenarios that need the CCW itself to implement additional interfaces still require `[assembly: WindowsRuntimeNativeExposedType(typeof(...))]`. This is the case for the covariant collection interfaces that XAML queries when a `DependencyObjectCollection` is used as an items source, as described in [Create CCW](interop.md#create-ccw).
+
+The switch is pay-for-play: when it is disabled, the trimmer and Native AOT remove the code behind it.
 
 ## ICustomPropertyProvider support for XAML binding
 

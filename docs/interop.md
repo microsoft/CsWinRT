@@ -133,6 +133,8 @@ Native code can also need a CCW **around a projected native object's managed wra
 
 This supplies the wrapper's CCW vtables without replacing its RCW marshaller. Ordinary marshalling still unwraps the original native object, and native-to-managed conversion still creates the projected type. Collection adapters can wrap native enumerators when a required bindable or covariant iterator interface is unavailable; ordinary interface marshalling remains strict.
 
+Projected classes that are not annotated this way have no CCW vtables, so a CCW request for one of them fails with a `NotSupportedException` by default. If native code only needs such objects as opaque references, set `CsWinRTEnableOpaqueRcwMarshalling` to `true` to expose them through the shared opaque-object CCW instead, as described in [Marshalling projected runtime classes as opaque CCWs](aot-trimming.md#marshalling-projected-runtime-classes-as-opaque-ccws). Annotated classes keep their own vtables, and scenarios that need additional interfaces, such as the covariant collection interfaces above, still need the annotation.
+
 ### Release native pointer
 
 To release a native COM pointer. Unlike `Marshal.Release`, this method is null-safe:

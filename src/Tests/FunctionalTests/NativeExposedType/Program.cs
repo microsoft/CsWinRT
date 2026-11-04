@@ -47,6 +47,13 @@ internal static class Program
             return 102;
         }
 
+        // Without a proxy, a CCW can't be created for a 'JsonObject' either, unless the opt-in opaque RCW marshalling
+        // feature is enabled. This project doesn't enable it, so the request must fail.
+        if (!IsOpaqueRcwMarshallingDisabled())
+        {
+            return 103;
+        }
+
         CollectionTests.Run(rcwFirst: args is ["--rcw-first"]);
 
         if (args is ["--xaml"])
@@ -55,6 +62,21 @@ internal static class Program
         }
 
         return 100;
+    }
+
+    // Checks that a CCW is not created for an RCW of a projected type that is not native-exposed by default
+    private static unsafe bool IsOpaqueRcwMarshallingDisabled()
+    {
+        try
+        {
+            WindowsRuntimeMarshal.Free(WindowsRuntimeComWrappersMarshal.GetOrCreateComInterfaceForObject(new JsonObject(), CreateComInterfaceFlags.TrackerSupport));
+
+            return false;
+        }
+        catch (NotSupportedException)
+        {
+            return true;
+        }
     }
 
     // Retrieves the proxy type map used by CsWinRT to resolve CCW marshalling info for managed objects

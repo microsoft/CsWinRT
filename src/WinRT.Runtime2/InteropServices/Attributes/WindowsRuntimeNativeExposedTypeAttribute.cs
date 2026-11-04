@@ -56,6 +56,13 @@ namespace WindowsRuntime.InteropServices;
 /// Applying this attribute to a projected class type explicitly requests that a CCW vtable be generated for it,
 /// which would not normally be present, since the type is just a projection.
 /// </para>
+/// <para>
+/// Projected classes that only need to be exposed to native code as opaque objects do not need this attribute.
+/// Setting the <c>CsWinRTEnableOpaqueRcwMarshalling</c> MSBuild property to <c>true</c> makes requests for a CCW
+/// over any projected class without a CCW vtable use a shared opaque CCW, instead of being reported as not
+/// supported. That CCW does not implement any of the interfaces of the projected type, so scenarios like the
+/// one described above still require this attribute.
+/// </para>
 /// </remarks>
 [AttributeUsage(AttributeTargets.Assembly, AllowMultiple = true, Inherited = false)]
 public sealed class WindowsRuntimeNativeExposedTypeAttribute : Attribute

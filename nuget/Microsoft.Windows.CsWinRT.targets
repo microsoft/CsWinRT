@@ -655,6 +655,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     <CsWinRTEnableMarshalingTypeMetadataSupport Condition="'$(CsWinRTEnableMarshalingTypeMetadataSupport)' == ''">true</CsWinRTEnableMarshalingTypeMetadataSupport>
     <CsWinRTEnableDefaultCustomPropertyProviderSupport Condition="'$(CsWinRTEnableDefaultCustomPropertyProviderSupport)' == ''">true</CsWinRTEnableDefaultCustomPropertyProviderSupport>
     <CsWinRTSuppressCustomPropertyNotSupportedException Condition="'$(CsWinRTSuppressCustomPropertyNotSupportedException)' == ''">false</CsWinRTSuppressCustomPropertyNotSupportedException>
+    <CsWinRTEnableOpaqueRcwMarshalling Condition="'$(CsWinRTEnableOpaqueRcwMarshalling)' == ''">false</CsWinRTEnableOpaqueRcwMarshalling>
 
     <!--
       Note: the 'CsWinRTUseWindowsUIXamlProjections' property and associated 'CSWINRT_USE_WINDOWS_UI_XAML_PROJECTIONS' feature
@@ -708,6 +709,11 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     <!-- CSWINRT_SUPPRESS_CUSTOM_PROPERTY_NOT_SUPPORTED_EXCEPTION switch -->
     <RuntimeHostConfigurationOption Include="CSWINRT_SUPPRESS_CUSTOM_PROPERTY_NOT_SUPPORTED_EXCEPTION"
                                     Value="$(CsWinRTSuppressCustomPropertyNotSupportedException)"
+                                    Trim="true" />
+
+    <!-- CSWINRT_ENABLE_OPAQUE_RCW_MARSHALLING switch -->
+    <RuntimeHostConfigurationOption Include="CSWINRT_ENABLE_OPAQUE_RCW_MARSHALLING"
+                                    Value="$(CsWinRTEnableOpaqueRcwMarshalling)"
                                     Trim="true" />
   </ItemGroup>
 
