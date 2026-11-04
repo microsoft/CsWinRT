@@ -321,6 +321,27 @@ public partial class Test_InteropGenericDiscovery
     }
 
     [TestMethod]
+    public void MemberReservations_SharedTransitionsAreBounded()
+    {
+        // The shared allowance (4096) is exhausted first, then the transitive budget (1024) is charged normally
+        const int helperCount = 4096 + 1024 + 200;
+        string helpers = string.Join('\n', Enumerable.Range(0, helperCount).Select(index =>
+            $"public sealed class Other{index}<T>;"));
+        string members = string.Join('\n', Enumerable.Range(0, helperCount).Select(index =>
+            $"public object Next{index}() => new Other{index}<T>();"));
+
+        AssertMemberReservationLimit($$"""
+            namespace MemberReservations;
+            {{helpers}}
+            public sealed class Family<T> { {{members}} }
+            public static class Program
+            {
+                public static void Main() => _ = new Family<int>();
+            }
+            """, ExpansionWarning);
+    }
+
+    [TestMethod]
     [DataRow(false)]
     [DataRow(true)]
     public void MemberReservations_CrossModuleTransitionsCannotShareMatchingArguments(bool methods)
