@@ -18,7 +18,7 @@ internal partial class TypeSignatureDiscovery<TResult>
     /// <param name="module">The resolved declaring module of the candidate.</param>
     /// <param name="arguments">The candidate's ordered type and method arguments.</param>
     /// <param name="isConstructed">Whether the candidate arguments are already known to be fully constructed.</param>
-    /// <returns>Whether the candidate can share its caller's reservation.</returns>
+    /// <returns>Whether the candidate can share its caller's reservation, consuming one unit of the shared allowance.</returns>
     private bool CanShareMemberReservation(
         MemberScanContext? scanContext,
         ModuleDefinition? module,
@@ -57,6 +57,15 @@ internal partial class TypeSignatureDiscovery<TResult>
                 return false;
             }
         }
+
+        // Shared transitions are not charged, so bound them separately to keep a pathologically wide module finite
+        // Once exhausted, further candidates fall back to ordinary accounting against the transitive budget
+        if (_sharedReservationCount == MaxSharedReservations)
+        {
+            return false;
+        }
+
+        _sharedReservationCount++;
 
         return true;
     }
