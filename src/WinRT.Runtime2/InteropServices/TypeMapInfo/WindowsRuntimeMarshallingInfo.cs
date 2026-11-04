@@ -306,6 +306,7 @@ internal sealed class WindowsRuntimeMarshallingInfo
     /// </remarks>
     private bool IsProjectedClass
     {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get
         {
             return
