@@ -403,6 +403,12 @@ internal sealed unsafe class EventSourceCache
     /// <returns>
     /// The strong reference to release after use, or <see langword="null"/> if the target is no longer alive or resolution fails.
     /// </returns>
+    /// <remarks>
+    /// Any failure is intentionally treated as an expired target, so that stale states are dropped (or replaced) rather than
+    /// surfacing an exception. This includes the errors reported when an out-of-process server has exited, such as
+    /// <c>RPC_E_DISCONNECTED</c> and <c>RPC_S_SERVER_UNAVAILABLE</c>, which can otherwise block registrations for a new
+    /// object that reuses the native pointer of a previous one.
+    /// </remarks>
     private static void* ResolveTargetUnsafe(WindowsRuntimeObjectReference targetWeakReference)
     {
         using WindowsRuntimeObjectReferenceValue targetWeakReferenceValue = targetWeakReference.AsValue();
