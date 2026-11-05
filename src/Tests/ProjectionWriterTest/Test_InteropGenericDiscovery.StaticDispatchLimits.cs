@@ -152,7 +152,9 @@ public partial class Test_InteropGenericDiscovery
                 HashSet<string> associations = GetComWrappersTypeAssociations(interop);
 
                 Assert.IsTrue(associations.Any(static type => type.StartsWith("StaticBudget.Required`1[[System.String,", StringComparison.Ordinal)), log);
-                Assert.AreEqual(1022, associations.Count(static type => type.StartsWith("StaticBudget.Node`1", StringComparison.Ordinal)), log);
+
+                // Required<string> shares the instance default's reservation, leaving 1023 for static bodies
+                Assert.AreEqual(1023, associations.Count(static type => type.StartsWith("StaticBudget.Node`1", StringComparison.Ordinal)), log);
                 Assert.IsFalse(associations.Any(static type => type.StartsWith("StaticBudget.Node`1[[StaticBudget.Marker1029,", StringComparison.Ordinal)), log);
 
                 byte[] output = File.ReadAllBytes(interop);

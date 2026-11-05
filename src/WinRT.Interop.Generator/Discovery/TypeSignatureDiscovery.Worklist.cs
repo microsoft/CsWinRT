@@ -52,8 +52,8 @@ internal partial class TypeSignatureDiscovery<TResult>
                 continue;
             }
 
-            // Reusing a closed substitution within its lexical family needs no additional reservation
-            if (!CanShareMemberReservation(scanContext, resolvedType, genericType.TypeArguments, isConstructed: true) &&
+            // Reusing a closed substitution within the scanned module needs no additional reservation
+            if (!CanShareMemberReservation(scanContext, resolvedType?.DeclaringModule, genericType.TypeArguments, isConstructed: true) &&
                 !TryReserveTransitiveInstantiation(depth: depth))
             {
                 continue;
@@ -149,9 +149,9 @@ internal partial class TypeSignatureDiscovery<TResult>
             }
 
             // A shallower requeue reuses this enumeration's earlier reservation.
-            // New same-family contexts can instead share the active scan's closed substitution.
+            // New same-module contexts can instead share the active scan's closed substitution.
             if (!visited &&
-                !CanShareMemberReservation(scanContext, resolvedType, genericType.TypeArguments, isConstructed: true) &&
+                !CanShareMemberReservation(scanContext, resolvedType?.DeclaringModule, genericType.TypeArguments, isConstructed: true) &&
                 !TryReserveTransitiveInstantiation(depth: depth))
             {
                 continue;
@@ -253,7 +253,7 @@ internal partial class TypeSignatureDiscovery<TResult>
         contexts.Add(arguments, depth);
 
         return
-            (CanShareMemberReservation(scanContext, method.DeclaringType, arguments) || TryReserveTransitiveInstantiation(depth: depth)) &&
+            (CanShareMemberReservation(scanContext, method.DeclaringModule, arguments) || TryReserveTransitiveInstantiation(depth: depth)) &&
             IsMethodWithinDepthLimit(method, depth);
     }
 
@@ -299,8 +299,8 @@ internal partial class TypeSignatureDiscovery<TResult>
             return true;
         }
 
-        // An unchanged closed substitution can borrow the active lexical family's reservation
-        if (CanShareMemberReservation(scanContext, method.DeclaringType, arguments))
+        // An unchanged closed substitution can borrow the active module scan's reservation
+        if (CanShareMemberReservation(scanContext, method.DeclaringModule, arguments))
         {
             return true;
         }
