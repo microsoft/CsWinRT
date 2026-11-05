@@ -298,6 +298,25 @@ internal sealed class WindowsRuntimeMarshallingInfo
     }
 
     /// <summary>
+    /// Gets whether the current instance is for a projected Windows Runtime class.
+    /// </summary>
+    /// <remarks>
+    /// Projected runtime classes are their own metadata provider. Proxies, value types, interfaces, and delegates
+    /// (which are classes too, but have their own CCW marshalling logic) are never considered projected classes.
+    /// </remarks>
+    private bool IsProjectedClass
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get
+        {
+            return
+                ReferenceEquals(_metadataProviderType, _publicType) &&
+                _metadataProviderType.IsClass &&
+                _metadataProviderType.BaseType != typeof(MulticastDelegate);
+        }
+    }
+
+    /// <summary>
     /// Tries to get a <see cref="WindowsRuntimeMarshallingInfo"/> instance for a given runtime class name.
     /// </summary>
     /// <param name="runtimeClassName">The input runtime class name to use for lookups.</param>
@@ -592,20 +611,24 @@ internal sealed class WindowsRuntimeMarshallingInfo
     /// </summary>
     /// <returns>The resulting <see cref="WindowsRuntimeComWrappersMarshallerAttribute"/> instance.</returns>
     /// <exception cref="NotSupportedException">Thrown if no <see cref="WindowsRuntimeComWrappersMarshallerAttribute"/> instance could be resolved.</exception>
-    /// <remarks>This method is meant to be used when preparing CCW vtables for managed types.</remarks>
+    /// <remarks>
+    /// <para>This method is meant to be used when preparing CCW vtables for managed types.</para>
+    /// <para>
+    /// If <see cref="WindowsRuntimeFeatureSwitches.EnableOpaqueRcwMarshalling"/> is enabled, projected runtime classes that
+    /// have no CCW vtables (i.e. that are not native-exposed) are marshalled as opaque objects instead of throwing.
+    /// </para>
+    /// </remarks>
     public WindowsRuntimeVtableInfo GetVtableInfo()
     {
         // Initialize the vtable if not already present (it is safe to do this concurrently)
         [MethodImpl(MethodImplOptions.NoInlining)]
         unsafe WindowsRuntimeVtableInfo InitializeVtableInfo()
         {
+            bool isProjectedClass = IsProjectedClass;
+
             // Native-exposed projected types have a separate CCW proxy. Only use it for vtables:
             // replacing the projected type's marshaller would break RCW creation and native unwrapping.
-            // Already-resolved proxies, value types, interfaces, and delegates cannot need this lookup.
-            if (ReferenceEquals(_metadataProviderType, _publicType) &&
-                _metadataProviderType.IsClass &&
-                _metadataProviderType.BaseType != typeof(MulticastDelegate) &&
-                ProxyTypeMapping.TryGetValue(_metadataProviderType, out Type? proxyType))
+            if (isProjectedClass && ProxyTypeMapping.TryGetValue(_metadataProviderType, out Type? proxyType))
             {
                 WindowsRuntimeMarshallingInfo proxyInfo = TypeToMarshallingInfoTable.GetOrAdd(proxyType, CreateMarshallingInfoCallback)!;
 
@@ -626,6 +649,15 @@ internal sealed class WindowsRuntimeMarshallingInfo
             // failure, rather than having that method throw and then catch and re-throw from here.
             if (vtableEntries is null)
             {
+                // Projected runtime classes without a native-exposure proxy only have an RCW-only marshaller. If opaque
+                // RCW marshalling is enabled, expose them with the shared vtables for opaque objects instead of failing.
+                // The resulting CCW only implements the standard interfaces, and the projected class itself forwards any
+                // other 'QueryInterface' request to its native object. Any other kind of type keeps failing below.
+                if (WindowsRuntimeFeatureSwitches.EnableOpaqueRcwMarshalling && isProjectedClass)
+                {
+                    return _vtableInfo ??= GetInfo(typeof(object)).GetVtableInfo();
+                }
+
                 // Throws an exception with a message that includes the type of the object we failed to marshal
                 [DoesNotReturn]
                 [StackTraceHidden]
@@ -652,11 +684,24 @@ internal sealed class WindowsRuntimeMarshallingInfo
     /// </summary>
     /// <returns>The resulting runtime class name.</returns>
     /// <exception cref="NotSupportedException">Thrown if no runtime class name could be resolved.</exception>
-    /// <remarks>This method is only meant to be used on managed types passed to native.</remarks>
+    /// <remarks>
+    /// <para>This method is only meant to be used on managed types passed to native.</para>
+    /// <para>
+    /// If <see cref="WindowsRuntimeFeatureSwitches.EnableOpaqueRcwMarshalling"/> is enabled, projected runtime classes
+    /// (which have no runtime class name info, as it is normally provided by their native object) report their type name.
+    /// </para>
+    /// </remarks>
     public string GetRuntimeClassName()
     {
         if (!TryGetRuntimeClassName(out string? runtimeClassName))
         {
+            // Projected runtime classes that are exposed as opaque objects only have their projected type, which always
+            // matches the name of the Windows Runtime class. This is the same fallback used when marshalling 'Type' values.
+            if (WindowsRuntimeFeatureSwitches.EnableOpaqueRcwMarshalling && IsProjectedClass)
+            {
+                return PublicType.FullName!;
+            }
+
             // Analogous validation as for when retrieving the marshaller attribute
             [DoesNotReturn]
             [StackTraceHidden]

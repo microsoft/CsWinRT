@@ -66,6 +66,11 @@ internal static class WindowsRuntimeFeatureSwitches
     private const string SuppressCustomPropertyNotSupportedExceptionPropertyName = "CSWINRT_SUPPRESS_CUSTOM_PROPERTY_NOT_SUPPORTED_EXCEPTION";
 
     /// <summary>
+    /// The configuration property name for <see cref="EnableOpaqueRcwMarshalling"/>.
+    /// </summary>
+    private const string EnableOpaqueRcwMarshallingPropertyName = "CSWINRT_ENABLE_OPAQUE_RCW_MARSHALLING";
+
+    /// <summary>
     /// Gets a value indicating whether or not manifest free WinRT activation is supported (defaults to <see langword="true"/>).
     /// </summary>
     [FeatureSwitchDefinition(EnableManifestFreeActivationPropertyName)]
@@ -118,6 +123,12 @@ internal static class WindowsRuntimeFeatureSwitches
     /// </summary>
     [FeatureSwitchDefinition(SuppressCustomPropertyNotSupportedExceptionPropertyName)]
     public static bool SuppressCustomPropertyNotSupportedException { get; } = GetConfigurationValue(SuppressCustomPropertyNotSupportedExceptionPropertyName, defaultValue: false);
+
+    /// <summary>
+    /// Gets a value indicating whether projected runtime class instances that cannot be marshalled to native code are exposed as opaque CCWs instead of reporting <see cref="NotSupportedException"/> (defaults to <see langword="false"/>).
+    /// </summary>
+    [FeatureSwitchDefinition(EnableOpaqueRcwMarshallingPropertyName)]
+    public static bool EnableOpaqueRcwMarshalling { get; } = GetConfigurationValue(EnableOpaqueRcwMarshallingPropertyName, defaultValue: false);
 
     /// <summary>
     /// Gets a configuration value for a specified property.

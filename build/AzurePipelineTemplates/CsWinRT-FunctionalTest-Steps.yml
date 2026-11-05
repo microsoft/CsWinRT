@@ -17,6 +17,7 @@ parameters:
     - DerivedClassAsBaseClass
     - CCW
     - NativeExposedType
+    - OpaqueRcwMarshalling
     - TypeMarshaling
     - ImplementWinMDTypes
     - UserDefinedTypeNames
