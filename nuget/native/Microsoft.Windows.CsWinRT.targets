@@ -38,7 +38,7 @@ Properties consumers may set on the vcxproj:
                                             back to the value exposed by any referenced component.
   CsWinRTSkipNativeHostingAssetsOverride    Set to 'true' to opt out of the arch-correct
                                             replacement of WinRT.Host.dll / .mui in the
-                                            consumer's ReferenceCopyLocalPaths.
+                                            consumer's reference and content copy items.
 ***********************************************************************************************
 -->
 <Project ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
@@ -52,6 +52,9 @@ Properties consumers may set on the vcxproj:
     <!-- Map vcxproj $(Platform) to the equivalent .NET platform name used by the synthesized csproj. -->
     <_CsWinRTNormalizedPlatform Condition="'$(Platform)' == 'Win32'">x86</_CsWinRTNormalizedPlatform>
     <_CsWinRTNormalizedPlatform Condition="'$(_CsWinRTNormalizedPlatform)' == ''">$(Platform)</_CsWinRTNormalizedPlatform>
+
+    <_CsWinRTHostDllPath>$(MSBuildThisFileDirectory)..\..\hosting\$(_CsWinRTNormalizedPlatform)\native\WinRT.Host.dll</_CsWinRTHostDllPath>
+    <_CsWinRTHostMuiPath>$(MSBuildThisFileDirectory)..\..\hosting\$(_CsWinRTNormalizedPlatform)\native\en-US\WinRT.Host.dll.mui</_CsWinRTHostMuiPath>
   </PropertyGroup>
 
   <!--
@@ -276,12 +279,9 @@ Properties consumers may set on the vcxproj:
     ============================================================
             _CsWinRTReplaceArchSelectedHostingAssets
 
-    If the standard reference flow brought a WinRT.Host.dll / WinRT.Host.dll.mui into
-    ReferenceCopyLocalPaths (e.g. via a JIT-built component's <None CopyToOutputDirectory>
-    items), replace it with the arch-correct copy from the CsWinRT package's
-    hosting/$(_CsWinRTNormalizedPlatform)/native/ folder. If nothing contributes one
-    (e.g. AOT-published component, or the consumer manages its own host bundle), this
-    target does nothing - we only correct what would already be copied.
+    Replace existing WinRT.Host.dll / WinRT.Host.dll.mui reference copy items with
+    the CsWinRT package's hosting/$(_CsWinRTNormalizedPlatform)/native/ assets.
+    Do not add hosting assets when no reference copy items contribute them.
 
     Skipped if the package-layout host dll is not found on disk (in-repo simulation).
     Skipped if the consumer sets CsWinRTSkipNativeHostingAssetsOverride=true.
@@ -291,11 +291,6 @@ Properties consumers may set on the vcxproj:
           AfterTargets="ResolveAssemblyReferences"
           Condition="'$(CsWinRTSkipNativeHostingAssetsOverride)' != 'true'">
 
-    <PropertyGroup>
-      <_CsWinRTHostDllPath>$(MSBuildThisFileDirectory)..\..\hosting\$(_CsWinRTNormalizedPlatform)\native\WinRT.Host.dll</_CsWinRTHostDllPath>
-      <_CsWinRTHostMuiPath>$(MSBuildThisFileDirectory)..\..\hosting\$(_CsWinRTNormalizedPlatform)\native\en-US\WinRT.Host.dll.mui</_CsWinRTHostMuiPath>
-    </PropertyGroup>
-
     <ItemGroup Condition="Exists('$(_CsWinRTHostDllPath)')">
       <_CsWinRTHostingItemsToReplace Include="@(ReferenceCopyLocalPaths)"
                                      Condition="'%(Filename)%(Extension)' == 'WinRT.Host.dll' or '%(Filename)%(Extension)' == 'WinRT.Host.dll.mui'" />
@@ -304,6 +299,23 @@ Properties consumers may set on the vcxproj:
                                Condition="'@(_CsWinRTHostingItemsToReplace)' != ''" />
       <ReferenceCopyLocalPaths Include="$(_CsWinRTHostMuiPath)"
                                Condition="'@(_CsWinRTHostingItemsToReplace)' != '' and Exists('$(_CsWinRTHostMuiPath)')" />
+    </ItemGroup>
+
+  </Target>
+
+  <!--
+    Pass the consumer's architecture to referenced projects when collecting content.
+    CsWinRT authoring uses CsWinRTAuthoring_Platform to select its hosting assets,
+    so both the source copy items and the returned output items use that architecture.
+  -->
+  <Target Name="_CsWinRTSelectArchSpecificHostingContent"
+          BeforeTargets="_GetCopyToOutputDirectoryItemsFromTransitiveProjectReferences"
+          Condition="'$(CsWinRTSkipNativeHostingAssetsOverride)' != 'true' and Exists('$(_CsWinRTHostDllPath)')">
+
+    <ItemGroup>
+      <_MSBuildProjectReferenceExistent>
+        <AdditionalProperties>%(_MSBuildProjectReferenceExistent.AdditionalProperties);CsWinRTAuthoring_Platform=$(_CsWinRTNormalizedPlatform)</AdditionalProperties>
+      </_MSBuildProjectReferenceExistent>
     </ItemGroup>
 
   </Target>
