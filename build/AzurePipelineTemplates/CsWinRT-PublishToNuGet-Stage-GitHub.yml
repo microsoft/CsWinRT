@@ -12,8 +12,6 @@ stages:
       persistCredentials: True
 
     - template: CsWinRT-PublishToNuGet-Steps.yml@self
-      parameters:
-        IsGitHub: true
 
     templateContext:
       outputs:
