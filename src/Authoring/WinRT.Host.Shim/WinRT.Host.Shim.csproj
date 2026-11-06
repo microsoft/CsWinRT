@@ -2,6 +2,7 @@
 
   <PropertyGroup>
     <TargetFrameworks>net10.0</TargetFrameworks>
+    <FileVersion>$(VersionNumber)</FileVersion>
 
     <!--
       This project is meant to be used for hosting scenarios with CoreCLR, so trimming and AOT
