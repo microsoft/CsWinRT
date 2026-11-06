@@ -277,7 +277,9 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="WinRTHostErrorStrings.rc" />
+    <ResourceCompile Include="WinRTHostErrorStrings.rc">
+      <PreprocessorDefinitions>PRODUCT_VERSION=\"$(VersionString)\";HOST_FILE_DESCRIPTION=\"C#/WinRT Native Host ($(Platform.Replace('Win32', 'x86')))\";%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
     <Xml Include="WinRTHost.rcconfig.xml" />
