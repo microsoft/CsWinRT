@@ -150,6 +150,7 @@
   <PropertyGroup>
     <VersionNumber Condition="'$(VersionNumber)'==''">0.0.0.0</VersionNumber>
     <VersionString Condition="'$(VersionString)'==''">0.0.0-private.0</VersionString>
+    <InformationalVersion Condition="'$(IsPublicProject)' == 'true' and '$(InformationalVersion)' == ''">$(VersionString)</InformationalVersion>
 
     <!--
       Default 'AssemblyVersionNumber' to '3.0.0.0' (the 'WinRT.Runtime' CsWinRT 3.0 baseline) so

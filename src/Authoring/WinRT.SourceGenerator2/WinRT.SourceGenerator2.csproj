@@ -39,7 +39,6 @@
     <FileVersion>$(VersionNumber)</FileVersion>
     <Version>$(VersionNumber)</Version>
     <AssemblyVersion>$(VersionNumber)</AssemblyVersion>
-    <InformationalVersion>$(VersionNumber)</InformationalVersion>
     <NeutralLanguage>en</NeutralLanguage>
     <Description>C#/WinRT Authoring Source Generator $(VersionString)</Description>
     <AssemblyTitle>C#/WinRT Authoring Source Generator v$(VersionString)</AssemblyTitle>

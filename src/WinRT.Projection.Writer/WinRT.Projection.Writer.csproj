@@ -7,12 +7,6 @@
     <RootNamespace>WindowsRuntime.ProjectionWriter</RootNamespace>
 
     <!--
-      Stamp the assembly with $(VersionString) so the generated version banner in projection
-      file headers can read it back via AssemblyInformationalVersionAttribute.
-    -->
-    <InformationalVersion>$(VersionString)</InformationalVersion>
-      
-    <!--
       The writer enables the strictest analysis posture (AnalysisLevel=latest +
       AnalysisLevelStyle=latest-all), matching WinRT.Interop.Generator. The five entries
       below are intentional permanent suppressions. They are scoped at the project level

@@ -9,7 +9,6 @@
     <Copyright>Copyright (c) Microsoft Corporation. All rights reserved.</Copyright>
     <AssemblyVersion>$(AssemblyVersionNumber)</AssemblyVersion>
     <FileVersion>$(VersionNumber)</FileVersion>
-    <InformationalVersion>$(VersionString)</InformationalVersion>
 
     <!-- 'WindowsRuntime' is the root namespace, with the name being consistent with eg. 'System.Runtime.InteropServices.WindowsRuntime' -->
     <RootNamespace>WindowsRuntime</RootNamespace>
