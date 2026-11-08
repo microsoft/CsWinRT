@@ -57,13 +57,11 @@ BEGIN
     BEGIN
         BLOCK "040904b0"
         BEGIN
-            VALUE "CompanyName", "Microsoft Corporation"
             VALUE "FileDescription", HOST_FILE_DESCRIPTION
             VALUE "FileVersion", VERSION_NUMBER
             VALUE "InternalName", "WinRT.Host"
             VALUE "LegalCopyright", "Copyright (c) Microsoft Corporation. All rights reserved."
             VALUE "OriginalFilename", "WinRT.Host.dll"
-            VALUE "ProductName", "C#/WinRT"
             VALUE "ProductVersion", PRODUCT_VERSION
         END
     END
