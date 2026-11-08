@@ -2,6 +2,9 @@
 
   <PropertyGroup>
     <TargetFrameworks>net10.0</TargetFrameworks>
+    <Description>C#/WinRT Managed Host Shim v$(VersionString)</Description>
+    <AssemblyTitle>C#/WinRT Managed Host Shim v$(VersionString)</AssemblyTitle>
+    <Copyright>Copyright (c) Microsoft Corporation. All rights reserved.</Copyright>
     <FileVersion>$(VersionNumber)</FileVersion>
 
     <!--
