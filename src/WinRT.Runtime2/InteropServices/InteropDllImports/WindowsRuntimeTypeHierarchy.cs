@@ -37,7 +37,7 @@ internal static class WindowsRuntimeTypeHierarchy
         int hashCode = ComputeReadOnlySpanHash(runtimeClassName);
 
         // Get the bucket index, which represents the chain of all colliding potential matches
-        int bucketIndex = WindowsRuntimeTypeHierarchyData.get_Buckets(null)[(int)((uint)hashCode % (uint)WindowsRuntimeTypeHierarchyData.get_Buckets(null).Length)];
+        int bucketIndex = WindowsRuntimeTypeHierarchyData.GetBucketIndex(null, hashCode);
 
         // Bucket indices of '-1' indicate no possible matches
         if (bucketIndex < 0)
@@ -67,8 +67,21 @@ internal static class WindowsRuntimeTypeHierarchy
             // The second value (2 bytes) is the offset to the value in the values RVA field data
             ushort valueOffset = keysDataReader.ReadUInt16();
 
-            // Check if the current key is a match for the input runtime class name
-            if (keysDataReader.ReadString(keyLength).SequenceEqual(runtimeClassName))
+            // The key stores a byte offset into the shared prefix blob, not the namespace text itself
+            int prefixOffset = keysDataReader.ReadInt32();
+            RvaDataReader prefixesDataReader = new(WindowsRuntimeTypeHierarchyData.get_Prefixes(null));
+            prefixesDataReader.Advance(prefixOffset);
+            int prefixLength = prefixesDataReader.ReadUInt16();
+
+            // Consume the suffix even for length mismatches, so the reader stays at the next collision candidate
+            ReadOnlySpan<char> key = keysDataReader.ReadString(keyLength - prefixLength);
+            ReadOnlySpan<char> prefix = prefixesDataReader.ReadString(prefixLength);
+
+            // Compare the two input slices ordinally without reconstructing or allocating a full class name
+            bool match = runtimeClassName.Length == keyLength &&
+                prefix.SequenceEqual(runtimeClassName[..prefixLength]) &&
+                key.SequenceEqual(runtimeClassName[prefixLength..]);
+            if (match)
             {
                 RvaDataReader valuesDataReader = new(WindowsRuntimeTypeHierarchyData.get_Values(null));
 
@@ -220,6 +233,23 @@ internal static class WindowsRuntimeTypeHierarchy
         }
 
         /// <summary>
+        /// Reads a 32-bit offset and advances the reader.
+        /// </summary>
+        /// <returns>The resulting offset.</returns>
+        public int ReadInt32()
+        {
+            if (_length < sizeof(int))
+            {
+                ThrowBadImageFormatException();
+            }
+
+            // Key records are only 2-byte aligned, so their 32-bit prefix offsets may be unaligned
+            int value = Unsafe.ReadUnaligned<int>(ref _dataRef);
+            Advance(sizeof(int));
+            return value;
+        }
+
+        /// <summary>
         /// Throws a <see cref="BadImageFormatException"/> indicating that the RVA data is malformed.
         /// </summary>
         /// <exception cref="BadImageFormatException"></exception>
@@ -236,11 +266,23 @@ internal static class WindowsRuntimeTypeHierarchy
 file static class WindowsRuntimeTypeHierarchyData
 {
     /// <summary>
-    /// Gets the <see cref="ReadOnlySpan{T}"/> for the runtime class name lookup buckets.
+    /// Gets the byte offset of a collision chain using the catalog's emitted bucket width.
     /// </summary>
-    /// <returns>The buckets <see cref="ReadOnlySpan{T}"/>.</returns>
+    /// <param name="_">Unused placeholder for the type owning the forwarded method.</param>
+    /// <param name="hash">The hash of the full runtime class name.</param>
+    /// <returns>The chain offset, or -1 if the bucket is empty.</returns>
     [UnsafeAccessor(UnsafeAccessorKind.StaticMethod)]
-    public static extern ReadOnlySpan<int> get_Buckets(
+    public static extern int GetBucketIndex(
+        [UnsafeAccessorType("WindowsRuntime.Interop.WindowsRuntimeTypeHierarchyData, WinRT.Interop")] object? _,
+        int hash);
+
+    /// <summary>
+    /// Gets the shared namespace prefix records, each containing a 16-bit character count and UTF-16 text.
+    /// </summary>
+    /// <param name="_">Unused placeholder for the type owning the forwarded method.</param>
+    /// <returns>A span over the readonly prefix RVA data.</returns>
+    [UnsafeAccessor(UnsafeAccessorKind.StaticMethod)]
+    public static extern ReadOnlySpan<byte> get_Prefixes(
         [UnsafeAccessorType("WindowsRuntime.Interop.WindowsRuntimeTypeHierarchyData, WinRT.Interop")] object? _);
 
     /// <summary>
