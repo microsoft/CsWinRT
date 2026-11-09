@@ -7,6 +7,8 @@ jobs:
     variables:
       ob_outputDirectory: '$(Build.SourcesDirectory)\out'
       ob_nugetPublishing_enabled: true
+      ob_nugetRepackOwnerServiceId: 567f58c6-ba0a-417c-b069-5bd29d670a65
+      ob_nugetRepackOwnerTeam: CsWinRT
       ob_nugetPublishing_compliantPackages: |
         Microsoft.Windows.CsWinRT.$(NugetVersion).nupkg;
         Microsoft.Windows.CsWinMD.$(NugetVersion).nupkg
