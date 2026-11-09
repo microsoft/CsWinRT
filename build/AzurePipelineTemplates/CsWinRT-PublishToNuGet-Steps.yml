@@ -1,9 +1,3 @@
-parameters:
-- name: 'IsGitHub'
-  displayName: 'GitHub Build'
-  type: boolean
-  default: false
-
 steps:    
   - task: NuGetAuthenticate@1
 
@@ -83,16 +77,3 @@ steps:
       configurationToPack: Release
       buildProperties: cswinmd_nuget_version=$(NugetVersion);cswinmd_outpath=$(Build.SourcesDirectory)\release_x86\net8.0\CsWinMD;source_generator_roslyn4080=$(Build.SourcesDirectory)\release_x86\netstandard2.0\roslyn4080\WinRT.SourceGenerator.dll
       packDestination: $(ob_outputDirectory)\packages
-
-  - ${{ if eq(parameters.IsGitHub, false) }}:
-
-  # NuGet signing
-    - task: onebranch.pipeline.signing@1
-      displayName: '🔒 Onebranch Signing for NuGet'
-      inputs:
-        command: sign
-        cp_code: 'CP-401405'
-        files_to_sign: |
-          Microsoft.Windows.CsWinRT.*.nupkg;
-          Microsoft.Windows.CsWinMD.*.nupkg;
-        search_root: $(ob_outputDirectory)\packages

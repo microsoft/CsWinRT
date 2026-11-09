@@ -7,6 +7,9 @@ jobs:
     variables:
       ob_outputDirectory: '$(Build.SourcesDirectory)\out'
       ob_nugetPublishing_enabled: true
+      ob_nugetPublishing_compliantPackages: |
+        Microsoft.Windows.CsWinRT.$(NugetVersion).nupkg;
+        Microsoft.Windows.CsWinMD.$(NugetVersion).nupkg
       # We only do packaging.
       ob_sdl_prefast_enabled: false
       ob_sdl_prefast_runDuring: 'Build'
