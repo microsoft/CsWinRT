@@ -188,6 +188,7 @@ internal partial class TypeSignatureDiscovery<TResult>
         if (methodArguments is null ||
             !method.TryResolve(_module.RuntimeContext, out MethodDefinition? definition) ||
             definition.CilMethodBody is null ||
+            _dispatchIndex.IsAnalysisExcluded(definition.DeclaringType) ||
             (depth > 0 && (definition.DeclaringModule is not ModuleDefinition declaringModule || !_shouldProcessModule(declaringModule))))
         {
             return;

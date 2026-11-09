@@ -87,6 +87,9 @@ internal sealed partial class MethodDispatchIndex
     /// <summary>The stable ordinals of all loaded input modules.</summary>
     private readonly Dictionary<ModuleDefinition, int> _moduleOrdinals = new(ReferenceEqualityComparer.Instance);
 
+    /// <summary>Indexes shared by all discovery passes, allocated only for modules with exclusions.</summary>
+    private readonly Dictionary<ModuleDefinition, InteropAnalysisExclusions>? _analysisExclusions;
+
     /// <summary>Methods that can be reached as indexed dispatch bodies.</summary>
     private readonly HashSet<MethodDefinition> _bodyMethods = new(ReferenceEqualityComparer.Instance);
 
@@ -117,6 +120,15 @@ internal sealed partial class MethodDispatchIndex
         foreach (ModuleDefinition module in modules)
         {
             _moduleOrdinals.Add(module, _moduleOrdinals.Count);
+            if (InteropAnalysisExclusions.TryCreate(
+                module: module,
+                context: runtimeContext,
+                signatureComparer: comparer,
+                token: token,
+                exclusions: out InteropAnalysisExclusions? analysisExclusions))
+            {
+                (_analysisExclusions ??= new(ReferenceEqualityComparer.Instance)).Add(module, analysisExclusions);
+            }
 
             foreach (TypeDefinition type in module.GetAllTypes())
             {
@@ -158,6 +170,73 @@ internal sealed partial class MethodDispatchIndex
     {
         // A completion-only root outside the index sorts after the loaded publishing modules
         return _moduleOrdinals.TryGetValue(module, out int ordinal) ? ordinal : _moduleOrdinals.Count;
+    }
+
+    /// <summary>Gets whether any indexed module contains an excluded implementation.</summary>
+    public bool HasAnalysisExclusions => _analysisExclusions is not null;
+
+    /// <summary>Checks whether a caller must preserve an excluded callee's visible signature.</summary>
+    /// <param name="descriptor">The referenced method or method specification.</param>
+    /// <returns>Whether an excluded or unresolved callee's signature needs preservation.</returns>
+    public bool ReferencesExcludedImplementation(IMethodDescriptor descriptor)
+    {
+        if (!HasAnalysisExclusions)
+        {
+            return false;
+        }
+
+        if (descriptor is MethodDefinition declaredMethod)
+        {
+            return IsAnalysisExcluded(declaredMethod.DeclaringType);
+        }
+
+        // 'MethodSpec' arguments and declaring 'TypeSpec' records already have independent root/body traversal
+        if (descriptor is MethodSpecification)
+        {
+            return false;
+        }
+
+        // Simple nominal signatures cannot introduce constructed generic or SZ-array types
+        bool mayExposeTypes = descriptor.Signature is not { } signature ||
+            MayExposeInteropTypes(signature.ReturnType) ||
+            signature.ParameterTypes.Any(MayExposeInteropTypes) ||
+            signature.SentinelParameterTypes.Any(MayExposeInteropTypes);
+
+        // A valid inherited 'MemberRef' may not resolve even though its caller-visible signature is usable
+        return mayExposeTypes &&
+            (descriptor.TryResolve(_runtimeContext, out MethodDefinition? resolved)
+                ? IsAnalysisExcluded(resolved.DeclaringType)
+                : descriptor.DeclaringType?.TryResolve(_runtimeContext, out _) is true);
+    }
+
+    /// <summary>Checks whether a signature may contain a discovered generic or array type.</summary>
+    /// <param name="type">The uninstantiated caller-visible signature.</param>
+    /// <returns>Whether discovery may report a constructed type from the signature.</returns>
+    private static bool MayExposeInteropTypes(TypeSignature type)
+    {
+        return type is not (CorLibTypeSignature or TypeDefOrRefSignature { Type: TypeDefinition or TypeReference });
+    }
+
+    /// <summary>Checks whether a type's declared implementation is excluded.</summary>
+    /// <param name="type">The resolved type definition, if available.</param>
+    /// <returns>Whether the type belongs to an excluded lexical implementation.</returns>
+    public bool IsAnalysisExcluded(TypeDefinition? type)
+    {
+        return HasAnalysisExclusions &&
+            type?.DeclaringModule is ModuleDefinition module &&
+            _analysisExclusions!.TryGetValue(module, out InteropAnalysisExclusions? exclusions) &&
+            exclusions.Contains(type);
+    }
+
+    /// <summary>Checks whether a record is rooted only in excluded implementations.</summary>
+    /// <param name="module">The loaded module containing the record.</param>
+    /// <param name="root">The loaded metadata record.</param>
+    /// <returns>Whether the record has no independent unexcluded root.</returns>
+    public bool IsAnalysisExcluded(ModuleDefinition module, IMetadataMember root)
+    {
+        return HasAnalysisExclusions &&
+            _analysisExclusions!.TryGetValue(module, out InteropAnalysisExclusions? exclusions) &&
+            exclusions.Contains(root);
     }
 
     /// <summary>Checks whether a method can be used as an indexed dispatch body.</summary>

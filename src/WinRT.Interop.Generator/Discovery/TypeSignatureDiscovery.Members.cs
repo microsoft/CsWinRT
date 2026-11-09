@@ -247,6 +247,11 @@ internal partial class TypeSignatureDiscovery<TResult>
         int methodDepth,
         MemberScanContext? scanContext)
     {
+        if (_dispatchIndex.IsAnalysisExcluded(method.DeclaringType))
+        {
+            yield break;
+        }
+
         RecordMethodScan(method, genericContext, typeDepth);
 
         // Substitute the active context into every signature source shared with root discovery
@@ -266,8 +271,9 @@ internal partial class TypeSignatureDiscovery<TResult>
         {
             IMethodDescriptor descriptor = operand.Descriptor;
 
-            // Follow only calls carrying generic substitutions to avoid crawling ordinary dependency bodies
-            if (descriptor is MethodSpecification || descriptor.DeclaringType is TypeSpecification)
+            // Follow generic substitutions, or preserve an excluded callee's visible signature
+            if (descriptor is MethodSpecification || descriptor.DeclaringType is TypeSpecification ||
+                _dispatchIndex.ReferencesExcludedImplementation(descriptor))
             {
                 foreach (TResult result in EnumerateMethodTypes(
                     descriptor: descriptor,
@@ -296,6 +302,11 @@ internal partial class TypeSignatureDiscovery<TResult>
     /// <returns>The methods eligible for discovery in this context.</returns>
     private IEnumerable<MethodDefinition> GetMethodsToScan(TypeSignature typeSignature, TypeDefinition type)
     {
+        if (_dispatchIndex.IsAnalysisExcluded(type))
+        {
+            return [];
+        }
+
         // An explicit 'TypeSpec' supplies the caller's type arguments for a one-hop member scan,
         // even when its dependency module is skipped by policy. Further traversal still follows
         // the configured assembly marshalling rules.

@@ -329,6 +329,11 @@ internal sealed partial class TypeSignatureDiscovery<TResult>
         // Field definitions can have type signatures inline, without them appearing in the 'TypeSpec' table
         foreach (FieldDefinition field in _module.EnumerateTableMembers<FieldDefinition>(TableIndex.Field))
         {
+            if (_dispatchIndex.IsAnalysisExcluded(field.DeclaringType))
+            {
+                continue;
+            }
+
             foreach (TResult result in EnumerateTypeSignatures(field.Signature?.FieldType))
             {
                 yield return result;
@@ -338,6 +343,11 @@ internal sealed partial class TypeSignatureDiscovery<TResult>
         // Open method definitions can expose closed types through signatures, locals, and instruction operands
         foreach (MethodDefinition method in _module.EnumerateTableMembers<MethodDefinition>(TableIndex.Method))
         {
+            if (_dispatchIndex.IsAnalysisExcluded(method.DeclaringType))
+            {
+                continue;
+            }
+
             foreach (TypeSignature visibleType in method.EnumerateAllVisibleTypes(_module.RuntimeContext))
             {
                 foreach (TResult result in EnumerateTypeSignatures(visibleType))
@@ -350,6 +360,11 @@ internal sealed partial class TypeSignatureDiscovery<TResult>
         // 'TypeSpec'-s contain signatures referenced by metadata tokens, including base types and implemented interfaces
         foreach (TypeSpecification specification in _module.EnumerateTableMembers<TypeSpecification>(TableIndex.TypeSpec))
         {
+            if (_dispatchIndex.IsAnalysisExcluded(_module, specification))
+            {
+                continue;
+            }
+
             foreach (TResult result in EnumerateTypeSignatures(specification.Signature))
             {
                 yield return result;
@@ -379,6 +394,11 @@ internal sealed partial class TypeSignatureDiscovery<TResult>
         // Substitution reveals 'List<int>' even when it appears nowhere else in the caller's metadata.
         foreach (MethodSpecification specification in _module.EnumerateTableMembers<MethodSpecification>(TableIndex.MethodSpec))
         {
+            if (_dispatchIndex.IsAnalysisExcluded(_module, specification))
+            {
+                continue;
+            }
+
             foreach (TResult result in EnumerateMethodTypes(specification, default, depth: 0))
             {
                 yield return result;
@@ -388,8 +408,21 @@ internal sealed partial class TypeSignatureDiscovery<TResult>
         // 'MethodSpec' rows carry no opcode, so actual dispatch sites do not get the root's one-hop exemption
         foreach (MethodDefinition method in _module.EnumerateTableMembers<MethodDefinition>(TableIndex.Method))
         {
+            if (_dispatchIndex.IsAnalysisExcluded(method.DeclaringType))
+            {
+                continue;
+            }
+
             foreach (MethodOperand operand in method.EnumerateMethodOperands())
             {
+                if (_dispatchIndex.ReferencesExcludedImplementation(operand.Descriptor))
+                {
+                    foreach (TResult result in EnumerateMethodTypes(operand.Descriptor, default, depth: 0))
+                    {
+                        yield return result;
+                    }
+                }
+
                 RegisterDispatch(operand, default, 1);
             }
         }
