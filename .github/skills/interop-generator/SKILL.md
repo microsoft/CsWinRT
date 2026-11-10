@@ -576,7 +576,11 @@ Builders construct complete type definitions with IL method bodies. They use a *
 | `.UserDefinedType.cs` | CCW interface entries + vtable |
 
 **Other builders:**
-- **`WindowsRuntimeTypeHierarchyBuilder`** — Emits a frozen hash table (keys/values/buckets as RVA static data) for O(1) runtime class name → type lookup
+- **`WindowsRuntimeTypeHierarchyBuilder`** — Emits a frozen hash table (keys/values/buckets as RVA static data) for O(1) runtime class name → base runtime class name lookup. Only data and literal-returning getters are generated (`Buckets`/`Keys`/`Values` spans, `UsesNarrowOffsets`, `MinimumKeyLength`, `MaximumKeyLength`); all lookup logic is handwritten in `WinRT.Runtime2\InteropServices\InteropDllImports\WindowsRuntimeTypeHierarchy.cs`. Data format (little-endian, keys/buckets offsets in 16-bit units, value offsets in bytes):
+  - **Keys**: a leading `ushort 0` (shared by all empty buckets as an empty chain, and by all names without a namespace as the empty prefix), then the unique namespace prefixes (including the trailing `.`) as `ushort length` + UTF-16 text, then the collision chains in bucket order. Each key record is `ushort suffixLength` (never `0`), `ushort valueOffset`, the prefix offset (`ushort` or `int`), and the UTF-16 suffix; each chain ends with a `ushort 0`.
+  - **Buckets**: one chain offset per bucket (`ushort` or `int`, `0` for empty buckets), indexed by `(uint)hash % (uint)bucketCount` with the FNV-1a-style hash (over UTF-16 code units) of the full name.
+  - **Values**: `ushort length`, `ushort` byte offset of the next base class value (`0xFFFF` if none), UTF-16 text.
+  - **Width**: `UsesNarrowOffsets` is `true` (`ushort` bucket entries and prefix offsets) if the start of every chain in the candidate narrow layout fits in a `ushort` (all prefixes precede all chains, so they fit too), and `false` (`int`) otherwise. Only stored starts must fit; the final chain may extend past the narrow address range.
 - **`DynamicCustomMappedTypeMapEntriesBuilder`** — Emits type map entries for dynamically custom-mapped interfaces (`ICommand`, `INotifyPropertyChanged`, `INotifyCollectionChanged`), with partial files per interface
 - **`IgnoresAccessChecksToBuilder`** — Emits `[IgnoresAccessChecksTo("AssemblyName")]` attributes so the generated assembly can access internal members of referenced assemblies
 - **`MetadataAssemblyAttributesBuilder`** — Copies metadata assembly attributes from the runtime assembly

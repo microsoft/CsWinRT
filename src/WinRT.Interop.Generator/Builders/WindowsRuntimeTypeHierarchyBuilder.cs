@@ -52,7 +52,7 @@ internal static partial class WindowsRuntimeTypeHierarchyBuilder
 
         // Use a sorted dictionary to ensure the resulting lookup is deterministic.
         // That is, we want to guarantee the same ordering if all pairs are the same.
-        SortedDictionary<string, string> sortedTypeHierarchyEntries = new(typeHierarchyEntries.ToDictionary());
+        SortedDictionary<string, string> sortedTypeHierarchyEntries = new(typeHierarchyEntries.ToDictionary(), StringComparer.Ordinal);
 
         token.ThrowIfCancellationRequested();
 
@@ -77,9 +77,9 @@ internal static partial class WindowsRuntimeTypeHierarchyBuilder
         token.ThrowIfCancellationRequested();
 
         int bucketSize;
+        bool usesNarrowOffsets;
         Dictionary<int, int> chainOffsets;
         FieldDefinition keysRvaField;
-        FieldDefinition prefixesRvaField;
 
         // Emit the 'Keys' RVA field
         try
@@ -90,8 +90,8 @@ internal static partial class WindowsRuntimeTypeHierarchyBuilder
                 interopDefinitions,
                 interopReferences,
                 out bucketSize,
+                out usesNarrowOffsets,
                 out chainOffsets,
-                out prefixesRvaField,
                 out keysRvaField);
         }
         catch (Exception e) when (!e.IsWellKnown)
@@ -108,8 +108,8 @@ internal static partial class WindowsRuntimeTypeHierarchyBuilder
         {
             BucketsRva(
                 bucketSize,
+                usesNarrowOffsets,
                 chainOffsets,
-                narrow: keysRvaField.FieldRva!.GetPhysicalSize() <= ushort.MaxValue,
                 interopDefinitions,
                 interopReferences,
                 out bucketsRvaField);
@@ -129,7 +129,7 @@ internal static partial class WindowsRuntimeTypeHierarchyBuilder
                 bucketsRvaField: bucketsRvaField,
                 keysRvaField: keysRvaField,
                 valuesRvaField: valuesRvaField,
-                prefixesRvaField: prefixesRvaField,
+                usesNarrowOffsets: usesNarrowOffsets,
                 interopReferences: interopReferences,
                 module: module,
                 out lookupType);
@@ -155,7 +155,7 @@ internal static partial class WindowsRuntimeTypeHierarchyBuilder
         out SortedDictionary<string, ValueInfo> typeHierarchyValues,
         out FieldDefinition valuesRvaField)
     {
-        typeHierarchyValues = [];
+        typeHierarchyValues = new SortedDictionary<string, ValueInfo>(StringComparer.Ordinal);
 
         int valueIndex = 0;
 
@@ -253,8 +253,8 @@ internal static partial class WindowsRuntimeTypeHierarchyBuilder
     /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
     /// <param name="bucketSize">The resulting bucket size.</param>
-    /// <param name="chainOffsets">The mapping of offsets of each chain.</param>
-    /// <param name="prefixesRvaField">The resulting shared namespace prefixes RVA field.</param>
+    /// <param name="usesNarrowOffsets">Whether all offsets into the 'Keys' RVA data are stored as <see cref="ushort"/> values (rather than <see cref="int"/> values).</param>
+    /// <param name="chainOffsets">The mapping of offsets of each chain (in 16-bit units).</param>
     /// <param name="keysRvaField">The resulting 'Keys' RVA field.</param>
     private static void KeysRva(
         SortedDictionary<string, string> typeHierarchyEntries,
@@ -262,8 +262,8 @@ internal static partial class WindowsRuntimeTypeHierarchyBuilder
         InteropDefinitions interopDefinitions,
         InteropReferences interopReferences,
         out int bucketSize,
+        out bool usesNarrowOffsets,
         out Dictionary<int, int> chainOffsets,
-        out FieldDefinition prefixesRvaField,
         out FieldDefinition keysRvaField)
     {
         // Set of known prime numbers, in ascending order
@@ -293,8 +293,11 @@ internal static partial class WindowsRuntimeTypeHierarchyBuilder
 
         bucketSize = 0;
 
-        // Search up to some maximum size for the best bucket size we can use for the application
-        for (int i = startingBucketSize; i < 2333; i++)
+        // Search up to some maximum size for the best bucket size we can use for the application. If the
+        // starting size is already past that limit, we still need to evaluate it, so that it can be selected.
+        int endingBucketSize = Math.Max(startingBucketSize + 1, 2333);
+
+        for (int i = startingBucketSize; i < endingBucketSize; i++)
         {
             using SpanOwner<int> buckets = SpanOwner<int>.Allocate(i, AllocationMode.Clear);
 
@@ -341,66 +344,106 @@ internal static partial class WindowsRuntimeTypeHierarchyBuilder
             chain.Add(key);
         }
 
-        using ArrayPoolBufferWriter<byte> keysRvaBuffer = new();
-        using ArrayPoolBufferWriter<byte> prefixesRvaBuffer = new();
-        Dictionary<string, int> prefixOffsets = new(StringComparer.Ordinal);
+        // Sort the chains by their bucket index, to ensure the results are deterministic
+        KeyValuePair<int, List<string>>[] sortedKeyChains = [.. keyChains.OrderBy(static pair => pair.Key)];
 
-        // Share the namespace including its final dot; unqualified names use an empty prefix
-        // Each prefix record is a 2-byte character count followed by UTF-16 text, ordered ordinally for deterministic offsets
-        foreach (string prefix in typeHierarchyEntries.Keys.Select(static key => key[..(key.LastIndexOf('.') + 1)]).Distinct(StringComparer.Ordinal).Order(StringComparer.Ordinal))
+        using ArrayPoolBufferWriter<byte> keysRvaBuffer = new();
+
+        // Write a '0' value at the start of the RVA data. This serves two purposes: it is the empty chain that
+        // all empty buckets point to (so callers don't need to check for empty buckets), and it is also the empty
+        // prefix used by all runtime class names that don't have a namespace (so they don't need special casing).
+        keysRvaBuffer.Write((ushort)0);
+
+        // Track the offset of each prefix (in 16-bit units), with the empty prefix being the '0' value written above
+        Dictionary<string, int> prefixOffsets = new(StringComparer.Ordinal) { [""] = 0 };
+
+        // Write all unique prefixes (ie. namespaces, including the trailing '.' character) before all chains,
+        // so that keys can reference them instead of repeating them. This greatly reduces the size of the RVA
+        // data, as most keys share a small number of namespaces (eg. 'Microsoft.UI.Xaml.Controls.'). Prefixes
+        // are written in the order they are first seen in the (sorted) keys, so the results are deterministic.
+        foreach (string key in typeHierarchyEntries.Keys)
         {
-            prefixOffsets.Add(prefix, prefixesRvaBuffer.WrittenCount);
-            prefixesRvaBuffer.Write((ushort)prefix.Length);
-            prefixesRvaBuffer.Write(prefix.AsSpan());
+            if (key.Length > ushort.MaxValue)
+            {
+                throw WellKnownInteropExceptions.RuntimeClassNameTooLong(key);
+            }
+
+            string prefix = key[..GetPrefixLength(key)];
+
+            // Skip prefixes we have already written (including the empty prefix)
+            if (!prefixOffsets.TryAdd(prefix, keysRvaBuffer.WrittenCount / sizeof(char)))
+            {
+                continue;
+            }
+
+            // The format is as follows:
+            //   - (2 bytes) length of the prefix (in characters)
+            //   - Prefix data (UTF-16LE encoded)
+            keysRvaBuffer.Write((ushort)prefix.Length);
+            keysRvaBuffer.Write(prefix.AsSpan());
         }
 
-        TypeDefinition prefixesRvaDataType = new(
-            ns: null,
-            name: $"TypeHierarchyLookupPrefixesRvaData(Size={prefixesRvaBuffer.WrittenCount}|Align=2)",
-            attributes: TypeAttributes.NestedAssembly | TypeAttributes.ExplicitLayout | TypeAttributes.Sealed,
-            baseType: interopReferences.ValueType)
+        // Compute the offset (in 16-bit units) of the first chain, assuming narrow offsets are used
+        int narrowChainOffset = keysRvaBuffer.WrittenCount / sizeof(char);
+
+        usesNarrowOffsets = true;
+
+        // Check whether the start of all chains can be stored in a 'ushort' value, if narrow offsets are used. We only
+        // need to check the start of each chain, as that's all that bucket entries point to. Additionally, all prefixes
+        // are before all chains, so if the start of all chains can be stored in a 'ushort' value, so can all prefixes.
+        foreach ((_, List<string> chain) in sortedKeyChains)
         {
-            ClassLayout = new ClassLayout(packingSize: 2, classSize: (uint)prefixesRvaBuffer.WrittenCount)
-        };
-        interopDefinitions.RvaFields.NestedTypes.Add(prefixesRvaDataType);
-        prefixesRvaField = new(
-            name: "TypeHierarchyLookupPrefixes"u8,
-            attributes: FieldAttributes.Public | FieldAttributes.Static | FieldAttributes.InitOnly | FieldAttributes.HasFieldRva,
-            fieldType: prefixesRvaDataType.ToTypeSignature())
-        {
-            FieldRva = new DataSegment(prefixesRvaBuffer.WrittenSpan.ToArray())
-        };
-        interopDefinitions.RvaFields.Fields.Add(prefixesRvaField);
+            if (narrowChainOffset > ushort.MaxValue)
+            {
+                usesNarrowOffsets = false;
+
+                break;
+            }
+
+            // Each key has 3 'ushort' values, followed by the suffix (see the format description below)
+            foreach (string key in chain)
+            {
+                narrowChainOffset += 3 + key.Length - GetPrefixLength(key);
+            }
+
+            // Account for the '\0' character at the end of the chain
+            narrowChainOffset++;
+        }
 
         // We also need to track the offset of the start of each chain, to reference it from the bucket entries
         chainOffsets = [];
 
-        // We need to go through indices in order to ensure the results are deterministic
-        foreach ((int bucketIndex, List<string> chain) in keyChains.OrderBy(static pair => pair.Key))
+        // Write all chains, in the same order as above
+        foreach ((int bucketIndex, List<string> chain) in sortedKeyChains)
         {
-            // Track the RVA offset of the current chain
-            chainOffsets[bucketIndex] = keysRvaBuffer.WrittenCount;
+            // Track the RVA offset of the current chain (in 16-bit units)
+            chainOffsets[bucketIndex] = keysRvaBuffer.WrittenCount / sizeof(char);
 
             // Process all keys in the chain (they might all point to different values).
             // That is, they are in the same chain just because the hash collided.
             foreach (string key in chain)
             {
-                if (key.Length > ushort.MaxValue)
-                {
-                    throw WellKnownInteropExceptions.RuntimeClassNameTooLong(key);
-                }
+                int prefixLength = GetPrefixLength(key);
+                int prefixOffset = prefixOffsets[key[..prefixLength]];
 
                 // The format is as follows:
-                //   - (2 bytes) full key length in UTF-16 characters
+                //   - (2 bytes) length of the suffix (ie. the key without its prefix), which is never '0'
                 //   - (2 bytes) RVA offset of the value
-                //   - (4 bytes) RVA offset of the namespace prefix
-                //   - Class name suffix (UTF-16LE encoded)
-                int prefixLength = key.LastIndexOf('.') + 1;
-                ReadOnlySpan<char> suffix = key.AsSpan(prefixLength);
-                keysRvaBuffer.Write((ushort)key.Length);
+                //   - (2 or 4 bytes) offset of the prefix (in 16-bit units), depending on whether narrow offsets are used
+                //   - Suffix data (UTF-16LE encoded)
+                keysRvaBuffer.Write((ushort)(key.Length - prefixLength));
                 keysRvaBuffer.Write((ushort)typeHierarchyValues[typeHierarchyEntries[key]].RvaOffset);
-                keysRvaBuffer.Write(prefixOffsets[key[..prefixLength]]);
-                keysRvaBuffer.Write(suffix);
+
+                if (usesNarrowOffsets)
+                {
+                    keysRvaBuffer.Write(checked((ushort)prefixOffset));
+                }
+                else
+                {
+                    keysRvaBuffer.Write(prefixOffset);
+                }
+
+                keysRvaBuffer.Write(key.AsSpan(prefixLength));
             }
 
             // Append a '\0' character to indicate the end of a chain, so callers know when to stop
@@ -437,41 +480,47 @@ internal static partial class WindowsRuntimeTypeHierarchyBuilder
     /// Creates the 'Buckets' RVA field for the type hierarchy.
     /// </summary>
     /// <param name="bucketSize">The resulting bucket size.</param>
-    /// <param name="chainOffsets">The mapping of offsets of each chain.</param>
-    /// <param name="narrow">Whether the entire key payload permits 16-bit offsets with a reserved empty-bucket sentinel.</param>
+    /// <param name="usesNarrowOffsets">Whether all offsets into the 'Keys' RVA data are stored as <see cref="ushort"/> values (rather than <see cref="int"/> values).</param>
+    /// <param name="chainOffsets">The mapping of offsets of each chain (in 16-bit units).</param>
     /// <param name="interopDefinitions">The <see cref="InteropDefinitions"/> instance to use.</param>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
     /// <param name="bucketsRvaField">The resulting 'Buckets' RVA field.</param>
     private static void BucketsRva(
         int bucketSize,
+        bool usesNarrowOffsets,
         Dictionary<int, int> chainOffsets,
-        bool narrow,
         InteropDefinitions interopDefinitions,
         InteropReferences interopReferences,
         out FieldDefinition bucketsRvaField)
     {
-        using ArrayPoolBufferWriter<byte> bucketsRvaBuffer = new(initialCapacity: bucketSize);
+        int bucketEntrySize = usesNarrowOffsets ? sizeof(ushort) : sizeof(int);
 
-        // Store each chain's byte offset, reserving the all-ones value for an empty bucket in either width
+        using ArrayPoolBufferWriter<byte> bucketsRvaBuffer = new(initialCapacity: bucketSize * bucketEntrySize);
+
+        // Fill the buckets RVA data with the right offsets. Empty buckets just use '0', which is the offset
+        // of an empty chain in the 'Keys' RVA data, so callers don't need to check for them separately.
         for (int i = 0; i < bucketSize; i++)
         {
-            if (narrow)
+            int offset = chainOffsets.TryGetValue(i, out int chainOffset) ? chainOffset : 0;
+
+            if (usesNarrowOffsets)
             {
-                bucketsRvaBuffer.Write(chainOffsets.TryGetValue(i, out int narrowOffset) ? checked((ushort)narrowOffset) : ushort.MaxValue);
-                continue;
+                bucketsRvaBuffer.Write(checked((ushort)offset));
             }
-            bucketsRvaBuffer.Write(chainOffsets.TryGetValue(i, out int offset) ? offset : -1);
+            else
+            {
+                bucketsRvaBuffer.Write(offset);
+            }
         }
 
         // Define the data type for 'Buckets' data
-        ushort alignment = narrow ? (ushort)2 : (ushort)4;
         TypeDefinition bucketsRvaDataType = new(
             ns: null,
-            name: $"TypeHierarchyLookupBucketsRvaData(Size={bucketsRvaBuffer.WrittenCount}|Align={alignment})",
+            name: $"TypeHierarchyLookupBucketsRvaData(Size={bucketsRvaBuffer.WrittenCount}|Align={bucketEntrySize})",
             attributes: TypeAttributes.NestedAssembly | TypeAttributes.ExplicitLayout | TypeAttributes.Sealed,
             baseType: interopReferences.ValueType)
         {
-            ClassLayout = new ClassLayout(packingSize: alignment, classSize: (uint)bucketsRvaBuffer.WrittenCount)
+            ClassLayout = new ClassLayout(packingSize: (ushort)bucketEntrySize, classSize: (uint)bucketsRvaBuffer.WrittenCount)
         };
 
         // Nest the type under the '<RvaFields>' type
@@ -497,7 +546,7 @@ internal static partial class WindowsRuntimeTypeHierarchyBuilder
     /// <param name="bucketsRvaField">The 'Buckets' RVA field (created by <see cref="BucketsRva"/>).</param>
     /// <param name="keysRvaField">The 'Keys' RVA field (created by <see cref="KeysRva"/>).</param>
     /// <param name="valuesRvaField">The 'Values' RVA field (created by <see cref="ValuesRva"/>).</param>
-    /// <param name="prefixesRvaField">The shared namespace prefixes RVA field (created by <see cref="KeysRva"/>).</param>
+    /// <param name="usesNarrowOffsets">Whether all offsets into the 'Keys' RVA data are stored as <see cref="ushort"/> values (rather than <see cref="int"/> values).</param>
     /// <param name="interopReferences">The <see cref="InteropReferences"/> instance to use.</param>
     /// <param name="module">The interop module being built.</param>
     /// <param name="windowsRuntimeTypeHierarchyDataType">The resulting type.</param>
@@ -506,7 +555,7 @@ internal static partial class WindowsRuntimeTypeHierarchyBuilder
         FieldDefinition bucketsRvaField,
         FieldDefinition keysRvaField,
         FieldDefinition valuesRvaField,
-        FieldDefinition prefixesRvaField,
+        bool usesNarrowOffsets,
         InteropReferences interopReferences,
         ModuleDefinition module,
         out TypeDefinition windowsRuntimeTypeHierarchyDataType)
@@ -520,8 +569,26 @@ internal static partial class WindowsRuntimeTypeHierarchyBuilder
 
         module.TopLevelTypes.Add(windowsRuntimeTypeHierarchyDataType);
 
+        int bucketsRvaSize = (int)bucketsRvaField.Signature!.FieldType.Resolve(module.RuntimeContext).ClassLayout!.ClassSize;
         int keysRvaSize = (int)keysRvaField.Signature!.FieldType.Resolve(module.RuntimeContext).ClassLayout!.ClassSize;
         int valuesRvaSize = (int)valuesRvaField.Signature!.FieldType.Resolve(module.RuntimeContext).ClassLayout!.ClassSize;
+
+        // Create the 'Buckets' get accessor
+        MethodDefinition get_BucketsMethod = new(
+            name: "get_Buckets"u8,
+            attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.SpecialName | MethodAttributes.Static,
+            signature: MethodSignature.CreateStatic(interopReferences.ReadOnlySpanByte))
+        {
+            IsAggressiveInlining = true,
+            CilInstructions =
+            {
+                { Ldsflda, bucketsRvaField },
+                { Conv_U },
+                { CilInstruction.CreateLdcI4(bucketsRvaSize) },
+                { Newobj, interopReferences.ReadOnlySpanByte_ctor },
+                { Ret }
+            }
+        };
 
         // Create the 'Keys' get accessor
         MethodDefinition get_KeysMethod = new(
@@ -557,8 +624,16 @@ internal static partial class WindowsRuntimeTypeHierarchyBuilder
             }
         };
 
+        windowsRuntimeTypeHierarchyDataType.Methods.Add(get_BucketsMethod);
         windowsRuntimeTypeHierarchyDataType.Methods.Add(get_KeysMethod);
         windowsRuntimeTypeHierarchyDataType.Methods.Add(get_ValuesMethod);
+
+        // Create the 'Buckets' property definition
+        PropertyDefinition bucketsProperty = new(
+            name: "Buckets"u8,
+            attributes: PropertyAttributes.None,
+            signature: PropertySignature.FromGetMethod(get_BucketsMethod))
+        { GetMethod = get_BucketsMethod };
 
         // Create the 'Keys' property definition
         PropertyDefinition keysProperty = new(
@@ -574,116 +649,101 @@ internal static partial class WindowsRuntimeTypeHierarchyBuilder
             signature: PropertySignature.FromGetMethod(get_ValuesMethod))
         { GetMethod = get_ValuesMethod };
 
+        windowsRuntimeTypeHierarchyDataType.Properties.Add(bucketsProperty);
         windowsRuntimeTypeHierarchyDataType.Properties.Add(keysProperty);
         windowsRuntimeTypeHierarchyDataType.Properties.Add(valuesProperty);
 
-        // Expose the prefix blob without copying; keys contain byte offsets into these length-prefixed records
-        MethodDefinition get_PrefixesMethod = new(
-            name: "get_Prefixes"u8,
+        // Compute the range of lengths of all keys, so that callers can skip lookups that can't possibly match
+        int minimumKeyLength = typeHierarchyEntries.Keys.Min(static key => key.Length);
+        int maximumKeyLength = typeHierarchyEntries.Keys.Max(static key => key.Length);
+
+        // Create the 'UsesNarrowOffsets' get accessor (it just returns a constant)
+        MethodDefinition get_UsesNarrowOffsetsMethod = new(
+            name: "get_UsesNarrowOffsets"u8,
             attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.SpecialName | MethodAttributes.Static,
-            signature: MethodSignature.CreateStatic(interopReferences.ReadOnlySpanByte))
+            signature: MethodSignature.CreateStatic(interopReferences.Boolean))
         {
             IsAggressiveInlining = true,
             CilInstructions =
             {
-                { Ldsflda, prefixesRvaField },
-                { Conv_U },
-                { CilInstruction.CreateLdcI4((int)prefixesRvaField.FieldRva!.GetPhysicalSize()) },
-                { Newobj, interopReferences.ReadOnlySpanByte_ctor },
+                { usesNarrowOffsets ? Ldc_I4_1 : Ldc_I4_0 },
                 { Ret }
             }
         };
-        windowsRuntimeTypeHierarchyDataType.Methods.Add(get_PrefixesMethod);
-        windowsRuntimeTypeHierarchyDataType.Properties.Add(new PropertyDefinition(
-            name: "Prefixes"u8,
+
+        // Create the 'MinimumKeyLength' get accessor (it just returns a constant)
+        MethodDefinition get_MinimumKeyLengthMethod = new(
+            name: "get_MinimumKeyLength"u8,
+            attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.SpecialName | MethodAttributes.Static,
+            signature: MethodSignature.CreateStatic(interopReferences.Int32))
+        {
+            IsAggressiveInlining = true,
+            CilInstructions =
+            {
+                { CilInstruction.CreateLdcI4(minimumKeyLength) },
+                { Ret }
+            }
+        };
+
+        // Create the 'MaximumKeyLength' get accessor (it just returns a constant)
+        MethodDefinition get_MaximumKeyLengthMethod = new(
+            name: "get_MaximumKeyLength"u8,
+            attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.SpecialName | MethodAttributes.Static,
+            signature: MethodSignature.CreateStatic(interopReferences.Int32))
+        {
+            IsAggressiveInlining = true,
+            CilInstructions =
+            {
+                { CilInstruction.CreateLdcI4(maximumKeyLength) },
+                { Ret }
+            }
+        };
+
+        windowsRuntimeTypeHierarchyDataType.Methods.Add(get_UsesNarrowOffsetsMethod);
+        windowsRuntimeTypeHierarchyDataType.Methods.Add(get_MinimumKeyLengthMethod);
+        windowsRuntimeTypeHierarchyDataType.Methods.Add(get_MaximumKeyLengthMethod);
+
+        // Create the 'UsesNarrowOffsets' property definition
+        PropertyDefinition usesNarrowOffsetsProperty = new(
+            name: "UsesNarrowOffsets"u8,
             attributes: PropertyAttributes.None,
-            signature: PropertySignature.FromGetMethod(get_PrefixesMethod))
-        { GetMethod = get_PrefixesMethod });
+            signature: PropertySignature.FromGetMethod(get_UsesNarrowOffsetsMethod))
+        { GetMethod = get_UsesNarrowOffsetsMethod };
 
-        // Match BucketsRva's width selection using the entire key blob, including chain terminators
-        // Reserving ushort.MaxValue for empty buckets is safe only when that byte offset is outside the blob
-        bool narrow = keysRvaSize <= ushort.MaxValue;
-        int bucketWidth = narrow ? sizeof(ushort) : sizeof(int);
-        int bucketCount = (int)bucketsRvaField.FieldRva!.GetPhysicalSize() / bucketWidth;
+        // Create the 'MinimumKeyLength' property definition
+        PropertyDefinition minimumKeyLengthProperty = new(
+            name: "MinimumKeyLength"u8,
+            attributes: PropertyAttributes.None,
+            signature: PropertySignature.FromGetMethod(get_MinimumKeyLengthMethod))
+        { GetMethod = get_MinimumKeyLengthMethod };
 
-        // Emit the address calculation: buckets + ((uint)hash % (uint)bucketCount) * bucketWidth
-        // Select the element load at generation time, avoiding a runtime branch on the catalog format
-        MethodDefinition getBucketIndex = new(
-            name: "GetBucketIndex"u8,
-            attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
-            signature: MethodSignature.CreateStatic(interopReferences.Int32, [interopReferences.Int32]))
-        {
-            IsAggressiveInlining = true,
-            CilInstructions =
-            {
-                { Ldsflda, bucketsRvaField },
-                { Conv_U },
-                { Ldarg_0 },
-                { CilInstruction.CreateLdcI4(bucketCount) },
-                { Rem_Un },
-                { CilInstruction.CreateLdcI4(bucketWidth) },
-                { Mul },
-                { Conv_U },
-                { Add },
-                { narrow ? Ldind_U2 : Ldind_I4 }
-            }
-        };
-        if (narrow)
-        {
-            // Normalize the ushort empty marker to -1, preserving the runtime's existing failure check
-            // Dup leaves valid offsets on the stack for the shared ret; the sentinel is popped and replaced
-            CilInstruction returnOffset = new(Ret);
-            _ = getBucketIndex.CilInstructions.Add(Dup);
-            getBucketIndex.CilInstructions.Add(CilInstruction.CreateLdcI4(ushort.MaxValue));
-            _ = getBucketIndex.CilInstructions.Add(Bne_Un_S, returnOffset.CreateLabel());
-            _ = getBucketIndex.CilInstructions.Add(Pop);
-            _ = getBucketIndex.CilInstructions.Add(Ldc_I4_M1);
-            getBucketIndex.CilInstructions.Add(returnOffset);
-        }
-        else
-        {
-            _ = getBucketIndex.CilInstructions.Add(Ret);
-        }
-        windowsRuntimeTypeHierarchyDataType.Methods.Add(getBucketIndex);
+        // Create the 'MaximumKeyLength' property definition
+        PropertyDefinition maximumKeyLengthProperty = new(
+            name: "MaximumKeyLength"u8,
+            attributes: PropertyAttributes.None,
+            signature: PropertySignature.FromGetMethod(get_MaximumKeyLengthMethod))
+        { GetMethod = get_MaximumKeyLengthMethod };
 
-        // Compute the range check arguments
-        int minLength = typeHierarchyEntries.Keys.Min(static key => key.Length);
-        int maxLength = typeHierarchyEntries.Keys.Max(static key => key.Length);
+        windowsRuntimeTypeHierarchyDataType.Properties.Add(usesNarrowOffsetsProperty);
+        windowsRuntimeTypeHierarchyDataType.Properties.Add(minimumKeyLengthProperty);
+        windowsRuntimeTypeHierarchyDataType.Properties.Add(maximumKeyLengthProperty);
+    }
 
-        // Jump labels
-        CilInstruction ldc_i4_0_returnFalse = new(Ldc_I4_0);
+    /// <summary>
+    /// Gets the length of the prefix (ie. the namespace, including the trailing '.' character) of a runtime class name.
+    /// </summary>
+    /// <param name="runtimeClassName">The input runtime class name.</param>
+    /// <returns>The length of the prefix of <paramref name="runtimeClassName"/>.</returns>
+    /// <remarks>
+    /// The remaining suffix is never empty (for non empty names), as its length is also used to indicate the end of a chain.
+    /// The runtime doesn't need to replicate this logic, as it just compares the prefix and suffix of each key separately.
+    /// </remarks>
+    private static int GetPrefixLength(string runtimeClassName)
+    {
+        int prefixLength = runtimeClassName.LastIndexOf('.') + 1;
 
-        // Create the 'IsLengthInRange' method as follows:
-        //
-        // public static bool IsLengthInRange(int length)
-        MethodDefinition isLengthInRange = new(
-            name: "IsLengthInRange"u8,
-            attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
-            signature: MethodSignature.CreateStatic(
-                returnType: interopReferences.Boolean,
-                parameterTypes: [interopReferences.Int32]))
-        {
-            IsAggressiveInlining = true,
-            CilInstructions =
-            {
-                // This emits the following code:
-                //
-                // return (uint)length is >= <MIN_LENGTH> and <= <MAX_LENGTH>;
-                { Ldarg_0 },
-                { CilInstruction.CreateLdcI4(minLength) },
-                { Blt_Un_S, ldc_i4_0_returnFalse.CreateLabel() },
-                { Ldarg_0 },
-                { CilInstruction.CreateLdcI4(maxLength) },
-                { Cgt_Un },
-                { Ldc_I4_0 },
-                { Ceq },
-                { Ret },
-                { ldc_i4_0_returnFalse },
-                { Ret }
-            }
-        };
-
-        windowsRuntimeTypeHierarchyDataType.Methods.Add(isLengthInRange);
+        // If the name ends with a '.' character, just use the entire name as the suffix
+        return prefixLength < runtimeClassName.Length ? prefixLength : 0;
     }
 
     /// <summary>
