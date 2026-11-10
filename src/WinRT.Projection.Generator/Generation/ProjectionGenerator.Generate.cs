@@ -54,9 +54,18 @@ internal partial class ProjectionGenerator
         {
             int winmdCount = CountProcessedWinMDs(args, references, isComponentMode);
 
-            ConsoleApp.Log(isComponentMode
-                ? $"Processing {winmdCount} .winmd component(s)"
-                : $"Processing {winmdCount} .winmd reference(s)");
+            // Skip the message entirely when there are no components to process, as it would only be noise
+            if (isComponentMode)
+            {
+                if (winmdCount > 0)
+                {
+                    ConsoleApp.Log($"Processing {winmdCount} .winmd component(s)");
+                }
+            }
+            else
+            {
+                ConsoleApp.Log($"Processing {winmdCount} .winmd reference(s)");
+            }
         }
 
         BuildWriterOptions(
