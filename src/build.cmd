@@ -268,7 +268,7 @@ set net10_runtime=%this_dir%_build\%cswinrt_platform%\%cswinrt_configuration%\Wi
 set net10_runtime_ref=%this_dir%_build\%cswinrt_platform%\%cswinrt_configuration%\WinRT.Runtime\ref\WinRT.Runtime.dll
 set net10_runtime_ref_xml=%this_dir%_build\%cswinrt_platform%\%cswinrt_configuration%\WinRT.Runtime\ref\WinRT.Runtime.xml
 set source_generator_roslyn4120=%this_dir%Authoring\WinRT.SourceGenerator.Roslyn4120\bin\%cswinrt_configuration%\netstandard2.0\WinRT.SourceGenerator.dll
-set source_generator=%this_dir%Authoring\WinRT.SourceGenerator2\bin\%cswinrt_configuration%\net10.0\WinRT.SourceGenerator.dll
+set source_generator=%this_dir%WinRT.SourceGenerator2\bin\%cswinrt_configuration%\net10.0\WinRT.SourceGenerator.dll
 set winrt_host_%cswinrt_platform%=%this_dir%_build\%cswinrt_platform%\%cswinrt_configuration%\WinRT.Host\bin\WinRT.Host.dll
 set winrt_host_resource_%cswinrt_platform%=%this_dir%_build\%cswinrt_platform%\%cswinrt_configuration%\WinRT.Host\bin\WinRT.Host.dll.mui
 set winrt_shim=%this_dir%Authoring\WinRT.Host.Shim\bin\%cswinrt_configuration%\net10.0\WinRT.Host.Shim.dll
@@ -614,7 +614,7 @@ if /I "%cswinrt_platform%"=="x64" (
     call :copyproduct "%winrt_runtime_staging%ref\%%f" "%cswinrt_stage%\ref"
     if errorlevel 1 exit /b !errorlevel!
   )
-  call :copyproduct "%this_dir%Authoring\WinRT.SourceGenerator2\bin\%cswinrt_configuration%\net10.0\WinRT.SourceGenerator.dll" "%cswinrt_stage%"
+  call :copyproduct "%this_dir%WinRT.SourceGenerator2\bin\%cswinrt_configuration%\net10.0\WinRT.SourceGenerator.dll" "%cswinrt_stage%"
   if errorlevel 1 exit /b !errorlevel!
   call :copyproduct "%this_dir%Authoring\WinRT.Host.Shim\bin\%cswinrt_configuration%\net10.0\WinRT.Host.Shim.dll" "%cswinrt_stage%"
   if errorlevel 1 exit /b !errorlevel!

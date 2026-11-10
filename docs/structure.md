@@ -17,7 +17,7 @@ Contains source files for producing the C#/WinRT NuGet package, which is regular
 
 ## [`src/Authoring`](../src/Authoring)
 
-Contains projects for implementing authoring and hosting support, including the source generators and the WinRT host.
+Contains projects for implementing authoring and hosting support, including the WinRT host.
 
 ## [`src/Benchmarks`](../src/Benchmarks)
 

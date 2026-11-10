@@ -32,8 +32,8 @@ The `CSWINRT3_0` define constant is set when CsWinRT 3.0 is active.
 CsWinRT/
 ├── src/
 │   ├── WinRT.Runtime2/                    # (1) Runtime library (WinRT.Runtime.dll)
-│   ├── Authoring/
-│   │   └── WinRT.SourceGenerator2/        # (2) Roslyn source generator + analyzers
+│   ├── WinRT.SourceGenerator2/            # (2) Roslyn source generator + analyzers
+│   ├── Authoring/                         # WinRT.Host (native hosting) and WinRT.Host.Shim
 │   ├── WinRT.Projection.Writer/           # (3) Projection writer library (C# code writers)
 │   ├── WinRT.Projection.Ref.Generator/    # (4) Reference projection source generator (cswinrtprojectionrefgen.exe)
 │   ├── WinRT.Impl.Generator/              # (5) Impl/forwarder DLL generator (cswinrtimplgen.exe)
@@ -333,7 +333,7 @@ Every projected type, plus every proxy type for a custom-mapped type, is tagged 
 
 The mapping from a projected type to its source `.winmd` module name (its "contract"/"stem") — needed only by build-time tooling (the interop and WinMD generators) — is **not** stored on each type. Instead, the projection generator emits a single centralized, fully trimmable lookup type, **`ABI.WindowsRuntimeMetadataTypes`**, carrying one **`[WindowsRuntimeMetadata(typeof(T), "stem")]`** entry per projected type (`Attributes/WindowsRuntimeMetadataAttribute.cs`, repurposed to a `(Type, string)`, `class`-targeting, `AllowMultiple` attribute). This mirrors how `ABI.WindowsRuntimeDefaultInterfaces` centralizes default interfaces, and lets the metadata be dead-code-eliminated when unused. Both the marker and the lookup type are implementation-only and are stripped from reference projections. `WinRT.Runtime`'s own manually-projected types do not contribute to a lookup type: the interop generator addresses them with the well-known `#CsWinRT` assembly identifier, and the WinMD generator reads their contract from the real `[ContractVersion]` metadata in the `WinRT.Runtime` reference assembly.
 
-### 2. WinRT.SourceGenerator2 (`src/Authoring/WinRT.SourceGenerator2/`)
+### 2. WinRT.SourceGenerator2 (`src/WinRT.SourceGenerator2/`)
 
 A Roslyn incremental source generator and diagnostic analyzer package. Runs at **design time** (IntelliSense) and **build time**. It is intentionally lightweight — heavy codegen is deferred to the post-build CLI tools.
 

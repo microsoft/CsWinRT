@@ -222,7 +222,7 @@ steps:
       displayName: Stage Source Generator
       condition: and(succeeded(), eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildConfiguration'], 'release'))
       inputs:
-        SourceFolder: $(Build.SourcesDirectory)\src\Authoring\WinRT.SourceGenerator2\bin\$(BuildConfiguration)\net10.0
+        SourceFolder: $(Build.SourcesDirectory)\src\WinRT.SourceGenerator2\bin\$(BuildConfiguration)\net10.0
         Contents: |
           WinRT.SourceGenerator.dll
           WinRT.SourceGenerator.pdb

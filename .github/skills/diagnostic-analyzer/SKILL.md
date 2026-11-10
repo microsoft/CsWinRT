@@ -5,7 +5,7 @@ description: Create a new Roslyn diagnostic analyzer for the CsWinRT source gene
 
 # Create a diagnostic analyzer
 
-Add a new Roslyn diagnostic analyzer to the CsWinRT source generator project (`src/Authoring/WinRT.SourceGenerator2/`). Follow the established patterns and group changes into separate commits.
+Add a new Roslyn diagnostic analyzer to the CsWinRT source generator project (`src/WinRT.SourceGenerator2/`). Follow the established patterns and group changes into separate commits.
 
 <investigate_before_answering>
 Before creating the analyzer, read the existing analyzers and diagnostic descriptors to understand:
@@ -14,9 +14,9 @@ Before creating the analyzer, read the existing analyzers and diagnostic descrip
 - The test infrastructure and test patterns
 
 Key files to read:
-- `src/Authoring/WinRT.SourceGenerator2/Diagnostics/DiagnosticDescriptors.cs` — all diagnostic descriptors
-- `src/Authoring/WinRT.SourceGenerator2/AnalyzerReleases.Shipped.md` — shipped diagnostics table
-- All analyzers in `src/Authoring/WinRT.SourceGenerator2/Diagnostics/Analyzers/` — code patterns
+- `src/WinRT.SourceGenerator2/Diagnostics/DiagnosticDescriptors.cs` — all diagnostic descriptors
+- `src/WinRT.SourceGenerator2/AnalyzerReleases.Shipped.md` — shipped diagnostics table
+- All analyzers in `src/WinRT.SourceGenerator2/Diagnostics/Analyzers/` — code patterns
 - `src/Tests/SourceGenerator2Test/Helpers/CSharpAnalyzerTest{TAnalyzer}.cs` — test helper
 
 Also check these external repositories for additional analyzer patterns to reference:
@@ -26,7 +26,7 @@ Also check these external repositories for additional analyzer patterns to refer
 
 ## Step 1: Add the diagnostic descriptor
 
-**File:** `src/Authoring/WinRT.SourceGenerator2/Diagnostics/DiagnosticDescriptors.cs`
+**File:** `src/WinRT.SourceGenerator2/Diagnostics/DiagnosticDescriptors.cs`
 
 Add a new `DiagnosticDescriptor` field following the existing pattern:
 
@@ -58,7 +58,7 @@ public static readonly DiagnosticDescriptor MyNewDiagnostic = new(
 
 ## Step 2: Register the diagnostic in AnalyzerReleases.Shipped.md
 
-**File:** `src/Authoring/WinRT.SourceGenerator2/AnalyzerReleases.Shipped.md`
+**File:** `src/WinRT.SourceGenerator2/AnalyzerReleases.Shipped.md`
 
 Add a new row to the rules table:
 
@@ -78,7 +78,7 @@ The columns are: `Rule ID | Category | Severity | Notes` (where Notes = the titl
 
 ## Step 3: Create the analyzer class
 
-**File:** `src/Authoring/WinRT.SourceGenerator2/Diagnostics/Analyzers/MyNewAnalyzer.cs`
+**File:** `src/WinRT.SourceGenerator2/Diagnostics/Analyzers/MyNewAnalyzer.cs`
 
 Use the existing analyzers in the `Diagnostics/Analyzers/` folder as reference for the code structure and patterns.
 

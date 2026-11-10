@@ -4,7 +4,7 @@
     "projects": [
       "Authoring\\WinRT.Host\\WinRT.Host.vcxproj",
       "Authoring\\WinRT.Host.Shim\\WinRT.Host.Shim.csproj",
-      "Authoring\\WinRT.SourceGenerator2\\WinRT.SourceGenerator2.csproj",
+      "WinRT.SourceGenerator2\\WinRT.SourceGenerator2.csproj",
       "WinRT.Generator.Core\\WinRT.Generator.Core.csproj",
       "WinRT.Generator.Tasks\\WinRT.Generator.Tasks.csproj",
       "WinRT.Impl.Generator\\WinRT.Impl.Generator.csproj",
