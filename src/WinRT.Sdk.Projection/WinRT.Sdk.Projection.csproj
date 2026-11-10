@@ -52,7 +52,7 @@
   -->
   <ItemGroup>
     <Reference Include="WinRT.Runtime">
-      <HintPath>$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)', '..', 'WinRT.Runtime2', 'bin', '$(Configuration)', 'net10.0', 'WinRT.Runtime.dll'))</HintPath>
+      <HintPath>$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)', '..', 'WinRT.Runtime', 'bin', '$(Configuration)', 'net10.0', 'WinRT.Runtime.dll'))</HintPath>
     </Reference>
     <Reference Include="WinRT.Sdk.Projection" Condition="'$(WindowsSdkXaml)' == 'true'">
       <HintPath>$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)', '..', 'WinRT.Sdk.Projection', 'bin', '$(Configuration)', '$(WindowsSdkBuild)', 'WinRT.Sdk.Projection.dll'))</HintPath>

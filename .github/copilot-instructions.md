@@ -31,7 +31,7 @@ The `CSWINRT3_0` define constant is set when CsWinRT 3.0 is active.
 ```
 CsWinRT/
 ├── src/
-│   ├── WinRT.Runtime2/                    # (1) Runtime library (WinRT.Runtime.dll)
+│   ├── WinRT.Runtime/                    # (1) Runtime library (WinRT.Runtime.dll)
 │   ├── WinRT.SourceGenerator/            # (2) Roslyn source generator + analyzers
 │   ├── Authoring/                         # WinRT.Host (native hosting) and WinRT.Host.Shim
 │   ├── WinRT.Projection.Writer/           # (3) Projection writer library (C# code writers)
@@ -165,7 +165,7 @@ By running the interop generator at the very end of the build process (after all
 
 ## Project details
 
-### 1. WinRT.Runtime (`src/WinRT.Runtime2/`)
+### 1. WinRT.Runtime (`src/WinRT.Runtime/`)
 
 The runtime library (`WinRT.Runtime.dll`) provides all common infrastructure for Windows Runtime interop. It is referenced by all other CsWinRT components and by consuming applications.
 
@@ -182,7 +182,7 @@ The runtime library (`WinRT.Runtime.dll`) provides all common infrastructure for
 **Directory structure:**
 
 ```
-WinRT.Runtime2/
+WinRT.Runtime/
 ├── WindowsRuntimeObject.cs          # Base class for ALL projected runtime classes (partial; reference + shared surface)
 ├── WindowsRuntimeObject.Impl.cs     # Implementation-only half of WindowsRuntimeObject (excluded from the reference assembly)
 ├── WindowsRuntimeInspectable.cs     # Fallback type for unknown native objects
@@ -663,7 +663,7 @@ A small build project that produces **`WindowsRuntime.Internal.winmd`** — the 
 - **WindowsSdkPackageVersion**: pinned (e.g. `10.0.26100.85-preview`) so the .NET SDK adds the implicit framework reference to the matching `Microsoft.Windows.SDK.NET.Ref` package
 - **Disabled CsWinRT integration**: `CsWinRTEnabled = false`, `CsWinRTGenerateProjection = false`, `CsWinRTGenerateInteropAssembly[2] = false` (this project itself feeds back into the CsWinRT pipeline; no NuGet `Microsoft.Windows.CsWinRT` reference is involved)
 - **`IsPackable = false`**: the produced `.dll` is just an intermediate artifact; only the `.winmd` is shipped
-- References `WinRT.Runtime2` via `ProjectReference Private="false"` and depends on `WinRT.WinMD.Generator` for build ordering only (`ReferenceOutputAssembly="false"`)
+- References `WinRT.Runtime` via `ProjectReference Private="false"` and depends on `WinRT.WinMD.Generator` for build ordering only (`ReferenceOutputAssembly="false"`)
 
 **Contents:**
 
@@ -713,7 +713,7 @@ The MSBuild integration is orchestrated through several `.props` and `.targets` 
 - **XML documentation**: generated for all projects
 - **`SkipLocalsInit`**: enabled in runtime and build tools for performance
 - **Suppressed warnings**: `CS8500` (ref safety in unsafe contexts), `AD0001` (analyzer crashes)
-- **Strong-name signing**: all assemblies signed with `src/WinRT.Runtime2/key.snk`
+- **Strong-name signing**: all assemblies signed with `src/WinRT.Runtime/key.snk`
 
 ### Naming conventions
 

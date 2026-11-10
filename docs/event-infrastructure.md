@@ -1,6 +1,6 @@
 # Windows Runtime Event Infrastructure
 
-This document provides a deep dive into how CsWinRT's event infrastructure works in `WinRT.Runtime2`. It covers event sources, event states, the event source cache, event registration tokens, RCW/CCW interaction, lifetime management across the native ABI boundary, and the specific behavior of static events.
+This document provides a deep dive into how CsWinRT's event infrastructure works in `WinRT.Runtime`. It covers event sources, event states, the event source cache, event registration tokens, RCW/CCW interaction, lifetime management across the native ABI boundary, and the specific behavior of static events.
 
 ## Table of Contents
 

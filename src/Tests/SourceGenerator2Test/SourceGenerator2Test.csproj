@@ -26,7 +26,7 @@
     <ProjectReference Include="..\..\WinRT.SourceGenerator\WinRT.SourceGenerator.csproj" SetPlatform="Platform=AnyCPU" />
     <ProjectReference Include="..\..\Projections\Windows\Windows.csproj" />
     <ProjectReference Include="..\..\Projections\WinAppSDK\WinAppSDK.csproj" />
-    <ProjectReference Include="..\..\WinRT.Runtime2\WinRT.Runtime.csproj" />
+    <ProjectReference Include="..\..\WinRT.Runtime\WinRT.Runtime.csproj" />
   </ItemGroup>
 
   <!--

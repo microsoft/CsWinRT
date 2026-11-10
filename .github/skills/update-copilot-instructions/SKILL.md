@@ -21,7 +21,7 @@ Read `.github/copilot-instructions.md` in full. Take note of every factual claim
 
 Launch parallel explore agents for each of the 12 CsWinRT 3.0 projects listed in the instructions. For each project, verify:
 
-1. **WinRT.Runtime (`src/WinRT.Runtime2/`)**
+1. **WinRT.Runtime (`src/WinRT.Runtime/`)**
    - Directory structure matches what's documented
    - Key types listed still exist and have the described purposes
    - T4 templates (`.tt` files) are accurately listed

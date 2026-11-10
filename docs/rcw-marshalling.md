@@ -4,7 +4,7 @@
 
 This document explains how CsWinRT 3.0 creates **RCWs** (Runtime Callable Wrappers), i.e. the managed objects that wrap native Windows Runtime objects when they cross the ABI boundary from native to managed.
 
-All of this logic lives in [`WindowsRuntimeComWrappers.CreateObject`](../src/WinRT.Runtime2/InteropServices/WindowsRuntimeComWrappers.cs), the `ComWrappers` override that the runtime invokes whenever a new wrapper needs to be created for a native object.
+All of this logic lives in [`WindowsRuntimeComWrappers.CreateObject`](../src/WinRT.Runtime/InteropServices/WindowsRuntimeComWrappers.cs), the `ComWrappers` override that the runtime invokes whenever a new wrapper needs to be created for a native object.
 
 The important thing to understand up front is that RCW creation is primarily a **specialization** problem. Almost every path through `CreateObject` produces a usable object, and the decision ladder exists for one reason: to return the **most derived, most statically-typed** managed object we can justify, so that callers get real metadata-level interface implementations (fast interface dispatch) instead of falling back to dynamic interface casts.
 
@@ -31,10 +31,10 @@ Not every interface gets a callback. The projection writer emits `ConvertToManag
 
 The two callback shapes differ in exactly the way you'd expect:
 
-- [`IWindowsRuntimeObjectComWrappersCallback`](../src/WinRT.Runtime2/InteropServices/Callbacks/IWindowsRuntimeObjectComWrappersCallback.cs) (sealed runtime classes and delegates) has a single `CreateObject` method. There is nothing to decide: the answer is always known.
-- [`IWindowsRuntimeUnsealedObjectComWrappersCallback`](../src/WinRT.Runtime2/InteropServices/Callbacks/IWindowsRuntimeUnsealedObjectComWrappersCallback.cs) (unsealed types and interfaces) additionally has `TryCreateObject(value, runtimeClassName, ...)`, which gets a chance to inspect the runtime class name and claim the object if it recognises it.
+- [`IWindowsRuntimeObjectComWrappersCallback`](../src/WinRT.Runtime/InteropServices/Callbacks/IWindowsRuntimeObjectComWrappersCallback.cs) (sealed runtime classes and delegates) has a single `CreateObject` method. There is nothing to decide: the answer is always known.
+- [`IWindowsRuntimeUnsealedObjectComWrappersCallback`](../src/WinRT.Runtime/InteropServices/Callbacks/IWindowsRuntimeUnsealedObjectComWrappersCallback.cs) (unsealed types and interfaces) additionally has `TryCreateObject(value, runtimeClassName, ...)`, which gets a chance to inspect the runtime class name and claim the object if it recognises it.
 
-Both callback kinds are emitted per type by CsWinRT's code generators: the projection writer emits them for projected classes and delegates (see [`AbiClassFactory.cs`](../src/WinRT.Projection.Writer/Factories/AbiClassFactory.cs) and `AbiDelegateFactory.cs`), the interop generator emits them for generic interface and generic delegate instantiations (see [`InteropTypeDefinitionBuilder.cs`](../src/WinRT.Interop.Generator/Builders/InteropTypeDefinitionBuilder.cs) and its `.Delegate` partial), and the built-in ones for manually-projected types are hand-written under [`src/WinRT.Runtime2/ABI/`](../src/WinRT.Runtime2/ABI).
+Both callback kinds are emitted per type by CsWinRT's code generators: the projection writer emits them for projected classes and delegates (see [`AbiClassFactory.cs`](../src/WinRT.Projection.Writer/Factories/AbiClassFactory.cs) and `AbiDelegateFactory.cs`), the interop generator emits them for generic interface and generic delegate instantiations (see [`InteropTypeDefinitionBuilder.cs`](../src/WinRT.Interop.Generator/Builders/InteropTypeDefinitionBuilder.cs) and its `.Delegate` partial), and the built-in ones for manually-projected types are hand-written under [`src/WinRT.Runtime/ABI/`](../src/WinRT.Runtime/ABI).
 
 ### How the information reaches `CreateObject`
 
@@ -186,7 +186,7 @@ if (WindowsRuntimeMarshallingInfo.TryGetMostDerivedInfo(runtimeClassName, out Wi
 }
 ```
 
-`TryGetMostDerivedInfo` first tries the exact name, then repeatedly asks [`WindowsRuntimeTypeHierarchy`](../src/WinRT.Runtime2/InteropServices/InteropDllImports/WindowsRuntimeTypeHierarchy.cs) for the next base runtime class name until it finds one that has marshalling info. The base-class chain data is emitted into `WinRT.Interop.dll` by the interop generator at publish time. Results are cached per runtime class name, including *negative* results, so a name that resolves to nothing is not re-walked on every marshalling operation.
+`TryGetMostDerivedInfo` first tries the exact name, then repeatedly asks [`WindowsRuntimeTypeHierarchy`](../src/WinRT.Runtime/InteropServices/InteropDllImports/WindowsRuntimeTypeHierarchy.cs) for the next base runtime class name until it finds one that has marshalling info. The base-class chain data is emitted into `WinRT.Interop.dll` by the interop generator at publish time. Results are cached per runtime class name, including *negative* results, so a name that resolves to nothing is not re-walked on every marshalling operation.
 
 This is what makes derived types work: an API statically declared to return `DependencyObject` can hand back a `Button`, and you get a `Button` RCW.
 

@@ -9,7 +9,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\WinRT.Generator.Tasks\WinRT.Generator.Tasks.csproj" ReferenceOutputAssembly="false" />
-    <ProjectReference Include="..\..\WinRT.Runtime2\WinRT.Runtime.csproj" />
+    <ProjectReference Include="..\..\WinRT.Runtime\WinRT.Runtime.csproj" />
   </ItemGroup>
 
   <PropertyGroup>

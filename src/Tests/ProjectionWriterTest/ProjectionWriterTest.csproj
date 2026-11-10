@@ -44,7 +44,7 @@
     match the path published as assembly metadata below.
   -->
   <ItemGroup>
-    <ProjectReference Include="..\..\WinRT.Runtime2\WinRT.Runtime.csproj"
+    <ProjectReference Include="..\..\WinRT.Runtime\WinRT.Runtime.csproj"
                       UndefineProperties="BuildToolArch;PublishBuildTool;RuntimeIdentifier;SelfContained;Platform" />
     <ProjectReference Include="..\..\WinRT.Projection.Writer\WinRT.Projection.Writer.csproj"
                       UndefineProperties="BuildToolArch;PublishBuildTool;RuntimeIdentifier;SelfContained;Platform" />

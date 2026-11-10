@@ -54,10 +54,10 @@
     so this project can compile without needing the 'Microsoft.Windows.CsWinRT' NuGet package.
     A 'ProjectReference' is used (rather than '<Reference HintPath="..." />' as in
     'WinRT.Sdk.Projection') so that 'dotnet build' on this project alone implicitly builds
-    'WinRT.Runtime2' first. 'Private=false' keeps the '.dll' out of the bin output / publish set.
+    'WinRT.Runtime' first. 'Private=false' keeps the '.dll' out of the bin output / publish set.
   -->
   <ItemGroup>
-    <ProjectReference Include="..\WinRT.Runtime2\WinRT.Runtime.csproj" Private="false" />
+    <ProjectReference Include="..\WinRT.Runtime\WinRT.Runtime.csproj" Private="false" />
   </ItemGroup>
 
   <!--

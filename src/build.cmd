@@ -526,7 +526,7 @@ exit /b %errorlevel%
 
 :buildruntimereference
 rem Stage the implementation before recompiling with implementation-only APIs stripped out
-set "winrt_runtime_bin=%this_dir%WinRT.Runtime2\bin\%cswinrt_configuration%\net10.0\"
+set "winrt_runtime_bin=%this_dir%WinRT.Runtime\bin\%cswinrt_configuration%\net10.0\"
 set "winrt_runtime_staging=%this_dir%_build\%cswinrt_platform%\%cswinrt_configuration%\WinRT.Runtime\"
 if "%cswinrt_reference_output%"=="" set "cswinrt_reference_output=%winrt_runtime_bin%"
 echo Staging WinRT.Runtime implementation assembly for %cswinrt_platform% %cswinrt_configuration%
@@ -539,10 +539,10 @@ call :exec %msbuild_path%msbuild.exe %cswinrt_build_params% /restore ^
   /p:VersionString=%cswinrt_version_string% ^
   /p:AssemblyVersionNumber=%cswinrt_assembly_version% ^
   /p:CsWinRTBuildReferenceAssembly=true ^
-  "%this_dir%WinRT.Runtime2\WinRT.Runtime.csproj" %cswinrt_reference_build_params%
+  "%this_dir%WinRT.Runtime\WinRT.Runtime.csproj" %cswinrt_reference_build_params%
 if errorlevel 1 exit /b !errorlevel!
 echo Staging WinRT.Runtime reference assembly for %cswinrt_platform% %cswinrt_configuration%
-call :copyproduct "%this_dir%WinRT.Runtime2\obj\%cswinrt_configuration%\net10.0\ref\WinRT.Runtime.dll" "%winrt_runtime_staging%ref"
+call :copyproduct "%this_dir%WinRT.Runtime\obj\%cswinrt_configuration%\net10.0\ref\WinRT.Runtime.dll" "%winrt_runtime_staging%ref"
 if errorlevel 1 exit /b !errorlevel!
 call :copyproduct "%cswinrt_reference_output%WinRT.Runtime.xml" "%winrt_runtime_staging%ref"
 exit /b %errorlevel%

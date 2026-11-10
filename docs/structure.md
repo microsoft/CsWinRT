@@ -101,7 +101,7 @@ Contains the **projection writer**, a C# library that reads `.winmd` metadata an
 
 Contains the **WinMD generator** (`cswinrtwinmdgen.exe`). This tool, distributed as a Native AOT binary alongside the other CsWinRT post-build tools, generates a `.winmd` metadata file from a compiled C# component assembly so developers can author Windows Runtime components in C#. It is a port and restructuring of the previous WinMD generator from CsWinRT 2.x, which was implemented as a Roslyn source generator. In addition to consistency with the other CsWinRT 3.0 build tools, moving it out of a source generator addresses a fundamental design issue: the 2.x generator emitted a `.winmd` file **on disk**, but arbitrary file I/O is explicitly unsupported in Roslyn source generators (which may only contribute additional source to the compilation). The new tool runs as a normal MSBuild step — invoked by the `RunCsWinRTWinMDGenerator` MSBuild task wired up through `nuget/Microsoft.Windows.CsWinRT.Authoring.WinMD.targets`, after `CoreCompile` when `CsWinRTComponent == true` — where file I/O is the expected output mechanism.
 
-## [`src/WinRT.Runtime2`](../src/WinRT.Runtime2) 
+## [`src/WinRT.Runtime`](../src/WinRT.Runtime) 
 
 Contains the WinRT.Runtime project for building the C#/WinRT runtime assembly, `WinRT.Runtime.dll`. The runtime assembly targets .NET 10 and provides Xaml reference tracking support which is necessary for WinUI 3 applications to manage memory correctly. The runtime assembly implements the following features for all projected C#/WinRT types:
 

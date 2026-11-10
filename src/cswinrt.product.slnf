@@ -13,7 +13,7 @@
       "WinRT.Projection.Generator\\WinRT.Projection.Generator.csproj",
       "WinRT.Projection.Ref.Generator\\WinRT.Projection.Ref.Generator.csproj",
       "WinRT.Projection.Writer\\WinRT.Projection.Writer.csproj",
-      "WinRT.Runtime2\\WinRT.Runtime.csproj",
+      "WinRT.Runtime\\WinRT.Runtime.csproj",
       "WinRT.WinMD.Generator\\WinRT.WinMD.Generator.csproj"
     ]
   }
