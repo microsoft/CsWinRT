@@ -47,7 +47,7 @@ Contains various testing-related projects:
 
 - [`FunctionalTests`](../src/Tests/FunctionalTests): A collection of standalone console applications, each validating a specific interop scenario (async, collections, events, CCW, dynamic casting, structs, and more) under real publishing conditions such as trimming and Native AOT.  Each test reports success with exit code `100`.
 
-- [`SourceGenerator2Test`](../src/Tests/SourceGenerator2Test): MSTest unit tests for the source generators and diagnostic analyzers in `WinRT.SourceGenerator2`, built on the Roslyn testing libraries.
+- [`SourceGenerator2Test`](../src/Tests/SourceGenerator2Test): MSTest unit tests for the source generators and diagnostic analyzers in `WinRT.SourceGenerator`, built on the Roslyn testing libraries.
 
 - [`ObjectLifetimeTests`](../src/Tests/ObjectLifetimeTests): A WinUI application-style MSTest project validating reference tracking, garbage collection behavior, and XAML element lifetime.
 
