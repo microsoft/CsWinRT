@@ -8,6 +8,8 @@ using System.Linq;
 using AsmResolver.DotNet;
 using WindowsRuntime.Generator.References;
 
+#pragma warning disable IDE0305
+
 namespace WindowsRuntime.ProjectionGenerator.Generation;
 
 /// <inheritdoc cref="ProjectionGenerator"/>
@@ -122,14 +124,12 @@ internal partial class ProjectionGenerator
         }
 
         // Keep only the selected references, in a stable order so the output doesn't depend on the input order
-#pragma warning disable IDE0305
         return references.Assemblies
             .Where(reference => paths.Contains(reference.Path))
             .OrderBy(static reference => reference.Name, StringComparer.Ordinal)
             .ThenBy(static reference => reference.Path, StringComparer.Ordinal)
             .Select(static reference => reference.Path)
             .ToArray();
-#pragma warning restore IDE0305
     }
 
     /// <summary>
