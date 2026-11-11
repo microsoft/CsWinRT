@@ -111,6 +111,10 @@ Contains the WinRT.Runtime project for building the C#/WinRT runtime assembly, `
 - IDynamicInterfaceCastable casting support
 - Extension methods common to projected types
 
+## [`src/WinRT.SourceGenerator`](../src/WinRT.SourceGenerator)
+
+Contains the Roslyn source generators and diagnostic analyzers that ship in the C#/WinRT NuGet package (`WinRT.SourceGenerator.dll`), including the component authoring generators and the diagnostic analyzers for Windows Runtime scenarios.
+
 ## [`src/WinRT.Sdk.Projection`](../src/WinRT.Sdk.Projection)
 
 Contains the project that produces the `WinRT.Sdk.Projection` assembly, which includes projected types from the `Windows.*` and `WinRT.Interop.*` namespaces.
