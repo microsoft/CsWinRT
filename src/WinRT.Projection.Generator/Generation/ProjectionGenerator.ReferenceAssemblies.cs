@@ -121,11 +121,15 @@ internal partial class ProjectionGenerator
             }
         }
 
-        return [.. references.Assemblies
+        // Keep only the selected references, in a stable order so the output doesn't depend on the input order
+#pragma warning disable IDE0305
+        return references.Assemblies
             .Where(reference => paths.Contains(reference.Path))
             .OrderBy(static reference => reference.Name, StringComparer.Ordinal)
             .ThenBy(static reference => reference.Path, StringComparer.Ordinal)
-            .Select(static reference => reference.Path)];
+            .Select(static reference => reference.Path)
+            .ToArray();
+#pragma warning restore IDE0305
     }
 
     /// <summary>
