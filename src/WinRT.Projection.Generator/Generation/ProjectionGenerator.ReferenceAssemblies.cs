@@ -80,6 +80,9 @@ internal partial class ProjectionGenerator
 
             bool include = IsFrameworkReference(reference) || reference.Name == "WinRT.Runtime";
 
+            // The SDK projections only depend on the framework and CsWinRT infrastructure (plus the SDK projection
+            // for the XAML one), so no other reference is needed. The remaining projections can also name types from
+            // other projections and components, and need those references to compile their generated sources.
             if (isWindowsSdkMode)
             {
                 include |= args.WindowsUIXamlProjection && reference.Name == "WinRT.Sdk.Projection";
