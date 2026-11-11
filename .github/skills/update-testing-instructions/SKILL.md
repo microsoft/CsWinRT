@@ -40,7 +40,7 @@ Launch an explore agent to analyze the functional test projects. Verify:
 - **Exit code convention** is still accurate (100 = success)
 - **"To add a new functional test" instructions** are still correct (TFM property name, project references, CI pipeline step)
 
-### Step 4: verify source generator and analyzer tests (`src/Tests/SourceGenerator2Test/`)
+### Step 4: verify source generator and analyzer tests (`src/Tests/SourceGeneratorTest/`)
 
 Launch an explore agent to analyze the source generator test project. Verify:
 

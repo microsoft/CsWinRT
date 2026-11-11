@@ -35,7 +35,7 @@
       "Tests\\HostTest\\HostTest.vcxproj",
       "Tests\\ObjectLifetimeTests\\ObjectLifetimeTests.Lifted.csproj",
       "Tests\\OOPExe\\OOPExe.csproj",
-      "Tests\\SourceGenerator2Test\\SourceGenerator2Test.csproj",
+      "Tests\\SourceGeneratorTest\\SourceGeneratorTest.csproj",
       "Tests\\TestComponentCSharp\\TestComponentCSharp.vcxproj",
       "Tests\\UnitTest\\UnitTest.csproj",
       "TestWinRT\\TestComponent\\TestComponent.vcxproj",

@@ -17,7 +17,7 @@ Key files to read:
 - `src/WinRT.SourceGenerator/Diagnostics/DiagnosticDescriptors.cs` — all diagnostic descriptors
 - `src/WinRT.SourceGenerator/AnalyzerReleases.Shipped.md` — shipped diagnostics table
 - All analyzers in `src/WinRT.SourceGenerator/Diagnostics/Analyzers/` — code patterns
-- `src/Tests/SourceGenerator2Test/Helpers/CSharpAnalyzerTest{TAnalyzer}.cs` — test helper
+- `src/Tests/SourceGeneratorTest/Helpers/CSharpAnalyzerTest{TAnalyzer}.cs` — test helper
 
 Also check these external repositories for additional analyzer patterns to reference:
 - https://github.com/Sergio0694/ComputeSharp/tree/main/src/ComputeSharp.D2D1.SourceGenerators/Diagnostics/Analyzers/
@@ -100,7 +100,7 @@ Use the existing analyzers in the `Diagnostics/Analyzers/` folder as reference f
 
 ## Step 4: Add tests (if requested)
 
-**File:** `src/Tests/SourceGenerator2Test/Test_MyNewAnalyzer.cs`
+**File:** `src/Tests/SourceGeneratorTest/Test_MyNewAnalyzer.cs`
 
 Create a new test class following the existing pattern:
 

@@ -120,7 +120,7 @@ return 100;
 3. Create `Program.cs` with top-level statements, return `100` on success
 4. Add the test to the CI matrix in the relevant pipeline YAML
 
-### 3. Source generator and analyzer tests (`src/Tests/SourceGenerator2Test/`)
+### 3. Source generator and analyzer tests (`src/Tests/SourceGeneratorTest/`)
 
 **What it tests:** All source generators and diagnostic analyzers in `WinRT.SourceGenerator`.
 
@@ -331,8 +331,8 @@ public void RefArrayParameter_IsRejected()
 | Exception/HRESULT conversion | `UnitTest/` (add to `ExceptionTests`) |
 | A scenario must survive trimming/AOT | `FunctionalTests/` (new or existing project) |
 | A new collection/async/CCW pattern under AOT | `FunctionalTests/` (new or existing project) |
-| A source generator's output | `SourceGenerator2Test/` (new `Test_*` class or add to existing) |
-| An analyzer diagnostic | `SourceGenerator2Test/` (new `Test_*Analyzer` class or add to existing) |
+| A source generator's output | `SourceGeneratorTest/` (new `Test_*` class or add to existing) |
+| An analyzer diagnostic | `SourceGeneratorTest/` (new `Test_*Analyzer` class or add to existing) |
 | GC/reference tracking behavior | `ObjectLifetimeTests/` |
 | XAML visual tree element lifetime | `ObjectLifetimeTests/` |
 | WinRT component authoring patterns | `AuthoringTest/` |
