@@ -69,6 +69,8 @@ internal partial class ProjectionGenerator
         HashSet<string> paths = new(StringComparer.Ordinal);
         Queue<ReferenceAssembly> pendingReferences = new();
 
+        // Select the roots to compile against (framework, CsWinRT infrastructure, and for non-SDK projections
+        // also the WinRT reference assemblies and components). Their dependencies are added in a second pass.
         foreach (ReferenceAssembly reference in references.Assemblies)
         {
             if (projectionReferenceAssemblies.Contains(reference.Path))
