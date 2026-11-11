@@ -57,6 +57,9 @@ internal sealed partial class TypeSignatureDiscovery<TResult>
     /// <summary>The write-only registry for late cross-module receiver contexts, or null in its completion pass.</summary>
     private readonly DispatchContextRegistry? _dispatchContexts;
 
+    /// <summary>The cross-module registry, available in every pass, used to report each module's transitive limit warning only once.</summary>
+    private readonly DispatchContextRegistry _registry;
+
     /// <summary>Whether this instance expands additive work instead of ordinary metadata roots.</summary>
     private readonly bool _isSupplemental;
 
@@ -195,6 +198,7 @@ internal sealed partial class TypeSignatureDiscovery<TResult>
     /// <param name="token">The cancellation token for discovery.</param>
     /// <param name="dispatchIndex">The complete dispatch metadata index.</param>
     /// <param name="dispatchContexts">The optional write-only cross-module registry.</param>
+    /// <param name="registry">The cross-module registry, which is also used to deduplicate transitive limit warnings across passes.</param>
     /// <param name="isSupplemental">Whether this instance uses the isolated supplemental allowance.</param>
     /// <param name="primary">The completed primary enumeration, if this is its supplemental phase.</param>
     private TypeSignatureDiscovery(
@@ -207,6 +211,7 @@ internal sealed partial class TypeSignatureDiscovery<TResult>
         CancellationToken token,
         MethodDispatchIndex dispatchIndex,
         DispatchContextRegistry? dispatchContexts,
+        DispatchContextRegistry registry,
         bool isSupplemental = false,
         TypeSignatureDiscovery<TResult>? primary = null)
     {
@@ -219,6 +224,7 @@ internal sealed partial class TypeSignatureDiscovery<TResult>
         _token = token;
         _dispatchIndex = dispatchIndex;
         _dispatchContexts = dispatchContexts;
+        _registry = registry;
         _isSupplemental = isSupplemental;
         _primary = primary;
         _moduleOrdinal = dispatchIndex.GetModuleOrdinal(module);
@@ -271,6 +277,7 @@ internal sealed partial class TypeSignatureDiscovery<TResult>
             token: token,
             dispatchIndex: dispatchIndex,
             dispatchContexts: completeCrossModuleJoins ? null : dispatchContexts,
+            registry: dispatchContexts,
             isSupplemental: completeCrossModuleJoins);
 
         foreach (TResult result in completeCrossModuleJoins ? discovery.EnumerateCrossModuleJoins(dispatchContexts) : discovery.EnumerateRoots())
@@ -316,6 +323,7 @@ internal sealed partial class TypeSignatureDiscovery<TResult>
                 token: token,
                 dispatchIndex: dispatchIndex,
                 dispatchContexts: dispatchContexts,
+                registry: dispatchContexts,
                 isSupplemental: true,
                 primary: discovery);
 

@@ -63,11 +63,16 @@ internal partial class InteropGenerator
         HashSet<string> marshallingEnabledAssemblyNames = NormalizeMarshallingAssemblyNames(args.MarshallingEnabledAssemblyNames);
         HashSet<string> marshallingDisabledAssemblyNames = NormalizeMarshallingAssemblyNames(args.MarshallingDisabledAssemblyNames);
 
+        // The generic and SZ-array enumerations use linked registries, so limit warnings are only reported once per module
+        (DispatchContextRegistry genericDispatchContexts, DispatchContextRegistry szArrayDispatchContexts) = DispatchContextRegistry.CreateLinkedPair();
+
         // Initialize the state, which contains all the discovered info we'll use for generation.
         // No additional parameters will be passed to later steps: all the info is in this object.
         InteropGeneratorDiscoveryState discoveryState = new(runtimeContext, signatureComparer)
         {
             CorLibTypeFactory = corLibTypeFactory,
+            GenericDispatchContexts = genericDispatchContexts,
+            SzArrayDispatchContexts = szArrayDispatchContexts,
             MarshallingEnabledAssemblyNames = marshallingEnabledAssemblyNames,
             MarshallingDisabledAssemblyNames = marshallingDisabledAssemblyNames
         };

@@ -146,7 +146,7 @@ public partial class Test_InteropGenericDiscovery
                     treatWarningsAsErrors: false, maxDegreesOfParallelism: parallelism, timeout: TimeSpan.FromMinutes(2));
 
                 Assert.AreEqual(0, exitCode, log);
-                StringAssert.Contains(log, "Supplemental generic discovery");
+                StringAssert.Contains(log, ExpansionWarning);
 
                 string interop = Path.Combine(directory, "WinRT.Interop.dll");
                 HashSet<string> associations = GetComWrappersTypeAssociations(interop);
@@ -338,7 +338,7 @@ public partial class Test_InteropGenericDiscovery
                     treatWarningsAsErrors: false, maxDegreesOfParallelism: reverse ? 4 : 1, timeout: TimeSpan.FromMinutes(2));
 
                 Assert.AreEqual(0, exitCode, log);
-                StringAssert.Contains(log, "Supplemental generic discovery");
+                StringAssert.Contains(log, ExpansionWarning);
 
                 string interop = Path.Combine(directory, "WinRT.Interop.dll");
                 string[] nodes = [.. GetComWrappersTypeAssociations(interop).Where(static type =>

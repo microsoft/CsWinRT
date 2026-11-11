@@ -303,7 +303,7 @@ public partial class Test_InteropGenericDiscovery
                     timeout: TimeSpan.FromMinutes(2));
 
                 Assert.AreEqual(0, exitCode, log);
-                StringAssert.Contains(log, "Supplemental generic discovery");
+                StringAssert.Contains(log, ExpansionWarning);
 
                 string interop = Path.Combine(directory, "WinRT.Interop.dll");
                 string[] nodes = [.. GetComWrappersTypeAssociations(interop).Where(static type =>
@@ -318,6 +318,11 @@ public partial class Test_InteropGenericDiscovery
                 string[] warnings = GetDiscoveryWarnings(log);
 
                 Assert.IsTrue(warnings.Any(static warning => warning.StartsWith($"warning {ExpansionWarning}:", StringComparison.Ordinal)), log);
+
+                // Each module reports the limit once, regardless of the discovery enumeration that reached it
+                string[] expansionWarnings = [.. warnings.Where(static warning => warning.StartsWith($"warning {ExpansionWarning}:", StringComparison.Ordinal))];
+
+                Assert.HasCount(expansionWarnings.Distinct(StringComparer.Ordinal).Count(), expansionWarnings, log);
 
                 if (firstOutput is not null)
                 {

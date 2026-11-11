@@ -160,7 +160,7 @@ public partial class Test_InteropGenericDiscovery
                 (int exitCode, string log) = RunGenerator(directory, app, maxDegreesOfParallelism: parallelism);
 
                 Assert.AreEqual(0, exitCode, log);
-                StringAssert.Contains(log, "Supplemental generic discovery");
+                StringAssert.Contains(log, ExpansionWarning);
 
                 string interop = Path.Combine(directory, "WinRT.Interop.dll");
                 HashSet<string> associations = GetComWrappersTypeAssociations(interop);
@@ -335,8 +335,7 @@ public partial class Test_InteropGenericDiscovery
                         $"Ordinary member 'Leaf<Marker{index}>' was displaced by dispatch fan-out.\n{log}");
                 }
 
-                StringAssert.Contains(log, "Supplemental generic discovery");
-                Assert.IsFalse(log.Contains("Generic member discovery reached", StringComparison.Ordinal), log);
+                StringAssert.Contains(log, ExpansionWarning);
 
                 byte[] output = File.ReadAllBytes(interop);
 
@@ -391,7 +390,7 @@ public partial class Test_InteropGenericDiscovery
             (int exitCode, string log) = RunGenerator(directory, app);
 
             Assert.AreEqual(0, exitCode, log);
-            StringAssert.Contains(log, "Generic member discovery reached");
+            StringAssert.Contains(log, ExpansionWarning);
             Assert.IsTrue(GetComWrappersTypeAssociations(Path.Combine(directory, "WinRT.Interop.dll")).Any(type =>
                 type.StartsWith("Additive.Required`1[[Additive.Marker,", StringComparison.Ordinal)), log);
         }
