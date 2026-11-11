@@ -139,12 +139,17 @@ internal partial class ProjectionGenerator
     /// <returns>Whether the reference belongs to the framework.</returns>
     private static bool IsFrameworkReference(ReferenceAssembly reference)
     {
-        // The name families mirror the Microsoft.NETCore.App reference pack; revisit them if it adds new ones.
-        // Microsoft also signs non-framework libraries with some of these keys, so check the name as well.
-        return BaseClassLibraryIdentity.IsBaseClassLibraryPublicKeyToken(reference.Module.Assembly?.GetPublicKeyToken())
-            && (reference.Name is "mscorlib" or "netstandard" or "System" or "Microsoft.CSharp" or "Microsoft.VisualBasic" or "Microsoft.VisualBasic.Core"
-                || reference.Name?.StartsWith("System.", StringComparison.Ordinal) == true
-                || reference.Name?.StartsWith("Microsoft.Win32.", StringComparison.Ordinal) == true);
+        // Microsoft signs non-framework libraries with some of these keys too, so the token alone isn't enough
+        if (!BaseClassLibraryIdentity.IsBaseClassLibraryPublicKeyToken(reference.Module.Assembly?.GetPublicKeyToken()))
+        {
+            return false;
+        }
+
+        // The name families mirror the Microsoft.NETCore.App reference pack; revisit them if it adds new ones
+        return
+            reference.Name is "mscorlib" or "netstandard" or "System" or "Microsoft.CSharp" or "Microsoft.VisualBasic" or "Microsoft.VisualBasic.Core" ||
+            reference.Name?.StartsWith("System.", StringComparison.Ordinal) == true ||
+            reference.Name?.StartsWith("Microsoft.Win32.", StringComparison.Ordinal) == true;
     }
 
     /// <summary>
