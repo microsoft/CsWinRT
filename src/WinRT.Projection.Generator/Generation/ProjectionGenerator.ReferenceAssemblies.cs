@@ -84,11 +84,12 @@ internal partial class ProjectionGenerator
             }
             else
             {
-                include |= reference.Name is "WinRT.Sdk.Projection" or "WinRT.Sdk.Xaml.Projection"
-                    || (isComponentMode && reference.Name == "WinRT.Projection")
-                    || reference.IsComponent
-                    || IsWindowsRuntimeReferenceAssembly(reference.Module)
-                    || (isComponentMode && IsActivationFactoryAssembly(reference.Module));
+                include |=
+                    reference.Name is "WinRT.Sdk.Projection" or "WinRT.Sdk.Xaml.Projection" ||
+                    (isComponentMode && reference.Name == "WinRT.Projection") ||
+                    reference.IsComponent ||
+                    IsWindowsRuntimeReferenceAssembly(reference.Module) ||
+                    (isComponentMode && IsActivationFactoryAssembly(reference.Module));
             }
 
             if (include && paths.Add(reference.Path) && !isWindowsSdkMode)
