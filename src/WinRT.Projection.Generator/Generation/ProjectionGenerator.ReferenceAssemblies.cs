@@ -145,7 +145,7 @@ internal partial class ProjectionGenerator
             return false;
         }
 
-        // The name families mirror the Microsoft.NETCore.App reference pack; revisit them if it adds new ones
+        // The name families mirror the 'Microsoft.NETCore.App' reference pack, so revisit them if it adds new ones
         return
             reference.Name is "mscorlib" or "netstandard" or "System" or "Microsoft.CSharp" or "Microsoft.VisualBasic" or "Microsoft.VisualBasic.Core" ||
             reference.Name?.StartsWith("System.", StringComparison.Ordinal) == true ||
