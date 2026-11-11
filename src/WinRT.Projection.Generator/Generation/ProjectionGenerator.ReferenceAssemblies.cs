@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using AsmResolver.DotNet;
+using WindowsRuntime.Generator.References;
 
 namespace WindowsRuntime.ProjectionGenerator.Generation;
 
@@ -38,6 +39,102 @@ internal partial class ProjectionGenerator
         }
 
         return new(resolver, assemblies);
+    }
+
+    /// <summary>
+    /// Selects the references needed to compile this projection, excluding unrelated application assemblies.
+    /// </summary>
+    /// <remarks>
+    /// Roslyn embeds every compilation reference and its MVID in the PDB, even when no emitted IL uses it.
+    /// SDK projections only depend on the framework and CsWinRT infrastructure. Other projections can name
+    /// authored component types, so their references conservatively include the dependencies of those components,
+    /// even when a particular dependency is not used by the generated source. Changes within that dependency
+    /// graph can therefore still change the projection's bytes and invalidate downstream caches.
+    /// </remarks>
+    /// <param name="args">The arguments for this invocation.</param>
+    /// <param name="references">The loaded reference assemblies.</param>
+    /// <param name="projectionReferenceAssemblies">Reference projections replaced by the generated sources.</param>
+    /// <returns>The compilation reference paths, ordered by assembly name and then path.</returns>
+    private static string[] GetCompilationReferences(
+        ProjectionGeneratorArgs args,
+        ReferenceAssemblySet references,
+        HashSet<string> projectionReferenceAssemblies)
+    {
+        bool isComponentMode = args.AssemblyName == "WinRT.Component";
+        bool isWindowsSdkMode = IsWindowsSdkMode(args);
+
+        ILookup<string, ReferenceAssembly> availableReferences = references.Assemblies
+            .Where(reference => !projectionReferenceAssemblies.Contains(reference.Path))
+            .ToLookup(static reference => reference.Name ?? string.Empty, StringComparer.Ordinal);
+        HashSet<string> paths = new(StringComparer.Ordinal);
+        Queue<ReferenceAssembly> pendingReferences = new();
+
+        foreach (ReferenceAssembly reference in references.Assemblies)
+        {
+            if (projectionReferenceAssemblies.Contains(reference.Path))
+            {
+                continue;
+            }
+
+            bool include = IsFrameworkReference(reference) || reference.Name == "WinRT.Runtime";
+
+            if (isWindowsSdkMode)
+            {
+                include |= args.WindowsUIXamlProjection && reference.Name == "WinRT.Sdk.Projection";
+            }
+            else
+            {
+                include |= reference.Name is "WinRT.Sdk.Projection" or "WinRT.Sdk.Xaml.Projection"
+                    || (isComponentMode && reference.Name == "WinRT.Projection")
+                    || reference.IsComponent
+                    || IsWindowsRuntimeReferenceAssembly(reference.Module)
+                    || (isComponentMode && IsActivationFactoryAssembly(reference.Module));
+            }
+
+            if (include && paths.Add(reference.Path) && !isWindowsSdkMode)
+            {
+                pendingReferences.Enqueue(reference);
+            }
+        }
+
+        // Components can inherit managed base classes or use forwarders in their public signatures.
+        // Preserve their dependency closure rather than assuming every required type is a WinRT type.
+        while (pendingReferences.TryDequeue(out ReferenceAssembly reference))
+        {
+            args.Token.ThrowIfCancellationRequested();
+
+            foreach (AssemblyReference dependency in reference.Module.AssemblyReferences)
+            {
+                foreach (ReferenceAssembly candidate in availableReferences[dependency.Name?.Value ?? string.Empty])
+                {
+                    if (paths.Add(candidate.Path))
+                    {
+                        pendingReferences.Enqueue(candidate);
+                    }
+                }
+            }
+        }
+
+        return [.. references.Assemblies
+            .Where(reference => paths.Contains(reference.Path))
+            .OrderBy(static reference => reference.Name, StringComparer.Ordinal)
+            .ThenBy(static reference => reference.Path, StringComparer.Ordinal)
+            .Select(static reference => reference.Path)];
+    }
+
+    /// <summary>
+    /// Checks whether a reference is a .NET framework assembly used by generated projections.
+    /// </summary>
+    /// <param name="reference">The reference assembly to check.</param>
+    /// <returns>Whether the reference belongs to the framework.</returns>
+    private static bool IsFrameworkReference(ReferenceAssembly reference)
+    {
+        // The name families mirror the Microsoft.NETCore.App reference pack; revisit them if it adds new ones.
+        // Microsoft also signs non-framework libraries with some of these keys, so check the name as well.
+        return BaseClassLibraryIdentity.IsBaseClassLibraryPublicKeyToken(reference.Module.Assembly?.GetPublicKeyToken())
+            && (reference.Name is "mscorlib" or "netstandard" or "System" or "Microsoft.CSharp" or "Microsoft.VisualBasic" or "Microsoft.VisualBasic.Core"
+                || reference.Name?.StartsWith("System.", StringComparison.Ordinal) == true
+                || reference.Name?.StartsWith("Microsoft.Win32.", StringComparison.Ordinal) == true);
     }
 
     /// <summary>
