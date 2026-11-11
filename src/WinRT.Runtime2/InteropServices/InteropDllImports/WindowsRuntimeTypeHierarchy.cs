@@ -26,8 +26,11 @@ internal static class WindowsRuntimeTypeHierarchy
         out ReadOnlySpan<char> baseRuntimeClassName,
         out int nextBaseRuntimeClassNameIndex)
     {
+        int minimumKeyLength = WindowsRuntimeTypeHierarchyData.get_MinimumKeyLength(null);
+        int maximumKeyLength = WindowsRuntimeTypeHierarchyData.get_MaximumKeyLength(null);
+
         // If the length can't possibly match any runtime class name we know of, we can stop here
-        if (!WindowsRuntimeTypeHierarchyData.IsLengthInRange(null, runtimeClassName.Length))
+        if ((uint)(runtimeClassName.Length - minimumKeyLength) > (uint)(maximumKeyLength - minimumKeyLength))
         {
             goto Failure;
         }
@@ -36,30 +39,26 @@ internal static class WindowsRuntimeTypeHierarchy
         // an exact match for the one used to actually emit the data in the RVA fields for the lookup.
         int hashCode = ComputeReadOnlySpanHash(runtimeClassName);
 
-        // Get the bucket index, which represents the chain of all colliding potential matches
-        int bucketIndex = WindowsRuntimeTypeHierarchyData.get_Buckets(null)[(int)((uint)hashCode % (uint)WindowsRuntimeTypeHierarchyData.get_Buckets(null).Length)];
+        // Get the offset of the chain of all colliding potential matches. Empty buckets just
+        // point to an empty chain at the start of the keys RVA data, so we don't need to check for them.
+        int chainOffset = GetChainOffset(hashCode);
 
-        // Bucket indices of '-1' indicate no possible matches
-        if (bucketIndex < 0)
-        {
-            goto Failure;
-        }
-
-        RvaDataReader keysDataReader = new(WindowsRuntimeTypeHierarchyData.get_Keys(null));
+        ReadOnlySpan<byte> keysRvaData = WindowsRuntimeTypeHierarchyData.get_Keys(null);
+        RvaDataReader keysDataReader = new(keysRvaData);
 
         // Move to the start of the bucket chain where the possible match might be
-        keysDataReader.Advance(bucketIndex);
+        keysDataReader.AdvanceUnits(chainOffset);
 
         // Iterate all keys in the bucket chain until we either find a match or reach the end
         // of the chain. This is the same exact logic as the standard 'Dictionary<,>' lookup.
         while (true)
         {
-            // The first value (2 bytes) is the length of the key (in characters)
-            ushort keyLength = keysDataReader.ReadUInt16();
+            // The first value (2 bytes) is the length of the suffix of the key (in characters)
+            ushort suffixLength = keysDataReader.ReadUInt16();
 
-            // A key length of '0' indicates the end of a chain. If
+            // A suffix length of '0' indicates the end of a chain. If
             // we found this value, it means we didn't find a match.
-            if (keyLength == 0)
+            if (suffixLength == 0)
             {
                 goto Failure;
             }
@@ -67,8 +66,30 @@ internal static class WindowsRuntimeTypeHierarchy
             // The second value (2 bytes) is the offset to the value in the values RVA field data
             ushort valueOffset = keysDataReader.ReadUInt16();
 
-            // Check if the current key is a match for the input runtime class name
-            if (keysDataReader.ReadString(keyLength).SequenceEqual(runtimeClassName))
+            // The third value (2 or 4 bytes, depending on the format) is the offset (in 16-bit units) to the prefix of the key
+            int prefixOffset = WindowsRuntimeTypeHierarchyData.get_UsesNarrowOffsets(null)
+                ? keysDataReader.ReadUInt16()
+                : keysDataReader.ReadInt32();
+
+            // Always read the suffix, so that the reader moves to the next key in the chain if this one doesn't match
+            ReadOnlySpan<char> suffix = keysDataReader.ReadString(suffixLength);
+
+            // Check the suffix first, so we can skip reading the prefix for all keys with a different suffix
+            if (!runtimeClassName.EndsWith(suffix))
+            {
+                continue;
+            }
+
+            RvaDataReader prefixDataReader = new(keysRvaData);
+
+            // Move to the prefix for the current key (it's stored as its length, followed by its characters)
+            prefixDataReader.AdvanceUnits(prefixOffset);
+
+            ushort prefixLength = prefixDataReader.ReadUInt16();
+            ReadOnlySpan<char> prefix = prefixDataReader.ReadString(prefixLength);
+
+            // Check if the current key (ie. its prefix followed by its suffix) is a match for the input runtime class name
+            if (prefixLength + suffixLength == runtimeClassName.Length && runtimeClassName.StartsWith(prefix))
             {
                 RvaDataReader valuesDataReader = new(WindowsRuntimeTypeHierarchyData.get_Values(null));
 
@@ -79,7 +100,7 @@ internal static class WindowsRuntimeTypeHierarchy
                 ushort valueLength = valuesDataReader.ReadUInt16();
 
                 // Next, we have:
-                //   - The index (2 bytes) of the next base runtime class name (0 if there is no next base class)
+                //   - The index (2 bytes) of the next base runtime class name ('ushort.MaxValue' if there is no next base class)
                 //   - The actual base runtime class name (with the previously retrieved length)
                 nextBaseRuntimeClassNameIndex = valuesDataReader.ReadUInt16();
                 baseRuntimeClassName = valuesDataReader.ReadString(valueLength);
@@ -133,6 +154,30 @@ internal static class WindowsRuntimeTypeHierarchy
     }
 
     /// <summary>
+    /// Gets the offset of the chain of keys for a given hash code.
+    /// </summary>
+    /// <param name="hashCode">The hash code of the input runtime class name.</param>
+    /// <returns>The offset (in 16-bit units) of the chain of keys for <paramref name="hashCode"/> in the keys RVA field data.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static int GetChainOffset(int hashCode)
+    {
+        ReadOnlySpan<byte> bucketsRvaData = WindowsRuntimeTypeHierarchyData.get_Buckets(null);
+
+        // The format depends on whether chain and prefix offsets fit in a 'ushort' value. This is a constant
+        // in the generated code, so after inlining only one of these two paths should actually be compiled.
+        if (WindowsRuntimeTypeHierarchyData.get_UsesNarrowOffsets(null))
+        {
+            ReadOnlySpan<ushort> buckets = MemoryMarshal.Cast<byte, ushort>(bucketsRvaData);
+
+            return buckets[(int)((uint)hashCode % (uint)buckets.Length)];
+        }
+
+        ReadOnlySpan<int> wideBuckets = MemoryMarshal.Cast<byte, int>(bucketsRvaData);
+
+        return wideBuckets[(int)((uint)hashCode % (uint)wideBuckets.Length)];
+    }
+
+    /// <summary>
     /// Computes a deterministic hash of an input span.
     /// </summary>
     /// <param name="span">The input span.</param>
@@ -183,6 +228,22 @@ internal static class WindowsRuntimeTypeHierarchy
         }
 
         /// <summary>
+        /// Advances the reader to the specified offset, in 16-bit units.
+        /// </summary>
+        /// <param name="offset">The offset (in 16-bit units) to use to advance the reader.</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void AdvanceUnits(int offset)
+        {
+            // Validate the offset before scaling it, so that invalid offsets can't overflow into valid ones
+            if ((uint)offset > (uint)_length / sizeof(char))
+            {
+                ThrowBadImageFormatException();
+            }
+
+            Advance(offset * sizeof(char));
+        }
+
+        /// <summary>
         /// Reads an <see cref="ushort"/> value and advances the reader.
         /// </summary>
         /// <returns>The resulting <see cref="ushort"/> value.</returns>
@@ -201,13 +262,32 @@ internal static class WindowsRuntimeTypeHierarchy
         }
 
         /// <summary>
+        /// Reads an <see cref="int"/> value and advances the reader.
+        /// </summary>
+        /// <returns>The resulting <see cref="int"/> value.</returns>
+        public int ReadInt32()
+        {
+            if (_length < sizeof(int))
+            {
+                ThrowBadImageFormatException();
+            }
+
+            // The RVA data is only guaranteed to be 2-byte aligned, so this read might be unaligned
+            int value = Unsafe.ReadUnaligned<int>(ref _dataRef);
+
+            Advance(sizeof(int));
+
+            return value;
+        }
+
+        /// <summary>
         /// Reads a <see cref="ReadOnlySpan{T}"/> of <see cref="char"/> value and advances the reader.
         /// </summary>
         /// <param name="length">The length of the span to read.</param>
         /// <returns>The resulting span.</returns>
         public ReadOnlySpan<char> ReadString(int length)
         {
-            if ((uint)length > (uint)_length)
+            if ((uint)length > (uint)_length / sizeof(char))
             {
                 ThrowBadImageFormatException();
             }
@@ -239,8 +319,9 @@ file static class WindowsRuntimeTypeHierarchyData
     /// Gets the <see cref="ReadOnlySpan{T}"/> for the runtime class name lookup buckets.
     /// </summary>
     /// <returns>The buckets <see cref="ReadOnlySpan{T}"/>.</returns>
+    /// <remarks>Each bucket is either a <see cref="ushort"/> or an <see cref="int"/> value, depending on <see cref="get_UsesNarrowOffsets"/>.</remarks>
     [UnsafeAccessor(UnsafeAccessorKind.StaticMethod)]
-    public static extern ReadOnlySpan<int> get_Buckets(
+    public static extern ReadOnlySpan<byte> get_Buckets(
         [UnsafeAccessorType("WindowsRuntime.Interop.WindowsRuntimeTypeHierarchyData, WinRT.Interop")] object? _);
 
     /// <summary>
@@ -260,11 +341,26 @@ file static class WindowsRuntimeTypeHierarchyData
         [UnsafeAccessorType("WindowsRuntime.Interop.WindowsRuntimeTypeHierarchyData, WinRT.Interop")] object? _);
 
     /// <summary>
-    /// Gets the <see cref="ReadOnlySpan{T}"/> for the runtime class name lookup buckets.
+    /// Gets whether offsets into the runtime class name lookup keys are <see cref="ushort"/> values (rather than <see cref="int"/> values).
     /// </summary>
-    /// <returns>The buckets <see cref="ReadOnlySpan{T}"/>.</returns>
+    /// <returns>Whether offsets into the runtime class name lookup keys are <see cref="ushort"/> values.</returns>
     [UnsafeAccessor(UnsafeAccessorKind.StaticMethod)]
-    public static extern bool IsLengthInRange(
-        [UnsafeAccessorType("WindowsRuntime.Interop.WindowsRuntimeTypeHierarchyData, WinRT.Interop")] object? _,
-        int length);
+    public static extern bool get_UsesNarrowOffsets(
+        [UnsafeAccessorType("WindowsRuntime.Interop.WindowsRuntimeTypeHierarchyData, WinRT.Interop")] object? _);
+
+    /// <summary>
+    /// Gets the length of the shortest runtime class name in the lookup.
+    /// </summary>
+    /// <returns>The length of the shortest runtime class name in the lookup.</returns>
+    [UnsafeAccessor(UnsafeAccessorKind.StaticMethod)]
+    public static extern int get_MinimumKeyLength(
+        [UnsafeAccessorType("WindowsRuntime.Interop.WindowsRuntimeTypeHierarchyData, WinRT.Interop")] object? _);
+
+    /// <summary>
+    /// Gets the length of the longest runtime class name in the lookup.
+    /// </summary>
+    /// <returns>The length of the longest runtime class name in the lookup.</returns>
+    [UnsafeAccessor(UnsafeAccessorKind.StaticMethod)]
+    public static extern int get_MaximumKeyLength(
+        [UnsafeAccessorType("WindowsRuntime.Interop.WindowsRuntimeTypeHierarchyData, WinRT.Interop")] object? _);
 }

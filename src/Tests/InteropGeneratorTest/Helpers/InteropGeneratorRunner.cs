@@ -118,7 +118,8 @@ internal sealed class InteropGeneratorRunner : IDisposable
         bool publicSignIidLibrary = false,
         string? sdkReferenceSource = null,
         string iidLibraryName = "IidLibrary",
-        bool forwardUriToFutureAssembly = false)
+        bool forwardUriToFutureAssembly = false,
+        Action<ModuleDefinition>? sdkReferenceRewriter = null)
     {
         Root = Directory.CreateTempSubdirectory("InteropGeneratorTest_").FullName;
         string referencesDirectory = Directory.CreateDirectory(Path.Combine(Root, "references")).FullName;
@@ -197,6 +198,19 @@ internal sealed class InteropGeneratorRunner : IDisposable
             [WindowsRuntime.WindowsRuntimeType]
             public class Derived : Base { }
             """, references: [.. Net100.References.All, MetadataReference.CreateFromFile(runtimePath)]);
+
+        if (sdkReferenceRewriter is not null)
+        {
+            // Allows producing metadata that can't be declared in C# (eg. type names longer than 512 characters)
+            ModuleDefinition module = ModuleDefinition.FromFile(sdkReference);
+
+            sdkReferenceRewriter(module);
+
+            using MemoryStream stream = new();
+
+            module.Write(stream);
+            File.WriteAllBytes(sdkReference, stream.ToArray());
+        }
 
         string[] enumerableAliases = [];
         string[] enumerableRoots = [];

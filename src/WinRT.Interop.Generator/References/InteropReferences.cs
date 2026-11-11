@@ -343,11 +343,6 @@ internal sealed class InteropReferences
     public GenericInstanceTypeSignature ReadOnlySpanUInt16 => field ??= ReadOnlySpan1.MakeGenericValueType([_corLibTypeFactory.UInt16]);
 
     /// <summary>
-    /// Gets the <see cref="TypeSignature"/> for <see cref="ReadOnlySpan{T}"/> of <see cref="int"/>.
-    /// </summary>
-    public GenericInstanceTypeSignature ReadOnlySpanInt32 => field ??= ReadOnlySpan1.MakeGenericValueType([_corLibTypeFactory.Int32]);
-
-    /// <summary>
     /// Gets the <see cref="TypeReference"/> for <see cref="System.Threading.Tasks.Task{TResult}"/>.
     /// </summary>
     public TypeReference Task1 => field ??= _corLibTypeFactory.CorLibScope.CreateTypeReference("System.Threading.Tasks"u8, "Task`1"u8);
@@ -1927,13 +1922,6 @@ internal sealed class InteropReferences
     /// Gets the <see cref="MemberReference"/> for <see cref="ReadOnlySpan{T}"/>'s constructor (of <see cref="byte"/>).
     /// </summary>
     public MemberReference ReadOnlySpanByte_ctor => field ??= ReadOnlySpanByte.ToTypeDefOrRef().CreateConstructorReference(
-        corLibTypeFactory: _corLibTypeFactory,
-        parameterTypes: [_corLibTypeFactory.Void.MakePointerType(), _corLibTypeFactory.Int32]);
-
-    /// <summary>
-    /// Gets the <see cref="MemberReference"/> for <see cref="ReadOnlySpan{T}"/>'s constructor (of <see cref="int"/>).
-    /// </summary>
-    public MemberReference ReadOnlySpanInt32_ctor => field ??= ReadOnlySpanInt32.ToTypeDefOrRef().CreateConstructorReference(
         corLibTypeFactory: _corLibTypeFactory,
         parameterTypes: [_corLibTypeFactory.Void.MakePointerType(), _corLibTypeFactory.Int32]);
 
