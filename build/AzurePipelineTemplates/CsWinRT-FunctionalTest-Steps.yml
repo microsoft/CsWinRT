@@ -24,6 +24,7 @@ parameters:
     - ForwardedTypeIdentities
     - GetIidInterceptors
     - GetIidInterceptorsFallback
+    - ActivationFactoryReconnection
 
 steps:
   - ${{ each functionalTest in parameters.FunctionalTests }}:

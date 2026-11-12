@@ -42,6 +42,7 @@
       "TestWinRT\\test_component_base\\test_component_base.vcxproj",
       "TestWinRT\\test_component_derived\\test_component_derived.vcxproj",
       "TestWinRT\\test_component_fast\\test_component_fast.vcxproj",
+      "Tests\\FunctionalTests\\ActivationFactoryReconnection\\ActivationFactoryReconnection.csproj",
       "Tests\\FunctionalTests\\Async\\Async.csproj",
       "Tests\\FunctionalTests\\CCW\\CCW.csproj",
       "Tests\\FunctionalTests\\ClassActivation\\ClassActivation.csproj",

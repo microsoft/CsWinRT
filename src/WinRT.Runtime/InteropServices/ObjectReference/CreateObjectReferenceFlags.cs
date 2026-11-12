@@ -40,5 +40,15 @@ internal enum CreateObjectReferenceFlags
     /// As such, we should prevent the last <c>ReleaseFromTrackerSource</c> call in the managed object reference.
     /// </para>
     /// </summary>
-    PreventReleaseFromTrackerSourceOnDispose = 0x1 << 2
+    PreventReleaseFromTrackerSourceOnDispose = 0x1 << 2,
+
+    /// <summary>
+    /// The object has been detected to be disconnected from its server (eg. the server process died).
+    /// </summary>
+    /// <remarks>
+    /// This flag is set after construction (see <see cref="WindowsRuntimeObjectReference.MarkDisconnected"/>), and it should never be passed
+    /// by callers. It may be set on any object reference, but it is only consumed to stop reusing cached activation factories
+    /// (see <see cref="WindowsRuntimeObjectReference.GetActivationFactory(ref WindowsRuntimeObjectReference?, string, in Guid)"/>).
+    /// </remarks>
+    IsDisconnected = 0x1 << 3
 }

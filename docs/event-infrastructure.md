@@ -425,18 +425,7 @@ For **static events**, there's no object instance. Instead, the generated code u
 
 ```csharp
 // Generated in the projected class
-private static WindowsRuntimeObjectReference __IStaticsType
-{
-    get
-    {
-        var ___IStaticsType = field;
-        if (___IStaticsType != null && ___IStaticsType.IsInCurrentContext)
-        {
-            return ___IStaticsType;
-        }
-        return field = WindowsRuntimeObjectReference.GetActivationFactory("TypeName", iid);
-    }
-}
+private static WindowsRuntimeObjectReference __IStaticsType => WindowsRuntimeObjectReference.GetActivationFactory(ref field, "TypeName", iid);
 ```
 
 And the event accessors pass this factory reference as the `thisObject`:
@@ -471,13 +460,15 @@ public static EventHandlerEventSource SomeStaticEvent(
 
 ### The Activation Factory Cache
 
-The static property `__IStaticsType` uses a **semi-cached** pattern:
+The static property `__IStaticsType` uses a **semi-cached** pattern (implemented by `WindowsRuntimeObjectReference.GetActivationFactory(ref ...)`):
 
-1. On first access: calls `WindowsRuntimeObjectReference.GetActivationFactory(...)` and stores the result.
-2. On subsequent accesses: checks `IsInCurrentContext`. If the current COM context matches the one where the factory was created, returns the cached value.
-3. If the context has changed (e.g., thread apartment transition): **re-fetches** the activation factory and **overwrites** the cached field.
+1. On first access: calls `WindowsRuntimeObjectReference.GetActivationFactory(...)` and stores the result in the backing field.
+2. On subsequent accesses: returns the cached value, as long as it can be used from the current COM context (free-threaded factories always can, context-aware ones are checked with `IsInCurrentContext`) and it has not been marked as disconnected.
+3. If the context has changed (e.g., thread apartment transition), or if a previous call on the cached factory failed because its server is gone (e.g., an out-of-process server died, see below): **re-fetches** the activation factory and **overwrites** the cached field.
 
-This means the cached `WindowsRuntimeObjectReference` for the activation factory can be replaced at any time if there's a context switch.
+This means the cached `WindowsRuntimeObjectReference` for the activation factory can be replaced at any time if there's a context switch, or after its server died.
+
+A cached activation factory is marked as disconnected when a call on it (a static method or property, a static event registration, or an activation) fails with an `HRESULT` indicating that its server is definitely gone: `RPC_E_DISCONNECTED`, `RPC_E_SERVER_DIED`, `RPC_E_SERVER_DIED_DNE`, `RPC_S_SERVER_UNAVAILABLE`, or `RPC_S_CALL_FAILED_DNE`. `RPC_S_CALL_FAILED` is excluded, as the server might still be alive: flagging the activation factory in that case would leave static event handlers registered through it on the server (still firing), with no way to remove them (see below). If the server is gone, the next call on the dead proxy fails with `RPC_S_SERVER_UNAVAILABLE` and flags it, so this costs at most one extra failed call. The failing call still throws, and it is never retried (calls on statics might not be idempotent): only the next access uses a new activation factory. For static events, this means that a handler subscribed through the old (disconnected) activation factory can't be unsubscribed through the new one: that `remove` is a no-op, as the new activation factory is a different event source key (the handler can't be invoked anymore anyway, since its server is gone).
 
 ### Context Switches and the IsInCurrentContext Check
 
@@ -490,7 +481,7 @@ private protected sealed override bool DerivedIsInCurrentContext()
 }
 ```
 
-When this returns `false`, the generated code discards the cached activation factory and creates a fresh one. This is where the concern about static events arises.
+When this returns `false`, the cached activation factory is discarded and a fresh one is created. This is where the concern about static events arises.
 
 ### Static Event Lifecycle Analysis
 
@@ -518,11 +509,11 @@ MyRuntimeClass.StaticEvent += MyHandler;
 
 - Code on a different thread (different COM apartment) accesses `__IStaticsType`.
 - `IsInCurrentContext` returns `false` for `A`.
-- A new activation factory `B` is fetched and stored in `field`, **replacing** `A`.
+- A new activation factory `B` is fetched and stored in the static field, **replacing** `A`.
 
 **Step 3: What happens to `A`?**
 
-- `A` is no longer referenced by the static `field` (it was overwritten by `B`).
+- `A` is no longer referenced by the static field (it was overwritten by `B`).
 - The `ConditionalWeakTable` used `A` as a **weak key**. Once `A` has no strong references, it becomes eligible for GC.
 - When `A` is collected, the `ConditionalWeakTable` automatically removes the entry, which means the `EventSource<T>` is also eligible for GC.
 - The `EventSource<T>` held a `WeakReference<object>` to the `EventSourceState<T>`.
@@ -615,6 +606,6 @@ In short, changing the key alone is not the whole answer: it must be paired with
 
 The root cause is that the activation factory object reference is an **unstable key** that can be replaced on context switches, yet it's also the key that keeps the `EventSource<T>` (and indirectly the `EventSourceState<T>` with its token) reachable. The fix must ensure the old activation factory (and therefore the old event source / state) remains reachable while subscriptions are active. This is safe because `EventSource<T>` already handles cross-context calls correctly — `WindowsRuntimeObjectReference.AsValue()` / `GetThisPtrWithContextUnsafe()` will marshal to the correct context via COM context callbacks when needed.
 
-**Keep a strong reference to the activation factory while subscriptions are active** — The `EventSourceState<T>` (or the `EventSource<T>`) could hold a strong reference back to the activation factory object reference that was used during subscription. Because `ConditionalWeakTable` uses weak keys, keeping a strong reference to the old activation factory prevents it from being collected, which in turn prevents the table entry (and the `EventSource<T>`) from being evicted. When the activation factory property is later accessed from a different context, it will produce a new `WindowsRuntimeObjectReference` and cache it in `field`, but the old one remains alive (held by the state). The `ConditionalWeakTable` lookup from the new context won't find a match (different key identity), but the **`EventSourceCache`** (keyed by native pointer, not object identity) can reconnect a new `EventSource<T>` to the surviving `EventSourceState<T>` — provided the native object supports `IWeakReferenceSource`. If it doesn't (which is the common case for static factories), an additional mechanism would be needed — for instance, having the generated code also maintain a direct strong reference to the `EventSource<T>` in a static field while subscriptions are active, bypassing the `ConditionalWeakTable` for the reconnection step.
+**Keep a strong reference to the activation factory while subscriptions are active** — The `EventSourceState<T>` (or the `EventSource<T>`) could hold a strong reference back to the activation factory object reference that was used during subscription. Because `ConditionalWeakTable` uses weak keys, keeping a strong reference to the old activation factory prevents it from being collected, which in turn prevents the table entry (and the `EventSource<T>`) from being evicted. When the activation factory property is later accessed from a different context, it will produce a new `WindowsRuntimeObjectReference` and cache it in the static field, but the old one remains alive (held by the state). The `ConditionalWeakTable` lookup from the new context won't find a match (different key identity), but the **`EventSourceCache`** (keyed by native pointer, not object identity) can reconnect a new `EventSource<T>` to the surviving `EventSourceState<T>` — provided the native object supports `IWeakReferenceSource`. If it doesn't (which is the common case for static factories), an additional mechanism would be needed — for instance, having the generated code also maintain a direct strong reference to the `EventSource<T>` in a static field while subscriptions are active, bypassing the `ConditionalWeakTable` for the reconnection step.
 
 This approach is the most targeted fix: it only keeps the factory alive for the duration of active subscriptions, the existing `EventSource<T>` correctly handles cross-context marshalling for any native calls, and it naturally cleans up when all handlers are removed (the strong reference is released, the activation factory becomes collectible, and the `ConditionalWeakTable` entry is evicted).
