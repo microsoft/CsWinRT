@@ -36,12 +36,12 @@
     assemblies: the tests invoke them as separate processes, exactly as a real build does.
     'UndefineProperties' drops the build-tool publishing properties ('BuildToolArch' and
     'PublishBuildTool', plus 'RuntimeIdentifier' / 'SelfContained') from this reference so the
-    generator is always built framework-dependent for the build host (output under 'net10.0\',
-    with no 'win-<arch>' RID subfolder). Without this, the generator's 'PublishAot' build is
-    self-contained and cannot be referenced by this non self-contained test project (NETSDK1151).
-    'Platform' is dropped as well: this project builds as x64/x86, but the generator declares no
-    platforms, so letting it through would place its output under 'bin\<platform>\' and no longer
-    match the path published as assembly metadata below.
+    generator is always built framework-dependent for the build host (output under
+    '$(ToolDotNetVersion)\', with no 'win-<arch>' RID subfolder). Without this, the generator's
+    'PublishAot' build is self-contained and cannot be referenced by this non self-contained test
+    project (NETSDK1151). 'Platform' is dropped as well: this project builds as x64/x86, but the
+    generator declares no platforms, so letting it through would place its output under
+    'bin\<platform>\' and no longer match the path published as assembly metadata below.
   -->
   <ItemGroup>
     <ProjectReference Include="..\..\WinRT.Runtime\WinRT.Runtime.csproj"
@@ -50,16 +50,19 @@
                       UndefineProperties="BuildToolArch;PublishBuildTool;RuntimeIdentifier;SelfContained;Platform" />
     <ProjectReference Include="..\..\WinRT.Projection.Ref.Generator\WinRT.Projection.Ref.Generator.csproj"
                       ReferenceOutputAssembly="false"
+                      SkipGetTargetFrameworkProperties="true"
                       OutputItemType="_CsWinRTToolReference"
                       UndefineProperties="BuildToolArch;PublishBuildTool;RuntimeIdentifier;SelfContained;Platform"
                       Private="false" />
     <ProjectReference Include="..\..\WinRT.Projection.Generator\WinRT.Projection.Generator.csproj"
                       ReferenceOutputAssembly="false"
+                      SkipGetTargetFrameworkProperties="true"
                       OutputItemType="_CsWinRTToolReference"
                       UndefineProperties="BuildToolArch;PublishBuildTool;RuntimeIdentifier;SelfContained;Platform"
                       Private="false" />
     <ProjectReference Include="..\..\WinRT.Interop.Generator\WinRT.Interop.Generator.csproj"
                       ReferenceOutputAssembly="false"
+                      SkipGetTargetFrameworkProperties="true"
                       OutputItemType="_CsWinRTToolReference"
                       UndefineProperties="BuildToolArch;PublishBuildTool;RuntimeIdentifier;SelfContained;Platform"
                       Private="false" />
@@ -81,11 +84,11 @@
     <AssemblyMetadata Include="RepositoryNuGetConfigPath"
                       Value="$(MSBuildThisFileDirectory)..\..\..\nuget.config" />
     <AssemblyMetadata Include="ProjectionRefGeneratorAssemblyPath"
-                      Value="$(MSBuildThisFileDirectory)..\..\WinRT.Projection.Ref.Generator\bin\$(Configuration)\net10.0\cswinrtprojectionrefgen.dll" />
+                      Value="$(MSBuildThisFileDirectory)..\..\WinRT.Projection.Ref.Generator\bin\$(Configuration)\$(ToolDotNetVersion)\cswinrtprojectionrefgen.dll" />
     <AssemblyMetadata Include="ProjectionGeneratorAssemblyPath"
-                      Value="$(MSBuildThisFileDirectory)..\..\WinRT.Projection.Generator\bin\$(Configuration)\net10.0\cswinrtprojectiongen.dll" />
+                      Value="$(MSBuildThisFileDirectory)..\..\WinRT.Projection.Generator\bin\$(Configuration)\$(ToolDotNetVersion)\cswinrtprojectiongen.dll" />
     <AssemblyMetadata Include="InteropGeneratorAssemblyPath"
-                      Value="$(MSBuildThisFileDirectory)..\..\WinRT.Interop.Generator\bin\$(Configuration)\net10.0\cswinrtinteropgen.dll" />
+                      Value="$(MSBuildThisFileDirectory)..\..\WinRT.Interop.Generator\bin\$(Configuration)\$(ToolDotNetVersion)\cswinrtinteropgen.dll" />
     <AssemblyMetadata Include="WinUIMetadataPath"
                       Value="$(NuGetPackageRoot)microsoft.windowsappsdk.winui\$(MicrosoftWinAppSDKWinUIVersion)\metadata\Microsoft.UI.Xaml.winmd" />
   </ItemGroup>
