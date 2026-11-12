@@ -43,7 +43,7 @@ internal static class ModuleDefinitionExtensions
 
                 if (windowsRuntimeMetadataTypesType is null)
                 {
-                    return FrozenDictionary<(string?, string?), string>.Empty;
+                    return [];
                 }
 
                 Dictionary<(string?, string?), string> builder = [];

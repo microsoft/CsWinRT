@@ -20,7 +20,7 @@ permissions:
   contents: read
 
 env:
-  DotNetSdkVersion: 10.0.402
+  DotNetSdkVersion: 11.0.100
   PackageVersion: 3.0.0-ci-actions.${{ github.run_number }}.${{ github.run_attempt }}
 
 jobs:

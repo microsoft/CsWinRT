@@ -48,7 +48,7 @@ internal partial class ModuleDefinitionExtensions
                 // to do anything here, lookups would just fail and report the correct diagnostics.
                 if (windowsRuntimeMetadataTypesType is null)
                 {
-                    return FrozenDictionary<(Utf8String?, Utf8String?), (TypeSignature, Utf8String)>.Empty;
+                    return [];
                 }
 
                 Dictionary<(Utf8String?, Utf8String?), (TypeSignature, Utf8String)> builder = [];

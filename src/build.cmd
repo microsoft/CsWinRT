@@ -1,7 +1,7 @@
 @echo off
 if /i "%cswinrt_echo%" == "on" @echo on
 
-set CsWinRTBuildNetSDKVersion=10.0.402
+set CsWinRTBuildNetSDKVersion=11.0.100
 
 set this_dir=%~dp0
 
@@ -272,11 +272,11 @@ set source_generator=%this_dir%Authoring\WinRT.SourceGenerator2\bin\%cswinrt_con
 set winrt_host_%cswinrt_platform%=%this_dir%_build\%cswinrt_platform%\%cswinrt_configuration%\WinRT.Host\bin\WinRT.Host.dll
 set winrt_host_resource_%cswinrt_platform%=%this_dir%_build\%cswinrt_platform%\%cswinrt_configuration%\WinRT.Host\bin\WinRT.Host.dll.mui
 set winrt_shim=%this_dir%Authoring\WinRT.Host.Shim\bin\%cswinrt_configuration%\net10.0\WinRT.Host.Shim.dll
-set cswinrtinteropgen_%cswinrt_platform%=%this_dir%WinRT.Interop.Generator\bin\%cswinrt_configuration%\net10.0\win-%cswinrt_platform%\publish\cswinrtinteropgen.exe
-set cswinrtimplgen_%cswinrt_platform%=%this_dir%WinRT.Impl.Generator\bin\%cswinrt_configuration%\net10.0\win-%cswinrt_platform%\publish\cswinrtimplgen.exe
-set cswinrtprojectiongen_%cswinrt_platform%=%this_dir%WinRT.Projection.Generator\bin\%cswinrt_configuration%\net10.0\win-%cswinrt_platform%\publish\cswinrtprojectiongen.exe
-set cswinrtprojectionrefgen_%cswinrt_platform%=%this_dir%WinRT.Projection.Ref.Generator\bin\%cswinrt_configuration%\net10.0\win-%cswinrt_platform%\publish\cswinrtprojectionrefgen.exe
-set cswinrtwinmdgen_%cswinrt_platform%=%this_dir%WinRT.WinMD.Generator\bin\%cswinrt_configuration%\net10.0\win-%cswinrt_platform%\publish\cswinrtwinmdgen.exe
+set cswinrtinteropgen_%cswinrt_platform%=%this_dir%WinRT.Interop.Generator\bin\%cswinrt_configuration%\net11.0\win-%cswinrt_platform%\publish\cswinrtinteropgen.exe
+set cswinrtimplgen_%cswinrt_platform%=%this_dir%WinRT.Impl.Generator\bin\%cswinrt_configuration%\net11.0\win-%cswinrt_platform%\publish\cswinrtimplgen.exe
+set cswinrtprojectiongen_%cswinrt_platform%=%this_dir%WinRT.Projection.Generator\bin\%cswinrt_configuration%\net11.0\win-%cswinrt_platform%\publish\cswinrtprojectiongen.exe
+set cswinrtprojectionrefgen_%cswinrt_platform%=%this_dir%WinRT.Projection.Ref.Generator\bin\%cswinrt_configuration%\net11.0\win-%cswinrt_platform%\publish\cswinrtprojectionrefgen.exe
+set cswinrtwinmdgen_%cswinrt_platform%=%this_dir%WinRT.WinMD.Generator\bin\%cswinrt_configuration%\net11.0\win-%cswinrt_platform%\publish\cswinrtwinmdgen.exe
 set run_cswinrt_generator_task=%this_dir%WinRT.Generator.Tasks\bin\%cswinrt_configuration%\netstandard2.0\WinRT.Generator.Tasks.dll
 
 set "cswinrt_nuspec=%this_dir%..\nuget\Microsoft.Windows.CsWinRT.nuspec"
@@ -602,7 +602,7 @@ if /I not "%cswinrt_platform%"=="x86" (
     "WinRT.WinMD.Generator,cswinrtwinmdgen"
   ) do (
     for /f "tokens=1,2 delims=," %%p in ("%%~t") do (
-      call :copyproduct "%this_dir%%%p\bin\%cswinrt_configuration%\net10.0\win-%cswinrt_platform%\publish\%%q.exe" "%cswinrt_stage%\tools"
+      call :copyproduct "%this_dir%%%p\bin\%cswinrt_configuration%\net11.0\win-%cswinrt_platform%\publish\%%q.exe" "%cswinrt_stage%\tools"
       if errorlevel 1 exit /b !errorlevel!
     )
   )

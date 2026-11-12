@@ -49,6 +49,7 @@
                       Private="false" />
     <ProjectReference Include="..\..\WinRT.Interop.Generator\WinRT.Interop.Generator.csproj"
                       ReferenceOutputAssembly="false"
+                      SkipGetTargetFrameworkProperties="true"
                       OutputItemType="_CsWinRTToolReference"
                       UndefineProperties="BuildToolArch;PublishBuildTool;RuntimeIdentifier;SelfContained;Platform"
                       Private="false" />
@@ -56,7 +57,7 @@
 
   <ItemGroup>
     <AssemblyMetadata Include="InteropGeneratorAssemblyPath"
-                      Value="$(MSBuildThisFileDirectory)..\..\WinRT.Interop.Generator\bin\$(Configuration)\net10.0\cswinrtinteropgen.dll" />
+                      Value="$(MSBuildThisFileDirectory)..\..\WinRT.Interop.Generator\bin\$(Configuration)\$(ToolDotNetVersion)\cswinrtinteropgen.dll" />
     <AssemblyMetadata Include="NetStandard20ReferenceDirectory"
                       Value="$(NuGetPackageRoot)netstandard.library\2.0.3\build\netstandard2.0\ref" />
     <AssemblyMetadata Include="GeneratorTasksAssemblyPath"
