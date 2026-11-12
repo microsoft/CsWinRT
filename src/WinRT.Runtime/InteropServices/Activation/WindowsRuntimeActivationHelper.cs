@@ -40,7 +40,7 @@ internal static unsafe class WindowsRuntimeActivationHelper
                 thisPtr: activationFactoryValue.GetThisPtrUnsafe(),
                 instance: inspectableInterfacePtr);
 
-            RestrictedErrorInfo.ThrowExceptionForHR(hresult);
+            RestrictedErrorInfo.ThrowExceptionForHR(hresult, activationFactoryObjectReference);
         }
     }
 
@@ -62,7 +62,7 @@ internal static unsafe class WindowsRuntimeActivationHelper
                 thisPtr: activationFactoryValue.GetThisPtrUnsafe(),
                 instance: &inspectableInterface);
 
-            RestrictedErrorInfo.ThrowExceptionForHR(hresult);
+            RestrictedErrorInfo.ThrowExceptionForHR(hresult, activationFactoryObjectReference);
         }
 
         // Query the 'IInspectable' object for the default interface, which is what callers expect.
@@ -108,7 +108,7 @@ internal static unsafe class WindowsRuntimeActivationHelper
                 param0: param0Reference.HString,
                 instance: defaultInterfacePtr);
 
-            RestrictedErrorInfo.ThrowExceptionForHR(hresult);
+            RestrictedErrorInfo.ThrowExceptionForHR(hresult, activationFactoryObjectReference);
         }
     }
 
@@ -144,7 +144,7 @@ internal static unsafe class WindowsRuntimeActivationHelper
                 innerInterface: innerInterfacePtr,
                 instance: defaultInterfacePtr);
 
-            RestrictedErrorInfo.ThrowExceptionForHR(hresult);
+            RestrictedErrorInfo.ThrowExceptionForHR(hresult, activationFactoryObjectReference);
         }
     }
 
@@ -177,7 +177,7 @@ internal static unsafe class WindowsRuntimeActivationHelper
                 innerInterface: innerInterfacePtr,
                 instance: defaultInterfacePtr);
 
-            RestrictedErrorInfo.ThrowExceptionForHR(hresult);
+            RestrictedErrorInfo.ThrowExceptionForHR(hresult, activationFactoryObjectReference);
         }
     }
 
@@ -222,7 +222,7 @@ internal static unsafe class WindowsRuntimeActivationHelper
                 innerInterface: innerInterfacePtr,
                 instance: defaultInterfacePtr);
 
-            RestrictedErrorInfo.ThrowExceptionForHR(hresult);
+            RestrictedErrorInfo.ThrowExceptionForHR(hresult, activationFactoryObjectReference);
         }
     }
 }

@@ -56,7 +56,10 @@ var entries = new (string Name, uint Value, string Description)[]
     ("ERROR_CANCELLED", 0x800704C7, "The operation was canceled."),
     ("ERROR_TIMEOUT", 0x800705B4, "This operation returned because the timeout period expired."),
     ("RPC_E_DISCONNECTED", 0x80010108, "The object invoked has disconnected from its clients."),
+    ("RPC_E_SERVER_DIED", 0x80010007, "The callee (server [not server application]) is not available and disappeared; all connections are invalid. The call may have executed."),
+    ("RPC_E_SERVER_DIED_DNE", 0x80010012, "The callee (server [not server application]) is not available and disappeared; all connections are invalid. The call did not execute."),
     ("RPC_S_SERVER_UNAVAILABLE", 0x800706BA, "The RPC server is unavailable."),
+    ("RPC_S_CALL_FAILED_DNE", 0x800706BF, "The remote procedure call failed and did not execute."),
     ("JSCRIPT_E_CANTEXECUTE", 0x89020001, "Cannot execute script.")
 };
 

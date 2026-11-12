@@ -3,6 +3,7 @@
 
 using System;
 using System.Runtime.CompilerServices;
+using System.Threading;
 
 namespace WindowsRuntime.InteropServices;
 
@@ -48,7 +49,10 @@ public abstract unsafe partial class WindowsRuntimeObjectReference : IDisposable
     /// <summary>
     /// The creation flags to control the lifecycle of the current <see cref="WindowsRuntimeObjectReference"/> instance.
     /// </summary>
-    private readonly CreateObjectReferenceFlags _flags;
+    /// <remarks>
+    /// This field is only ever mutated to set <see cref="CreateObjectReferenceFlags.IsDisconnected"/> (see <see cref="MarkDisconnected"/>).
+    /// </remarks>
+    private CreateObjectReferenceFlags _flags;
 
     /// <summary>
     /// Creates a new <see cref="WindowsRuntimeObjectReference"/> instance with the specified parameters.
@@ -106,6 +110,15 @@ public abstract unsafe partial class WindowsRuntimeObjectReference : IDisposable
     }
 
     /// <summary>
+    /// Gets whether <see cref="CreateObjectReferenceFlags.IsDisconnected"/> is set for the current object reference (see <see cref="MarkDisconnected"/>).
+    /// </summary>
+    internal bool IsDisconnected
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => _flags.HasFlag(CreateObjectReferenceFlags.IsDisconnected);
+    }
+
+    /// <summary>
     /// Gets whether <see cref="CreateObjectReferenceFlags.IsAggregated"/> is set for the current object reference.
     /// </summary>
     internal bool IsAggregated
@@ -141,6 +154,21 @@ public abstract unsafe partial class WindowsRuntimeObjectReference : IDisposable
     internal CreateObjectReferenceFlags CopyFlags(CreateObjectReferenceFlags requestedFlags)
     {
         return _flags & requestedFlags;
+    }
+
+    /// <summary>
+    /// Marks the current object reference as disconnected from its server (eg. because the server process died).
+    /// </summary>
+    /// <remarks>
+    /// This may be called on any object reference, but the flag is only consumed by <see cref="GetActivationFactory(ref WindowsRuntimeObjectReference?, string, in Guid)"/>:
+    /// cached activation factories marked as disconnected are not reused, and a new activation factory is resolved the next time they are accessed.
+    /// </remarks>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal void MarkDisconnected()
+    {
+        _ = Interlocked.Or(
+            location1: ref Unsafe.As<CreateObjectReferenceFlags, int>(ref _flags),
+            value: (int)CreateObjectReferenceFlags.IsDisconnected);
     }
 
     /// <summary>
