@@ -17,7 +17,7 @@ Contains source files for producing the C#/WinRT NuGet package, which is regular
 
 ## [`src/Authoring`](../src/Authoring)
 
-Contains projects for implementing authoring and hosting support, including the source generators and the WinRT host.
+Contains projects for implementing authoring and hosting support, including the WinRT host.
 
 ## [`src/Benchmarks`](../src/Benchmarks)
 
@@ -47,7 +47,7 @@ Contains various testing-related projects:
 
 - [`FunctionalTests`](../src/Tests/FunctionalTests): A collection of standalone console applications, each validating a specific interop scenario (async, collections, events, CCW, dynamic casting, structs, and more) under real publishing conditions such as trimming and Native AOT.  Each test reports success with exit code `100`.
 
-- [`SourceGenerator2Test`](../src/Tests/SourceGenerator2Test): MSTest unit tests for the source generators and diagnostic analyzers in `WinRT.SourceGenerator2`, built on the Roslyn testing libraries.
+- [`SourceGeneratorTest`](../src/Tests/SourceGeneratorTest): MSTest unit tests for the source generators and diagnostic analyzers in `WinRT.SourceGenerator`, built on the Roslyn testing libraries.
 
 - [`ObjectLifetimeTests`](../src/Tests/ObjectLifetimeTests): A WinUI application-style MSTest project validating reference tracking, garbage collection behavior, and XAML element lifetime.
 
@@ -101,7 +101,7 @@ Contains the **projection writer**, a C# library that reads `.winmd` metadata an
 
 Contains the **WinMD generator** (`cswinrtwinmdgen.exe`). This tool, distributed as a Native AOT binary alongside the other CsWinRT post-build tools, generates a `.winmd` metadata file from a compiled C# component assembly so developers can author Windows Runtime components in C#. It is a port and restructuring of the previous WinMD generator from CsWinRT 2.x, which was implemented as a Roslyn source generator. In addition to consistency with the other CsWinRT 3.0 build tools, moving it out of a source generator addresses a fundamental design issue: the 2.x generator emitted a `.winmd` file **on disk**, but arbitrary file I/O is explicitly unsupported in Roslyn source generators (which may only contribute additional source to the compilation). The new tool runs as a normal MSBuild step — invoked by the `RunCsWinRTWinMDGenerator` MSBuild task wired up through `nuget/Microsoft.Windows.CsWinRT.Authoring.WinMD.targets`, after `CoreCompile` when `CsWinRTComponent == true` — where file I/O is the expected output mechanism.
 
-## [`src/WinRT.Runtime2`](../src/WinRT.Runtime2) 
+## [`src/WinRT.Runtime`](../src/WinRT.Runtime) 
 
 Contains the WinRT.Runtime project for building the C#/WinRT runtime assembly, `WinRT.Runtime.dll`. The runtime assembly targets .NET 10 and provides Xaml reference tracking support which is necessary for WinUI 3 applications to manage memory correctly. The runtime assembly implements the following features for all projected C#/WinRT types:
 
@@ -110,6 +110,10 @@ Contains the WinRT.Runtime project for building the C#/WinRT runtime assembly, `
 - [ComWrappers](https://docs.microsoft.com/dotnet/api/system.runtime.interopservices.comwrappers) management
 - IDynamicInterfaceCastable casting support
 - Extension methods common to projected types
+
+## [`src/WinRT.SourceGenerator`](../src/WinRT.SourceGenerator)
+
+Contains the Roslyn source generators and diagnostic analyzers that ship in the C#/WinRT NuGet package (`WinRT.SourceGenerator.dll`), including the component authoring generators and the diagnostic analyzers for Windows Runtime scenarios.
 
 ## [`src/WinRT.Sdk.Projection`](../src/WinRT.Sdk.Projection)
 

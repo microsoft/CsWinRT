@@ -23,10 +23,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\Authoring\WinRT.SourceGenerator2\WinRT.SourceGenerator2.csproj" SetPlatform="Platform=AnyCPU" />
+    <ProjectReference Include="..\..\WinRT.SourceGenerator\WinRT.SourceGenerator.csproj" SetPlatform="Platform=AnyCPU" />
     <ProjectReference Include="..\..\Projections\Windows\Windows.csproj" />
     <ProjectReference Include="..\..\Projections\WinAppSDK\WinAppSDK.csproj" />
-    <ProjectReference Include="..\..\WinRT.Runtime2\WinRT.Runtime.csproj" />
+    <ProjectReference Include="..\..\WinRT.Runtime\WinRT.Runtime.csproj" />
   </ItemGroup>
 
   <!--

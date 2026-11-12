@@ -300,7 +300,7 @@
       <Build Solution="*|ARM64" Project="false" />
       <Build Solution="*|x86" Project="false" />
     </Project>
-    <Project Path="Tests/SourceGenerator2Test/SourceGenerator2Test.csproj">
+    <Project Path="Tests/SourceGeneratorTest/SourceGeneratorTest.csproj">
       <Platform Solution="*|ARM64" Project="ARM64" />
       <Platform Solution="*|x64" Project="x64" />
       <Platform Solution="*|x86" Project="x86" />
@@ -515,7 +515,7 @@
     <File Path="Tests/FunctionalTests/PublishProfiles/win-x64.pubxml" />
     <File Path="Tests/FunctionalTests/PublishProfiles/win-x86.pubxml" />
   </Folder>
-  <Project Path="Authoring/WinRT.SourceGenerator2/WinRT.SourceGenerator2.csproj" />
+  <Project Path="WinRT.SourceGenerator/WinRT.SourceGenerator.csproj" />
   <Project Path="WinRT.Generator.Core/WinRT.Generator.Core.csproj" />
   <Project Path="WinRT.Generator.Tasks/WinRT.Generator.Tasks.csproj" />
   <Project Path="WinRT.Impl.Generator/WinRT.Impl.Generator.csproj" />
@@ -524,7 +524,7 @@
   <Project Path="WinRT.Projection.Writer/WinRT.Projection.Writer.csproj" />
   <Project Path="WinRT.Projection.Generator/WinRT.Projection.Generator.csproj" />
   <Project Path="WinRT.Projection.Ref.Generator/WinRT.Projection.Ref.Generator.csproj" />
-  <Project Path="WinRT.Runtime2/WinRT.Runtime.csproj" />
+  <Project Path="WinRT.Runtime/WinRT.Runtime.csproj" />
   <Project Path="WinRT.Sdk.Projection/WinRT.Sdk.Projection.csproj">
     <Build Project="false" />
   </Project>

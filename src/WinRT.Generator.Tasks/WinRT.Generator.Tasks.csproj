@@ -14,7 +14,7 @@
 
     <!-- Enable strong name signing -->
     <SignAssembly>true</SignAssembly>
-    <AssemblyOriginatorKeyFile>..\WinRT.Runtime2\key.snk</AssemblyOriginatorKeyFile>
+    <AssemblyOriginatorKeyFile>..\WinRT.Runtime\key.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
 
   <ItemGroup>

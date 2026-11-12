@@ -45,7 +45,7 @@
     <AssemblyTitle>C#/WinRT Authoring Source Generator v$(VersionString)</AssemblyTitle>
     <Copyright>Copyright (c) Microsoft Corporation. All rights reserved.</Copyright>
     <SignAssembly>true</SignAssembly>
-    <AssemblyOriginatorKeyFile>..\..\WinRT.Runtime2\key.snk</AssemblyOriginatorKeyFile>
+    <AssemblyOriginatorKeyFile>..\WinRT.Runtime\key.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
 
   <!-- Additional files with the Roslyn analyzer rules -->
@@ -64,12 +64,12 @@
     the analyzer does not have to ship the build tool assemblies and their dependencies (e.g. 'AsmResolver').
   -->
   <ItemGroup>
-    <Compile Include="..\..\WinRT.Generator.Core\Helpers\WindowsRuntimeTypeMappings.cs" Link="Helpers\WindowsRuntimeTypeMappings.cs" />
-    <Compile Include="..\..\WinRT.Interop.Generator\Helpers\TypeMapping.cs" Link="Helpers\TypeMapping.cs" />
-    <Compile Include="..\..\WinRT.Generator.Core\Helpers\GuidGenerator.cs" Link="Helpers\GuidGenerator.cs" />
-    <Compile Include="..\..\WinRT.Generator.Core\References\WellKnownPublicKeyTokens.cs" Link="Helpers\WellKnownPublicKeyTokens.cs" />
-    <Compile Include="..\..\WinRT.Generator.Core\References\WellKnownWindowsRuntimeIids.cs" Link="Helpers\WellKnownWindowsRuntimeIids.cs" />
-    <Compile Include="..\..\WinRT.Generator.Core\References\WindowsRuntimeReferenceAssemblyMetadata.cs" Link="Helpers\WindowsRuntimeReferenceAssemblyMetadata.cs" />
+    <Compile Include="..\WinRT.Generator.Core\Helpers\WindowsRuntimeTypeMappings.cs" Link="Helpers\WindowsRuntimeTypeMappings.cs" />
+    <Compile Include="..\WinRT.Interop.Generator\Helpers\TypeMapping.cs" Link="Helpers\TypeMapping.cs" />
+    <Compile Include="..\WinRT.Generator.Core\Helpers\GuidGenerator.cs" Link="Helpers\GuidGenerator.cs" />
+    <Compile Include="..\WinRT.Generator.Core\References\WellKnownPublicKeyTokens.cs" Link="Helpers\WellKnownPublicKeyTokens.cs" />
+    <Compile Include="..\WinRT.Generator.Core\References\WellKnownWindowsRuntimeIids.cs" Link="Helpers\WellKnownWindowsRuntimeIids.cs" />
+    <Compile Include="..\WinRT.Generator.Core\References\WindowsRuntimeReferenceAssemblyMetadata.cs" Link="Helpers\WindowsRuntimeReferenceAssemblyMetadata.cs" />
   </ItemGroup>
 
 </Project>

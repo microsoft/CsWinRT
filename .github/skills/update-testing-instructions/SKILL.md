@@ -23,7 +23,7 @@ Launch an explore agent to analyze the unit test project. Verify:
 
 - **Project settings** are current: test framework, TFM property name, output type, self-contained/AOT settings
 - **Key dependencies** listed in the `.csproj` are current (MSTest packages, CsWin32, Newtonsoft.Json, etc.)
-- **Project references** listed (WinRT.SourceGenerator2, projection projects) are current
+- **Project references** listed (WinRT.SourceGenerator, projection projects) are current
 - **Test class list** is complete and accurate — check all `.cs` files for `[TestClass]` classes, verify no classes have been added, removed, or renamed
 - **Namespace** is still `UnitTest`
 - **Shared helpers** (`UnitTestHelper.cs`, `TestModuleInitializer.cs`) still exist
@@ -40,12 +40,12 @@ Launch an explore agent to analyze the functional test projects. Verify:
 - **Exit code convention** is still accurate (100 = success)
 - **"To add a new functional test" instructions** are still correct (TFM property name, project references, CI pipeline step)
 
-### Step 4: verify source generator and analyzer tests (`src/Tests/SourceGenerator2Test/`)
+### Step 4: verify source generator and analyzer tests (`src/Tests/SourceGeneratorTest/`)
 
 Launch an explore agent to analyze the source generator test project. Verify:
 
 - **Project settings** are current: test framework, TFM, key dependencies (MSTest, `Microsoft.CodeAnalysis.CSharp.Analyzer.Testing`, `Basic.Reference.Assemblies.*`)
-- **Project references** are current (WinRT.SourceGenerator2, projection projects, WinRT.Runtime)
+- **Project references** are current (WinRT.SourceGenerator, projection projects, WinRT.Runtime)
 - **Test class table** is complete and accurate — check all `Test_*.cs` files, verify no classes have been added, removed, or renamed, and verify each class's description matches its actual content
 - **Test helper classes** in `Helpers/` are accurately listed and described
 - **Generator test pattern example** matches the actual conventions used in the test files (variable names, method signatures, `VerifySources` call style)

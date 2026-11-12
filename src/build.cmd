@@ -184,20 +184,10 @@ if ErrorLevel 1 (
 :sourcegeneratortest
 rem Running Source Generator Unit Tests
 echo Running source generator tests for %cswinrt_platform% %cswinrt_configuration%
-call :exec %dotnet_exe% test --verbosity normal --no-build --logger trx;LogFilePath=%~dp0sourcegeneratortest_%cswinrt_version_string%.trx %this_dir%Tests\SourceGeneratorTest\SourceGeneratorTest.csproj /nologo /m /p:configuration=%cswinrt_configuration% -- RunConfiguration.TreatNoTestsAsError=true
+call :exec %dotnet_exe% test --verbosity normal --no-build --logger trx;LogFilePath=%~dp0sourcegeneratortest_%cswinrt_version_string%.trx %this_dir%Tests\SourceGeneratorTest\SourceGeneratorTest.csproj /nologo /m /p:platform=%cswinrt_platform%;configuration=%cswinrt_configuration% -- RunConfiguration.TreatNoTestsAsError=true
 if ErrorLevel 1 (
   echo.
   echo ERROR: Source generator unit test failed, skipping NuGet pack
-  exit /b !ErrorLevel!
-)
-
-:sourcegenerator2test
-rem Running Source Generator 2 Unit Tests
-echo Running source generator 2 tests for %cswinrt_platform% %cswinrt_configuration%
-call :exec %dotnet_exe% test --verbosity normal --no-build --logger trx;LogFilePath=%~dp0sourcegenerator2test_%cswinrt_version_string%.trx %this_dir%Tests\SourceGenerator2Test\SourceGenerator2Test.csproj /nologo /m /p:platform=%cswinrt_platform%;configuration=%cswinrt_configuration% -- RunConfiguration.TreatNoTestsAsError=true
-if ErrorLevel 1 (
-  echo.
-  echo ERROR: Source generator 2 unit test failed, skipping NuGet pack
   exit /b !ErrorLevel!
 )
 
@@ -268,7 +258,7 @@ set net10_runtime=%this_dir%_build\%cswinrt_platform%\%cswinrt_configuration%\Wi
 set net10_runtime_ref=%this_dir%_build\%cswinrt_platform%\%cswinrt_configuration%\WinRT.Runtime\ref\WinRT.Runtime.dll
 set net10_runtime_ref_xml=%this_dir%_build\%cswinrt_platform%\%cswinrt_configuration%\WinRT.Runtime\ref\WinRT.Runtime.xml
 set source_generator_roslyn4120=%this_dir%Authoring\WinRT.SourceGenerator.Roslyn4120\bin\%cswinrt_configuration%\netstandard2.0\WinRT.SourceGenerator.dll
-set source_generator=%this_dir%Authoring\WinRT.SourceGenerator2\bin\%cswinrt_configuration%\net10.0\WinRT.SourceGenerator.dll
+set source_generator=%this_dir%WinRT.SourceGenerator\bin\%cswinrt_configuration%\net10.0\WinRT.SourceGenerator.dll
 set winrt_host_%cswinrt_platform%=%this_dir%_build\%cswinrt_platform%\%cswinrt_configuration%\WinRT.Host\bin\WinRT.Host.dll
 set winrt_host_resource_%cswinrt_platform%=%this_dir%_build\%cswinrt_platform%\%cswinrt_configuration%\WinRT.Host\bin\WinRT.Host.dll.mui
 set winrt_shim=%this_dir%Authoring\WinRT.Host.Shim\bin\%cswinrt_configuration%\net10.0\WinRT.Host.Shim.dll
@@ -526,7 +516,7 @@ exit /b %errorlevel%
 
 :buildruntimereference
 rem Stage the implementation before recompiling with implementation-only APIs stripped out
-set "winrt_runtime_bin=%this_dir%WinRT.Runtime2\bin\%cswinrt_configuration%\net10.0\"
+set "winrt_runtime_bin=%this_dir%WinRT.Runtime\bin\%cswinrt_configuration%\net10.0\"
 set "winrt_runtime_staging=%this_dir%_build\%cswinrt_platform%\%cswinrt_configuration%\WinRT.Runtime\"
 if "%cswinrt_reference_output%"=="" set "cswinrt_reference_output=%winrt_runtime_bin%"
 echo Staging WinRT.Runtime implementation assembly for %cswinrt_platform% %cswinrt_configuration%
@@ -539,10 +529,10 @@ call :exec %msbuild_path%msbuild.exe %cswinrt_build_params% /restore ^
   /p:VersionString=%cswinrt_version_string% ^
   /p:AssemblyVersionNumber=%cswinrt_assembly_version% ^
   /p:CsWinRTBuildReferenceAssembly=true ^
-  "%this_dir%WinRT.Runtime2\WinRT.Runtime.csproj" %cswinrt_reference_build_params%
+  "%this_dir%WinRT.Runtime\WinRT.Runtime.csproj" %cswinrt_reference_build_params%
 if errorlevel 1 exit /b !errorlevel!
 echo Staging WinRT.Runtime reference assembly for %cswinrt_platform% %cswinrt_configuration%
-call :copyproduct "%this_dir%WinRT.Runtime2\obj\%cswinrt_configuration%\net10.0\ref\WinRT.Runtime.dll" "%winrt_runtime_staging%ref"
+call :copyproduct "%this_dir%WinRT.Runtime\obj\%cswinrt_configuration%\net10.0\ref\WinRT.Runtime.dll" "%winrt_runtime_staging%ref"
 if errorlevel 1 exit /b !errorlevel!
 call :copyproduct "%cswinrt_reference_output%WinRT.Runtime.xml" "%winrt_runtime_staging%ref"
 exit /b %errorlevel%
@@ -614,7 +604,7 @@ if /I "%cswinrt_platform%"=="x64" (
     call :copyproduct "%winrt_runtime_staging%ref\%%f" "%cswinrt_stage%\ref"
     if errorlevel 1 exit /b !errorlevel!
   )
-  call :copyproduct "%this_dir%Authoring\WinRT.SourceGenerator2\bin\%cswinrt_configuration%\net10.0\WinRT.SourceGenerator.dll" "%cswinrt_stage%"
+  call :copyproduct "%this_dir%WinRT.SourceGenerator\bin\%cswinrt_configuration%\net10.0\WinRT.SourceGenerator.dll" "%cswinrt_stage%"
   if errorlevel 1 exit /b !errorlevel!
   call :copyproduct "%this_dir%Authoring\WinRT.Host.Shim\bin\%cswinrt_configuration%\net10.0\WinRT.Host.Shim.dll" "%cswinrt_stage%"
   if errorlevel 1 exit /b !errorlevel!

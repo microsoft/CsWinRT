@@ -11,13 +11,13 @@ Add a new `[FeatureSwitchDefinition]`-based runtime feature switch to CsWinRT. F
 Before adding the feature switch, read the existing switches to understand the naming conventions, code style, and patterns used:
 
 Key files to read:
-- `src/WinRT.Runtime2/Properties/WindowsRuntimeFeatureSwitches.cs` — all existing feature switches
+- `src/WinRT.Runtime/Properties/WindowsRuntimeFeatureSwitches.cs` — all existing feature switches
 - `nuget/Microsoft.Windows.CsWinRT.targets` — MSBuild property defaults and `RuntimeHostConfigurationOption` items (at the bottom of the file)
 </investigate_before_answering>
 
 ## Step 1: Add the feature switch definition
 
-**File:** `src/WinRT.Runtime2/Properties/WindowsRuntimeFeatureSwitches.cs`
+**File:** `src/WinRT.Runtime/Properties/WindowsRuntimeFeatureSwitches.cs`
 
 Add three things to the `WindowsRuntimeFeatureSwitches` class, following the existing pattern exactly:
 

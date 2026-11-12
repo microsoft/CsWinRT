@@ -26,7 +26,7 @@ CsWinRT 3.0 has 9 primary test project areas, each serving a different purpose. 
 - **TFM:** Variable via `$(AppBuildTFMs)`, multi-platform (x86/x64)
 - **Output type:** Exe, self-contained, AOT-enabled
 - **Key dependencies:** MSTest.TestFramework, MSTest.TestAdapter, MSTest.SourceGeneration, Microsoft.Windows.CsWin32, Newtonsoft.Json, Microsoft.VCRTForwarders.140
-- **References:** WinRT.SourceGenerator2 (as analyzer), Test/TestSubset/Windows/WinAppSDK projections
+- **References:** WinRT.SourceGenerator (as analyzer), Test/TestSubset/Windows/WinAppSDK projections
 - **Runner:** The MSTest projects use `MSTest.Sdk`, pinned in `global.json`. The SDK supplies the runner and matching MSTest/MTP packages, using its default extension profile (TRX reporting and code coverage). Shared `Directory.Build.props` enables source generation for CoreCLR as well as Native AOT. Do not add redundant runner properties or MSTest package references.
 
 **Test organization:**
@@ -116,13 +116,13 @@ return 100;
 
 **To add a new functional test:**
 1. Create a new folder under `FunctionalTests/` (e.g. `MyScenario/`)
-2. Create `MyScenario.csproj` following the pattern of existing projects (use `$(FunctionalTestsBuildTFMs)`, reference Test/Windows projections, reference `WinRT.SourceGenerator2` as analyzer)
+2. Create `MyScenario.csproj` following the pattern of existing projects (use `$(FunctionalTestsBuildTFMs)`, reference Test/Windows projections, reference `WinRT.SourceGenerator` as analyzer)
 3. Create `Program.cs` with top-level statements, return `100` on success
 4. Add the test to the CI matrix in the relevant pipeline YAML
 
-### 3. Source generator and analyzer tests (`src/Tests/SourceGenerator2Test/`)
+### 3. Source generator and analyzer tests (`src/Tests/SourceGeneratorTest/`)
 
-**What it tests:** All source generators and diagnostic analyzers in `WinRT.SourceGenerator2`.
+**What it tests:** All source generators and diagnostic analyzers in `WinRT.SourceGenerator`.
 
 **When to add tests here:** For testing a new or modified source generator, a new analyzer diagnostic, or changes to generated code output.
 
@@ -130,7 +130,7 @@ return 100;
 - **Test framework:** MSTest
 - **TFM:** `net10.0`
 - **Key dependencies:** MSTest, `Microsoft.CodeAnalysis.CSharp.Analyzer.Testing`, `Basic.Reference.Assemblies.Net100`
-- **References:** WinRT.SourceGenerator2 (project reference), Windows/WinAppSDK projections, WinRT.Runtime
+- **References:** WinRT.SourceGenerator (project reference), Windows/WinAppSDK projections, WinRT.Runtime
 
 **Test classes:**
 | Test class | What it tests |
@@ -331,8 +331,8 @@ public void RefArrayParameter_IsRejected()
 | Exception/HRESULT conversion | `UnitTest/` (add to `ExceptionTests`) |
 | A scenario must survive trimming/AOT | `FunctionalTests/` (new or existing project) |
 | A new collection/async/CCW pattern under AOT | `FunctionalTests/` (new or existing project) |
-| A source generator's output | `SourceGenerator2Test/` (new `Test_*` class or add to existing) |
-| An analyzer diagnostic | `SourceGenerator2Test/` (new `Test_*Analyzer` class or add to existing) |
+| A source generator's output | `SourceGeneratorTest/` (new `Test_*` class or add to existing) |
+| An analyzer diagnostic | `SourceGeneratorTest/` (new `Test_*Analyzer` class or add to existing) |
 | GC/reference tracking behavior | `ObjectLifetimeTests/` |
 | XAML visual tree element lifetime | `ObjectLifetimeTests/` |
 | WinRT component authoring patterns | `AuthoringTest/` |

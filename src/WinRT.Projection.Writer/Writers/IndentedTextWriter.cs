@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-// Adapted from src/Authoring/WinRT.SourceGenerator2/Helpers/IndentedTextWriter.cs (which itself
+// Adapted from src/WinRT.SourceGenerator/Helpers/IndentedTextWriter.cs (which itself
 // was ported from ComputeSharp); reshaped here as a class backed by StringBuilder so it can be
 // passed around freely and live as long as needed in this long-running tool.
 

@@ -54,7 +54,7 @@
       naming path (the forwarder is written by the tool itself, so signing it is its responsibility).
     -->
     <AssemblyMetadata Include="StrongNameKeyPath"
-                      Value="$(MSBuildThisFileDirectory)..\..\WinRT.Runtime2\key.snk" />
+                      Value="$(MSBuildThisFileDirectory)..\..\WinRT.Runtime\key.snk" />
   </ItemGroup>
 
   <ItemGroup>
