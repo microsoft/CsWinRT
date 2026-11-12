@@ -146,12 +146,12 @@ internal sealed class InteropGeneratorDiscoveryState(RuntimeContext runtimeConte
     /// <summary>
     /// Gets the cross-module contexts collected by the generic discovery enumerations.
     /// </summary>
-    public DispatchContextRegistry GenericDispatchContexts { get; } = new();
+    public required DispatchContextRegistry GenericDispatchContexts { get; init; }
 
     /// <summary>
     /// Gets the cross-module contexts collected by the SZ-array discovery enumerations.
     /// </summary>
-    public DispatchContextRegistry SzArrayDispatchContexts { get; } = new();
+    public required DispatchContextRegistry SzArrayDispatchContexts { get; init; }
 
     /// <summary>
     /// Gets the corlib references for the application's target framework.

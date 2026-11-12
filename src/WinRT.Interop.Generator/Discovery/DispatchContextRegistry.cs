@@ -13,6 +13,32 @@ namespace WindowsRuntime.InteropGenerator.Discovery;
 /// </summary>
 internal sealed class DispatchContextRegistry
 {
+    /// <summary>
+    /// The modules whose transitive instantiation limit warning was already reported. This set is shared by
+    /// linked registries, so each module is only reported once across all of them.
+    /// </summary>
+    private readonly ConcurrentDictionary<ModuleDefinition, byte> _transitiveLimitReportedModules;
+
+    /// <summary>
+    /// Creates a new <see cref="DispatchContextRegistry"/> instance.
+    /// </summary>
+    /// <param name="transitiveLimitReportedModules">The shared set of modules whose transitive instantiation limit warning was already reported.</param>
+    private DispatchContextRegistry(ConcurrentDictionary<ModuleDefinition, byte> transitiveLimitReportedModules)
+    {
+        _transitiveLimitReportedModules = transitiveLimitReportedModules;
+    }
+
+    /// <summary>
+    /// Creates a pair of linked <see cref="DispatchContextRegistry"/> instances.
+    /// </summary>
+    /// <returns>The two linked registries.</returns>
+    public static (DispatchContextRegistry First, DispatchContextRegistry Second) CreateLinkedPair()
+    {
+        ConcurrentDictionary<ModuleDefinition, byte> transitiveLimitReportedModules = [];
+
+        return (new(transitiveLimitReportedModules), new(transitiveLimitReportedModules));
+    }
+
     /// <summary>The actual receiver contexts, read only after the parallel publishing barrier.</summary>
     public ConcurrentBag<Receiver> Receivers { get; } = [];
 
@@ -21,6 +47,16 @@ internal sealed class DispatchContextRegistry
 
     /// <summary>Dispatch-capable body contexts already expanded by the module enumerations.</summary>
     public ConcurrentBag<ExpandedBody> ExpandedBodies { get; } = [];
+
+    /// <summary>
+    /// Marks the transitive instantiation limit warning as reported for a module.
+    /// </summary>
+    /// <param name="module">The module that reached the limit.</param>
+    /// <returns>Whether this is the first report for the module (and the warning should be emitted).</returns>
+    public bool TryMarkTransitiveLimitReported(ModuleDefinition module)
+    {
+        return _transitiveLimitReportedModules.TryAdd(module, 0);
+    }
 
     /// <summary>
     /// An observed receiver context with its traversal provenance.

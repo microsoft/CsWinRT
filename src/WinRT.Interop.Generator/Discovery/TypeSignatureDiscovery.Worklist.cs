@@ -351,9 +351,11 @@ internal partial class TypeSignatureDiscovery<TResult>
             {
                 _transitiveTypeLimitReported = true;
 
-                (_isSupplemental
-                    ? WellKnownInteropExceptions.SupplementalGenericDiscoveryLimitExceededWarning(_module, MaxTransitiveTypes)
-                    : WellKnownInteropExceptions.GenericTypeDiscoveryTransitiveTypeLimitExceededWarning(_module, MaxTransitiveTypes)).LogOrThrow(_treatWarningsAsErrors);
+                // The warning is shared by every enumeration of the module (generic and SZ array, primary and supplemental)
+                if (_registry.TryMarkTransitiveLimitReported(_module))
+                {
+                    WellKnownInteropExceptions.GenericTypeDiscoveryTransitiveTypeLimitExceededWarning(_module).LogOrThrow(_treatWarningsAsErrors);
+                }
             }
 
             return false;

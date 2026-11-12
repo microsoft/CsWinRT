@@ -599,7 +599,6 @@ public partial class Test_InteropGenericDiscovery
             string interop = Path.Combine(directory, "WinRT.Interop.dll");
 
             StringAssert.Contains(log, ExpansionWarning);
-            StringAssert.Contains(log, "1024");
             Assert.IsFalse(log.Contains(RecursionWarning, StringComparison.Ordinal), log);
             Assert.IsFalse(log.Contains(ComplexityWarning, StringComparison.Ordinal), log);
 

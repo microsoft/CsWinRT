@@ -409,11 +409,11 @@ Ordinary member discovery still covers class-owned static implementations and de
 
 Generic-instance and SZ-array discovery have independent enumerations, worklists, visited state, and allowances:
 
-| Enumeration | Scope | Transitive instantiation limit | Warning prefix |
-|-------------|-------|-------------------------------|----------------|
-| Primary | Per input module and result kind | 1024 | `Generic member discovery reached` |
-| Module-local supplemental | Per input module and result kind | 1024, separate from primary | `Supplemental generic discovery reached` |
-| Late cross-module supplemental | Once for the application per result kind | 1024, shared across publication stages | `Supplemental generic discovery reached` |
+| Enumeration | Scope | Transitive instantiation limit |
+|-------------|-------|-------------------------------|
+| Primary | Per input module and result kind | 1024 |
+| Module-local supplemental | Per input module and result kind | 1024, separate from primary |
+| Late cross-module supplemental | Once for the application per result kind | 1024, shared across publication stages |
 
 Type member scans and generic method bodies share their enumeration's counter. Branching return types such as `Node<A<T>>` and `Node<B<T>>`, or branching generic helper calls, can otherwise create exponentially many work items below the depth and complexity limits. Types with no eligible members, including policy-skipped framework generics without a static initializer, do not consume reservations. Unresolved methods, methods without IL bodies, and transitive callees skipped by policy do not consume reservations either; their referenced signatures and method arguments remain visible.
 
@@ -423,7 +423,7 @@ Primary discovery completes first with first-visit ordering. Generic dispatch ob
 
 Receiver-driven instance defaults wait until the supplemental generic-dispatch queue drains, then run in first-observation order. Newly discovered receivers form subsequent batches without resetting the counter. Additional constrained static calls run last, sharing that same remaining allowance rather than receiving another 1024 reservations. Their ordinary callees, static initializers, and newly exposed instance defaults retain normal member traversal and static-phase provenance. The final loop drains both default and static work to a fixpoint, allowing interleaved call chains.
 
-Explicit signatures in the input metadata are roots and do not consume transitive reservations. Reaching the limit can prevent further member scans while still allowing signatures to be reported; other discovery branches continue. Depth, complexity, and instantiation-limit diagnostics are `CSWINRTINTEROPGEN0104`, `CSWINRTINTEROPGEN0105`, and `CSWINRTINTEROPGEN0106`. Supplemental and late-join warnings use the supplemental prefix, and warnings-as-errors promotes both primary and supplemental forms.
+Explicit signatures in the input metadata are roots and do not consume transitive reservations. Reaching the limit can prevent further member scans while still allowing signatures to be reported; other discovery branches continue. Depth, complexity, and instantiation-limit diagnostics are `CSWINRTINTEROPGEN0104`, `CSWINRTINTEROPGEN0105`, and `CSWINRTINTEROPGEN0106`. The instantiation-limit warning is internally phase-agnostic: it is reported once per module (via `DispatchContextRegistry.TryMarkTransitiveLimitReported`, whose state is shared by the generic and SZ-array registries and by all primary, supplemental, and late-join phases), with a single message that names neither the phase nor the limit. Warnings-as-errors promotes it like any other warning.
 
 #### Cross-module completion
 
