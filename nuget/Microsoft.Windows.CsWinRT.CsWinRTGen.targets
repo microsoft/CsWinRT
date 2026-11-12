@@ -107,14 +107,14 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     <_RunCsWinRTGeneratorPropertyInputsCachePath>$([MSBuild]::NormalizePath('$(MSBuildProjectDirectory)', '$(_RunCsWinRTGeneratorPropertyInputsCachePath)'))</_RunCsWinRTGeneratorPropertyInputsCachePath>
 
     <!--
-      Set the path of the file with the hash of the Windows Runtime metadata inputs for 'cswinrtprojectiongen'.
-      That tool takes the '.winmd' files as inputs, so which ones it is given has to take part in the up-to-date
-      check. The targets below also list them in Inputs, which covers their contents, but a timestamp check
+      Set the path of the file with the hash of the inputs for 'cswinrtprojectiongen'. That tool takes the '.winmd'
+      files and reference assemblies as inputs, so which ones it is given has to take part in the up-to-date check.
+      The targets below also list the ones it reads in Inputs, which covers their contents, but a timestamp check
       compares the newest input against the output, so it can never observe a removal (or an addition that is
       older than the last output). Hashing the set turns that into a change it can see.
     -->
-    <_CsWinRTProjectionGenWinMDInputsCachePath Condition="'$(_CsWinRTProjectionGenWinMDInputsCachePath)' == ''">$(IntermediateOutputPath)$(MSBuildProjectName).cswinrtprojectiongen.winmds.cache</_CsWinRTProjectionGenWinMDInputsCachePath>
-    <_CsWinRTProjectionGenWinMDInputsCachePath>$([MSBuild]::NormalizePath('$(MSBuildProjectDirectory)', '$(_CsWinRTProjectionGenWinMDInputsCachePath)'))</_CsWinRTProjectionGenWinMDInputsCachePath>
+    <_CsWinRTProjectionGenInputsCachePath Condition="'$(_CsWinRTProjectionGenInputsCachePath)' == ''">$(IntermediateOutputPath)$(MSBuildProjectName).cswinrtprojectiongen.inputs.cache</_CsWinRTProjectionGenInputsCachePath>
+    <_CsWinRTProjectionGenInputsCachePath>$([MSBuild]::NormalizePath('$(MSBuildProjectDirectory)', '$(_CsWinRTProjectionGenInputsCachePath)'))</_CsWinRTProjectionGenInputsCachePath>
 
     <!--
       Default property values for `cswinrtimplgen`.
@@ -372,31 +372,69 @@ Copyright (C) Microsoft Corporation. All rights reserved.
 
   <!--
     ============================================================
-                  _CsWinRTComputeProjectionGenWinMDInputs
+                  _CsWinRTComputeProjectionGenInputs
 
-    Writes the hash of the Windows Runtime metadata inputs for
-    'cswinrtprojectiongen', so its targets rerun when that set changes.
+    Collects the inputs of 'cswinrtprojectiongen' for the up-to-date
+    checks of its targets, and writes the hash of the set of inputs,
+    so those targets rerun when that set changes.
     ============================================================
   -->
-  <Target Name="_CsWinRTComputeProjectionGenWinMDInputs" DependsOnTargets="ResolveReferences;CsWinRTRemoveWinMDReferences">
+  <Target Name="_CsWinRTComputeProjectionGenInputs" DependsOnTargets="FindReferenceAssembliesForReferences;CsWinRTRemoveWinMDReferences;CsWinRTResolveWindowsMetadata">
 
     <ItemGroup>
-      <_CsWinRTProjectionGenWinMDInputsToHash Include="@(CsWinRTInputs)" />
+      <_CsWinRTProjectionGenWinMDInputs Include="@(CsWinRTInputs)" />
 
       <!-- Metadata a referenced projection contributes, as a ';' separated list that MSBuild splits here -->
-      <_CsWinRTProjectionGenWinMDInputsToHash Include="%(ReferencePathWithRefAssemblies.CsWinRTInputs)"
-                                              Condition="'%(ReferencePathWithRefAssemblies.CsWinRTInputs)' != ''" />
+      <_CsWinRTProjectionGenWinMDInputs Include="%(ReferencePathWithRefAssemblies.CsWinRTInputs)"
+                                        Condition="'%(ReferencePathWithRefAssemblies.CsWinRTInputs)' != ''" />
 
-      <_CsWinRTProjectionGenWinMDInputsToHash Include="$(CsWinRTInteropMetadata)" />
+      <_CsWinRTProjectionGenWinMDInputs Include="$(CsWinRTInteropMetadata)" />
+
+      <!--
+        Besides the references they are compiled against (see below), the projections read the reference assemblies to decide what
+        to project. The Windows SDK projections only read the Windows SDK ones, while the merged projection reads every reference
+        projection. Any other project reference is skipped, so that changing its public API doesn't regenerate all projections.
+      -->
+      <_CsWinRTWindowsSdkReferenceAssembly Include="@(ReferencePathWithRefAssemblies)"
+                                           Condition="'%(ReferencePathWithRefAssemblies.FileName)' == 'Microsoft.Windows.SDK.NET' or '%(ReferencePathWithRefAssemblies.FileName)' == 'Microsoft.Windows.UI.Xaml'" />
+      <_CsWinRTSdkProjectionGenReferenceInputs Include="@(_CsWinRTWindowsSdkReferenceAssembly)" />
+      <_CsWinRTSdkXamlProjectionGenReferenceInputs Include="@(_CsWinRTWindowsSdkReferenceAssembly)" />
+      <_CsWinRTMergedProjectionGenReferenceInputs Include="@(ReferencePathWithRefAssemblies)"
+                                                  Condition="'%(ReferencePathWithRefAssemblies.ReferenceSourceTarget)' != 'ProjectReference' or '%(ReferencePathWithRefAssemblies.CsWinRTGenerateReferenceProjection)' == 'true'" />
+
+      <!--
+        The Windows SDK metadata is passed as a token or folder, so it can only take part in the hash, not in Inputs. The references
+        are hashed with whether they are reference projections, as a project that stops being one is no longer listed in Inputs.
+      -->
+      <_CsWinRTProjectionGenInputsToHash Include="@(_CsWinRTProjectionGenWinMDInputs)" />
+      <_CsWinRTProjectionGenInputsToHash Include="CsWinRTWindowsMetadata=$(CsWinRTWindowsMetadata)" />
+      <_CsWinRTProjectionGenInputsToHash Include="@(ReferencePathWithRefAssemblies->'%(Identity)|%(CsWinRTGenerateReferenceProjection)')" />
     </ItemGroup>
 
-    <Hash ItemsToHash="@(_CsWinRTProjectionGenWinMDInputsToHash)">
-      <Output TaskParameter="HashResult" PropertyName="_CsWinRTProjectionGenWinMDInputsHash" />
+    <!--
+      Each generated projection is recorded next to it with the references it was compiled against ('<AssemblyName>.references'),
+      which can include any project a component depends on, so those are tracked exactly. Precompiled projections have no record.
+    -->
+    <ReadLinesFromFile File="$([System.IO.Path]::ChangeExtension('$(_CsWinRTSdkProjectionAssemblyPath)', '.references'))">
+      <Output TaskParameter="Lines" ItemName="_CsWinRTSdkProjectionGenReferenceInputs" />
+    </ReadLinesFromFile>
+    <ReadLinesFromFile File="$([System.IO.Path]::ChangeExtension('$(_CsWinRTSdkXamlAssemblyPath)', '.references'))" Condition="'$(_CsWinRTSdkXamlAssemblyPath)' != ''">
+      <Output TaskParameter="Lines" ItemName="_CsWinRTSdkXamlProjectionGenReferenceInputs" />
+    </ReadLinesFromFile>
+    <ReadLinesFromFile File="$([System.IO.Path]::ChangeExtension('$(_CsWinRTGeneratorMergedProjectionAssemblyPath)', '.references'))">
+      <Output TaskParameter="Lines" ItemName="_CsWinRTMergedProjectionGenReferenceInputs" />
+    </ReadLinesFromFile>
+    <ReadLinesFromFile File="$([System.IO.Path]::ChangeExtension('$(_CsWinRTGeneratorComponentAssemblyPath)', '.references'))">
+      <Output TaskParameter="Lines" ItemName="_CsWinRTComponentProjectionGenReferenceInputs" />
+    </ReadLinesFromFile>
+
+    <Hash ItemsToHash="@(_CsWinRTProjectionGenInputsToHash)">
+      <Output TaskParameter="HashResult" PropertyName="_CsWinRTProjectionGenInputsHash" />
     </Hash>
 
     <WriteLinesToFile
-      Lines="$(_CsWinRTProjectionGenWinMDInputsHash)"
-      File="$(_CsWinRTProjectionGenWinMDInputsCachePath)"
+      Lines="$(_CsWinRTProjectionGenInputsHash)"
+      File="$(_CsWinRTProjectionGenInputsCachePath)"
       Overwrite="true"
       WriteOnlyWhenDifferent="true" />
   </Target>
@@ -667,8 +705,8 @@ Copyright (C) Microsoft Corporation. All rights reserved.
 
   <Target
     Name="_RunCsWinRTMergedProjectionGenerator"
-    DependsOnTargets="_CsWinRTResolveGeneratorInputs;_CsWinRTComputeProjectionGenWinMDInputs;_RunCsWinRTSdkProjectionGenerator;_RunCsWinRTSdkXamlProjectionGenerator"
-    Inputs="@(ReferencePathWithRefAssemblies);@(CsWinRTInputs);$(_RunCsWinRTGeneratorPropertyInputsCachePath);$(_CsWinRTProjectionGenWinMDInputsCachePath)"
+    DependsOnTargets="_CsWinRTResolveGeneratorInputs;_CsWinRTComputeProjectionGenInputs;_RunCsWinRTSdkProjectionGenerator;_RunCsWinRTSdkXamlProjectionGenerator"
+    Inputs="@(_CsWinRTMergedProjectionGenReferenceInputs);@(_CsWinRTProjectionGenWinMDInputs);$(_RunCsWinRTGeneratorPropertyInputsCachePath);$(_CsWinRTProjectionGenInputsCachePath)"
     Outputs="$(_CsWinRTGeneratorMergedProjectionAssemblyPath)"
     Condition="'$(CsWinRTGenerateInteropAssembly2)' == 'true' and '$(DesignTimeBuild)' != 'true'">
 
@@ -724,8 +762,9 @@ Copyright (C) Microsoft Corporation. All rights reserved.
       <ReferencePath Include="@(CsWinRTGeneratorMergedProjectionPath)" />
       <ReferenceCopyLocalPaths Include="@(CsWinRTGeneratorMergedProjectionPath)" />
 
-      <!-- Append to 'FileWrites' so the forwarder .dll will be removed on clean -->
+      <!-- Append to 'FileWrites' so the forwarder .dll and the record of its references will be removed on clean -->
       <FileWrites Include="@(CsWinRTGeneratorMergedProjectionPath)"/>
+      <FileWrites Include="$([System.IO.Path]::ChangeExtension('$(_CsWinRTGeneratorMergedProjectionAssemblyPath)', '.references'))"/>
     </ItemGroup>
   </Target>
 
@@ -738,12 +777,17 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     assemblies by checking for [WindowsRuntimeComponentAssembly] on
     the assemblies and only includes types from those.
     If no component types are found, the tool produces no output DLL.
+
+    Unlike the other projections, this one depends on all references:
+    any of them can contribute an activation entry point to it (with
+    '[WindowsRuntimeComponentAssemblyExportsType]'), which only shows
+    in the assembly itself, so none of them can be left out of Inputs.
     ============================================================
   -->
   <Target
     Name="_RunCsWinRTComponentProjectionGenerator"
-    DependsOnTargets="_CsWinRTValidateGeneratorInputs;_CsWinRTResolveGeneratorInputs;_CsWinRTComputeProjectionGenWinMDInputs;_RunCsWinRTMergedProjectionGenerator"
-    Inputs="@(ReferencePathWithRefAssemblies);@(CsWinRTInputs);$(_RunCsWinRTGeneratorPropertyInputsCachePath);$(_CsWinRTProjectionGenWinMDInputsCachePath);$(_CsWinRTWinMDOutputPath)"
+    DependsOnTargets="_CsWinRTValidateGeneratorInputs;_CsWinRTResolveGeneratorInputs;_CsWinRTComputeProjectionGenInputs;_RunCsWinRTMergedProjectionGenerator"
+    Inputs="@(ReferencePathWithRefAssemblies);@(_CsWinRTComponentProjectionGenReferenceInputs);@(_CsWinRTProjectionGenWinMDInputs);$(_RunCsWinRTGeneratorPropertyInputsCachePath);$(_CsWinRTProjectionGenInputsCachePath);$(_CsWinRTWinMDOutputPath)"
     Outputs="$(_CsWinRTGeneratorComponentAssemblyPath)"
     Condition="'$(CsWinRTGenerateInteropAssembly2)' == 'true' and '$(DesignTimeBuild)' != 'true'">
 
@@ -812,8 +856,9 @@ Copyright (C) Microsoft Corporation. All rights reserved.
       <ReferencePath Include="@(CsWinRTGeneratorComponentPath)" />
       <ReferenceCopyLocalPaths Include="@(CsWinRTGeneratorComponentPath)" />
 
-      <!-- Append to 'FileWrites' so the component .dll will be removed on clean -->
+      <!-- Append to 'FileWrites' so the component .dll and the record of its references will be removed on clean -->
       <FileWrites Include="@(CsWinRTGeneratorComponentPath)"/>
+      <FileWrites Include="$([System.IO.Path]::ChangeExtension('$(_CsWinRTGeneratorComponentAssemblyPath)', '.references'))"/>
     </ItemGroup>
   </Target>
 
@@ -855,8 +900,8 @@ Copyright (C) Microsoft Corporation. All rights reserved.
   -->
   <Target
     Name="_RunCsWinRTSdkProjectionGenerator"
-    DependsOnTargets="_CsWinRTResolveGeneratorInputs;_CsWinRTComputeProjectionGenWinMDInputs"
-    Inputs="@(ReferencePathWithRefAssemblies);@(CsWinRTInputs);$(_RunCsWinRTGeneratorPropertyInputsCachePath);$(_CsWinRTProjectionGenWinMDInputsCachePath)"
+    DependsOnTargets="_CsWinRTResolveGeneratorInputs;_CsWinRTComputeProjectionGenInputs"
+    Inputs="@(_CsWinRTSdkProjectionGenReferenceInputs);@(_CsWinRTProjectionGenWinMDInputs);$(_RunCsWinRTGeneratorPropertyInputsCachePath);$(_CsWinRTProjectionGenInputsCachePath)"
     Outputs="$(_CsWinRTSdkProjectionAssemblyPath)"
     Condition="'$(CsWinRTGenerateInteropAssembly2)' == 'true' and '$(DesignTimeBuild)' != 'true'">
 
@@ -867,10 +912,13 @@ Copyright (C) Microsoft Corporation. All rights reserved.
         <_SdkProjectionImplExists Condition="Exists('$(_SdkProjectionImplPath)')">true</_SdkProjectionImplExists>
     </PropertyGroup>
 
-    <!-- If pre-built impl assembly exists - copy it to the intermediate output -->
+    <!-- If pre-built impl assembly exists - copy it to the intermediate output (it was not generated, so it has no record of its references) -->
     <Copy
       SourceFiles="$(_SdkProjectionImplPath)"
       DestinationFiles="$(_CsWinRTSdkProjectionAssemblyPath)"
+      Condition="'$(_SdkProjectionImplExists)' == 'true'" />
+    <Delete
+      Files="$([System.IO.Path]::ChangeExtension('$(_CsWinRTSdkProjectionAssemblyPath)', '.references'))"
       Condition="'$(_SdkProjectionImplExists)' == 'true'" />
 
     <!-- Fall back to generation with direct and project-reference WinMDs if no prebuilt SDK impl exists -->
@@ -923,9 +971,10 @@ Copyright (C) Microsoft Corporation. All rights reserved.
       <ReferenceCopyLocalPaths Include="@(CsWinRTSdkProjectionPath)" />
     </ItemGroup>
 
-    <!-- Append to 'FileWrites' so the .dll will be removed on clean -->
+    <!-- Append to 'FileWrites' so the .dll and the record of its references will be removed on clean -->
     <ItemGroup>
       <FileWrites Include="@(CsWinRTSdkProjectionPath)"/>
+      <FileWrites Include="$([System.IO.Path]::ChangeExtension('$(_CsWinRTSdkProjectionAssemblyPath)', '.references'))"/>
     </ItemGroup>
   </Target>
 
@@ -941,8 +990,8 @@ Copyright (C) Microsoft Corporation. All rights reserved.
   -->
   <Target
     Name="_RunCsWinRTSdkXamlProjectionGenerator"
-    DependsOnTargets="_CsWinRTResolveGeneratorInputs;_CsWinRTComputeProjectionGenWinMDInputs"
-    Inputs="@(ReferencePathWithRefAssemblies);@(CsWinRTInputs);$(_RunCsWinRTGeneratorPropertyInputsCachePath);$(_CsWinRTProjectionGenWinMDInputsCachePath)"
+    DependsOnTargets="_CsWinRTResolveGeneratorInputs;_CsWinRTComputeProjectionGenInputs"
+    Inputs="@(_CsWinRTSdkXamlProjectionGenReferenceInputs);@(_CsWinRTProjectionGenWinMDInputs);$(_RunCsWinRTGeneratorPropertyInputsCachePath);$(_CsWinRTProjectionGenInputsCachePath)"
     Outputs="$(_CsWinRTSdkXamlAssemblyPath)"
     Condition="'$(CsWinRTGenerateInteropAssembly2)' == 'true' and '$(CsWinRTUseWindowsUIXamlProjections)' == 'true' and '$(DesignTimeBuild)' != 'true'">
 
@@ -953,10 +1002,13 @@ Copyright (C) Microsoft Corporation. All rights reserved.
         <_SdkXamlImplExists Condition="Exists('$(_SdkXamlImplPath)')">true</_SdkXamlImplExists>
     </PropertyGroup>
 
-    <!-- If pre-built impl assembly exists - copy it to the intermediate output -->
+    <!-- If pre-built impl assembly exists - copy it to the intermediate output (it was not generated, so it has no record of its references) -->
     <Copy
       SourceFiles="$(_SdkXamlImplPath)"
       DestinationFiles="$(_CsWinRTSdkXamlAssemblyPath)"
+      Condition="'$(_SdkXamlImplExists)' == 'true'" />
+    <Delete
+      Files="$([System.IO.Path]::ChangeExtension('$(_CsWinRTSdkXamlAssemblyPath)', '.references'))"
       Condition="'$(_SdkXamlImplExists)' == 'true'" />
 
     <!-- Fall back to generation with direct and project-reference WinMDs if no prebuilt XAML impl exists -->
@@ -1011,9 +1063,10 @@ Copyright (C) Microsoft Corporation. All rights reserved.
       <ReferenceCopyLocalPaths Include="@(CsWinRTSdkXamlPath)" />
     </ItemGroup>
 
-    <!-- Append to 'FileWrites' so the .dll will be removed on clean -->
+    <!-- Append to 'FileWrites' so the .dll and the record of its references will be removed on clean -->
     <ItemGroup>
       <FileWrites Include="@(CsWinRTSdkXamlPath)"/>
+      <FileWrites Include="$([System.IO.Path]::ChangeExtension('$(_CsWinRTSdkXamlAssemblyPath)', '.references'))"/>
     </ItemGroup>
   </Target>
 </Project>

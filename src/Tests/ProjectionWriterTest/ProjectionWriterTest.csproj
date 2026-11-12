@@ -48,6 +48,13 @@
                       UndefineProperties="BuildToolArch;PublishBuildTool;RuntimeIdentifier;SelfContained;Platform" />
     <ProjectReference Include="..\..\WinRT.Projection.Writer\WinRT.Projection.Writer.csproj"
                       UndefineProperties="BuildToolArch;PublishBuildTool;RuntimeIdentifier;SelfContained;Platform" />
+    <!-- The base SDK determinism test generates the complete SDK, including its COM interop helpers. -->
+    <ProjectReference Include="..\..\WinRT.Internal\WinRT.Internal.csproj"
+                      ReferenceOutputAssembly="false"
+                      OutputItemType="_CsWinRTToolReference"
+                      SkipGetTargetFrameworkProperties="true"
+                      UndefineProperties="BuildToolArch;PublishBuildTool;RuntimeIdentifier;SelfContained;Platform"
+                      Private="false" />
     <ProjectReference Include="..\..\WinRT.Projection.Ref.Generator\WinRT.Projection.Ref.Generator.csproj"
                       ReferenceOutputAssembly="false"
                       OutputItemType="_CsWinRTToolReference"
@@ -84,6 +91,8 @@
                       Value="$(MSBuildThisFileDirectory)..\..\WinRT.Projection.Ref.Generator\bin\$(Configuration)\net10.0\cswinrtprojectionrefgen.dll" />
     <AssemblyMetadata Include="ProjectionGeneratorAssemblyPath"
                       Value="$(MSBuildThisFileDirectory)..\..\WinRT.Projection.Generator\bin\$(Configuration)\net10.0\cswinrtprojectiongen.dll" />
+    <AssemblyMetadata Include="InternalMetadataPath"
+                      Value="$(CsWinRTInteropMetadata)" />
     <AssemblyMetadata Include="InteropGeneratorAssemblyPath"
                       Value="$(MSBuildThisFileDirectory)..\..\WinRT.Interop.Generator\bin\$(Configuration)\net10.0\cswinrtinteropgen.dll" />
     <AssemblyMetadata Include="WinUIMetadataPath"

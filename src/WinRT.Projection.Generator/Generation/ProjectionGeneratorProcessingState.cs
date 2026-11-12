@@ -10,14 +10,14 @@ namespace WindowsRuntime.ProjectionGenerator.Generation;
 /// State produced by the processing phase of <see cref="ProjectionGenerator"/>.
 /// </summary>
 /// <param name="sourcesFolder">The path to the folder where sources will be generated.</param>
-/// <param name="referencesWithoutProjections">The reference assembly paths excluding projection assemblies.</param>
+/// <param name="compilationReferences">The reference assembly paths needed to compile the generated sources.</param>
 /// <param name="writerOptions">The options to pass to <see cref="ProjectionWriter.ProjectionWriter.Run"/>.</param>
 /// <param name="hasTypesToProject">Whether any types were found to project.</param>
 /// <param name="componentAssemblyNames">Sorted simple names of all input <c>[WindowsRuntimeComponentAssembly]</c> references (component-mode only).</param>
 /// <param name="activationFactoryAssemblyNames">Sorted simple names of input references that only contribute an activation entry point (component-mode only).</param>
 internal sealed class ProjectionGeneratorProcessingState(
     string sourcesFolder,
-    string[] referencesWithoutProjections,
+    string[] compilationReferences,
     ProjectionWriterOptions writerOptions,
     bool hasTypesToProject = true,
     IReadOnlyList<string>? componentAssemblyNames = null,
@@ -29,9 +29,9 @@ internal sealed class ProjectionGeneratorProcessingState(
     public string SourcesFolder { get; } = sourcesFolder;
 
     /// <summary>
-    /// Gets the reference assembly paths excluding projection assemblies.
+    /// Gets the reference assembly paths needed to compile the generated sources.
     /// </summary>
-    public string[] ReferencesWithoutProjections { get; } = referencesWithoutProjections;
+    public string[] CompilationReferences { get; } = compilationReferences;
 
     /// <summary>
     /// Gets the options used to invoke <see cref="ProjectionWriter.ProjectionWriter.Run"/>.
