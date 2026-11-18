@@ -111,34 +111,15 @@ internal static partial class AbiMethodBodyFactory
             MethodDefinition? addMethod = evt.AddMethod;
             int eventSlot = addMethod is not null && methodSlot.TryGetValue(addMethod, out int es) ? es : 0;
 
-            // Build the projected event source type name. For non-generic delegate handlers, the
-            // EventSource subclass lives in the ABI namespace alongside this Methods class, so
-            // we need to use the ABI-qualified name. For generic handlers (Windows.Foundation.*EventHandler),
-            // it's mapped to global::WindowsRuntime.InteropServices.EventHandlerEventSource<...>.
-            string eventSourceProjectedFull;
+            // Non-generic handlers use the event-source subclass in the delegate's ABI namespace
+            // Generic handlers (e.g. Windows.Foundation.EventHandler<T>) use the runtime's mapped
+            // WindowsRuntime.InteropServices.EventHandlerEventSource<T> instead
+            string eventSourceProjectedFull = TypedefNameWriter.WriteTypeName(
+                context, TypeSemanticsFactory.Get(evtSig), TypedefNameType.EventSource, true).Format();
 
-            if (isGenericEvent)
+            if (!eventSourceProjectedFull.StartsWith(GlobalPrefix, StringComparison.Ordinal))
             {
-                eventSourceProjectedFull = TypedefNameWriter.WriteTypeName(context, TypeSemanticsFactory.Get(evtSig), TypedefNameType.EventSource, true).Format();
-
-                if (!eventSourceProjectedFull.StartsWith(GlobalPrefix, StringComparison.Ordinal))
-                {
-                    eventSourceProjectedFull = GlobalPrefix + eventSourceProjectedFull;
-                }
-            }
-            else
-            {
-                // Non-generic delegate handler: the EventSource lives in the same ABI namespace
-                // as this Methods class, so we use just the short name
-                string delegateName = string.Empty;
-
-                if (evtSig is TypeDefOrRefSignature td)
-                {
-                    delegateName = td.Type.GetRawName();
-                    delegateName = IdentifierEscaping.StripBackticks(delegateName);
-                }
-
-                eventSourceProjectedFull = delegateName + "EventSource";
+                eventSourceProjectedFull = GlobalPrefix + eventSourceProjectedFull;
             }
 
             string eventSourceInteropType = isGenericEvent

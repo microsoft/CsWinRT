@@ -93,7 +93,7 @@ internal static partial class ClassMembersFactory
             // Emit GetInterface() / GetDefaultInterface() impl for this interface BEFORE its
             // members. For overridable interfaces or non-exclusive direct interfaces, emit
             // IWindowsRuntimeInterface<T>.GetInterface(). For the default interface on an
-            // unsealed class with an exclusive default, emit "internal new GetDefaultInterface()".
+            // unsealed class with an exclusive default, emit an internal GetDefaultInterface() helper.
             // Both helpers are implementation-only: they return 'WindowsRuntimeObjectReferenceValue'
             // (which is stripped from the 'WinRT.Runtime' reference assembly), and are only ever
             // called from the ABI marshallers (which are themselves implementation-only and not
@@ -113,7 +113,7 @@ internal static partial class ClassMembersFactory
             }
             else if (impl.IsDefaultInterface() && !classType.IsSealed && !context.Settings.ReferenceProjection)
             {
-                // 'internal new GetDefaultInterface()' helper whenever the interface is the
+                // 'internal GetDefaultInterface()' helper whenever the interface is the
                 // default interface and the class is unsealed -- regardless of exclusive-to
                 // status. This branch is only reached when the prior branch's
                 // IsInterfaceInInheritanceList check fails (i.e., ExclusiveTo default interfaces),
@@ -121,17 +121,11 @@ internal static partial class ClassMembersFactory
                 // prior branch, this helper is implementation-only (see above), so it is gated off
                 // in reference-projection mode.
                 string giObjRefName = ObjRefNameGenerator.GetObjRefName(context, substitutedInterface);
-                bool hasBaseType = false;
-
-                if (classType.BaseType is not null)
-                {
-                    hasBaseType = classType.HasNonObjectBaseType();
-                }
 
                 writer.WriteLine();
                 writer.Write("internal ");
 
-                writer.WriteIf(hasBaseType, "new ");
+                writer.WriteIf(HasAccessibleDefaultInterfaceHelper(context, classType), "new ");
 
                 writer.WriteLine(isMultiline: true, $$"""
                     WindowsRuntimeObjectReferenceValue GetDefaultInterface()
@@ -620,5 +614,31 @@ internal static partial class ClassMembersFactory
                 }
                 """);
         }
+    }
+
+    /// <summary>
+    /// Checks whether an ancestor emits a default-interface helper accessible to the current projected class.
+    /// </summary>
+    /// <remarks>
+    /// Helpers are internal, so only ancestors generated into this projection can contribute one. A non-exclusive
+    /// default uses an explicit interface implementation instead, but an earlier ancestor may still have a helper.
+    /// </remarks>
+    private static bool HasAccessibleDefaultInterfaceHelper(ProjectionEmitContext context, TypeDefinition type)
+    {
+        while (type.BaseType?.ResolveAsTypeDefinition(context.Cache) is { } baseType)
+        {
+            if (context.Settings.Filter.Includes(baseType.FullName) &&
+                !baseType.IsRemoved &&
+                !baseType.IsSealed &&
+                baseType.Interfaces.Any(impl => impl.IsDefaultInterface() &&
+                    !IsInterfaceInInheritanceList(context.Cache, impl, includeExclusiveInterface: false)))
+            {
+                return true;
+            }
+
+            type = baseType;
+        }
+
+        return false;
     }
 }

@@ -1,16 +1,84 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System;
+using System.IO;
+using System.Linq;
+using AsmResolver.DotNet;
 using ProjectionWriterTest.Helpers;
+using WindowsRuntime.ProjectionWriter;
 
 namespace ProjectionWriterTest;
 
 /// <summary>
-/// Tests the names used to construct generic event sources in 'WinRT.Interop'.
+/// Tests event-source names for generic handlers and delegates shared between projections.
 /// </summary>
 [TestClass]
 public class Test_EventSources
 {
+    /// <summary>
+    /// An interface's Methods class uses the delegate's fully qualified ABI event-source type, including when
+    /// the delegate is declared in another namespace or supplied by a separate projection.
+    /// </summary>
+    [TestMethod]
+    [DataRow(false, false)]
+    [DataRow(false, true)]
+    [DataRow(true, false)]
+    [DataRow(true, true)]
+    public void CrossNamespaceDelegate_UsesQualifiedEventSource(bool idic, bool separateProjection)
+    {
+        string directory = Directory.CreateTempSubdirectory("CrossNamespaceEventSource_").FullName;
+
+        try
+        {
+            string metadata = ExclusiveToMetadata.Create(directory, fastAbi: false);
+            ModuleDefinition module = ModuleDefinition.FromFile(metadata);
+            module.TopLevelTypes.Single(type => type.FullName == "Contoso.ChangedHandler").Namespace = "Contoso.Events";
+            metadata = Path.Combine(directory, "CrossNamespace.winmd");
+            module.Write(metadata);
+            string[] references = [];
+
+            string Generate(string name, string[] includes)
+            {
+                string output = Path.Combine(directory, name);
+                ProjectionWriter.Run(new ProjectionWriterOptions
+                {
+                    InputPaths = [metadata],
+                    OutputFolder = output,
+                    OutputAssemblyName = name,
+                    IncludeTypes = includes,
+                    PublicExclusiveTo = !idic,
+                    IdicExclusiveTo = idic
+                });
+                return output;
+            }
+
+            // A separately projected delegate supplies its own public event-source implementation
+            if (separateProjection)
+            {
+                string delegateOutput = Generate("DelegateProjection", ["Contoso.Events.ChangedHandler"]);
+                references = [ProjectionWriterRunner.CompileSources(
+                    Directory.GetFiles(delegateOutput, "*.cs").Select(File.ReadAllText),
+                    Path.Combine(directory, "DelegateProjection.dll"))];
+            }
+
+            string[] includes = ["Contoso.Widget", "Contoso.IWidget", "Contoso.IWidget2", "Contoso.IWidget3"];
+            string output = Generate("EventProjection", separateProjection ? includes : [.. includes, "Contoso.Events.ChangedHandler"]);
+            string source = File.ReadAllText(Path.Combine(output, "Contoso.cs"));
+
+            StringAssert.Contains(source, "ConditionalWeakTable<object, global::ABI.Contoso.Events.ChangedHandlerEventSource>");
+            StringAssert.Contains(source, "new global::ABI.Contoso.Events.ChangedHandlerEventSource(thisReference,");
+            _ = ProjectionWriterRunner.CompileSources(
+                Directory.GetFiles(output, "*.cs").Select(File.ReadAllText),
+                Path.Combine(directory, "EventProjection.dll"),
+                additionalReferences: references);
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
     /// <summary>
     /// Specialized event sources use the runtime event-source base name, not the delegate name
     /// followed by an 'EventSource' suffix after its generic arguments.
