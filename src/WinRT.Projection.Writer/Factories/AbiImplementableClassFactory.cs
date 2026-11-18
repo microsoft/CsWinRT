@@ -1270,8 +1270,11 @@ internal static class AbiImplementableClassFactory
 
             if (resolution is ImplementableMemberResolution.Declare)
             {
+                string overrideModifier = !isProtectedSurface && name == "ToString" && parms.Length == 0 && ret == "string"
+                    ? "override " : string.Empty;
+
                 writer.WriteLine();
-                writer.WriteLine($"{(isProtectedSurface ? "protected" : "public")} abstract {ret} {name}({parms});");
+                writer.WriteLine($"{(isProtectedSurface ? "protected" : "public")} abstract {overrideModifier}{ret} {name}({parms});");
             }
 
             // A protected method cannot implement an interface method implicitly, so it needs an explicit implementation

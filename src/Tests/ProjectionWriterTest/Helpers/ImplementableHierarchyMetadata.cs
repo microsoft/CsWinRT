@@ -79,6 +79,12 @@ internal static class ImplementableHierarchyMetadata
     /// <summary>An unsealed class with an interface declaring <c>AaPoint Current { get; }</c>, for a struct in the same namespace.</summary>
     public const string CurrentBase = "ZzCurrentBase";
 
+    /// <summary>An unsealed class implementing <c>IStringable</c>.</summary>
+    public const string StringableBase = "StringableBase";
+
+    /// <summary>A class inheriting its <c>IStringable</c> implementation from <see cref="StringableBase"/>.</summary>
+    public const string StringableDerived = "StringableDerived";
+
     public static string Create(string directory)
     {
         ModuleDefinition module = new("Contoso.winmd") { RuntimeVersion = "WindowsRuntime 1.4" };
@@ -407,6 +413,13 @@ internal static class ImplementableHierarchyMetadata
 
         AddProperty(currentSource, "Current", point.ToTypeSignature(true), hasSetter: false);
         currentBase.Interfaces.Add(new InterfaceImplementation(currentSource));
+
+        TypeDefinition stringableBase = AddClass(StringableBase, objectType.Type);
+        TypeDefinition stringableDefaultInterface = (TypeDefinition)stringableBase.Interfaces.Single().Interface!;
+
+        _ = AddMethod(stringableDefaultInterface, "ToString", module.CorLibTypeFactory.String, module.CorLibTypeFactory.Int32);
+        stringableBase.Interfaces.Add(new InterfaceImplementation(new TypeReference(module, foundation, "Windows.Foundation", "IStringable")));
+        _ = AddClass(StringableDerived, stringableBase);
 
         AddClass(CurrentDerived, currentBase).Interfaces.Add(new InterfaceImplementation(Instantiate(iterator, point.ToTypeSignature(true))));
 

@@ -124,10 +124,13 @@ internal static class WindowsRuntimeExtensions
         /// <remarks>
         /// Types in a reference projection assembly (marked with <c>[WindowsRuntimeReferenceAssembly]</c>) are
         /// projected Windows Runtime types, but they do not carry the per-type <c>[WindowsRuntimeType]</c>
-        /// marker that implementation projections use (it is stripped from reference projections). Authored component
-        /// types are instead recognized from the exported type metadata in their generated component projection.
+        /// marker that implementation projections use (it is stripped from reference projections). Generated
+        /// implementation and activation factory bases are managed helpers, not projected Windows Runtime types.
+        /// Authored component types are instead recognized from the exported type metadata in their generated component projection.
         /// </remarks>
-        public bool IsReferenceProjectionWindowsRuntimeType => type.Scope?.GetAssembly() is { IsWindowsRuntimeReferenceAssembly: true };
+        public bool IsReferenceProjectionWindowsRuntimeType =>
+            type.Scope?.GetAssembly() is { IsWindowsRuntimeReferenceAssembly: true } &&
+            (type is not TypeDefinition definition || !ImplementableClassMetadata.IsImplementableBase(definition));
 
         /// <summary>
         /// Checks whether an <see cref="ITypeDescriptor"/> is some <see cref="Guid"/> type.

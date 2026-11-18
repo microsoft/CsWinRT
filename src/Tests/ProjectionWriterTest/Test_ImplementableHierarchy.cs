@@ -1,8 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System;
 using System.IO;
 using System.Linq;
+using System.Runtime.Loader;
+using System.Runtime.Versioning;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -18,6 +21,75 @@ namespace ProjectionWriterTest;
 [TestClass]
 public class Test_ImplementableHierarchy
 {
+    [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    public void StringableMethod_OverridesObjectToString(bool referenceProjection)
+    {
+        string directory = Directory.CreateTempSubdirectory("ProjectionHierarchyTest_").FullName;
+
+        try
+        {
+            ClassDeclarationSyntax[] classes = GetAbiClasses(Generate(directory, referenceProjection));
+            MethodDeclarationSyntax[] methods = [.. classes.Single(type => type.Identifier.ValueText == ImplementableHierarchyMetadata.StringableBase)
+                .Members.OfType<MethodDeclarationSyntax>().Where(method => method.Identifier.ValueText == "ToString")];
+            MethodDeclarationSyntax method = methods.Single(method => method.ParameterList.Parameters.Count == 0);
+
+            Assert.IsTrue(method.Modifiers.Any(SyntaxKind.AbstractKeyword));
+            Assert.IsTrue(method.Modifiers.Any(SyntaxKind.OverrideKeyword), method.ToString());
+            Assert.IsFalse(methods.Single(method => method.ParameterList.Parameters.Count == 1).Modifiers.Any(SyntaxKind.OverrideKeyword));
+            Assert.IsFalse(GetMethodNames(classes.Single(type => type.Identifier.ValueText == ImplementableHierarchyMetadata.StringableDerived)).Contains("ToString"));
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    [TestMethod]
+    [SupportedOSPlatform("windows6.3")]
+    public void StringableImplementation_DispatchesThroughObjectAndInterface()
+    {
+        string directory = Directory.CreateTempSubdirectory("ProjectionHierarchyTest_").FullName;
+        AssemblyLoadContext loadContext = new("StringableImplementation", isCollectible: true);
+
+        try
+        {
+            string projection = ProjectionWriterRunner.CompileSources(
+                Directory.GetFiles(Generate(directory, referenceProjection: false), "*.cs").Select(File.ReadAllText),
+                Path.Combine(directory, "Projection.dll"));
+            string consumer = ProjectionWriterRunner.CompileSources(
+                ["""
+                public sealed class StringableImplementation : ABI.Contoso.StringableDerived
+                {
+                    public override void StringableBaseMethod() { }
+                    public override void StringableDerivedMethod() { }
+                    public override string ToString() => "implemented";
+                    public override string ToString(int value0) => value0.ToString();
+                }
+                """],
+                Path.Combine(directory, "Consumer.dll"),
+                additionalReferences: [projection]);
+
+            using (FileStream stream = File.OpenRead(projection))
+            {
+                _ = loadContext.LoadFromStream(stream);
+            }
+
+            using FileStream consumerStream = File.OpenRead(consumer);
+            Type type = loadContext.LoadFromStream(consumerStream).GetType("StringableImplementation")!;
+            object instance = Activator.CreateInstance(type)!;
+
+            Assert.AreEqual("implemented", instance.ToString());
+            Assert.AreEqual("implemented", ((Windows.Foundation.IStringable)instance).ToString());
+        }
+        finally
+        {
+            loadContext.Unload();
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
     /// <summary>
     /// The base for <c>IClosable</c> already declares the <c>Dispose()</c> that <c>IIterator&lt;int&gt;</c> (as
     /// <c>IEnumerator&lt;int&gt;</c>) also needs, so redeclaring it would hide the inherited abstract member.
