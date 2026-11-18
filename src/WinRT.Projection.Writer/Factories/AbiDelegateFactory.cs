@@ -1,11 +1,13 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Collections.Generic;
 using AsmResolver.DotNet;
 using WindowsRuntime.ProjectionWriter.Generation;
 using WindowsRuntime.ProjectionWriter.Helpers;
 using WindowsRuntime.ProjectionWriter.Metadata;
 using WindowsRuntime.ProjectionWriter.Models;
+using WindowsRuntime.ProjectionWriter.Resolvers;
 using WindowsRuntime.ProjectionWriter.Writers;
 
 namespace WindowsRuntime.ProjectionWriter.Factories;
@@ -253,8 +255,8 @@ internal static class AbiDelegateFactory
         // Compute the projected type name (with global::) used as the generic argument.
         string projectedName = TypedefNameWriter.WriteTypedefName(context, type, TypedefNameType.Projected, true).Format();
 
-        // Emit the lambda parameter list / argument list (e.g. "a, b, out c") for the GetEventInvoke body.
-        IndentedTextWriterCallback callArgs = MethodFactory.WriteCallArguments(context, sig, leadingComma: false);
+        // Emit the lambda that forwards the invocation to the target delegate (see the remarks on 'WriteEventInvokeLambda')
+        IndentedTextWriterCallback eventInvokeLambda = WriteEventInvokeLambda(context, sig, projectedName);
 
         writer.WriteLine();
         writer.WriteLine(isMultiline: true, $$"""
@@ -289,11 +291,106 @@ internal static class AbiDelegateFactory
                     /// <inheritdoc/>
                     protected override {{projectedName}} GetEventInvoke()
                     {
-                        return ({{callArgs}}) => TargetDelegate.Invoke({{callArgs}});
+                        {{eventInvokeLambda}}
                     }
                 }
             }
             """);
+    }
+
+    /// <summary>
+    /// Emits the lambda returned by <c>GetEventInvoke</c>, which forwards a native event invocation to the managed handlers.
+    /// </summary>
+    /// <param name="writer">The output writer.</param>
+    /// <param name="context">The active emission context.</param>
+    /// <param name="sig">The signature of the delegate's <c>Invoke</c> method.</param>
+    /// <param name="projectedName">The projected type name of the delegate.</param>
+    /// <remarks>
+    /// <para>
+    /// The target delegate is <see langword="null"/> once the last managed handler has been removed, which can happen while the
+    /// native event source is still dispatching to the CCW (eg. an unsubscription racing an event that was already in flight).
+    /// The lambda must not throw in that case, as the exception would otherwise escape the CCW and fail fast the native caller.
+    /// An invocation without any handlers is a no-op that returns (and assigns to outputs) default values.
+    /// </para>
+    /// <para>
+    /// The target delegate is only read once, so the null check and the invocation always operate on the same snapshot.
+    /// </para>
+    /// </remarks>
+    private static void WriteEventInvokeLambda(IndentedTextWriter writer, ProjectionEmitContext context, MethodSignatureInfo sig, string projectedName)
+    {
+        // The lambda parameter list / argument list (eg. "a, b, out c")
+        IndentedTextWriterCallback callArgs = MethodFactory.WriteCallArguments(context, sig, leadingComma: false);
+
+        List<ParameterInfo> outputParameters = [];
+
+        foreach (ParameterInfo parameter in sig.Parameters)
+        {
+            if (ParameterCategoryResolver.Resolve(parameter) is ParameterCategory.Out or ParameterCategory.ReceiveArray)
+            {
+                outputParameters.Add(parameter);
+            }
+        }
+
+        bool hasReturnValue = sig.ReturnType is not null;
+
+        // The common case is a 'void' delegate with no output parameters, where the conditional access is enough
+        if (!hasReturnValue && outputParameters.Count == 0)
+        {
+            writer.Write($"return ({callArgs}) => TargetDelegate?.Invoke({callArgs});");
+
+            return;
+        }
+
+        // Nothing is invoked without a target delegate, but the lambda still has to produce values: C# requires all 'out' parameters to be
+        // assigned before returning, and the native caller reads the return value and outputs back after the call
+        IndentedTextWriterCallback noTargetDelegateBody = WriteNoTargetDelegateBody(outputParameters, hasReturnValue);
+
+        writer.Write(isMultiline: true, $$"""
+            return ({{callArgs}}) =>
+            {
+                {{projectedName}} __targetDelegate = TargetDelegate;
+
+                if (__targetDelegate is null)
+                {
+                    {{noTargetDelegateBody}}
+                }
+
+                {{(hasReturnValue ? "return " : "")}}__targetDelegate.Invoke({{callArgs}});
+            };
+            """);
+    }
+
+    /// <inheritdoc cref="WriteEventInvokeLambda(IndentedTextWriter, ProjectionEmitContext, MethodSignatureInfo, string)"/>
+    /// <returns>A callback that writes the lambda to the writer it's appended to.</returns>
+    private static IndentedTextWriterCallback WriteEventInvokeLambda(ProjectionEmitContext context, MethodSignatureInfo sig, string projectedName)
+    {
+        return writer => WriteEventInvokeLambda(writer, context, sig, projectedName);
+    }
+
+    /// <summary>
+    /// Emits the statements for an event invocation with no target delegate: output parameters are assigned
+    /// their default value (as they must be definitely assigned before returning), and a default value is
+    /// returned, if the delegate has a return value.
+    /// </summary>
+    /// <param name="writer">The output writer.</param>
+    /// <param name="outputParameters">The parameters of the delegate that are only written by the callee.</param>
+    /// <param name="hasReturnValue">Whether the delegate has a return value.</param>
+    private static void WriteNoTargetDelegateBody(IndentedTextWriter writer, List<ParameterInfo> outputParameters, bool hasReturnValue)
+    {
+        foreach (ParameterInfo parameter in outputParameters)
+        {
+            writer.WriteLine($"{MethodFactory.WriteParameterNameCallback(parameter)} = default;");
+        }
+
+        writer.WriteLineIf(outputParameters.Count > 0);
+        writer.Write(hasReturnValue ? "return default;" : "return;");
+    }
+
+    /// <inheritdoc cref="WriteNoTargetDelegateBody(IndentedTextWriter, List{ParameterInfo}, bool)"/>
+    /// <returns>A callback that writes the statements to the writer it's appended to.</returns>
+    private static IndentedTextWriterCallback WriteNoTargetDelegateBody(List<ParameterInfo> outputParameters, bool hasReturnValue)
+    {
+        return writer => WriteNoTargetDelegateBody(writer, outputParameters, hasReturnValue);
     }
 
     /// <summary>

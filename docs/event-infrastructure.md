@@ -125,6 +125,8 @@ protected override EventHandler<TSender, TEventArgs> GetEventInvoke()
 }
 ```
 
+The `TargetDelegate` property is `null` once the last managed handler has been removed, which happens *before* the native `remove_EventName` call completes. A native event source can still be dispatching to the CCW at that point (eg. an unsubscription racing an event already in flight), so every `GetEventInvoke()` implementation, including the ones emitted by the projection writer for non-generic delegates, must tolerate a `null` target and not throw, as the exception would escape the CCW and fail fast the native caller. For delegates with a return value or output parameters (where `?.` cannot be used), the generated code reads `TargetDelegate` into a local once, and when it is `null` assigns `default` to all output parameters and returns `default`.
+
 ### EventSourceCache
 
 **File:** `InteropServices/Events/EventSourceCache.cs`
