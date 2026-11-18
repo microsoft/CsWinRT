@@ -895,6 +895,46 @@ namespace UnitTest
             normalStream.CopyTo(memoryStream);
         }
 
+        [TestMethod]
+        public async Task TestNullStreamAdapterRemainsUsableAfterDispose()
+        {
+            using var input = Stream.Null.AsInputStream();
+            using var output = Stream.Null.AsOutputStream();
+            using var randomAccess = Stream.Null.AsRandomAccessStream();
+
+            input.Dispose();
+            output.Dispose();
+            randomAccess.Dispose();
+
+            Assert.AreSame(input, Stream.Null.AsInputStream());
+            Assert.AreSame(output, Stream.Null.AsOutputStream());
+            Assert.AreSame(randomAccess, Stream.Null.AsRandomAccessStream());
+            Assert.AreSame(Stream.Null, randomAccess.AsStream());
+
+            var buffer = new byte[] { 1, 2, 3 }.AsBuffer();
+            Assert.AreEqual(0u, (await input.ReadAsync(buffer, buffer.Capacity, InputStreamOptions.None)).Length);
+            buffer.Length = buffer.Capacity;
+            Assert.AreEqual(buffer.Length, await output.WriteAsync(buffer));
+            Assert.IsTrue(await output.FlushAsync());
+            Assert.IsTrue(randomAccess.CanRead);
+            Assert.IsTrue(randomAccess.CanWrite);
+            randomAccess.Seek(0);
+            Assert.AreEqual(0ul, randomAccess.Position);
+            Assert.AreEqual(0ul, randomAccess.Size);
+        }
+
+        [TestMethod]
+        public void TestManagedStreamAdapterDisposesUnderlyingStream()
+        {
+            using var stream = new MemoryStream();
+            using var adapter = stream.AsRandomAccessStream();
+
+            adapter.Dispose();
+
+            Assert.IsFalse(stream.CanRead);
+            Assert.ThrowsExactly<ObjectDisposedException>(() => adapter.AsStream());
+        }
+
         async Task InvokeStreamWriteAndReadAsync()
         {
             var random = new Random(42);
