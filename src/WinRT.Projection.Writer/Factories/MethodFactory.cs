@@ -132,6 +132,13 @@ internal static class MethodFactory
         writer.Write(name);
     }
 
+    /// <inheritdoc cref="WriteParameterName(IndentedTextWriter, ParameterInfo)"/>
+    /// <returns>A callback that writes the parameter name to the writer it's appended to.</returns>
+    public static IndentedTextWriterCallback WriteParameterNameCallback(ParameterInfo p)
+    {
+        return writer => WriteParameterName(writer, p);
+    }
+
     /// <summary>
     /// Writes the parameter's projected type + name (e.g. <c>int @value</c>).
     /// </summary>
