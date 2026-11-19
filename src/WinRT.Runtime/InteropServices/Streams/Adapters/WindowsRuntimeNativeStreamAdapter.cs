@@ -105,7 +105,8 @@ internal abstract partial class WindowsRuntimeNativeStreamAdapter : IDisposable
     {
         Stream? managedStream = _managedStream;
 
-        if (managedStream is null)
+        // Keep the cached adapter usable for the globally shared, non-disposable 'null' stream
+        if (managedStream is null || ReferenceEquals(managedStream, Stream.Null))
         {
             return;
         }
