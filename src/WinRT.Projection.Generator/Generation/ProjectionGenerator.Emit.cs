@@ -116,14 +116,13 @@ internal partial class ProjectionGenerator
                 throw WellKnownProjectionGeneratorExceptions.EmitDllError(result.Diagnostics);
             }
 
-            // MSBuild reads this list to track the same dependency closure as the compilation
+            // MSBuild reads this list to track the same dependency closure as the compilation. It is also an output
+            // of the projection targets, so it's always rewritten with the .dll: if it kept an older timestamp when
+            // unchanged, any input newer than it would make those targets rerun on every build from then on.
             string referencesPath = Path.Combine(args.GeneratedAssemblyDirectory, assemblyName + ".references");
             string referencesText = string.Join(Environment.NewLine, processingState.CompilationReferences.Select(Path.GetFullPath)) + Environment.NewLine;
 
-            if (!File.Exists(referencesPath) || File.ReadAllText(referencesPath) != referencesText)
-            {
-                File.WriteAllText(referencesPath, referencesText);
-            }
+            File.WriteAllText(referencesPath, referencesText);
         }
         catch (Exception e) when (!e.IsWellKnown)
         {

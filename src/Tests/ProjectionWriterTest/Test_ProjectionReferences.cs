@@ -68,7 +68,9 @@ public class Test_ProjectionReferences
             references.Reverse();
             CollectionAssert.AreEqual(baseline, RunGenerator(directory, metadata, assemblyName, references, xamlProjection, windowsSdkOnly, windowsMetadata));
             CollectionAssert.AreEqual(manifest, File.ReadAllLines(manifestPath));
-            Assert.AreEqual(DateTime.UnixEpoch, File.GetLastWriteTimeUtc(manifestPath));
+
+            // The manifest is an output of the projection targets, so it's rewritten with the projection even when unchanged
+            Assert.AreNotEqual(DateTime.UnixEpoch, File.GetLastWriteTimeUtc(manifestPath));
 
             // A real projection dependency must remain an input to the embedded PDB
             if (sdk is not null)

@@ -411,20 +411,43 @@ Copyright (C) Microsoft Corporation. All rights reserved.
       <_CsWinRTProjectionGenInputsToHash Include="@(ReferencePathWithRefAssemblies->'%(Identity)|%(CsWinRTGenerateReferenceProjection)')" />
     </ItemGroup>
 
-    <!--
-      Each generated projection is recorded next to it with the references it was compiled against ('<AssemblyName>.references'),
-      which can include any project a component depends on, so those are tracked exactly. Precompiled projections have no record.
-    -->
-    <ReadLinesFromFile File="$([System.IO.Path]::ChangeExtension('$(_CsWinRTSdkProjectionAssemblyPath)', '.references'))">
+    <PropertyGroup>
+
+      <!-- Determine the OS build number from the target platform version (e.g. 10.0.22621.0 -> 22621) -->
+      <_SdkProjectionOsBuild Condition="'$(EffectiveTargetPlatformVersion)' != ''">$([System.Version]::Parse('$(EffectiveTargetPlatformVersion)').Build)</_SdkProjectionOsBuild>
+      <_SdkProjectionImplPath>$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)', '..', 'impl', 'net10', '$(_SdkProjectionOsBuild)', 'WinRT.Sdk.Projection.dll'))</_SdkProjectionImplPath>
+      <_SdkProjectionImplExists Condition="Exists('$(_SdkProjectionImplPath)')">true</_SdkProjectionImplExists>
+      <_SdkXamlOsBuild Condition="'$(EffectiveTargetPlatformVersion)' != ''">$([System.Version]::Parse('$(EffectiveTargetPlatformVersion)').Build)</_SdkXamlOsBuild>
+      <_SdkXamlImplPath>$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)', '..', 'impl', 'net10', '$(_SdkXamlOsBuild)', 'WinRT.Sdk.Xaml.Projection.dll'))</_SdkXamlImplPath>
+      <_SdkXamlImplExists Condition="Exists('$(_SdkXamlImplPath)')">true</_SdkXamlImplExists>
+
+      <!--
+        Each generated projection is recorded next to it with the references it was compiled against ('<AssemblyName>.references'),
+        which can include any project a component depends on, so those are tracked exactly. Precompiled projections have no record.
+      -->
+      <_CsWinRTSdkProjectionReferencesPath>$([System.IO.Path]::ChangeExtension('$(_CsWinRTSdkProjectionAssemblyPath)', '.references'))</_CsWinRTSdkProjectionReferencesPath>
+      <_CsWinRTSdkXamlReferencesPath Condition="'$(_CsWinRTSdkXamlAssemblyPath)' != ''">$([System.IO.Path]::ChangeExtension('$(_CsWinRTSdkXamlAssemblyPath)', '.references'))</_CsWinRTSdkXamlReferencesPath>
+      <_CsWinRTMergedProjectionReferencesPath>$([System.IO.Path]::ChangeExtension('$(_CsWinRTGeneratorMergedProjectionAssemblyPath)', '.references'))</_CsWinRTMergedProjectionReferencesPath>
+      <_CsWinRTComponentProjectionReferencesPath>$([System.IO.Path]::ChangeExtension('$(_CsWinRTGeneratorComponentAssemblyPath)', '.references'))</_CsWinRTComponentProjectionReferencesPath>
+
+      <!--
+        The record is an output of each generated projection too, so that a projection whose record is missing is regenerated,
+        rather than skipped for good with none of those references tracked. Precompiled projections have none, so they are exempt.
+      -->
+      <_CsWinRTSdkProjectionGeneratedReferencesPath Condition="'$(_SdkProjectionImplExists)' != 'true'">$(_CsWinRTSdkProjectionReferencesPath)</_CsWinRTSdkProjectionGeneratedReferencesPath>
+      <_CsWinRTSdkXamlGeneratedReferencesPath Condition="'$(_SdkXamlImplExists)' != 'true'">$(_CsWinRTSdkXamlReferencesPath)</_CsWinRTSdkXamlGeneratedReferencesPath>
+    </PropertyGroup>
+
+    <ReadLinesFromFile File="$(_CsWinRTSdkProjectionReferencesPath)">
       <Output TaskParameter="Lines" ItemName="_CsWinRTSdkProjectionGenReferenceInputs" />
     </ReadLinesFromFile>
-    <ReadLinesFromFile File="$([System.IO.Path]::ChangeExtension('$(_CsWinRTSdkXamlAssemblyPath)', '.references'))" Condition="'$(_CsWinRTSdkXamlAssemblyPath)' != ''">
+    <ReadLinesFromFile File="$(_CsWinRTSdkXamlReferencesPath)" Condition="'$(_CsWinRTSdkXamlReferencesPath)' != ''">
       <Output TaskParameter="Lines" ItemName="_CsWinRTSdkXamlProjectionGenReferenceInputs" />
     </ReadLinesFromFile>
-    <ReadLinesFromFile File="$([System.IO.Path]::ChangeExtension('$(_CsWinRTGeneratorMergedProjectionAssemblyPath)', '.references'))">
+    <ReadLinesFromFile File="$(_CsWinRTMergedProjectionReferencesPath)">
       <Output TaskParameter="Lines" ItemName="_CsWinRTMergedProjectionGenReferenceInputs" />
     </ReadLinesFromFile>
-    <ReadLinesFromFile File="$([System.IO.Path]::ChangeExtension('$(_CsWinRTGeneratorComponentAssemblyPath)', '.references'))">
+    <ReadLinesFromFile File="$(_CsWinRTComponentProjectionReferencesPath)">
       <Output TaskParameter="Lines" ItemName="_CsWinRTComponentProjectionGenReferenceInputs" />
     </ReadLinesFromFile>
 
@@ -707,7 +730,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     Name="_RunCsWinRTMergedProjectionGenerator"
     DependsOnTargets="_CsWinRTResolveGeneratorInputs;_CsWinRTComputeProjectionGenInputs;_RunCsWinRTSdkProjectionGenerator;_RunCsWinRTSdkXamlProjectionGenerator"
     Inputs="@(_CsWinRTMergedProjectionGenReferenceInputs);@(_CsWinRTProjectionGenWinMDInputs);$(_RunCsWinRTGeneratorPropertyInputsCachePath);$(_CsWinRTProjectionGenInputsCachePath)"
-    Outputs="$(_CsWinRTGeneratorMergedProjectionAssemblyPath)"
+    Outputs="$(_CsWinRTGeneratorMergedProjectionAssemblyPath);$(_CsWinRTMergedProjectionReferencesPath)"
     Condition="'$(CsWinRTGenerateInteropAssembly2)' == 'true' and '$(DesignTimeBuild)' != 'true'">
 
     <ItemGroup>
@@ -764,7 +787,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
 
       <!-- Append to 'FileWrites' so the forwarder .dll and the record of its references will be removed on clean -->
       <FileWrites Include="@(CsWinRTGeneratorMergedProjectionPath)"/>
-      <FileWrites Include="$([System.IO.Path]::ChangeExtension('$(_CsWinRTGeneratorMergedProjectionAssemblyPath)', '.references'))"/>
+      <FileWrites Include="$(_CsWinRTMergedProjectionReferencesPath)"/>
     </ItemGroup>
   </Target>
 
@@ -788,7 +811,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     Name="_RunCsWinRTComponentProjectionGenerator"
     DependsOnTargets="_CsWinRTValidateGeneratorInputs;_CsWinRTResolveGeneratorInputs;_CsWinRTComputeProjectionGenInputs;_RunCsWinRTMergedProjectionGenerator"
     Inputs="@(ReferencePathWithRefAssemblies);@(_CsWinRTComponentProjectionGenReferenceInputs);@(_CsWinRTProjectionGenWinMDInputs);$(_RunCsWinRTGeneratorPropertyInputsCachePath);$(_CsWinRTProjectionGenInputsCachePath);$(_CsWinRTWinMDOutputPath)"
-    Outputs="$(_CsWinRTGeneratorComponentAssemblyPath)"
+    Outputs="$(_CsWinRTGeneratorComponentAssemblyPath);$(_CsWinRTComponentProjectionReferencesPath)"
     Condition="'$(CsWinRTGenerateInteropAssembly2)' == 'true' and '$(DesignTimeBuild)' != 'true'">
 
     <ItemGroup>
@@ -858,7 +881,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
 
       <!-- Append to 'FileWrites' so the component .dll and the record of its references will be removed on clean -->
       <FileWrites Include="@(CsWinRTGeneratorComponentPath)"/>
-      <FileWrites Include="$([System.IO.Path]::ChangeExtension('$(_CsWinRTGeneratorComponentAssemblyPath)', '.references'))"/>
+      <FileWrites Include="$(_CsWinRTComponentProjectionReferencesPath)"/>
     </ItemGroup>
   </Target>
 
@@ -902,15 +925,8 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     Name="_RunCsWinRTSdkProjectionGenerator"
     DependsOnTargets="_CsWinRTResolveGeneratorInputs;_CsWinRTComputeProjectionGenInputs"
     Inputs="@(_CsWinRTSdkProjectionGenReferenceInputs);@(_CsWinRTProjectionGenWinMDInputs);$(_RunCsWinRTGeneratorPropertyInputsCachePath);$(_CsWinRTProjectionGenInputsCachePath)"
-    Outputs="$(_CsWinRTSdkProjectionAssemblyPath)"
+    Outputs="$(_CsWinRTSdkProjectionAssemblyPath);$(_CsWinRTSdkProjectionGeneratedReferencesPath)"
     Condition="'$(CsWinRTGenerateInteropAssembly2)' == 'true' and '$(DesignTimeBuild)' != 'true'">
-
-    <!-- Determine the OS build number from the target platform version (e.g. 10.0.22621.0 -> 22621) -->
-    <PropertyGroup>
-        <_SdkProjectionOsBuild Condition="'$(EffectiveTargetPlatformVersion)' != ''">$([System.Version]::Parse('$(EffectiveTargetPlatformVersion)').Build)</_SdkProjectionOsBuild>
-        <_SdkProjectionImplPath>$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)', '..', 'impl', 'net10', '$(_SdkProjectionOsBuild)', 'WinRT.Sdk.Projection.dll'))</_SdkProjectionImplPath>
-        <_SdkProjectionImplExists Condition="Exists('$(_SdkProjectionImplPath)')">true</_SdkProjectionImplExists>
-    </PropertyGroup>
 
     <!-- If pre-built impl assembly exists - copy it to the intermediate output (it was not generated, so it has no record of its references) -->
     <Copy
@@ -918,7 +934,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
       DestinationFiles="$(_CsWinRTSdkProjectionAssemblyPath)"
       Condition="'$(_SdkProjectionImplExists)' == 'true'" />
     <Delete
-      Files="$([System.IO.Path]::ChangeExtension('$(_CsWinRTSdkProjectionAssemblyPath)', '.references'))"
+      Files="$(_CsWinRTSdkProjectionReferencesPath)"
       Condition="'$(_SdkProjectionImplExists)' == 'true'" />
 
     <!-- Fall back to generation with direct and project-reference WinMDs if no prebuilt SDK impl exists -->
@@ -974,7 +990,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     <!-- Append to 'FileWrites' so the .dll and the record of its references will be removed on clean -->
     <ItemGroup>
       <FileWrites Include="@(CsWinRTSdkProjectionPath)"/>
-      <FileWrites Include="$([System.IO.Path]::ChangeExtension('$(_CsWinRTSdkProjectionAssemblyPath)', '.references'))"/>
+      <FileWrites Include="$(_CsWinRTSdkProjectionReferencesPath)"/>
     </ItemGroup>
   </Target>
 
@@ -992,15 +1008,8 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     Name="_RunCsWinRTSdkXamlProjectionGenerator"
     DependsOnTargets="_CsWinRTResolveGeneratorInputs;_CsWinRTComputeProjectionGenInputs"
     Inputs="@(_CsWinRTSdkXamlProjectionGenReferenceInputs);@(_CsWinRTProjectionGenWinMDInputs);$(_RunCsWinRTGeneratorPropertyInputsCachePath);$(_CsWinRTProjectionGenInputsCachePath)"
-    Outputs="$(_CsWinRTSdkXamlAssemblyPath)"
+    Outputs="$(_CsWinRTSdkXamlAssemblyPath);$(_CsWinRTSdkXamlGeneratedReferencesPath)"
     Condition="'$(CsWinRTGenerateInteropAssembly2)' == 'true' and '$(CsWinRTUseWindowsUIXamlProjections)' == 'true' and '$(DesignTimeBuild)' != 'true'">
-
-    <!-- Determine the OS build number from the target platform version (e.g. 10.0.22621.0 -> 22621) -->
-    <PropertyGroup>
-        <_SdkXamlOsBuild Condition="'$(EffectiveTargetPlatformVersion)' != ''">$([System.Version]::Parse('$(EffectiveTargetPlatformVersion)').Build)</_SdkXamlOsBuild>
-        <_SdkXamlImplPath>$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)', '..', 'impl', 'net10', '$(_SdkXamlOsBuild)', 'WinRT.Sdk.Xaml.Projection.dll'))</_SdkXamlImplPath>
-        <_SdkXamlImplExists Condition="Exists('$(_SdkXamlImplPath)')">true</_SdkXamlImplExists>
-    </PropertyGroup>
 
     <!-- If pre-built impl assembly exists - copy it to the intermediate output (it was not generated, so it has no record of its references) -->
     <Copy
@@ -1008,7 +1017,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
       DestinationFiles="$(_CsWinRTSdkXamlAssemblyPath)"
       Condition="'$(_SdkXamlImplExists)' == 'true'" />
     <Delete
-      Files="$([System.IO.Path]::ChangeExtension('$(_CsWinRTSdkXamlAssemblyPath)', '.references'))"
+      Files="$(_CsWinRTSdkXamlReferencesPath)"
       Condition="'$(_SdkXamlImplExists)' == 'true'" />
 
     <!-- Fall back to generation with direct and project-reference WinMDs if no prebuilt XAML impl exists -->
@@ -1066,7 +1075,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     <!-- Append to 'FileWrites' so the .dll and the record of its references will be removed on clean -->
     <ItemGroup>
       <FileWrites Include="@(CsWinRTSdkXamlPath)"/>
-      <FileWrites Include="$([System.IO.Path]::ChangeExtension('$(_CsWinRTSdkXamlAssemblyPath)', '.references'))"/>
+      <FileWrites Include="$(_CsWinRTSdkXamlReferencesPath)"/>
     </ItemGroup>
   </Target>
 </Project>
