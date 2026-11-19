@@ -210,7 +210,8 @@ namespace System.IO
         void IDisposable.Dispose()
         {
             Stream str = _managedStream;
-            if (str == null)
+            // Keep the cached adapter usable for the globally shared, non-disposable null stream.
+            if (str == null || ReferenceEquals(str, Stream.Null))
                 return;
 
             _managedStream = null;
