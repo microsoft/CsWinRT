@@ -647,6 +647,10 @@ internal static class AbiInterfaceFactory
             return;
         }
 
+        // Calls on activation factory interfaces (which are only ever called through cached activation factories) also
+        // report failures with the object reference, so that it can be marked as disconnected if its server died.
+        bool isActivationFactory = AbiTypeHelpers.IsActivationFactoryInterface(context.Cache, type);
+
         writer.WriteLine(isMultiline: true, $$"""
             {{(useInternal ? "internal static class " : "public static class ")}}{{nameStripped}}Methods
             {
@@ -654,7 +658,7 @@ internal static class AbiInterfaceFactory
 
         foreach ((TypeDefinition iface, int startSlot, bool segSkipEvents) in segments)
         {
-            AbiMethodBodyFactory.EmitMethodsClassMembersFor(writer, context, iface, startSlot, segSkipEvents);
+            AbiMethodBodyFactory.EmitMethodsClassMembersFor(writer, context, iface, startSlot, segSkipEvents, isActivationFactory);
         }
 
         writer.WriteLine("}");

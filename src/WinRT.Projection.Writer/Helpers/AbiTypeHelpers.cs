@@ -35,6 +35,33 @@ internal static partial class AbiTypeHelpers
     }
 
     /// <summary>
+    /// Determines whether an interface is an activation factory interface, ie. an interface referenced by its exclusive-to runtime
+    /// class through an <c>[Activatable]</c>, <c>[Static]</c>, or <c>[Composable]</c> attribute (so it is only ever called through
+    /// a cached activation factory).
+    /// </summary>
+    /// <param name="cache">The metadata cache to use to resolve types.</param>
+    /// <param name="iface">The interface type to check.</param>
+    /// <returns>Whether <paramref name="iface"/> is an activation factory interface.</returns>
+    public static bool IsActivationFactoryInterface(MetadataCache cache, TypeDefinition iface)
+    {
+        // Factory interfaces without '[ExclusiveTo]' are not detected, so their call sites won't flag disconnected activation factories
+        if (GetExclusiveToType(cache, iface) is not { } exclusiveToType)
+        {
+            return false;
+        }
+
+        foreach (KeyValuePair<string, AttributedType> entry in AttributedTypes.Get(exclusiveToType, cache))
+        {
+            if (entry.Value.Type == iface)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /// <summary>
     /// Returns the unique virtual-method name used to refer to <paramref name="method"/> on
     /// <paramref name="type"/>'s vtable: the method's metadata name suffixed with its zero-based
     /// index in the type's method list, so overloads disambiguate (e.g. <c>get_Item_4</c>).

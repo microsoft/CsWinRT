@@ -494,8 +494,8 @@ internal static class ClassFactory
     }
 
     /// <summary>
-    /// Emits the static lazy objref property for a static factory interface (mirrors truth's
-    /// pattern: lazy <c>WindowsRuntimeObjectReference.GetActivationFactory(...)</c>).
+    /// Emits the static objref property for an activation factory interface (ie. a <c>[Static]</c>, <c>[Activatable]</c>,
+    /// or <c>[Composable]</c> factory interface), see <see cref="WriteActivationFactoryObjRef"/>.
     /// </summary>
     internal static void WriteStaticFactoryObjRef(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition staticIface, string runtimeClassFullName, string objRefName)
     {
@@ -507,24 +507,33 @@ internal static class ClassFactory
             return;
         }
 
+        WriteActivationFactoryObjRef(writer, runtimeClassFullName, objRefName, ObjRefNameGenerator.WriteIidExpression(context, staticIface));
+    }
+
+    /// <summary>
+    /// Emits the static objref property for an activation factory of a given runtime class (using the property backing field to cache it).
+    /// </summary>
+    /// <param name="writer">The <see cref="IndentedTextWriter"/> instance to write to.</param>
+    /// <param name="runtimeClassFullName">The full name of the runtime class to get the activation factory for.</param>
+    /// <param name="objRefName">The name of the objref property to emit (ie. <c>_objRef_*</c>).</param>
+    /// <param name="iid">The IID expression for the activation factory interface, or <see langword="null"/> for the default <c>IActivationFactory</c> interface.</param>
+    /// <remarks>
+    /// This method should not be called for reference projections (where the objref is omitted).
+    /// </remarks>
+    internal static void WriteActivationFactoryObjRef(IndentedTextWriter writer, string runtimeClassFullName, string objRefName, IndentedTextWriterCallback? iid)
+    {
         writer.WriteLine();
 
-        IndentedTextWriterCallback iid = ObjRefNameGenerator.WriteIidExpression(context, staticIface);
-
-        writer.WriteLine(isMultiline: true, $$"""
-            private static WindowsRuntimeObjectReference {{objRefName}}
-            {
-                get
-                {
-                    var __{{objRefName}} = field;
-                    if (__{{objRefName}} != null && __{{objRefName}}.IsInCurrentContext)
-                    {
-                        return __{{objRefName}};
-                    }
-                    return field = WindowsRuntimeObjectReference.GetActivationFactory("{{runtimeClassFullName}}", {{iid}});
-                }
-            }
-            """);
+        // The cached activation factory (the property backing field) is managed by 'WindowsRuntimeObjectReference', which also takes
+        // care of resolving a new activation factory when the cached one can't be used (ie. on a different context, or after its server died).
+        if (iid is null)
+        {
+            writer.WriteLine($"""private static WindowsRuntimeObjectReference {objRefName} => WindowsRuntimeObjectReference.GetActivationFactory(ref field, "{runtimeClassFullName}");""");
+        }
+        else
+        {
+            writer.WriteLine($"""private static WindowsRuntimeObjectReference {objRefName} => WindowsRuntimeObjectReference.GetActivationFactory(ref field, "{runtimeClassFullName}", {iid});""");
+        }
     }
 
     /// <summary>

@@ -34,7 +34,11 @@ internal static partial class AbiMethodBodyFactory
     /// Emits the per-interface members (methods, properties, events) into an already-open Methods
     /// static class. Used both for the standalone case and for the fast-abi merged emission.
     /// </summary>
-    internal static void EmitMethodsClassMembersFor(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type, int startSlot, bool skipExclusiveEvents)
+    /// <remarks>
+    /// If <c>isActivationFactory</c> is set, the method bodies also pass <c>thisReference</c> to <c>RestrictedErrorInfo.ThrowExceptionForHR(...)</c>
+    /// (see <see cref="EmitAbiMethodBodyIfSimple(IndentedTextWriter, ProjectionEmitContext, MethodSignatureInfo, int, string?, bool, bool)"/>).
+    /// </remarks>
+    internal static void EmitMethodsClassMembersFor(IndentedTextWriter writer, ProjectionEmitContext context, TypeDefinition type, int startSlot, bool skipExclusiveEvents, bool isActivationFactory)
     {
         // Build a map from each MethodDefinition to its WinMD vtable slot.
         // In AsmResolver, type.Methods is iterated in MethodDef row order, so the position of each
@@ -63,7 +67,7 @@ internal static partial class AbiMethodBodyFactory
             writer.Write($"{ret} {mname}(WindowsRuntimeObjectReference thisReference{comma}{parms})");
 
             // Emit the body if we can handle this case. Slot comes from the method's WinMD index.
-            EmitAbiMethodBodyIfSimple(writer, context, sig, methodSlot[method], isNoExcept: method.IsNoExcept);
+            EmitAbiMethodBodyIfSimple(writer, context, sig, methodSlot[method], isNoExcept: method.IsNoExcept, isActivationFactory: isActivationFactory);
         }
 
         // Emit property accessors. Each getter / setter consumes one vtable slot — looked up from the underlying method.
@@ -79,7 +83,7 @@ internal static partial class AbiMethodBodyFactory
                         public static unsafe {{propType}} {{pname}}(WindowsRuntimeObjectReference thisReference)
                     """);
 
-                EmitAbiMethodBodyIfSimple(writer, context, new MethodSignatureInfo(getter), methodSlot[getter], isNoExcept: prop.IsNoExcept);
+                EmitAbiMethodBodyIfSimple(writer, context, new MethodSignatureInfo(getter), methodSlot[getter], isNoExcept: prop.IsNoExcept, isActivationFactory: isActivationFactory);
             }
 
             if (prop.SetMethod is { } setter)
@@ -89,7 +93,7 @@ internal static partial class AbiMethodBodyFactory
                         public static unsafe void {{pname}}(WindowsRuntimeObjectReference thisReference, {{InterfaceFactory.WritePropType(context, prop, isSetProperty: true)}} value)
                     """);
 
-                EmitAbiMethodBodyIfSimple(writer, context, new MethodSignatureInfo(setter), methodSlot[setter], paramNameOverride: "value", isNoExcept: prop.IsNoExcept);
+                EmitAbiMethodBodyIfSimple(writer, context, new MethodSignatureInfo(setter), methodSlot[setter], paramNameOverride: "value", isNoExcept: prop.IsNoExcept, isActivationFactory: isActivationFactory);
             }
         }
 

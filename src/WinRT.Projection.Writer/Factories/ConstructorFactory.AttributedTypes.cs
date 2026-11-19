@@ -42,22 +42,7 @@ internal static partial class ConstructorFactory
         {
             string fullName = classType.FullName ?? string.Empty;
             string objRefName = "_objRef_" + IidExpressionGenerator.EscapeTypeNameForIdentifier(GlobalPrefix + fullName, stripGlobal: true);
-            writer.WriteLine();
-            writer.Write($"private static WindowsRuntimeObjectReference {objRefName}");
-            writer.WriteLine();
-            writer.WriteLine(isMultiline: true, $$"""
-                {
-                    get
-                    {
-                        var __{{objRefName}} = field;
-                        if (__{{objRefName}} != null && __{{objRefName}}.IsInCurrentContext)
-                        {
-                            return __{{objRefName}};
-                        }
-                        return field = WindowsRuntimeObjectReference.GetActivationFactory("{{fullName}}");
-                    }
-                }
-                """);
+            ClassFactory.WriteActivationFactoryObjRef(writer, fullName, objRefName, iid: null);
         }
 
         // A class can be activated through several composable factories (e.g. one per contract version), but the

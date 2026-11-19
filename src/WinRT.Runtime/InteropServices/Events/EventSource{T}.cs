@@ -107,7 +107,7 @@ public abstract unsafe class EventSource<T>
                 // Actually register the marshalled event invoke on the native object
                 HRESULT hresult = ((delegate* unmanaged[MemberFunction]<void*, void*, EventRegistrationToken*, HRESULT>)addHandler)(thisPtr, eventInvokeValue.GetThisPtrUnsafe(), &token);
 
-                RestrictedErrorInfo.ThrowExceptionForHR(hresult);
+                RestrictedErrorInfo.ThrowExceptionForHR(hresult, _nativeObjectReference);
 
                 state.Token = token;
             }
@@ -151,7 +151,7 @@ public abstract unsafe class EventSource<T>
                 // Pass the token we got from 'Subscribe' to remove the native event subscription
                 HRESULT hresult = ((delegate* unmanaged[MemberFunction]<void*, EventRegistrationToken, HRESULT>)removeHandler)(nativeObjectReferenceValue.GetThisPtrUnsafe(), state.Token);
 
-                RestrictedErrorInfo.ThrowExceptionForHR(hresult);
+                RestrictedErrorInfo.ThrowExceptionForHR(hresult, _nativeObjectReference);
 
                 // We've unsubscribed from the native object, so we can also manually dispose the
                 // event source state we were using. This will help reduce GC finalizer pressure.
