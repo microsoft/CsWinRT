@@ -30,7 +30,7 @@ internal partial class ProjectionGenerator
         args.Token.ThrowIfCancellationRequested();
 
         bool isComponentMode = args.AssemblyName == "WinRT.Component";
-        bool isSdkMode = !isComponentMode && args.WindowsSdkOnly;
+        bool isWindowsSdkMode = IsWindowsSdkMode(args);
 
         // Show the appropriate message to inform users of what this generator is doing, based on the input
         // arguments. If we don't have precompiled projections, this tool might run up to 4 times during
@@ -39,7 +39,7 @@ internal partial class ProjectionGenerator
         // they are logged right away. The other ones report the number of .winmd-s this invocation actually
         // processes (the input list is shared by all invocations), so they are logged as soon as the
         // reference assemblies are loaded, which is all that is needed to tell the .winmd-s apart.
-        if (isSdkMode)
+        if (isWindowsSdkMode)
         {
             ConsoleApp.Log(args.WindowsUIXamlProjection
                 ? "Processing 'Windows.UI.Xaml' .winmd references"
@@ -50,7 +50,7 @@ internal partial class ProjectionGenerator
         ReferenceAssemblySet references = LoadReferenceAssemblies(args);
 
         // Log the number of .winmd-s this invocation processes, before doing any of the heavy work
-        if (!isSdkMode)
+        if (!isWindowsSdkMode)
         {
             int winmdCount = CountProcessedWinMDs(args, references, isComponentMode);
 
@@ -73,11 +73,11 @@ internal partial class ProjectionGenerator
             out List<string> componentAssemblyNames,
             out List<string> activationFactoryAssemblyNames);
 
-        string[] referencesWithoutProjections = [.. args.ReferenceAssemblyPaths.Where(r => !projectionReferenceAssemblies.Contains(r))];
+        string[] compilationReferences = GetCompilationReferences(args, references, projectionReferenceAssemblies);
 
         return new ProjectionGeneratorProcessingState(
             outputFolder,
-            referencesWithoutProjections,
+            compilationReferences,
             writerOptions,
             hasTypesToProject,
             componentAssemblyNames,
@@ -122,6 +122,16 @@ internal partial class ProjectionGenerator
         {
             throw WellKnownProjectionGeneratorExceptions.CsWinRTProcessError(exitCode: -1, exception: e);
         }
+    }
+
+    /// <summary>
+    /// Checks whether an invocation generates either Windows SDK projection rather than component or merged sources.
+    /// </summary>
+    /// <param name="args">The arguments for this invocation.</param>
+    /// <returns>Whether the invocation generates a Windows SDK projection.</returns>
+    private static bool IsWindowsSdkMode(ProjectionGeneratorArgs args)
+    {
+        return args.AssemblyName != "WinRT.Component" && (args.WindowsSdkOnly || args.WindowsUIXamlProjection);
     }
 
     /// <summary>
@@ -175,7 +185,7 @@ internal partial class ProjectionGenerator
         // 'WindowsUIXamlProjection' also flows to component mode (for the '[TypeMapAssemblyTarget]' union),
         // but must not put it into Windows SDK mode: the SDK 'Windows.UI.Xaml' namespace comes from
         // 'WinRT.Sdk.Xaml.Projection.dll', so component mode is never Windows SDK mode.
-        bool isWindowsSdkMode = (args.WindowsSdkOnly || args.WindowsUIXamlProjection) && !isComponentMode;
+        bool isWindowsSdkMode = IsWindowsSdkMode(args);
 
         // In component mode, read the component .winmd files directly to get the WinRT type
         // includes. The .winmd is the authoritative source of WinRT types and only contains
