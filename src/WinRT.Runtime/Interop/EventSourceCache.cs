@@ -30,8 +30,7 @@ namespace ABI.WinRT.Interop
             // If target no longer exists, destroy cache
             lock (this)
             {
-                using var resolved = this.target.Resolve(IID.IID_IUnknown);
-                if (resolved == null)
+                if (!IsTargetAlive())
                 {
                     this.target = target;
                     states.Clear();
@@ -46,8 +45,7 @@ namespace ABI.WinRT.Interop
             // If target no longer exists, destroy cache
             lock (this)
             {
-                using var resolved = this.target.Resolve(IID.IID_IUnknown);
-                if (resolved == null)
+                if (!IsTargetAlive())
                 {
                     return null;
                 }
@@ -58,6 +56,22 @@ namespace ABI.WinRT.Interop
                 return weakState;
             }
             return null;
+        }
+
+        private bool IsTargetAlive()
+        {
+            try
+            {
+                using var resolved = target.Resolve(IID.IID_IUnknown);
+                return resolved != null;
+            }
+            catch (Exception ex) when (
+                ex.HResult == unchecked((int)0x80010108) || // RPC_E_DISCONNECTED
+                ex.HResult == unchecked((int)0x800706BA))   // HRESULT_FROM_WIN32(RPC_S_SERVER_UNAVAILABLE)
+            {
+                // An out-of-process weak reference can fail instead of returning null after its server exits.
+                return false;
+            }
         }
 
         private void SetState(int index, global::System.WeakReference<object> state)
