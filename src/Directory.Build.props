@@ -57,6 +57,13 @@
     -->
     <DotNetVersion>net10.0</DotNetVersion>
 
+    <!--
+      The .NET version used by the Native AOT CLI build tools (all the 'WinRT.*.Generator' projects). This is
+      intentionally separate from '$(DotNetVersion)', as the tools can target a newer .NET version than the
+      rest of the projects (which they can still process, as they don't need to load them into the runtime).
+    -->
+    <ToolDotNetVersion>net11.0</ToolDotNetVersion>
+
     <!-- Enforce the same language version for all projects -->
     <LangVersion>14.0</LangVersion>
 
@@ -131,11 +138,11 @@
   <PropertyGroup>
     <CsWinRTGenTasksAssembly>$(MSBuildThisFileDirectory)WinRT.Generator.Tasks\bin\$(Configuration)\netstandard2.0\WinRT.Generator.Tasks.dll</CsWinRTGenTasksAssembly>
     <_CsWinRTToolsArchFolder Condition="'$(BuildToolArch)' != ''">win-$(BuildToolArch)\</_CsWinRTToolsArchFolder>
-    <CsWinRTInteropGenEffectiveToolsDirectory>$(MSBuildThisFileDirectory)WinRT.Interop.Generator\bin\$(Configuration)\net10.0\$(_CsWinRTToolsArchFolder)</CsWinRTInteropGenEffectiveToolsDirectory>
-    <CsWinRTImplEffectiveToolsDirectory>$(MSBuildThisFileDirectory)WinRT.Impl.Generator\bin\$(Configuration)\net10.0\$(_CsWinRTToolsArchFolder)</CsWinRTImplEffectiveToolsDirectory>
-    <CsWinRTMergedProjectionEffectiveToolsDirectory>$(MSBuildThisFileDirectory)WinRT.Projection.Generator\bin\$(Configuration)\net10.0\$(_CsWinRTToolsArchFolder)</CsWinRTMergedProjectionEffectiveToolsDirectory>
-    <CsWinRTRefGenEffectiveToolsDirectory>$(MSBuildThisFileDirectory)WinRT.Projection.Ref.Generator\bin\$(Configuration)\net10.0\$(_CsWinRTToolsArchFolder)</CsWinRTRefGenEffectiveToolsDirectory>
-    <CsWinRTWinMDGenEffectiveToolsDirectory>$(MSBuildThisFileDirectory)WinRT.WinMD.Generator\bin\$(Configuration)\net10.0\$(_CsWinRTToolsArchFolder)</CsWinRTWinMDGenEffectiveToolsDirectory>
+    <CsWinRTInteropGenEffectiveToolsDirectory>$(MSBuildThisFileDirectory)WinRT.Interop.Generator\bin\$(Configuration)\$(ToolDotNetVersion)\$(_CsWinRTToolsArchFolder)</CsWinRTInteropGenEffectiveToolsDirectory>
+    <CsWinRTImplEffectiveToolsDirectory>$(MSBuildThisFileDirectory)WinRT.Impl.Generator\bin\$(Configuration)\$(ToolDotNetVersion)\$(_CsWinRTToolsArchFolder)</CsWinRTImplEffectiveToolsDirectory>
+    <CsWinRTMergedProjectionEffectiveToolsDirectory>$(MSBuildThisFileDirectory)WinRT.Projection.Generator\bin\$(Configuration)\$(ToolDotNetVersion)\$(_CsWinRTToolsArchFolder)</CsWinRTMergedProjectionEffectiveToolsDirectory>
+    <CsWinRTRefGenEffectiveToolsDirectory>$(MSBuildThisFileDirectory)WinRT.Projection.Ref.Generator\bin\$(Configuration)\$(ToolDotNetVersion)\$(_CsWinRTToolsArchFolder)</CsWinRTRefGenEffectiveToolsDirectory>
+    <CsWinRTWinMDGenEffectiveToolsDirectory>$(MSBuildThisFileDirectory)WinRT.WinMD.Generator\bin\$(Configuration)\$(ToolDotNetVersion)\$(_CsWinRTToolsArchFolder)</CsWinRTWinMDGenEffectiveToolsDirectory>
     <CsWinRTToolsArchitecture>AnyCPU</CsWinRTToolsArchitecture>
 
     <!--

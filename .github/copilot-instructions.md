@@ -428,7 +428,7 @@ A **.NET CLI tool** (`cswinrtprojectionrefgen.exe`) published as a **Native AOT*
 
 **Project settings:**
 
-- **Target**: `net10.0`, C# 14, `PublishAot = true`, `DisableRuntimeMarshalling`
+- **Target**: `net11.0` (`$(ToolDotNetVersion)`, newer than the rest of the repo, which stays on `net10.0`), C# 14, `PublishAot = true`, `DisableRuntimeMarshalling`
 - **Root namespace**: `WindowsRuntime.ReferenceProjectionGenerator`
 - **Assembly name**: `cswinrtprojectionrefgen`
 - **Dependencies**: `ConsoleAppFramework` (CLI), and project references to `WinRT.Projection.Writer` and the shared `WinRT.Generator.Core`
@@ -449,7 +449,7 @@ A **.NET CLI tool** (`cswinrtimplgen.exe`) published as a **Native AOT** binary.
 
 **Project settings:**
 
-- **Target**: `net10.0`, `PublishAot = true`, `DisableRuntimeMarshalling`
+- **Target**: `net11.0` (`$(ToolDotNetVersion)`, newer than the rest of the repo, which stays on `net10.0`), `PublishAot = true`, `DisableRuntimeMarshalling`
 - **Assembly name**: `cswinrtimplgen`
 - **Dependencies**: `AsmResolver.DotNet` (IL manipulation), `ConsoleAppFramework` (CLI), and a project reference to the shared `WinRT.Generator.Core`
 
@@ -482,7 +482,7 @@ A **.NET CLI tool** (`cswinrtprojectiongen.exe`) published as a **Native AOT** b
 
 **Project settings:**
 
-- **Target**: `net10.0`, `PublishAot = true`, `DisableRuntimeMarshalling`
+- **Target**: `net11.0` (`$(ToolDotNetVersion)`, newer than the rest of the repo, which stays on `net10.0`), `PublishAot = true`, `DisableRuntimeMarshalling`
 - **Assembly name**: `cswinrtprojectiongen`
 - **Dependencies**: `ConsoleAppFramework`, `Microsoft.CodeAnalysis.CSharp` (Roslyn, transitively through `WinRT.Generator.Core`), and project references to `WinRT.Projection.Writer` and the shared `WinRT.Generator.Core`
 
@@ -508,7 +508,7 @@ A **.NET CLI tool** (`cswinrtinteropgen.exe`) published as a **Native AOT** bina
 
 **Project settings:**
 
-- **Target**: `net10.0`, C# 14, `PublishAot = true`, `DisableRuntimeMarshalling`
+- **Target**: `net11.0` (`$(ToolDotNetVersion)`, newer than the rest of the repo, which stays on `net10.0`), C# 14, `PublishAot = true`, `DisableRuntimeMarshalling`
 - **Assembly name**: `cswinrtinteropgen`
 - **Dependencies**: `AsmResolver.DotNet`, `ConsoleAppFramework`, `CommunityToolkit.HighPerformance`, `System.Numerics.Tensors`, and a project reference to the shared `WinRT.Generator.Core`
 - **Security**: Control Flow Guard enabled, `IlcDehydrate = false` for lower memory usage
@@ -544,7 +544,7 @@ A **.NET CLI tool** (`cswinrtwinmdgen.exe`) published as a **Native AOT** binary
 
 **Project settings:**
 
-- **Target**: `net10.0`, C# 14, `PublishAot = true`, `DisableRuntimeMarshalling`
+- **Target**: `net11.0` (`$(ToolDotNetVersion)`, newer than the rest of the repo, which stays on `net10.0`), C# 14, `PublishAot = true`, `DisableRuntimeMarshalling`
 - **Root namespace**: `WindowsRuntime.WinMDGenerator`
 - **Assembly name**: `cswinrtwinmdgen`
 - **Dependencies**: `AsmResolver.DotNet`, `ConsoleAppFramework`, and a project reference to the shared `WinRT.Generator.Core`

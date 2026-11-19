@@ -29,18 +29,20 @@
     separate process (end-to-end), so the generator exposes no internals to this project.
     'UndefineProperties' drops the build-tool publishing properties ('BuildToolArch' and
     'PublishBuildTool', plus 'RuntimeIdentifier' / 'SelfContained') from this reference so the
-    generator is always built framework-dependent for the build host (output under 'net10.0\',
-    with no 'win-<arch>' RID subfolder). Without this, the generator's 'PublishAot' build is
-    self-contained and cannot be referenced by this non self-contained test project (NETSDK1151).
-    'Platform' is dropped as well: this project builds as x64/x86, but the generator declares no
-    platforms, so letting it through would place its output under 'bin\<platform>\' and no longer
-    match the path published as assembly metadata below (leaving the tests running a stale tool).
+    generator is always built framework-dependent for the build host (output under
+    '$(ToolDotNetVersion)\', with no 'win-<arch>' RID subfolder). Without this, the generator's
+    'PublishAot' build is self-contained and cannot be referenced by this non self-contained test
+    project (NETSDK1151). 'Platform' is dropped as well: this project builds as x64/x86, but the
+    generator declares no platforms, so letting it through would place its output under
+    'bin\<platform>\' and no longer match the path published as assembly metadata below (leaving the
+    tests running a stale tool).
   -->
   <ItemGroup>
     <ProjectReference Include="..\..\WinRT.Runtime\WinRT.Runtime.csproj"
                       UndefineProperties="BuildToolArch;PublishBuildTool;RuntimeIdentifier;SelfContained" />
     <ProjectReference Include="..\..\WinRT.WinMD.Generator\WinRT.WinMD.Generator.csproj"
                       ReferenceOutputAssembly="false"
+                      SkipGetTargetFrameworkProperties="true"
                       OutputItemType="_CsWinRTToolReference"
                       UndefineProperties="BuildToolArch;PublishBuildTool;RuntimeIdentifier;SelfContained;Platform"
                       Private="false" />
@@ -49,7 +51,7 @@
   <!-- Pass the built tool's path to the tests via assembly metadata -->
   <ItemGroup>
     <AssemblyMetadata Include="WinMDGeneratorAssemblyPath"
-                      Value="$(MSBuildThisFileDirectory)..\..\WinRT.WinMD.Generator\bin\$(Configuration)\net10.0\cswinrtwinmdgen.dll" />
+                      Value="$(MSBuildThisFileDirectory)..\..\WinRT.WinMD.Generator\bin\$(Configuration)\$(ToolDotNetVersion)\cswinrtwinmdgen.dll" />
   </ItemGroup>
 
   <ItemGroup>

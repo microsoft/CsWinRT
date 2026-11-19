@@ -45,7 +45,7 @@ steps:
 
 # Install x86 first so that it isn't the first on PATH.
   - task: UseDotNet@2
-    displayName: Use .NET Core SDK 10.0 x86
+    displayName: Use .NET Core SDK 11.0 x86
     condition: eq(variables['BuildPlatform'], 'x86')
     inputs:
       packageType: sdk
@@ -57,7 +57,7 @@ steps:
 # Install arm64 due to arm64 hosting binaries are only available there.
 # Installing using dotnet script given UseDotNet@2 doesn't work with arm64.
   - task: PowerShell@2
-    displayName: Install .NET Core SDK 10.0 arm64
+    displayName: Install .NET Core SDK 11.0 arm64
     condition: eq(variables['BuildPlatform'], 'arm64')
     inputs:
       targetType: inline
@@ -67,7 +67,7 @@ steps:
         &([scriptblock]::Create((Invoke-WebRequest -UseBasicParsing 'https://dot.net/v1/dotnet-install.ps1'))) -Version "$(_DotnetVersion)" -Architecture "arm64" -InstallDir "$(LocalAppData)\Microsoft\dotnet\arm64\"
 
   - task: UseDotNet@2
-    displayName: Use .NET Core SDK 10.0
+    displayName: Use .NET Core SDK 11.0
     inputs:
       packageType: sdk
       version: $(_DotnetVersion)
@@ -285,7 +285,7 @@ steps:
       displayName: Stage cswinrtinteropgen
       condition: and(succeeded(), or(eq(variables['BuildPlatform'], 'x64'), eq(variables['BuildPlatform'], 'arm64')), eq(variables['BuildConfiguration'], 'release'))
       inputs:
-        SourceFolder: $(Build.SourcesDirectory)\src\WinRT.Interop.Generator\bin\$(BuildConfiguration)\net10.0\win-$(BuildPlatform)\publish
+        SourceFolder: $(Build.SourcesDirectory)\src\WinRT.Interop.Generator\bin\$(BuildConfiguration)\net11.0\win-$(BuildPlatform)\publish
         Contents: |
           cswinrtinteropgen.exe
           cswinrtinteropgen.pdb
@@ -295,7 +295,7 @@ steps:
       displayName: Stage cswinrtimplgen
       condition: and(succeeded(), or(eq(variables['BuildPlatform'], 'x64'), eq(variables['BuildPlatform'], 'arm64')), eq(variables['BuildConfiguration'], 'release'))
       inputs:
-        SourceFolder: $(Build.SourcesDirectory)\src\WinRT.Impl.Generator\bin\$(BuildConfiguration)\net10.0\win-$(BuildPlatform)\publish
+        SourceFolder: $(Build.SourcesDirectory)\src\WinRT.Impl.Generator\bin\$(BuildConfiguration)\net11.0\win-$(BuildPlatform)\publish
         Contents: |
           cswinrtimplgen.exe
           cswinrtimplgen.pdb
@@ -305,7 +305,7 @@ steps:
       displayName: Stage cswinrtprojectiongen
       condition: and(succeeded(), or(eq(variables['BuildPlatform'], 'x64'), eq(variables['BuildPlatform'], 'arm64')), eq(variables['BuildConfiguration'], 'release'))
       inputs:
-        SourceFolder: $(Build.SourcesDirectory)\src\WinRT.Projection.Generator\bin\$(BuildConfiguration)\net10.0\win-$(BuildPlatform)\publish
+        SourceFolder: $(Build.SourcesDirectory)\src\WinRT.Projection.Generator\bin\$(BuildConfiguration)\net11.0\win-$(BuildPlatform)\publish
         Contents: |
           cswinrtprojectiongen.exe
           cswinrtprojectiongen.pdb
@@ -315,7 +315,7 @@ steps:
       displayName: Stage cswinrtprojectionrefgen
       condition: and(succeeded(), or(eq(variables['BuildPlatform'], 'x64'), eq(variables['BuildPlatform'], 'arm64')), eq(variables['BuildConfiguration'], 'release'))
       inputs:
-        SourceFolder: $(Build.SourcesDirectory)\src\WinRT.Projection.Ref.Generator\bin\$(BuildConfiguration)\net10.0\win-$(BuildPlatform)\publish
+        SourceFolder: $(Build.SourcesDirectory)\src\WinRT.Projection.Ref.Generator\bin\$(BuildConfiguration)\net11.0\win-$(BuildPlatform)\publish
         Contents: |
           cswinrtprojectionrefgen.exe
           cswinrtprojectionrefgen.pdb
@@ -325,7 +325,7 @@ steps:
       displayName: Stage cswinrtwinmdgen
       condition: and(succeeded(), or(eq(variables['BuildPlatform'], 'x64'), eq(variables['BuildPlatform'], 'arm64')), eq(variables['BuildConfiguration'], 'release'))
       inputs:
-        SourceFolder: $(Build.SourcesDirectory)\src\WinRT.WinMD.Generator\bin\$(BuildConfiguration)\net10.0\win-$(BuildPlatform)\publish
+        SourceFolder: $(Build.SourcesDirectory)\src\WinRT.WinMD.Generator\bin\$(BuildConfiguration)\net11.0\win-$(BuildPlatform)\publish
         Contents: |
           cswinrtwinmdgen.exe
           cswinrtwinmdgen.pdb
