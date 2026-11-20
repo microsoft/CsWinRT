@@ -70,16 +70,7 @@ public sealed class IEnumeratorAdapter<T> : IEnumerator<T>, IEnumeratorAdapter
     /// <returns>The <see cref="IEnumeratorAdapter{T}"/> instance associated to <paramref name="enumerator"/>.</returns>
     private static IEnumeratorAdapter<T> GetOrCreateInstance(IEnumerator<T> enumerator)
     {
-        ConditionalWeakTable<object, object> table = IEnumeratorAdapterTable<T>.Table;
-
-        // Avoid allocating a new adapter if one already exists. If two threads race here, one adapter
-        // is published and returned to both, and the other is dropped (it hasn't touched the enumerator).
-        if (!table.TryGetValue(enumerator, out object? adapter))
-        {
-            adapter = table.GetOrAdd(enumerator, new IEnumeratorAdapter<T>(enumerator));
-        }
-
-        return Unsafe.As<IEnumeratorAdapter<T>>(adapter);
+        return Unsafe.As<IEnumeratorAdapter<T>>(IEnumeratorAdapterTable<T>.Table.GetOrAdd(enumerator, IEnumeratorAdapterFactory<T>.Callback));
     }
 
     /// <summary>
@@ -199,7 +190,25 @@ file static class IEnumeratorAdapterTable<T>
     /// Keys and values are stored as <see cref="object"/>, so that all element types share a single <see cref="ConditionalWeakTable{TKey, TValue}"/>
     /// instantiation (and all its related types), instead of having a separate one for each of them. There is still one table instance for each
     /// <typeparamref name="T"/> value though, as the same enumerator can implement <see cref="IEnumerator{T}"/> for multiple element types,
-    /// and each of them needs its own adapter (which is stateful). Only <see cref="IEnumeratorAdapter{T}.GetOrCreateInstance"/> writes to this table.
+    /// and each of them needs its own adapter (which is stateful).
     /// </remarks>
     public static readonly ConditionalWeakTable<object, object> Table = [];
+}
+
+/// <summary>
+/// A factory type for <see cref="IEnumeratorAdapter{T}"/> instances.
+/// </summary>
+/// <typeparam name="T">The type of objects to enumerate.</typeparam>
+file static class IEnumeratorAdapterFactory<T>
+{
+    /// <summary>
+    /// The singleton <see cref="Func{T, TResult}"/> callback instance for the factory.
+    /// </summary>
+    public static readonly Func<object, object> Callback = Create;
+
+    /// <inheritdoc cref="IEnumeratorAdapter{T}.IEnumeratorAdapter(IEnumerator{T})"/>
+    private static object Create(object enumerator)
+    {
+        return new IEnumeratorAdapter<T>(Unsafe.As<IEnumerator<T>>(enumerator));
+    }
 }
