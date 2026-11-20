@@ -4,7 +4,6 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Runtime.CompilerServices;
 
 #pragma warning disable IDE0032
@@ -79,8 +78,6 @@ public sealed class IEnumeratorAdapter<T> : IEnumerator<T>, IEnumeratorAdapter
         {
             adapter = table.GetOrAdd(enumerator, new IEnumeratorAdapter<T>(enumerator));
         }
-
-        Debug.Assert(adapter is IEnumeratorAdapter<T>);
 
         return Unsafe.As<IEnumeratorAdapter<T>>(adapter);
     }
