@@ -70,7 +70,10 @@ public sealed class IEnumeratorAdapter<T> : IEnumerator<T>, IEnumeratorAdapter
     /// <returns>The <see cref="IEnumeratorAdapter{T}"/> instance associated to <paramref name="enumerator"/>.</returns>
     private static IEnumeratorAdapter<T> GetOrCreateInstance(IEnumerator<T> enumerator)
     {
-        return Unsafe.As<IEnumeratorAdapter<T>>(IEnumeratorAdapterTable<T>.Table.GetOrAdd(enumerator, IEnumeratorAdapterFactory<T>.Callback));
+        object adapter = IEnumeratorAdapterTable<T>.Table.GetOrAdd(enumerator, IEnumeratorAdapterFactory<T>.Callback);
+
+        // This is safe because this is the only caller that ever adds items to the table
+        return Unsafe.As<IEnumeratorAdapter<T>>(adapter);
     }
 
     /// <summary>
