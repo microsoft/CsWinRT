@@ -204,7 +204,7 @@ file static class IEnumeratorAdapterFactory<T>
     /// <summary>
     /// The singleton <see cref="Func{T, TResult}"/> callback instance for the factory.
     /// </summary>
-    public static readonly Func<object, object> Callback = Create;
+    public static readonly Func<object, object> Callback = new(Create);
 
     /// <inheritdoc cref="IEnumeratorAdapter{T}.IEnumeratorAdapter(IEnumerator{T})"/>
     private static object Create(object enumerator)
