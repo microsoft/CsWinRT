@@ -267,7 +267,7 @@ internal abstract unsafe class ContextAwareObjectReference : WindowsRuntimeObjec
         /// in a <c>beforefieldinit</c> type which is only used when the lambda is actually needed), and also it allows
         /// storing the entire delegate in the Frozen Object Heap (FOH).
         /// </remarks>
-        public static readonly Func<nuint, ContextAwareObjectReference, WindowsRuntimeObjectReference?> Value = CreateForCurrentContext;
+        public static readonly Func<nuint, ContextAwareObjectReference, WindowsRuntimeObjectReference?> Value = new(CreateForCurrentContext);
 
         /// <summary>
         /// A stub to create a new object reference for a given context.
