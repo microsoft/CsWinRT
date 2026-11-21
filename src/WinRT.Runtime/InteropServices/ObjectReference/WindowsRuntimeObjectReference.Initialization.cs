@@ -405,10 +405,6 @@ public unsafe partial class WindowsRuntimeObjectReference
 
         if (isReferenceTracker.Succeeded)
         {
-            // If we have a reference tracker, we should report an 'AddRef' on it,
-            // as we're wrapping the native object in a managed object reference.
-            _ = IReferenceTrackerVftbl.AddRefFromTrackerSourceUnsafe(referenceTracker);
-
             // We can release the reference tracker, as it's implemented on the same native object,
             // meaning it will remain alive anyway as long as the main object is also kept alive.
             // This matches the handling of non aggregation scenarios above.
@@ -423,16 +419,21 @@ public unsafe partial class WindowsRuntimeObjectReference
         // We're going to store the input object, so increment its ref count
         _ = IUnknownVftbl.AddRefUnsafe(externalComObject);
 
+        // ComWrappers reports the RCW's primary reference through AddRefFromTrackerSource and
+        // balances it when disconnecting. Reporting it here too would hide a native root
+        // from the tracker's actual-versus-expected reference count comparison
+        const CreateObjectReferenceFlags flags = CreateObjectReferenceFlags.PreventReleaseFromTrackerSourceOnDispose;
+
         // Special case for free-threaded object references (see notes above)
         if (isFreeThreaded)
         {
-            return new FreeThreadedObjectReference(externalComObject, referenceTracker);
+            return new FreeThreadedObjectReference(externalComObject, referenceTracker, flags);
         }
 
         // Optimize the returned context-aware object reference if 'IInspectable' is requested
         return iid == WellKnownWindowsInterfaceIIDs.IID_IInspectable
-            ? new ContextAwareInspectableObjectReference(externalComObject, referenceTracker)
-            : new ContextAwareInterfaceObjectReference(externalComObject, referenceTracker, in iid);
+            ? new ContextAwareInspectableObjectReference(externalComObject, referenceTracker, flags)
+            : new ContextAwareInterfaceObjectReference(externalComObject, referenceTracker, in iid, flags);
     }
 
     /// <inheritdoc cref="InitializeObjectReferenceUnsafe(void*, in Guid, CreateObjectReferenceMarshalingType)"/>
@@ -496,8 +497,6 @@ public unsafe partial class WindowsRuntimeObjectReference
         // If we resolved a reference tracker, set it up (see notes above)
         if (isReferenceTracker.Succeeded)
         {
-            _ = IReferenceTrackerVftbl.AddRefFromTrackerSourceUnsafe(referenceTracker);
-
             _ = IUnknownVftbl.ReleaseUnsafe(referenceTracker);
         }
         else
@@ -506,15 +505,18 @@ public unsafe partial class WindowsRuntimeObjectReference
             referenceTracker = null;
         }
 
+        // ComWrappers owns the tracker-source notification for the primary RCW reference
+        const CreateObjectReferenceFlags flags = CreateObjectReferenceFlags.PreventReleaseFromTrackerSourceOnDispose;
+
         // Special case for free-threaded object references (see notes above)
         if (isFreeThreaded)
         {
-            return new FreeThreadedObjectReference(acquiredExternalComObject, referenceTracker);
+            return new FreeThreadedObjectReference(acquiredExternalComObject, referenceTracker, flags);
         }
 
         // Optimize the returned context-aware object reference (see notes above)
         return iid == WellKnownWindowsInterfaceIIDs.IID_IInspectable
-            ? new ContextAwareInspectableObjectReference(acquiredExternalComObject, referenceTracker)
-            : new ContextAwareInterfaceObjectReference(acquiredExternalComObject, referenceTracker, in iid);
+            ? new ContextAwareInspectableObjectReference(acquiredExternalComObject, referenceTracker, flags)
+            : new ContextAwareInterfaceObjectReference(acquiredExternalComObject, referenceTracker, in iid, flags);
     }
 }

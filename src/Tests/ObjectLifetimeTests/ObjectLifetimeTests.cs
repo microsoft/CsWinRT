@@ -131,6 +131,38 @@ namespace ObjectLifetimeTests
         }
 
         [TestMethod]
+        [DataRow(false)]
+        [DataRow(true)]
+        public void CommandBarFlyoutCommandsSurviveCollection(bool secondaryCommands)
+        {
+            CommandBarFlyout flyout = null;
+            WeakReference commandsReference = null;
+            WeakReference separatorReference = null;
+
+            _asyncQueue
+                .CallFromUIThread(() =>
+                {
+                    flyout = new CommandBarFlyout();
+                    IList<ICommandBarElement> commands = secondaryCommands ? flyout.SecondaryCommands : flyout.PrimaryCommands;
+                    AppBarSeparator separator = new AppBarSeparator();
+                    commands.Add(separator);
+                    commandsReference = new WeakReference(commands);
+                    separatorReference = new WeakReference(separator);
+                })
+                .CollectUntilTrue(() => !commandsReference.IsAlive, "The commands RCW was not collected")
+                .CallFromUIThread(() =>
+                {
+                    Assert.IsInstanceOfType<AppBarSeparator>(separatorReference.Target);
+                    IList<ICommandBarElement> commands = secondaryCommands ? flyout.SecondaryCommands : flyout.PrimaryCommands;
+                    Assert.AreEqual(1, commands.Count);
+                    Assert.IsInstanceOfType<AppBarSeparator>(commands[0]);
+                })
+                .Run();
+
+            GC.KeepAlive(flyout);
+        }
+
+        [TestMethod]
         public void OpaqueDependencyObjectBindingsUseXamlMetadata()
         {
             OpaqueBindingPage page = null;
