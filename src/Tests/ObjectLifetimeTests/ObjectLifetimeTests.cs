@@ -162,6 +162,44 @@ namespace ObjectLifetimeTests
             GC.KeepAlive(flyout);
         }
 
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        private static (WeakReference Grid, WeakReference Button, WeakReference Handler) CreateImportedEventCycle(Panel host)
+        {
+            Grid grid = (Grid)XamlReader.Load("""
+                <Grid xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation">
+                    <Button />
+                </Grid>
+                """);
+            Button button = (Button)grid.Children[0];
+            RoutedEventHandler handler = (_, _) => GC.KeepAlive(grid);
+            button.Click += handler;
+
+            // Give the parsed subtree a parent to clear its parser GC-root peg
+            host.Children.Add(grid);
+
+            return (new WeakReference(grid), new WeakReference(button), new WeakReference(handler));
+        }
+
+        [TestMethod]
+        public void ImportedRuntimeClassEventCycleIsCollected()
+        {
+            (WeakReference Grid, WeakReference Button, WeakReference Handler) references = default;
+
+            _asyncQueue
+                .CallFromUIThread(() => references = CreateImportedEventCycle(mainCanvas))
+                .CallFromUIThread(() => mainCanvas.Children.Remove((UIElement)references.Grid.Target))
+                .CollectUntilTrue(
+                    () => !references.Grid.IsAlive && !references.Button.IsAlive && !references.Handler.IsAlive,
+                    "The imported Grid/Button event cycle was not collected")
+                .CallFromUIThread(() =>
+                {
+                    Assert.IsNull(references.Grid.Target);
+                    Assert.IsNull(references.Button.Target);
+                    Assert.IsNull(references.Handler.Target);
+                })
+                .Run();
+        }
+
         [TestMethod]
         public void OpaqueDependencyObjectBindingsUseXamlMetadata()
         {
