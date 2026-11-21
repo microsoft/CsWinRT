@@ -65,7 +65,12 @@ internal static unsafe class AgileObjectReferenceExtensions
     /// <param name="objectReference">The source agile reference (this is expected to be from <see cref="AsAgileUnsafe"/>).</param>
     /// <param name="iid">The IID to use to create the resulting non-agile reference.</param>
     /// <returns>The resulting non-agile reference resolved from <paramref name="objectReference"/>.</returns>
-    public static WindowsRuntimeObjectReference FromAgileUnsafe(this WindowsRuntimeObjectReference objectReference, in Guid iid)
+    /// <remarks>
+    /// The returned object reference takes ownership of the COM reference produced by <c>IAgileReference.Resolve</c>.
+    /// </remarks>
+    public static WindowsRuntimeObjectReference FromAgileUnsafe(
+        this WindowsRuntimeObjectReference objectReference,
+        in Guid iid)
     {
         void* pObjectReference;
         HRESULT hresult;

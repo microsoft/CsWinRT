@@ -20,7 +20,8 @@ public sealed unsafe class AgileReferenceTests
     [TestMethod]
     public void CrossContextResolutionReleasesNativeReferences()
     {
-        AsyncQueue queue = new(((ObjectLifetimeTests.Lifted.App)Application.Current).m_window.DispatcherQueue);
+        AsyncQueue queue = new(
+            ((ObjectLifetimeTests.Lifted.App)Application.Current).m_window.DispatcherQueue);
         nint pointer = 0;
         WindowsRuntimeObjectReference reference = null;
         Exception workerError = null;
@@ -33,7 +34,9 @@ public sealed unsafe class AgileReferenceTests
                 {
                     pointer = (nint)NativeUnknown.Create();
                     reference = WindowsRuntimeComWrappersMarshal.CreateObjectReferenceUnsafe(
-                        (void*)pointer, in NativeUnknown.Iid, out _);
+                        externalComObject: (void*)pointer,
+                        iid: in NativeUnknown.Iid,
+                        wrapperFlags: out _);
                     Assert.IsFalse(reference.IsFreeThreaded);
                     Assert.AreEqual(2, NativeUnknown.GetReferenceCount((void*)pointer));
 
@@ -75,15 +78,18 @@ public sealed unsafe class AgileReferenceTests
                     }) { IsBackground = true };
                     worker.Start();
                 })
-                .WaitForHandle(completed, "Cross-context resolution did not complete", 15000)
+                .WaitForHandle(
+                    handle: completed,
+                    timeoutErrorMessage: "Cross-context resolution did not complete",
+                    timeout: 15000)
                 .CallFromUIThread(() =>
                 {
                     Assert.IsNull(workerError);
                     reference = null;
                 })
                 .CollectUntilTrue(
-                    () => NativeUnknown.GetReferenceCount((void*)pointer) == 1,
-                    "Cross-context resolution retained a native reference after collection")
+                    fn: () => NativeUnknown.GetReferenceCount((void*)pointer) == 1,
+                    timeoutMessage: "Cross-context resolution retained a native reference after collection")
                 .Run();
         }
         finally
@@ -96,21 +102,36 @@ public sealed unsafe class AgileReferenceTests
         }
     }
 
+    /// <summary>
+    /// Provides a native, reference-counted <c>IUnknown</c> using standard COM apartment marshalling.
+    /// </summary>
+    /// <remarks>
+    /// The object exposes neither <c>IAgileObject</c> nor <c>IMarshal</c>. Its state is allocated outside the managed
+    /// heap, so the count measures native ownership rather than managed reachability. The test retains the initial
+    /// reference until all observations and queued releases complete.
+    /// </remarks>
     private static class NativeUnknown
     {
         public static readonly Guid Iid = new("00000000-0000-0000-C000-000000000046");
-        private static readonly void** Vtable = CreateVtable();
+
+        [FixedAddressValueType]
+        private static readonly IUnknownVftbl Vtable = new()
+        {
+            QueryInterface = &QueryInterface,
+            AddRef = &AddRef,
+            Release = &ReleaseUnmanaged
+        };
 
         private struct Instance
         {
-            public void** Vtable;
+            public IUnknownVftbl* Vtable;
             public int ReferenceCount;
         }
 
         public static void* Create()
         {
             Instance* instance = (Instance*)NativeMemory.AllocZeroed((nuint)sizeof(Instance));
-            instance->Vtable = Vtable;
+            instance->Vtable = (IUnknownVftbl*)Unsafe.AsPointer(in Vtable);
             instance->ReferenceCount = 1;
             return instance;
         }
@@ -124,16 +145,6 @@ public sealed unsafe class AgileReferenceTests
             {
                 _ = ReleaseCore((Instance*)pointer);
             }
-        }
-
-        private static void** CreateVtable()
-        {
-            void** vtable = (void**)RuntimeHelpers.AllocateTypeAssociatedMemory(
-                typeof(NativeUnknown), 3 * sizeof(void*));
-            vtable[0] = (delegate* unmanaged[MemberFunction]<void*, Guid*, void**, int>)&QueryInterface;
-            vtable[1] = (delegate* unmanaged[MemberFunction]<void*, uint>)&AddRef;
-            vtable[2] = (delegate* unmanaged[MemberFunction]<void*, uint>)&ReleaseUnmanaged;
-            return vtable;
         }
 
         [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]

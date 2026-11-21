@@ -360,6 +360,11 @@ public unsafe partial class WindowsRuntimeObjectReference
     /// Unlike <see cref="InitializeObjectReference"/>, this method assumes <paramref name="externalComObject"/> is exactly the
     /// right interface pointer for <paramref name="iid"/>, and will therefore skip doing a <c>QueryInterface</c> call on it.
     /// </para>
+    /// <para>
+    /// For reference-tracked objects, the tracker pointer is borrowed from the same native object and the returned
+    /// reference is the primary native reference of an RCW registered with <see cref="ComWrappers"/>. That registration owns
+    /// the primary tracker-source notification and its balancing release; additional queried references are tracked independently.
+    /// </para>
     /// </remarks>
     internal static WindowsRuntimeObjectReference InitializeObjectReferenceUnsafe(
         void* externalComObject,
@@ -419,9 +424,9 @@ public unsafe partial class WindowsRuntimeObjectReference
         // We're going to store the input object, so increment its ref count
         _ = IUnknownVftbl.AddRefUnsafe(externalComObject);
 
-        // ComWrappers reports the RCW's primary reference through AddRefFromTrackerSource and
+        // 'ComWrappers' reports the primary RCW reference through 'AddRefFromTrackerSource' and
         // balances it when disconnecting. Reporting it here too would hide a native root
-        // from the tracker's actual-versus-expected reference count comparison
+        // from the tracker's actual-versus-expected reference count comparison.
         const CreateObjectReferenceFlags flags = CreateObjectReferenceFlags.PreventReleaseFromTrackerSourceOnDispose;
 
         // Special case for free-threaded object references (see notes above)
@@ -438,8 +443,14 @@ public unsafe partial class WindowsRuntimeObjectReference
 
     /// <inheritdoc cref="InitializeObjectReferenceUnsafe(void*, in Guid, CreateObjectReferenceMarshalingType)"/>
     /// <remarks>
+    /// <para>
     /// This method is equivalent to <see cref="InitializeObjectReferenceUnsafe(void*, in Guid, CreateObjectReferenceMarshalingType)"/>, with
     /// the only difference that it takes ownership of <paramref name="externalComObject"/>, so callers don't need to release it on their end.
+    /// </para>
+    /// <para>
+    /// As with <see cref="InitializeObjectReferenceUnsafe(void*, in Guid, CreateObjectReferenceMarshalingType)"/>,
+    /// <see cref="ComWrappers"/> registration owns the primary tracker-source notification and its balancing release.
+    /// </para>
     /// </remarks>
     private static WindowsRuntimeObjectReference InitializeObjectReferenceUnsafe(
         ref void* externalComObject,
@@ -505,7 +516,7 @@ public unsafe partial class WindowsRuntimeObjectReference
             referenceTracker = null;
         }
 
-        // ComWrappers owns the tracker-source notification for the primary RCW reference
+        // 'ComWrappers' owns the tracker-source notification for the primary RCW reference
         const CreateObjectReferenceFlags flags = CreateObjectReferenceFlags.PreventReleaseFromTrackerSourceOnDispose;
 
         // Special case for free-threaded object references (see notes above)

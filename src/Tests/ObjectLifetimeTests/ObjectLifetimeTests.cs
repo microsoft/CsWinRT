@@ -143,17 +143,23 @@ namespace ObjectLifetimeTests
                 .CallFromUIThread(() =>
                 {
                     flyout = new CommandBarFlyout();
-                    IList<ICommandBarElement> commands = secondaryCommands ? flyout.SecondaryCommands : flyout.PrimaryCommands;
+                    IList<ICommandBarElement> commands = secondaryCommands
+                        ? flyout.SecondaryCommands
+                        : flyout.PrimaryCommands;
                     AppBarSeparator separator = new AppBarSeparator();
                     commands.Add(separator);
                     commandsReference = new WeakReference(commands);
                     separatorReference = new WeakReference(separator);
                 })
-                .CollectUntilTrue(() => !commandsReference.IsAlive, "The commands RCW was not collected")
+                .CollectUntilTrue(
+                    fn: () => !commandsReference.IsAlive,
+                    timeoutMessage: "The commands RCW was not collected")
                 .CallFromUIThread(() =>
                 {
                     Assert.IsInstanceOfType<AppBarSeparator>(separatorReference.Target);
-                    IList<ICommandBarElement> commands = secondaryCommands ? flyout.SecondaryCommands : flyout.PrimaryCommands;
+                    IList<ICommandBarElement> commands = secondaryCommands
+                        ? flyout.SecondaryCommands
+                        : flyout.PrimaryCommands;
                     Assert.AreEqual(1, commands.Count);
                     Assert.IsInstanceOfType<AppBarSeparator>(commands[0]);
                 })
@@ -163,7 +169,8 @@ namespace ObjectLifetimeTests
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        private static (WeakReference Grid, WeakReference Button, WeakReference Handler) CreateImportedEventCycle(Panel host)
+        private static (WeakReference Grid, WeakReference Button, WeakReference Handler) CreateImportedEventCycle(
+            Panel host)
         {
             Grid grid = (Grid)XamlReader.Load("""
                 <Grid xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation">
@@ -189,8 +196,8 @@ namespace ObjectLifetimeTests
                 .CallFromUIThread(() => references = CreateImportedEventCycle(mainCanvas))
                 .CallFromUIThread(() => mainCanvas.Children.Remove((UIElement)references.Grid.Target))
                 .CollectUntilTrue(
-                    () => !references.Grid.IsAlive && !references.Button.IsAlive && !references.Handler.IsAlive,
-                    "The imported Grid/Button event cycle was not collected")
+                    fn: () => !references.Grid.IsAlive && !references.Button.IsAlive && !references.Handler.IsAlive,
+                    timeoutMessage: "The imported Grid/Button event cycle was not collected")
                 .CallFromUIThread(() =>
                 {
                     Assert.IsNull(references.Grid.Target);
