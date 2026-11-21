@@ -102,6 +102,7 @@
     <ClInclude Include="WarningStatic.h" />
     <ClInclude Include="Windows.Class.h" />
     <ClInclude Include="WinRT.Class.h" />
+    <ClInclude Include="WrlAsyncOperation.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="$(GeneratedFilesDir)module.g.cpp" />
@@ -126,6 +127,7 @@
     <ClCompile Include="WarningStatic.cpp" />
     <ClCompile Include="Windows.Class.cpp" />
     <ClCompile Include="WinRT.Class.cpp" />
+    <ClCompile Include="WrlAsyncOperation.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Midl Include="TestComponentCSharp.idl" />

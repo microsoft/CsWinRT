@@ -47,6 +47,7 @@ namespace TestComponentCSharp
         BlittableStruct blittable;
     };
 
+    [createfromstring("TestComponentCSharp.Class.CreateStructFromString")]
     struct NonBlittableStringStruct
     {
         String str;
@@ -153,6 +154,7 @@ namespace TestComponentCSharp
     }
 
     [default_interface, gc_pressure(Windows.Foundation.Metadata.GCPressureAmount.High)]
+    [createfromstring("TestComponentCSharp.Class.CreateFromString")]
     runtimeclass Class :
         Windows.Foundation.IStringable
         //, ICowboy
@@ -185,6 +187,8 @@ namespace TestComponentCSharp
         static Int32 StaticReadWriteProperty{ set; };
         static Windows.Foundation.TimeSpan FromSeconds(Int32 seconds);
         static Windows.Foundation.DateTime Now();
+        static Class CreateFromString(String value);
+        static NonBlittableStringStruct CreateStructFromString(String value);
 
         // class
         event EventHandler0 Event0;
@@ -394,6 +398,10 @@ namespace TestComponentCSharp
         Windows.Foundation.IAsyncActionWithProgress<Int32> DoitAsyncWithProgress();
         Windows.Foundation.IAsyncOperation<Int32> AddAsync(Int32 lhs, Int32 rhs);
         Windows.Foundation.IAsyncOperationWithProgress<Int32, Int32> AddAsyncWithProgress(Int32 lhs, Int32 rhs);
+        Windows.Foundation.IAsyncOperationWithProgress<UInt32, UInt32> WrlAddAsyncWithProgress(UInt32 lhs, UInt32 rhs);
+        Windows.Foundation.IAsyncOperationWithProgress<UInt32, UInt32> WrlAddAsyncWithProgress(UInt32 lhs, UInt32 rhs,
+            Windows.Foundation.AsyncOperationWithProgressCompletedHandler<UInt32, UInt32> observer);
+        Boolean TryCompleteWrlAsync(Int32 hr);
 
         // Type mappings
         // "Simple" structs (blittable with changes to add properties/functions/constructors/etc.)
