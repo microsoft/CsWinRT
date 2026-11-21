@@ -1527,6 +1527,50 @@ public class DiagnosticAnalyzerTests
     }
 
     [TestMethod]
+    public async Task AotMissingPartial_WinRTBaseRequiresRuntimeClassName()
+    {
+        const string source = """
+            using WinRT;
+
+            [assembly: GeneratedWinRTExposedExternalType(typeof(WithLookup))]
+
+            [WindowsRuntimeType]
+            class WinRTBase { }
+
+            abstract class Intermediate : WinRTBase { }
+            class {|CsWinRT1028:MissingName|} : Intermediate { }
+            partial class GeneratedName : WinRTBase { }
+
+            [WinRTExposedType]
+            class {|CsWinRT1028:WithVtableOnly|} : WinRTBase { }
+
+            [WinRTRuntimeClassName("Custom")]
+            class WithName : WinRTBase { }
+
+            class WithLookup : WinRTBase { }
+
+            [WinRTExposedType(typeof(WinRTManagedOnlyTypeDetails))]
+            class ManagedOnly : WinRTBase { }
+
+            class MappedBase : System.Uri
+            {
+                public MappedBase() : base("https://example.test/") { }
+            }
+
+            class NoMetadataNeeded { }
+            """;
+
+        await CSharpAnalyzerTest<WinRT.SourceGenerator.WinRTAotDiagnosticAnalyzer>.VerifyAnalyzerAsync(
+            source,
+            editorconfig:
+            [
+                ("CsWinRTAotOptimizerEnabled", "auto"),
+                ("CsWinRTAotWarningLevel", "1"),
+                ("CsWinRTCcwLookupTableGeneratorEnabled", "true")
+            ]);
+    }
+
+    [TestMethod]
     public async Task AotWarningSuppressedInterfaces_OnlyImplementsSuppressedInterface_DoesNotWarn()
     {
         const string source = """

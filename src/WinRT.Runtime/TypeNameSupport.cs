@@ -396,7 +396,7 @@ namespace WinRT
 
 #nullable enable
         /// <summary>
-        /// Tracker for visited types when determining a WinRT interface to use as the type name.
+        /// Tracker for visited types when determining a WinRT type to use as the type name.
         /// </summary>
         /// <remarks>
         /// Only used when <see cref="GetNameForType"/> is called with <see cref="TypeNameGenerationFlags.ForGetRuntimeClassName"/>.
@@ -466,7 +466,7 @@ namespace WinRT
                 {
                     if ((flags & TypeNameGenerationFlags.ForGetRuntimeClassName) != 0)
                     {
-                        return TryAppendWinRTInterfaceNameForType(type, builder, flags);
+                        return TryAppendWinRTTypeNameForType(type, builder, flags);
                     }
                     else
                     {
@@ -477,7 +477,7 @@ namespace WinRT
             return true;
         }
 
-        private static bool TryAppendWinRTInterfaceNameForType(Type type, StringBuilder builder, TypeNameGenerationFlags flags)
+        private static bool TryAppendWinRTTypeNameForType(Type type, StringBuilder builder, TypeNameGenerationFlags flags)
         {
             Debug.Assert((flags & TypeNameGenerationFlags.ForGetRuntimeClassName) != 0);
             Debug.Assert(!type.IsGenericTypeDefinition);
@@ -541,29 +541,43 @@ namespace WinRT
 #if NET
                 [UnconditionalSuppressMessage("Trimming", "IL2070", Justification = "Updated binaries will have WinRTRuntimeClassNameAttribute which will be used instead.")]
 #endif
-                static bool TryAppendWinRTInterfaceNameForTypeJit(Type type, StringBuilder builder, TypeNameGenerationFlags flags)
+                static bool TryAppendWinRTTypeNameForTypeJit(Type type, StringBuilder builder, TypeNameGenerationFlags flags)
                 {
                     var visitedTypes = visitedTypesInstance;
 
                     visitedTypes.Push(new VisitedType { Type = type });
 
-                    Type interfaceTypeToUse = null;
-                    foreach (var iface in type.GetInterfaces())
+                    Type baseTypeToUse = type.BaseType;
+                    // Custom-mapped managed classes do not provide a projected base's WinRT interfaces
+                    while (baseTypeToUse is not null && baseTypeToUse != typeof(object) &&
+                        (!Projections.IsTypeWindowsRuntimeType(baseTypeToUse) ||
+                         Projections.FindCustomAbiTypeNameForType(baseTypeToUse) is not null))
                     {
-                        if (Projections.IsTypeWindowsRuntimeType(iface))
+                        baseTypeToUse = baseTypeToUse.BaseType;
+                    }
+                    if (baseTypeToUse == typeof(object))
+                    {
+                        baseTypeToUse = null;
+                    }
+
+                    Type typeToUse = baseTypeToUse;
+                    if (typeToUse is null)
+                    {
+                        foreach (var iface in type.GetInterfaces())
                         {
-                            if (interfaceTypeToUse is null || interfaceTypeToUse.IsAssignableFrom(iface))
+                            if (Projections.IsTypeWindowsRuntimeType(iface) &&
+                                (typeToUse is null || typeToUse.IsAssignableFrom(iface)))
                             {
-                                interfaceTypeToUse = iface;
+                                typeToUse = iface;
                             }
                         }
                     }
 
                     bool success = false;
 
-                    if (interfaceTypeToUse is not null)
+                    if (typeToUse is not null)
                     {
-                        success = TryAppendTypeName(interfaceTypeToUse, builder, flags);
+                        success = TryAppendTypeName(typeToUse, builder, flags);
                     }
 
                     visitedTypes.Pop();
@@ -571,7 +585,7 @@ namespace WinRT
                     return success;
                 }
 
-                return TryAppendWinRTInterfaceNameForTypeJit(type, builder, flags);
+                return TryAppendWinRTTypeNameForTypeJit(type, builder, flags);
             }
         }
 
@@ -627,7 +641,7 @@ namespace WinRT
 
             if ((flags & TypeNameGenerationFlags.ForGetRuntimeClassName) != 0 && !Projections.IsTypeWindowsRuntimeType(type))
             {
-                return TryAppendWinRTInterfaceNameForType(type, builder, flags);
+                return TryAppendWinRTTypeNameForType(type, builder, flags);
             }
 
             Type definition = type.GetGenericTypeDefinition();

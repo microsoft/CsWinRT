@@ -10,6 +10,7 @@ using Basic.Reference.Assemblies;
 using Generator;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using WinRT;
@@ -306,7 +307,81 @@ public class AotOptimizerTests
         Assert.IsFalse(generated.Contains("== \"ABI.System.Collections.Generic.ToAbiEnumeratorAdapter`1[System.Int32]\""));
     }
 
-    private static string RunAotOptimizer(string source)
+    [DataTestMethod]
+    [DataRow(true, false)]
+    [DataRow(true, true)]
+    [DataRow(false, false)]
+    public void RuntimeClassName_DoesNotReplaceExplicitVtableOnWinRTSubclass(
+        bool hasExplicitVtable, bool hasExplicitName)
+    {
+        string source = $$"""
+            using WinRT;
+
+            namespace RuntimeClassNameTest;
+
+            internal sealed class WinRTExposedTypeAttribute : System.Attribute { }
+
+            [WindowsRuntimeType]
+            internal class Base : System.IDisposable
+            {
+                public void Dispose() { }
+            }
+
+            {{(hasExplicitVtable ? "[WinRT.WinRTExposedType]" : "[WinRTExposedType]")}}
+            {{(hasExplicitName ? """[WinRTRuntimeClassName("Custom")]""" : "")}}
+            internal partial class Test : Base { }
+            """;
+
+        RunAotOptimizer(CreateCompilation(source), out Compilation compilation);
+        AssertCompiles(compilation);
+        var attributes = compilation.GetTypeByMetadataName("RuntimeClassNameTest.Test").GetAttributes();
+        var nameAttribute = attributes.Single(attribute => SymbolEqualityComparer.Default.Equals(
+            attribute.AttributeClass, compilation.GetTypeByMetadataName("WinRT.WinRTRuntimeClassNameAttribute")));
+        var vtableAttribute = attributes.Single(attribute => SymbolEqualityComparer.Default.Equals(
+            attribute.AttributeClass, compilation.GetTypeByMetadataName("WinRT.WinRTExposedTypeAttribute")));
+
+        Assert.AreEqual(hasExplicitName ? "Custom" : "RuntimeClassNameTest.Base", nameAttribute.ConstructorArguments[0].Value);
+        Assert.AreEqual(hasExplicitVtable ? 0 : 1, vtableAttribute.ConstructorArguments.Length);
+    }
+
+    [TestMethod]
+    public void RuntimeClassName_NameOnlyDoesNotClaimVtableLookup()
+    {
+        const string source = """
+            using WinRT;
+
+            [assembly: GeneratedWinRTExposedExternalType(typeof(RuntimeClassNameTest.Test))]
+
+            namespace RuntimeClassNameTest;
+
+            [WindowsRuntimeType]
+            internal class Base { }
+            internal class Test : Base { }
+            """;
+
+        GeneratorDriverRunResult result = RunAotOptimizer(CreateCompilation(source), out Compilation compilation);
+        AssertCompiles(compilation);
+        var methods = result.GeneratedTrees.SelectMany(static tree => tree.GetRoot().DescendantNodes().OfType<MethodDeclarationSyntax>());
+        var nameLookup = methods.Single(static method => method.Identifier.ValueText == "LookupRuntimeClassName");
+        var vtableLookup = methods.Single(static method => method.Identifier.ValueText == "LookupVtableEntries");
+
+        CollectionAssert.AreEquivalent(new[] { "RuntimeClassNameTest.Test", "RuntimeClassNameTest.Base" }, GetStringLiterals(nameLookup));
+        Assert.IsFalse(GetStringLiterals(vtableLookup).Contains("RuntimeClassNameTest.Test"));
+
+        static string[] GetStringLiterals(MethodDeclarationSyntax method) =>
+            method.DescendantNodes().OfType<LiteralExpressionSyntax>()
+                .Where(static literal => literal.IsKind(SyntaxKind.StringLiteralExpression))
+                .Select(static literal => literal.Token.ValueText)
+                .ToArray();
+    }
+
+    private static void AssertCompiles(Compilation compilation)
+    {
+        var errors = compilation.GetDiagnostics().Where(static diagnostic => diagnostic.Severity == DiagnosticSeverity.Error).ToArray();
+        Assert.AreEqual(0, errors.Length, string.Join(Environment.NewLine, errors.Select(static error => error.ToString())));
+    }
+
+    private static CSharpCompilation CreateCompilation(string source)
     {
         SyntaxTree syntaxTree = CSharpSyntaxTree.ParseText(source, new CSharpParseOptions(LanguageVersion.Latest));
 
@@ -315,23 +390,26 @@ public class AotOptimizerTests
             MetadataReference.CreateFromFile(typeof(ComWrappersSupport).Assembly.Location)
         };
 
-        CSharpCompilation compilation = CSharpCompilation.Create(
+        return CSharpCompilation.Create(
             "AotOptimizerTest",
             new[] { syntaxTree },
             references,
             new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary, allowUnsafe: true));
+    }
 
+    private static string RunAotOptimizer(string source) =>
+        string.Join(Environment.NewLine, RunAotOptimizer(CreateCompilation(source), out _).GeneratedTrees.Select(static tree => tree.ToString()));
+
+    private static GeneratorDriverRunResult RunAotOptimizer(CSharpCompilation compilation, out Compilation updatedCompilation)
+    {
         GeneratorDriver driver = CSharpGeneratorDriver.Create(
             generators: new[] { new WinRTAotSourceGenerator().AsSourceGenerator() },
             additionalTexts: ImmutableArray<AdditionalText>.Empty,
-            parseOptions: (CSharpParseOptions)syntaxTree.Options,
+            parseOptions: (CSharpParseOptions)compilation.SyntaxTrees.First().Options,
             optionsProvider: new ConfigOptionsProvider());
 
-        driver = driver.RunGenerators(compilation);
-
-        return string.Join(
-            Environment.NewLine,
-            driver.GetRunResult().GeneratedTrees.Select(static tree => tree.ToString()));
+        driver = driver.RunGeneratorsAndUpdateCompilation(compilation, out updatedCompilation, out _);
+        return driver.GetRunResult();
     }
 
     private sealed class ConfigOptions : AnalyzerConfigOptions

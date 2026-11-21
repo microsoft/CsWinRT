@@ -66,6 +66,14 @@ namespace WinRT.SourceGenerator
                 var csWinRTAotWarningLevel = context.Options.AnalyzerConfigOptionsProvider.GetCsWinRTAotWarningLevel();
                 var allowUnsafe = GeneratorHelper.AllowUnsafe(context.Compilation);
                 var isCsWinRTCcwLookupTableGeneratorEnabled = context.Options.AnalyzerConfigOptionsProvider.IsCsWinRTCcwLookupTableGeneratorEnabled();
+                var isWinRTType = GeneratorHelper.IsWinRTType(context.Compilation, isComponentProject);
+                var isManagedOnlyType = GeneratorHelper.IsManagedOnlyType(context.Compilation);
+                var lookupTypes = isCsWinRTCcwLookupTableGeneratorEnabled && generatedWinRTExposedExternalTypeAttribute is not null ?
+                    context.Compilation.Assembly.GetAttributes()
+                        .Where(attribute => SymbolEqualityComparer.Default.Equals(attribute.AttributeClass, generatedWinRTExposedExternalTypeAttribute))
+                        .Select(attribute => attribute.ConstructorArguments is [{ Kind: TypedConstantKind.Type, Value: ITypeSymbol type }] ? type : null)
+                        .ToImmutableHashSet<ITypeSymbol>(SymbolEqualityComparer.Default) :
+                    ImmutableHashSet<ITypeSymbol>.Empty;
 
                 context.RegisterSymbolAction(context =>
                 {
@@ -88,12 +96,17 @@ namespace WinRT.SourceGenerator
                             return;
                         }
 
-                        // Make sure this is a class that we would generate the WinRTExposedType attribute on
-                        // and that it isn't already partial.
+                        // Only analyze managed classes eligible for generated WinRT metadata
                         if (!GeneratorHelper.IsWinRTType(namedType, winrtTypeAttribute, typeMapper, isComponentProject, context.Compilation.Assembly) &&
-                            !GeneratorHelper.HasNonInstantiatedWinRTGeneric(namedType, typeMapper) &&
-                            !GeneratorHelper.HasAttributeWithType(namedType, winrtExposedTypeAttribute))
+                            !GeneratorHelper.HasNonInstantiatedWinRTGeneric(namedType, typeMapper))
                         {
+                            bool hasExplicitVtable = GeneratorHelper.HasAttributeWithType(namedType, winrtExposedTypeAttribute);
+                            bool isPartial = GeneratorHelper.IsPartial(namedType);
+                            bool needsRuntimeClassName = !isPartial &&
+                                WinRTAotSourceGenerator.GetWinRTBaseType(namedType, isWinRTType, typeMapper) is not null &&
+                                !GeneratorHelper.HasWinRTRuntimeClassNameAttribute(namedType, context.Compilation) &&
+                                !isManagedOnlyType(namedType) &&
+                                !lookupTypes.Contains(namedType);
                             var interfacesFromOldProjections = new HashSet<string>();
                             bool implementsWinRTInterfaces = false;
                             bool implementsCustomMappedInterfaces = false;
@@ -110,7 +123,7 @@ namespace WinRT.SourceGenerator
                                 suppressedInterfaces = context.Options.AnalyzerConfigOptionsProvider.GetOptions(declaringSyntaxTree).GetCsWinRTAotWarningSuppressedInterfaces();
                             }
 
-                            foreach (var iface in namedType.AllInterfaces)
+                            foreach (var iface in hasExplicitVtable ? ImmutableArray<INamedTypeSymbol>.Empty : namedType.AllInterfaces)
                             {
                                 if (GeneratorHelper.IsWinRTType(iface, winrtTypeAttribute, typeMapper, isComponentProject, context.Compilation.Assembly))
                                 {
@@ -138,11 +151,11 @@ namespace WinRT.SourceGenerator
                                 }
                             }
 
-                            if (!GeneratorHelper.IsPartial(namedType) && 
-                                (implementsWinRTInterfaces || implementsCustomMappedInterfaces))
+                            if (!isPartial &&
+                                (implementsWinRTInterfaces || implementsCustomMappedInterfaces || needsRuntimeClassName))
                             {
                                 // Based on the warning level, emit as a warning or as an info.
-                                var diagnosticDescriptor = (csWinRTAotWarningLevel >= 2 || (csWinRTAotWarningLevel == 1 && implementsWinRTInterfaces)) ?
+                                var diagnosticDescriptor = (csWinRTAotWarningLevel >= 2 || (csWinRTAotWarningLevel == 1 && (implementsWinRTInterfaces || needsRuntimeClassName))) ?
                                     WinRTRules.ClassNotAotCompatibleWarning : WinRTRules.ClassNotAotCompatibleInfo;
                                 context.ReportDiagnostic(Diagnostic.Create(diagnosticDescriptor, namedType.Locations[0], namedType.Name));
                             }
@@ -376,7 +389,7 @@ namespace WinRT.SourceGenerator
                                     if (instantiatedTypeSymbol.MetadataName.Contains("`"))
                                     {
                                         addClassOnLookupTable =
-                                            !GeneratorHelper.HasWinRTExposedTypeAttribute(instantiatedTypeSymbol) &&
+                                            !GeneratorHelper.HasAttributeWithType(instantiatedTypeSymbol, winrtExposedTypeAttribute) &&
                                             // If the type is defined in the same assembly as what the source generator is running on,
                                             // we let the WinRTExposedType attribute generator handle it. The only scenario the generator
                                             // doesn't handle which we handle here is if it is a generic type implementing generic WinRT interfaces.
@@ -388,7 +401,7 @@ namespace WinRT.SourceGenerator
                                     else if (!GeneratorHelper.IsWinRTType(instantiatedTypeSymbol, winrtTypeAttribute, typeMapper, isComponentProject, context.Compilation.Assembly))
                                     {
                                         addClassOnLookupTable =
-                                            !GeneratorHelper.HasWinRTExposedTypeAttribute(instantiatedTypeSymbol) &&
+                                            !GeneratorHelper.HasAttributeWithType(instantiatedTypeSymbol, winrtExposedTypeAttribute) &&
                                             // If the type is defined in the same assembly as what the source generator is running on,
                                             // we let the WinRTExposedType attribute generator handle it.
                                             !SymbolEqualityComparer.Default.Equals(instantiatedTypeSymbol.ContainingAssembly, context.SemanticModel.Compilation.Assembly) &&

@@ -686,10 +686,10 @@ namespace Generator
                  namedType.TypeArguments.Any(static argument => argument.DeclaredAccessibility == Accessibility.Private));
         }
 
-        public static bool HasWinRTExposedTypeAttribute(ISymbol type)
+        public static bool HasWinRTExposedTypeAttribute(ISymbol type, Compilation compilation)
         {
-            return type.GetAttributes().
-                Any(static attribute => string.CompareOrdinal(attribute.AttributeClass.Name, "WinRTExposedTypeAttribute") == 0);
+            var attributeType = compilation.GetTypeByMetadataName("WinRT.WinRTExposedTypeAttribute");
+            return attributeType is not null && HasAttributeWithType(type, attributeType);
         }
 
         public static bool HasWinRTRuntimeClassNameAttribute(ISymbol type, Compilation compilation)
@@ -779,7 +779,7 @@ namespace Generator
             {
                 if (SymbolEqualityComparer.Default.Equals(attribute.AttributeClass, winrtExposedTypeAttribute))
                 {
-                    if (attribute.ConstructorArguments is [{ Kind: TypedConstantKind.Type, Type: ITypeSymbol exposedTypeDetails }] &&
+                    if (attribute.ConstructorArguments is [{ Kind: TypedConstantKind.Type, Value: ITypeSymbol exposedTypeDetails }] &&
                         SymbolEqualityComparer.Default.Equals(exposedTypeDetails, winrtManagedOnlyTypeDetails))
                     {
                         return true;

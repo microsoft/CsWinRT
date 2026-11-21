@@ -250,7 +250,7 @@ namespace WinRT
     /// <summary>
     /// An attributes used to explicitly indicate ther runtime class name to use for WinRT exposed types.
     /// </summary>
-    /// <remarks>This attribute is emitted by the CsWinRT generator for non-authored types implementing WinRT interfaces.</remarks>
+    /// <remarks>This attribute is emitted by the CsWinRT generator for non-authored types implementing WinRT interfaces or deriving from WinRT classes.</remarks>
     [EditorBrowsable(EditorBrowsableState.Never)]
     [AttributeUsage(AttributeTargets.Class, Inherited = false, AllowMultiple = false)]
 #if EMBED

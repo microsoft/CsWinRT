@@ -88,8 +88,74 @@ if (warningOverrideCCW2 == null)
     return 108;
 }
 
-Guid IID_IProperties1 = new("4BB22177-718B-57C4-8977-CDF2621C781A");
+if (!CheckRuntimeClassName(ccw, "TestComponentCSharp.WarningClass"))
+{
+    return 149;
+}
+
 Guid IID_IProperties2 = new("6090AE4B-83A1-5474-A8D9-AF9B8C8DBD09");
+ccw = MarshalInspectable<object>.CreateMarshaler(new ManagedWarningClass3());
+ccw.TryAs<IUnknownVftbl>(IID_IProperties2, out var additionalInterface);
+using (additionalInterface)
+{
+    if (additionalInterface is null || !CheckRuntimeClassName(ccw, "TestComponentCSharp.WarningClass"))
+    {
+        return 150;
+    }
+}
+
+object warningRcw = new DefaultComWrappers().GetOrCreateObjectForComInstance(ccw.ThisPtr, CreateObjectFlags.UniqueInstance);
+GC.KeepAlive(ccw);
+if (warningRcw.GetType() != typeof(WarningClass) || warningRcw is not IProperties2)
+{
+    return 156;
+}
+
+Guid customInterfaceIid = new("C878B4FC-85D8-4E62-BBB7-27128D6265D1");
+ComWrappersSupport.RegisterComInterfaceEntries(typeof(ManagedCustomEquals), new[]
+{
+    new ComWrappers.ComInterfaceEntry { IID = customInterfaceIid, Vtable = IInspectable.Vftbl.AbiToProjectionVftablePtr }
+});
+ccw = MarshalInspectable<object>.CreateMarshaler(new ManagedCustomEquals());
+if (!CheckRuntimeClassName(ccw, "TestComponentCSharp.UnSealedCustomEquals"))
+{
+    return 151;
+}
+
+Guid baseInterfaceIid = new("D952F244-AD18-5E0B-9003-AD9F030E3F63");
+ccw.TryAs<IUnknownVftbl>(baseInterfaceIid, out var customEqualsBase);
+ccw.TryAs<IUnknownVftbl>(customInterfaceIid, out var customEqualsRegisteredInterface);
+using (customEqualsBase)
+using (customEqualsRegisteredInterface)
+{
+    if (customEqualsBase is null || customEqualsRegisteredInterface is null)
+    {
+        return 152;
+    }
+}
+
+if (RuntimeFeature.IsDynamicCodeCompiled)
+{
+    using var jitBase = MarshalInspectable<object>.CreateMarshaler(new JitCustomEquals());
+    if (!CheckRuntimeClassName(jitBase, "TestComponentCSharp.UnSealedCustomEquals"))
+    {
+        return 153;
+    }
+
+    using var jitInterface = MarshalInspectable<object>.CreateMarshaler(new JitWarningClass());
+    if (!CheckRuntimeClassName(jitInterface, "TestComponentCSharp.WarningClass"))
+    {
+        return 154;
+    }
+
+    using var jitMappedBase = MarshalInspectable<object>.CreateMarshaler(new JitUri());
+    if (!CheckRuntimeClassName(jitMappedBase, ""))
+    {
+        return 155;
+    }
+}
+
+Guid IID_IProperties1 = new("4BB22177-718B-57C4-8977-CDF2621C781A");
 var managedInterfaceInheritance = new ManagedInterfaceInheritance();
 ccw = MarshalInspectable<object>.CreateMarshaler(managedInterfaceInheritance);
 ccw.TryAs<IUnknownVftbl>(IID_IProperties1, out var propertiesCCW);
@@ -535,6 +601,35 @@ sealed partial class ManagedWarningClass : WarningClass, IUriHandler, IArtist
 // the child class has no WinRT interfaces.
 sealed partial class ManagedWarningClass2 : WarningClass 
 {
+}
+
+sealed partial class ManagedWarningClass3 : WarningClass, IProperties2
+{
+    public int ReadWriteProperty { get; set; }
+}
+
+sealed partial class ManagedCustomEquals : UnSealedCustomEquals
+{
+}
+
+#pragma warning disable CsWinRT1028 // Non-partial classes exercise the JIT fallback without generated metadata
+abstract class JitCustomEqualsIntermediate : UnSealedCustomEquals
+{
+}
+
+sealed class JitCustomEquals : JitCustomEqualsIntermediate
+{
+}
+
+sealed class JitWarningClass : WarningClass, IProperties2
+{
+    public int ReadWriteProperty { get; set; }
+}
+#pragma warning restore CsWinRT1028
+
+sealed class JitUri : Uri
+{
+    public JitUri() : base("https://example.test/") { }
 }
 
 sealed partial class ManagedInterfaceInheritance : IProperties2

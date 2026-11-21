@@ -567,6 +567,20 @@ namespace Generator
             }
         }
 
+        internal static INamedTypeSymbol GetWinRTBaseType(ITypeSymbol symbol, Func<ISymbol, TypeMapper, bool> isWinRTType, TypeMapper mapper)
+        {
+            for (var baseType = symbol.BaseType; baseType is not null && baseType.SpecialType != SpecialType.System_Object; baseType = baseType.BaseType)
+            {
+                // Custom-mapped managed classes do not provide a projected base's WinRT interfaces
+                if (isWinRTType(baseType, mapper) && !mapper.HasMappingForType(ToVtableLookupString(baseType.OriginalDefinition)))
+                {
+                    return baseType;
+                }
+            }
+
+            return null;
+        }
+
         internal static VtableAttribute GetVtableAttributeToAdd(
             ITypeSymbol symbol, 
             Func<ISymbol, bool> isManagedOnlyType,
@@ -604,8 +618,10 @@ namespace Generator
             // If the attribute is already placed on the type, don't generate a new one as we will
             // use the specified one.  Also for authoring scenarios where we call this for authored WinRT types,
             // don't generate the runtimeclass name for them as we will rely on the full name for them as we do today.
-            var checkForRuntimeClasName = !GeneratorHelper.HasWinRTRuntimeClassNameAttribute(symbol, compilation) && 
+            var checkForRuntimeClassName = !GeneratorHelper.HasWinRTRuntimeClassNameAttribute(symbol, compilation) &&
                 (!isAuthoring || (isAuthoring && !isWinRTType(symbol, mapper)));
+            INamedTypeSymbol baseTypeForRuntimeClassName = checkForRuntimeClassName ? GetWinRTBaseType(symbol, isWinRTType, mapper) : null;
+
             INamedTypeSymbol interfaceToUseForRuntimeClassName = null;
             foreach (var iface in symbol.AllInterfaces)
             {
@@ -667,7 +683,14 @@ namespace Generator
                 AddGenericInterfaceInstantiation(symbol as INamedTypeSymbol);
             }
 
-            if (!interfacesToAddToVtable.Any())
+            if (!isAuthoring && GeneratorHelper.HasWinRTExposedTypeAttribute(symbol, compilation))
+            {
+                interfacesToAddToVtable.Clear();
+                genericInterfacesToAddToVtable.Clear();
+            }
+
+            var typeForRuntimeClassName = baseTypeForRuntimeClassName ?? interfaceToUseForRuntimeClassName;
+            if (!interfacesToAddToVtable.Any() && typeForRuntimeClassName is null)
             {
                 return default;
             }
@@ -718,7 +741,7 @@ namespace Generator
                 symbol is IArrayTypeSymbol,
                 isDelegate,
                 symbol.DeclaredAccessibility == Accessibility.Public,
-                GetRuntimeClassName(interfaceToUseForRuntimeClassName, isWinRTType, mapper));
+                GetRuntimeClassName(typeForRuntimeClassName, isWinRTType, mapper));
 
             void AddGenericInterfaceInstantiation(INamedTypeSymbol iface)
             {
@@ -758,12 +781,10 @@ namespace Generator
                     (iface.IsGenericType && iface.TypeArguments.Any(typeArgument => IsExternalInternalInterface(typeArgument as INamedTypeSymbol)));
             }
 
-            // Determines the interface to use to represent the type when GetRuntimeClassName is called.
-            // Given these are non WinRT types implementing WinRT interfaces, we find the most derived
-            // interface to represent it so that it applies for most scenarios.
+            // Use an interface name only when there is no projected WinRT base
             void CheckForInterfaceToUseForRuntimeClassName(INamedTypeSymbol iface)
             {
-                if (!checkForRuntimeClasName)
+                if (!checkForRuntimeClassName || baseTypeForRuntimeClassName is not null)
                 {
                     return;
                 }
@@ -959,12 +980,13 @@ namespace Generator
             // to get all the symbol data rather than the data at an instance of a partial class definition.
             foreach (var vtableAttribute in vtableAttributes.ToImmutableHashSet())
             {
+                bool hasVtableEntries = vtableAttribute.Interfaces.Any();
                 // If this is a WinRT component project and this call is coming
                 // from the AOT optimizer, then any public types are not handled
                 // right now as they are handled by the WinRT component source generator
                 // calling this.
                 if (((isCsWinRTComponentFromAotOptimizer && !vtableAttribute.IsPublic) || !isCsWinRTComponentFromAotOptimizer) &&
-                    vtableAttribute.Interfaces.Any())
+                    (hasVtableEntries || !string.IsNullOrEmpty(vtableAttribute.RuntimeClassName)))
                 {
                     StringBuilder source = new();
                     if (!vtableAttribute.IsGlobalNamespace)
@@ -975,14 +997,22 @@ namespace Generator
                         """);
                     }
 
-                    // Check if this class shares the same vtable as another class.  If so, reuse the same generated class for it.
-                    VtableEntry entry = new(vtableAttribute.Interfaces, vtableAttribute.GenericInterfaces, vtableAttribute.IsDelegate);
-                    bool vtableEntryExists = vtableEntryToVtableClassName.TryGetValue(entry, out var ccwClassName);
-                    if (!vtableEntryExists)
+                    string ccwClassName = null;
+                    string exposedTypeAttribute = null;
+                    bool generateVtableClass = false;
+                    if (hasVtableEntries)
                     {
-                        var @namespace = vtableAttribute.IsGlobalNamespace ? "" : $"{vtableAttribute.Namespace}.";
-                        ccwClassName = GeneratorHelper.EscapeTypeNameForIdentifier(@namespace + vtableAttribute.ClassName);
-                        vtableEntryToVtableClassName.Add(entry, ccwClassName);
+                        // Reuse the generated class if another type shares the same vtable
+                        VtableEntry entry = new(vtableAttribute.Interfaces, vtableAttribute.GenericInterfaces, vtableAttribute.IsDelegate);
+                        if (!vtableEntryToVtableClassName.TryGetValue(entry, out ccwClassName))
+                        {
+                            var @namespace = vtableAttribute.IsGlobalNamespace ? "" : $"{vtableAttribute.Namespace}.";
+                            ccwClassName = GeneratorHelper.EscapeTypeNameForIdentifier(@namespace + vtableAttribute.ClassName);
+                            vtableEntryToVtableClassName.Add(entry, ccwClassName);
+                            generateVtableClass = true;
+                        }
+
+                        exposedTypeAttribute = $$"""[global::WinRT.WinRTExposedType(typeof(global::WinRT.{{escapedAssemblyName}}VtableClasses.{{ccwClassName}}WinRTTypeDetails))]""";
                     }
 
                     var escapedClassName = GeneratorHelper.EscapeTypeNameForIdentifier(vtableAttribute.ClassName);
@@ -995,8 +1025,12 @@ namespace Generator
                             source.AppendLine($$"""[global::WinRT.WinRTRuntimeClassName("{{vtableAttribute.RuntimeClassName}}")]""");
                         }
 
+                        if (exposedTypeAttribute is not null)
+                        {
+                            source.AppendLine(exposedTypeAttribute);
+                        }
+
                         source.AppendLine($$"""
-                            [global::WinRT.WinRTExposedType(typeof(global::WinRT.{{escapedAssemblyName}}VtableClasses.{{ccwClassName}}WinRTTypeDetails))]
                             partial class {{vtableAttribute.ClassName}}
                             {
                             }
@@ -1021,8 +1055,12 @@ namespace Generator
                             source.AppendLine($$"""[global::WinRT.WinRTRuntimeClassName("{{vtableAttribute.RuntimeClassName}}")]""");
                         }
 
+                        if (exposedTypeAttribute is not null)
+                        {
+                            source.AppendLine(exposedTypeAttribute);
+                        }
+
                         source.AppendLine($$"""
-                            [global::WinRT.WinRTExposedType(typeof(global::WinRT.{{escapedAssemblyName}}VtableClasses.{{ccwClassName}}WinRTTypeDetails))]
                             partial {{classHierarchy[0].GetTypeKeyword()}} {{classHierarchy[0].QualifiedName}}
                             {
                             }
@@ -1036,7 +1074,7 @@ namespace Generator
                     }
 
                     // Only generate class, if this is the first time we run into this set of vtables.
-                    if (!vtableEntryExists)
+                    if (generateVtableClass)
                     {
                         if (firstVtableClass)
                         {
@@ -1516,7 +1554,7 @@ namespace Generator
                         if (instantiatedTypeSymbol.MetadataName.Contains("`"))
                         {
                             addClassOnLookupTable =
-                                !GeneratorHelper.HasWinRTExposedTypeAttribute(instantiatedTypeSymbol) &&
+                                !GeneratorHelper.HasWinRTExposedTypeAttribute(instantiatedTypeSymbol, context.SemanticModel.Compilation) &&
                                 // If the type is defined in the same assembly as what the source generator is running on,
                                 // we let the WinRTExposedType attribute generator handle it. The only scenario the generator
                                 // doesn't handle which we handle here is if it is a generic type implementing generic WinRT interfaces.
@@ -1528,7 +1566,7 @@ namespace Generator
                         else if (!isWinRTType(instantiatedTypeSymbol, typeMapper))
                         {
                             addClassOnLookupTable =
-                                !GeneratorHelper.HasWinRTExposedTypeAttribute(instantiatedTypeSymbol) &&
+                                !GeneratorHelper.HasWinRTExposedTypeAttribute(instantiatedTypeSymbol, context.SemanticModel.Compilation) &&
                                 // If the type is defined in the same assembly as what the source generator is running on,
                                 // we let the WinRTExposedType attribute generator handle it.
                                 !SymbolEqualityComparer.Default.Equals(instantiatedTypeSymbol.ContainingAssembly, context.SemanticModel.Compilation.Assembly) &&
@@ -1855,7 +1893,7 @@ namespace Generator
             // We gather all the class names that have the same vtable and generate it
             // as part of one if to reduce generated code.
             var vtableEntryToClassNameList = new Dictionary<VtableEntry, List<string>>();
-            foreach (var vtableAttribute in value.vtableAttributes.ToImmutableHashSet())
+            foreach (var vtableAttribute in value.vtableAttributes.ToImmutableHashSet().Where(static v => v.Interfaces.Any()))
             {
                 VtableEntry entry = new(vtableAttribute.Interfaces, vtableAttribute.GenericInterfaces, vtableAttribute.IsDelegate);
                 if (!vtableEntryToClassNameList.TryGetValue(entry, out var classNameList))
