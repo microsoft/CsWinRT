@@ -91,6 +91,40 @@ TEST(HostTest, ProbeByClass)
 	EXPECT_TRUE(Activate<ProbeByClass>(L"ProbeByClass.manifest") == L"TestHost.ProbeByClass.dll");
 }
 
+TEST(HostTest, ProbeByClassWithMixedCaseGenericHost)
+{
+	EXPECT_TRUE(
+		Activate<ProbeByClass>(L"MixedCaseGenericHost.manifest") ==
+		L"TestHost.ProbeByClass.dll");
+}
+
+TEST(HostTest, ProbeByClassUsesServerSuffixFirstWhenFallingBackToClassName)
+{
+	Activate<ProbeByHost>(L"ClassFallbackServer.manifest", CLASS_E_CLASSNOTAVAILABLE);
+}
+
+// ClassId:				Host:									Target:
+// TestHost.ProbeByClass	Dotted.Directory\Unmatched.Host.dll		Dotted.Directory\TestHost.ProbeByClass.dll
+//
+// A renamed host must fall back to class-name probing without escaping a
+// dotted host directory.
+TEST(HostTest, ProbeByClassWithRenamedHostInDottedDirectory)
+{
+	EXPECT_TRUE(Activate<ProbeByClass>(L"DottedDirectory.manifest") == L"TestHost.ProbeByClass.dll");
+}
+
+TEST(HostTest, TargetNotFoundWithRenamedHostInDottedDirectory)
+{
+	Activate<ClassNotFound>(
+		L"DottedDirectoryTargetNotFound.manifest",
+		HRESULT_FROM_WIN32(ERROR_MOD_NOT_FOUND));
+}
+
+TEST(HostTest, ProbeByHostUsesServerSuffixFirstWithMultiDotHostName)
+{
+	Activate<ProbeByHost>(L"MultiDotRenamedHost.manifest", CLASS_E_CLASSNOTAVAILABLE);
+}
+
 // ClassId:				Host:				Target:
 // TestHost.Class		Test.Host.dll		Test.dll
 // 
@@ -139,4 +173,3 @@ TEST(HostTest, RuntimeConflict)
 {
 	Activate<ClassNotFound>(L"RuntimeNotFound.manifest", CoreHostIncompatibleConfig);
 }
-
