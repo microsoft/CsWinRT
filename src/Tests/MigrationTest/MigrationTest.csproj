@@ -1,0 +1,22 @@
+<Project Sdk="MSTest.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <Platforms>x64;x86</Platforms>
+    <CsWinRTEnabled>false</CsWinRTEnabled>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Basic.Reference.Assemblies.Net100" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" />
+    <ProjectReference Include="..\..\Authoring\WinRT.Migration.CodeFixes\WinRT.Migration.CodeFixes.csproj" SetPlatform="Platform=AnyCPU" />
+    <ProjectReference Include="..\..\WinRT.SourceGenerator\WinRT.SourceGenerator.csproj" SetPlatform="Platform=AnyCPU" />
+    <ProjectReference Include="..\..\WinRT.Runtime\WinRT.Runtime.csproj" SetPlatform="Platform=AnyCPU" />
+    <PackageReference Include="Microsoft.Windows.CsWinRT" VersionOverride="2.3.1" ExcludeAssets="all" PrivateAssets="all" GeneratePathProperty="true" />
+  </ItemGroup>
+  <ItemGroup>
+    <AssemblyMetadata Include="LegacyWinRTRuntimeAssemblyPath" Value="$(PkgMicrosoft_Windows_CsWinRT)\lib\net8.0\WinRT.Runtime.dll" />
+  </ItemGroup>
+  <ItemGroup>
+    <Using Include="Microsoft.VisualStudio.TestTools.UnitTesting" />
+  </ItemGroup>
+</Project>

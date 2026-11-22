@@ -1,0 +1,8 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <!-- The migrated delegate is a BCL type; keep the package analyzers but skip unrelated post-build generators. -->
+    <CsWinRTGenerateProjection>false</CsWinRTGenerateProjection>
+    <CsWinRTGenerateInteropAssembly>false</CsWinRTGenerateInteropAssembly>
+  </PropertyGroup>
+</Project>

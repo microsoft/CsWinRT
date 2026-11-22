@@ -10,6 +10,39 @@ namespace WindowsRuntime.SourceGenerator.Diagnostics;
 /// </summary>
 internal static partial class DiagnosticDescriptors
 {
+    /// <summary>Gets a <see cref="DiagnosticDescriptor"/> for an attributed array parameter's 3.0 span mapping.</summary>
+    public static readonly DiagnosticDescriptor LegacyArrayParameter = new(
+        id: "CSWINRT2053",
+        title: "Migrate legacy array parameter to span",
+        messageFormat: "The legacy array parameter '{0}' maps to '{1}' on CsWinRT 3.0; update its signature and review array-dependent uses",
+        category: "WindowsRuntime.SourceGenerator",
+        defaultSeverity: DiagnosticSeverity.Info,
+        isEnabledByDefault: true,
+        description: "ReadOnlyArray parameters map to ReadOnlySpan<T> and WriteOnlyArray parameters map to Span<T>. The fixer validates supported synchronous bodies and requires array-construction evidence for loaded callers; unproven null behavior, escaping, and linked interface/override contracts require review.",
+        helpLinkUri: "https://github.com/microsoft/CsWinRT");
+
+    /// <summary>Gets a <see cref="DiagnosticDescriptor"/> for a legacy attribute with a verified 3.0 migration.</summary>
+    public static readonly DiagnosticDescriptor LegacyWindowsRuntimeAttribute = new(
+        id: "CSWINRT2051",
+        title: "Migrate legacy CsWinRT attribute",
+        messageFormat: "The CsWinRT 2.x attribute '{0}' can be migrated on the CsWinRT 3.0 target",
+        category: "WindowsRuntime.SourceGenerator",
+        defaultSeverity: DiagnosticSeverity.Info,
+        isEnabledByDefault: true,
+        description: "Remove redundant legacy annotations or replace them with their supported 3.0 equivalents. Preserve the legacy annotation conditionally when retaining 2.x targets.",
+        helpLinkUri: "https://github.com/microsoft/CsWinRT");
+
+    /// <summary>Gets a <see cref="DiagnosticDescriptor"/> for a legacy attribute whose contract needs manual review.</summary>
+    public static readonly DiagnosticDescriptor LegacyWindowsRuntimeAttributeRequiresReview = new(
+        id: "CSWINRT2052",
+        title: "Review legacy CsWinRT attribute contract",
+        messageFormat: "The CsWinRT 2.x attribute '{0}' requires contract review before migrating to CsWinRT 3.0",
+        category: "WindowsRuntime.SourceGenerator",
+        defaultSeverity: DiagnosticSeverity.Info,
+        isEnabledByDefault: true,
+        description: "Custom marshalling, projection metadata, exported factories, and array directions cannot be preserved by simply deleting or renaming an attribute. Review the corresponding migration rule.",
+        helpLinkUri: "https://github.com/microsoft/CsWinRT");
+
     /// <summary>
     /// Gets a <see cref="DiagnosticDescriptor"/> for an invalid target type for <c>[GeneratedCustomPropertyProvider]</c>.
     /// </summary>

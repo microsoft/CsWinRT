@@ -228,6 +228,15 @@ steps:
           WinRT.SourceGenerator.pdb
         TargetFolder: $(StagingFolder)\net10.0
 
+    # Stage migration IDE code fixes without copying their host-provided Roslyn dependencies
+    - task: CopyFiles@2
+      displayName: Stage Migration Code Fixes
+      condition: and(succeeded(), eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildConfiguration'], 'release'))
+      inputs:
+        SourceFolder: $(Build.SourcesDirectory)\src\Authoring\WinRT.Migration.CodeFixes\bin\$(BuildConfiguration)\netstandard2.0
+        Contents: WinRT.Migration.CodeFixes.dll
+        TargetFolder: $(StagingFolder)\netstandard2.0
+
     # Stage Net10.0
     - task: CopyFiles@2
       displayName: Stage Net10.0

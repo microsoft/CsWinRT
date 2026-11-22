@@ -57,6 +57,18 @@ steps:
         --no-build
       testRunTitle: Source Generator Tests
 
+# Migration fixes are architecture-independent Roslyn workspace operations.
+  - task: DotNetCoreCLI@2
+    displayName: Run Migration Code Fix Tests
+    condition: and(succeeded(), eq(variables['BuildPlatform'], 'x64'))
+    inputs:
+      command: test
+      projects: 'src/Tests/MigrationTest/MigrationTest.csproj'
+      arguments: >
+        /p:platform=$(BuildPlatform);configuration=$(BuildConfiguration)
+        --no-build
+      testRunTitle: Migration Code Fix Tests
+
 # Run WinMD Generator Tests. Gated to x64 only for the same reason as the source generator tests: these
 # run the 'cswinrtwinmdgen' tool end-to-end as a separate process (which is always built for the build
 # host), so the target platform makes no difference to what they cover.

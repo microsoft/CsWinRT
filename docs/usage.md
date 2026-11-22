@@ -9,6 +9,8 @@ For more information on using the NuGet package, refer to the [NuGet documentati
 
 ## Getting started with CsWinRT 3.0
 
+For existing CsWinRT 2.x projects, follow the [migration guide](migration-2-to-3.md) before changing the target framework, or use its TFM-first recovery path after retargeting.
+
 CsWinRT 3.0 requires **.NET 10** or later and is supported with the new `.1` **Target framework revision number**.  To opt-in to using the CsWinRT 3.0, you would need to update your target framework as below.  You may choose to multi-target to support both CsWinRT 3.0 and CsWinRT 2.x.
 
 ```xml

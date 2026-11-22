@@ -61,10 +61,16 @@ Copyright (C) Microsoft Corporation. All rights reserved.
 
     <!-- Intercept statically computable 'WindowsRuntimeMarshal.GetIid<T>()' calls with precomputed IIDs. -->
     <CsWinRTGenerateGetIidInterceptors Condition="'$(CsWinRTGenerateGetIidInterceptors)' == ''">true</CsWinRTGenerateGetIidInterceptors>
+
+    <!-- Editorconfig values cannot contain newlines or semicolon separators; encode the complete evaluated target intent. -->
+    <CsWinRTMigrationTargetFrameworks>$(TargetFrameworks)</CsWinRTMigrationTargetFrameworks>
+    <CsWinRTMigrationTargetFrameworks Condition="'$(CsWinRTMigrationTargetFrameworks)' == ''">$(TargetFramework)</CsWinRTMigrationTargetFrameworks>
+    <CsWinRTMigrationTargetFrameworks>$([System.Text.RegularExpressions.Regex]::Replace('$(CsWinRTMigrationTargetFrameworks)', '\s+', '').Replace(';', ','))</CsWinRTMigrationTargetFrameworks>
   </PropertyGroup>
 
   <ItemGroup>
     <CompilerVisibleProperty Include="CsWinRTGenerateGetIidInterceptors" />
+    <CompilerVisibleProperty Include="CsWinRTMigrationTargetFrameworks" />
     <CompilerVisibleProperty Include="CsWinRTAotOptimizerEnabled" />
     <CompilerVisibleProperty Include="CsWinRTAotExportsEnabled" />
     <CompilerVisibleProperty Include="CsWinRTRcwFactoryFallbackGeneratorForceOptIn" />

@@ -191,6 +191,18 @@ if ErrorLevel 1 (
   exit /b !ErrorLevel!
 )
 
+:migrationtest
+rem Run migration code-fix tests
+if "%cswinrt_platform%" NEQ "arm64" (
+  echo Running migration tests for %cswinrt_platform% %cswinrt_configuration%
+  call :exec "%this_dir%Tests\MigrationTest\bin\%cswinrt_platform%\%cswinrt_configuration%\net10.0\MigrationTest.exe" --progress off
+  if ErrorLevel 1 (
+    echo.
+    echo ERROR: Migration test failed, skipping NuGet pack
+    exit /b !ErrorLevel!
+  )
+)
+
 :hosttest
 rem Run WinRT.Host tests
 echo Running cswinrt host tests for %cswinrt_platform% %cswinrt_configuration%
@@ -259,6 +271,7 @@ set net10_runtime_ref=%this_dir%_build\%cswinrt_platform%\%cswinrt_configuration
 set net10_runtime_ref_xml=%this_dir%_build\%cswinrt_platform%\%cswinrt_configuration%\WinRT.Runtime\ref\WinRT.Runtime.xml
 set source_generator_roslyn4120=%this_dir%Authoring\WinRT.SourceGenerator.Roslyn4120\bin\%cswinrt_configuration%\netstandard2.0\WinRT.SourceGenerator.dll
 set source_generator=%this_dir%WinRT.SourceGenerator\bin\%cswinrt_configuration%\net10.0\WinRT.SourceGenerator.dll
+set migration_code_fixes=%this_dir%Authoring\WinRT.Migration.CodeFixes\bin\%cswinrt_configuration%\netstandard2.0\WinRT.Migration.CodeFixes.dll
 set winrt_host_%cswinrt_platform%=%this_dir%_build\%cswinrt_platform%\%cswinrt_configuration%\WinRT.Host\bin\WinRT.Host.dll
 set winrt_host_resource_%cswinrt_platform%=%this_dir%_build\%cswinrt_platform%\%cswinrt_configuration%\WinRT.Host\bin\WinRT.Host.dll.mui
 set winrt_shim=%this_dir%Authoring\WinRT.Host.Shim\bin\%cswinrt_configuration%\net10.0\WinRT.Host.Shim.dll
@@ -284,7 +297,7 @@ set "cswinrt_package_properties=cswinrt_nuget_version=%cswinrt_version_string%;"
 for %%p in (
   interop_winmd
   net10_runtime net10_runtime_ref net10_runtime_ref_xml
-  source_generator winrt_shim run_cswinrt_generator_task
+  source_generator migration_code_fixes winrt_shim run_cswinrt_generator_task
   winrt_host_x86 winrt_host_x64 winrt_host_arm winrt_host_arm64
   winrt_host_resource_x86 winrt_host_resource_x64
   winrt_host_resource_arm winrt_host_resource_arm64

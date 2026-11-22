@@ -25,6 +25,7 @@
     <File Path="../docs/embedded.md" />
     <File Path="../docs/hosting.md" />
     <File Path="../docs/interop.md" />
+    <File Path="../docs/migration-2-to-3.md" />
     <File Path="../docs/runtime-class-projections.md" />
     <File Path="../docs/structure.md" />
     <File Path="../docs/usage.md" />
@@ -306,6 +307,12 @@
       <Platform Solution="*|x86" Project="x86" />
       <Build Solution="*|ARM64" Project="false" />
     </Project>
+    <Project Path="Tests/MigrationTest/MigrationTest.csproj">
+      <Platform Solution="*|ARM64" Project="ARM64" />
+      <Platform Solution="*|x64" Project="x64" />
+      <Platform Solution="*|x86" Project="x86" />
+      <Build Solution="*|ARM64" Project="false" />
+    </Project>
     <Project Path="Tests/TestComponentCSharp/TestComponentCSharp.vcxproj" Id="7e3a9ab3-8cbb-4b9c-ba76-0fe7108dcaeb">
       <Build Solution="*|ARM64" Project="false" />
     </Project>
@@ -516,6 +523,7 @@
     <File Path="Tests/FunctionalTests/PublishProfiles/win-x86.pubxml" />
   </Folder>
   <Project Path="WinRT.SourceGenerator/WinRT.SourceGenerator.csproj" />
+  <Project Path="Authoring/WinRT.Migration.CodeFixes/WinRT.Migration.CodeFixes.csproj" />
   <Project Path="WinRT.Generator.Core/WinRT.Generator.Core.csproj" />
   <Project Path="WinRT.Generator.Tasks/WinRT.Generator.Tasks.csproj" />
   <Project Path="WinRT.Impl.Generator/WinRT.Impl.Generator.csproj" />

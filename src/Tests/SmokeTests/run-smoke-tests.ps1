@@ -13,6 +13,10 @@
         built and run, validating that the generated projection and interop assemblies, and
         the 'WinRT.Runtime' ref/impl assemblies, are wired up correctly.
 
+      * Migration: a copied, deliberately broken .1 consumer receives the bundled typed-event
+        fixer through the package. 'dotnet format' discovers/applies it; the fixed delegate builds
+        and runs on CoreCLR or Native AOT. The original fixture is never edited.
+
       * MixedConsumption: a .NET app combines Windows SDK projections with an authored component
         implementing an SDK interface and taking an SDK type in a constructor. This validates
         component projection generation against SDK forwarders without duplicate type definitions
@@ -84,7 +88,7 @@
     Version of the 'Microsoft.Windows.CsWinRT' package to consume.
 
 .PARAMETER Test
-    Which smoke test(s) to run: 'Consumption', 'MixedConsumption', 'ExclusiveToConsumption', 'Preinitialization',
+    Which smoke test(s) to run: 'Consumption', 'Migration', 'MixedConsumption', 'ExclusiveToConsumption', 'Preinitialization',
     'Authoring', 'Projection', 'ProjectionReferences', 'GraphBuild', 'PrivateAssets', 'WindowsSdkProjection',
     'WindowsSdkXamlProjection', 'ComponentUsingProjection', or 'All' (the default). The CI runs each test as its own
     step (passing a single value), so an individual failure is reported in isolation; local builds use the default 'All'.
@@ -118,7 +122,7 @@ param (
     [Parameter(Mandatory = $true)]
     [string] $PackageVersion,
 
-    [ValidateSet('All', 'Consumption', 'MixedConsumption', 'ExclusiveToConsumption', 'Preinitialization', 'Authoring', 'Projection', 'ProjectionReferences', 'GraphBuild', 'PrivateAssets', 'WindowsSdkProjection', 'WindowsSdkXamlProjection', 'ComponentUsingProjection')]
+    [ValidateSet('All', 'Consumption', 'Migration', 'MixedConsumption', 'ExclusiveToConsumption', 'Preinitialization', 'Authoring', 'Projection', 'ProjectionReferences', 'GraphBuild', 'PrivateAssets', 'WindowsSdkProjection', 'WindowsSdkXamlProjection', 'ComponentUsingProjection')]
     [string] $Test = 'All',
 
     [ValidateSet('CoreCLR', 'NativeAot')]
@@ -1080,6 +1084,122 @@ function Invoke-ExclusiveToConsumptionSmokeTest {
             throw 'Changing only the inclusion filter did not regenerate the reference policy.'
         }
     }
+}
+
+function Invoke-MigrationSmokeTest {
+    $fixture = Join-Path $smokeTestsRoot ('obj\migration-' + [Guid]::NewGuid().ToString('N'))
+    $null = New-Item -ItemType Directory -Path $fixture
+    Copy-Item -LiteralPath (Join-Path $smokeTestsRoot 'Migration\Migration.csproj') -Destination $fixture
+    Copy-Item -LiteralPath (Join-Path $smokeTestsRoot 'Migration\Program.cs') -Destination $fixture
+    $project = Join-Path $fixture 'Migration.csproj'
+    $source = Join-Path $fixture 'Program.cs'
+
+    # Formatter workspace loading cannot receive our build's global properties; persist them in the isolated copy
+    [xml] $xml = Get-Content -LiteralPath $project -Raw
+    $properties = $xml.CreateElement('PropertyGroup')
+    foreach ($entry in @{
+        CsWinRTPackageSource = $resolvedPackageSource
+        CsWinRTPackageVersion = $PackageVersion
+        RestoreSources = "$resolvedPackageSource;`$(CsWinRTDependenciesSource)"
+    }.GetEnumerator()) {
+        $element = $xml.CreateElement($entry.Key)
+        $element.InnerText = $entry.Value
+        $null = $properties.AppendChild($element)
+    }
+    $null = $xml.Project.AppendChild($properties)
+    $items = $xml.CreateElement('ItemGroup')
+    $reference = $xml.CreateElement('PackageReference')
+    $reference.SetAttribute('Update', 'Microsoft.Windows.CsWinRT')
+    $reference.SetAttribute('Version', $PackageVersion)
+    $null = $items.AppendChild($reference)
+    $null = $xml.Project.AppendChild($items)
+    $xml.Save($project)
+
+    $query = Invoke-MSBuildQuery -Project $project -Arguments @('-t:ResolveReferences', '-getItem:Analyzer')
+    if (-not ($query.Items.Analyzer | Where-Object {
+        [IO.Path]::GetFileName($_.Identity) -eq 'WinRT.Migration.CodeFixes.dll'
+    })) {
+        throw 'The restored package did not supply the migration fixer.'
+    }
+
+    $targetOutput = & dotnet msbuild $project -nologo @(
+        '-p:TargetFrameworks=net10.0-windows10.0.26100.1%3Bnet10.0-windows10.0.26100.0'
+        '-getProperty:CsWinRTMigrationTargetFrameworks,TargetFramework'
+    )
+    if ($LASTEXITCODE -ne 0) {
+        throw 'The migration target-list query failed.'
+    }
+    $targets = ($targetOutput -join [Environment]::NewLine) | ConvertFrom-Json
+    if ($targets.Properties.CsWinRTMigrationTargetFrameworks -ne 'net10.0-windows10.0.26100.1,net10.0-windows10.0.26100.0') {
+        throw 'The package did not preserve the full target list for migration code fixes.'
+    }
+
+    $multilineTargets = "`r`n  net10.0-windows10.0.26100.1%3B`r`n`t net10.0-windows10.0.26100.0`r`n"
+    $targetOutput = & dotnet msbuild $project -nologo @(
+        "-p:TargetFrameworks=$multilineTargets"
+        '-getProperty:CsWinRTMigrationTargetFrameworks,TargetFramework'
+    )
+    if ($LASTEXITCODE -ne 0 -or
+        (($targetOutput -join [Environment]::NewLine) | ConvertFrom-Json).Properties.CsWinRTMigrationTargetFrameworks -ne
+            'net10.0-windows10.0.26100.1,net10.0-windows10.0.26100.0') {
+        throw 'The package did not normalize multiline target intent for migration code fixes.'
+    }
+
+    $output = (& dotnet build $project --no-restore @commonBuildArgs 2>&1) -join [Environment]::NewLine
+    if ($LASTEXITCODE -eq 0 -or $output -notmatch 'error CS0246' -or $output -match 'CS8032|CS8034') {
+        throw "Expected missing legacy names, with no analyzer-load failure.`n$output"
+    }
+
+    # Apply precise attribute diagnostics before the broad compiler-error family
+    & dotnet format analyzers $project --diagnostics CSWINRT2051 --severity info --no-restore --verbosity minimal
+    if ($LASTEXITCODE -ne 0 -or -not (Get-Content -LiteralPath $source -Raw).Contains('global::WindowsRuntime.WindowsRuntimeClassNameAttribute')) {
+        throw 'The packaged attribute migration fixer was not discovered or applied.'
+    }
+
+    & dotnet format analyzers $project --diagnostics CSWINRT2053 --severity info --no-restore --verbosity minimal
+    $convertedSource = Get-Content -LiteralPath $source -Raw
+    if ($LASTEXITCODE -ne 0 -or -not $convertedSource.Contains('global::System.ReadOnlySpan<int>') -or
+        -not $convertedSource.Contains('global::System.Span<int>')) {
+        throw 'The packaged array-to-span fixer was not discovered or applied.'
+    }
+
+    & dotnet format analyzers $project --diagnostics CS0234 CS0246 --no-restore --verbosity minimal
+    if ($LASTEXITCODE -ne 0 -or -not (Get-Content -LiteralPath $source -Raw).Contains('global::System.EventHandler<object, int>')) {
+        throw 'The packaged typed-event fixer was not discovered or applied.'
+    }
+
+    & dotnet format analyzers $project --diagnostics CS1503 CS0266 CS0664 --no-restore --verbosity minimal
+    $convertedSource = Get-Content -LiteralPath $source -Raw
+    if ($LASTEXITCODE -ne 0 -or -not $convertedSource.Contains('(float)(Next())') -or
+        -not $convertedSource.Contains('(float)((double)(value))') -or -not $convertedSource.Contains('(float)(1d / 3)')) {
+        throw 'The packaged geometry narrowing fixer was not discovered or applied.'
+    }
+
+    & dotnet format analyzers $project --diagnostics CS0234 CS0246 --no-restore --verify-no-changes --verbosity minimal
+    if ($LASTEXITCODE -ne 0) {
+        throw 'The migration fix was not idempotent.'
+    }
+
+    & dotnet format analyzers $project --diagnostics CSWINRT2051 --severity info --no-restore --verify-no-changes --verbosity minimal
+    if ($LASTEXITCODE -ne 0) {
+        throw 'The attribute migration was not idempotent.'
+    }
+
+    & dotnet format analyzers $project --diagnostics CSWINRT2053 --severity info --no-restore --verify-no-changes --verbosity minimal
+    if ($LASTEXITCODE -ne 0) {
+        throw 'The array-to-span migration was not idempotent.'
+    }
+
+    & dotnet format analyzers $project --diagnostics CS1503 CS0266 CS0664 --no-restore --verify-no-changes --verbosity minimal
+    if ($LASTEXITCODE -ne 0) {
+        throw 'The geometry narrowing migration was not idempotent.'
+    }
+
+    Invoke-ConsumptionSmokeTest -Name 'Migration' -Project $project
+}
+
+if ($Test -in @('All', 'Migration')) {
+    Invoke-MigrationSmokeTest
 }
 
 if ($Test -in @('All', 'Consumption')) {

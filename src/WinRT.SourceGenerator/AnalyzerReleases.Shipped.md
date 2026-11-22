@@ -57,3 +57,6 @@ CSWINRT2047 | WindowsRuntime.SourceGenerator | Error | Authored parameter name c
 CSWINRT2048 | WindowsRuntime.SourceGenerator | Warning | Reading from a write-only 'Span<T>' parameter
 CSWINRT2049 | WindowsRuntime.SourceGenerator | Error | Invalid Windows Runtime metadata exclusion
 CSWINRT2050 | WindowsRuntime.SourceGenerator | Error | Ignored type in exported Windows Runtime signature
+CSWINRT2051 | WindowsRuntime.SourceGenerator | Info | Migrate legacy CsWinRT attribute
+CSWINRT2052 | WindowsRuntime.SourceGenerator | Info | Review legacy CsWinRT attribute contract
+CSWINRT2053 | WindowsRuntime.SourceGenerator | Info | Migrate legacy array parameter to span

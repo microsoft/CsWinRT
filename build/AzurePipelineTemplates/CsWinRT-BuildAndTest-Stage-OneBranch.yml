@@ -68,6 +68,7 @@ jobs:
           net10.0/ref/WinRT.Runtime.dll;
           native/WinRT.Host.dll;
           netstandard2.0/WinRT.Generator.Tasks.dll;
+          netstandard2.0/WinRT.Migration.CodeFixes.dll;
           net10.0/native/cswinrtinteropgen.exe;
           net10.0/native/cswinrtimplgen.exe;
           net10.0/native/cswinrtprojectiongen.exe;

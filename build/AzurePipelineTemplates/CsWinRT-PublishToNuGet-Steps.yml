@@ -102,6 +102,7 @@ steps:
         net10_runtime_ref=$(Build.SourcesDirectory)\\release_x86\\net10.0\\ref\\WinRT.Runtime.dll;\
         net10_runtime_ref_xml=$(Build.SourcesDirectory)\\release_x86\\net10.0\\ref\\WinRT.Runtime.xml;\
         source_generator=$(Build.SourcesDirectory)\\release_x86\\net10.0\\WinRT.SourceGenerator.dll;\
+        migration_code_fixes=$(Build.SourcesDirectory)\\release_x86\\netstandard2.0\\WinRT.Migration.CodeFixes.dll;\
         winrt_shim=$(Build.SourcesDirectory)\\release_x86\\net10.0\\WinRT.Host.Shim.dll;\
         winrt_host_x86=$(Build.SourcesDirectory)\\release_x86\\native\\WinRT.Host.dll;\
         winrt_host_x64=$(Build.SourcesDirectory)\\release_x64\\native\\WinRT.Host.dll;\
@@ -153,6 +154,26 @@ steps:
       pwsh: true
       filePath: $(Build.SourcesDirectory)\src\Tests\SmokeTests\run-smoke-tests.ps1
       arguments: -PackageSource "$(ob_outputDirectory)\packages" -PackageVersion "$(NugetVersion)" -Test Consumption -Runtime CoreCLR
+      workingDirectory: $(Build.SourcesDirectory)
+
+  - task: PowerShell@2
+    displayName: Run Migration smoke test (CoreCLR)
+    continueOnError: true
+    inputs:
+      pwsh: true
+      targetType: filePath
+      filePath: $(Build.SourcesDirectory)\src\Tests\SmokeTests\run-smoke-tests.ps1
+      arguments: -PackageSource "$(ob_outputDirectory)\packages" -PackageVersion "$(NugetVersion)" -Test Migration -Runtime CoreCLR
+      workingDirectory: $(Build.SourcesDirectory)
+
+  - task: PowerShell@2
+    displayName: Run Migration smoke test (NAOT)
+    continueOnError: true
+    inputs:
+      pwsh: true
+      targetType: filePath
+      filePath: $(Build.SourcesDirectory)\src\Tests\SmokeTests\run-smoke-tests.ps1
+      arguments: -PackageSource "$(ob_outputDirectory)\packages" -PackageVersion "$(NugetVersion)" -Test Migration -Runtime NativeAot
       workingDirectory: $(Build.SourcesDirectory)
 
   - task: PowerShell@2
