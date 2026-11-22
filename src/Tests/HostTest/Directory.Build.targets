@@ -5,8 +5,6 @@
     <MsAppxPackageTargets>$(MSBuildProjectDirectory)/DoNotImport_MsAppxPackageTargets.targets</MsAppxPackageTargets>
     <PrepareForRunDependsOn>$(PrepareForRunDependsOn);CopyTestAssets</PrepareForRunDependsOn>
     <HostTestSourceDir>$([MSBuild]::NormalizeDirectory('$(MSBuildThisFileDirectory)'))</HostTestSourceDir>
-    <TestProjectionOutDir>$([MSBuild]::NormalizeDirectory('$(MSBuildThisFileDirectory)..\..\Projections\Test\bin', '$(Platform)', '$(Configuration)', 'net8.0'))</TestProjectionOutDir>
-    <TestHostProbeByClassOutDir>$([MSBuild]::NormalizeDirectory('$(MSBuildThisFileDirectory)..\..\Projections\TestHost.ProbeByClass\bin', '$(Platform)', '$(Configuration)', 'net8.0'))</TestHostProbeByClassOutDir>
   </PropertyGroup>
 
   <!--Rename host/test dlls for various tests (requires disabling hardlinks)-->
@@ -23,26 +21,26 @@
             $(BuildOutDir)WinRT.Host\bin\WinRT.Host.dll;
             $(HostTestSourceDir)WinRT.Host.runtimeconfig.json;
             $(OutDir)WinRT.Host.Shim.dll;
-            $(TestHostProbeByClassOutDir)TestHost.ProbeByClass.dll;
-            $(TestProjectionOutDir)Test.dll;
+            $(OutDir)TestHost.ProbeByClass.dll;
+            $(OutDir)Test.dll;
             $(BuildOutDir)WinRT.Host\bin\WinRT.Host.dll;
             $(HostTestSourceDir)WinRT.Host.runtimeconfig.json;
             $(OutDir)WinRT.Host.Shim.dll;
             $(BuildOutDir)WinRT.Host\bin\WinRT.Host.dll;
             $(HostTestSourceDir)WinRT.Host.runtimeconfig.json;
             $(OutDir)WinRT.Host.Shim.dll;
-            $(TestHostProbeByClassOutDir)TestHost.ProbeByClass.dll;
-            $(TestProjectionOutDir)Test.dll;
+            $(OutDir)TestHost.ProbeByClass.dll;
+            $(OutDir)Test.dll;
             $(BuildOutDir)WinRT.Host\bin\WinRT.Host.dll;
             $(HostTestSourceDir)Test.Host.runtimeconfig.json;
             $(OutDir)WinRT.Host.Shim.dll;
-            $(TestHostProbeByClassOutDir)TestHost.ProbeByClass.dll;
-            $(TestProjectionOutDir)Test.dll;
+            $(OutDir)TestHost.ProbeByClass.dll;
+            $(OutDir)Test.dll;
             $(BuildOutDir)WinRT.Host\bin\WinRT.Host.dll;
             $(HostTestSourceDir)WinRT.Host.runtimeconfig.json;
             $(OutDir)WinRT.Host.Shim.dll;
-            $(TestHostProbeByClassOutDir)TestHost.ProbeByClass.dll;
-            $(TestProjectionOutDir)Test.dll"
+            $(OutDir)TestHost.ProbeByClass.dll;
+            $(OutDir)Test.dll"
           DestinationFiles="
             $(OutDir)WinRT.Host.dll.mui;
             $(OutDir)WinRT.Host.dll;
