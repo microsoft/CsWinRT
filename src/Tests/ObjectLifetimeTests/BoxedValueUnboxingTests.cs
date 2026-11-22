@@ -2,7 +2,9 @@ using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Threading;
+using Microsoft.UI.Xaml;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Windows.Foundation;
 using WindowsRuntime.InteropServices;
 using WindowsRuntime.InteropServices.Marshalling;
 
@@ -14,17 +16,22 @@ public sealed unsafe class BoxedValueUnboxingTests
     [TestMethod]
     public void GenericDelegateUnboxingReleasesNativeReferences()
     {
-        NativeInspectable* value = NativeInspectable.Create(runtimeClassName: null);
-        NativeInspectable* box = NativeInspectable.CreateDelegateBox(
-            "Windows.Foundation.IReference`1<Windows.Foundation.EventHandler`1<Object>>",
-            value);
+        void* value = NativeInspectable.Create(runtimeClassName: null);
+        void* box = NativeInspectable.CreateReference(
+            runtimeClassName: "Windows.Foundation.IReference`1<Windows.Foundation.EventHandler`1<Object>>",
+            value: value);
 
         try
         {
             AssertConvertsTo(box, typeof(EventHandler<object>));
 
-            CollectUntil(() => value->ReferenceCount == 1, () => $"box={box->ReferenceCount}, value={value->ReferenceCount}");
-            Assert.AreEqual(1, box->ReferenceCount);
+            new AsyncQueue(((ObjectLifetimeTests.Lifted.App)Application.Current).m_window.DispatcherQueue)
+                .CollectUntilTrue(
+                    fn: () => NativeInspectable.GetReferenceCount(value) == 1,
+                    timeoutMessage: "Delegate unboxing retained a native reference after collection")
+                .Run();
+
+            Assert.AreEqual(1, NativeInspectable.GetReferenceCount(box));
         }
         finally
         {
@@ -36,15 +43,23 @@ public sealed unsafe class BoxedValueUnboxingTests
     [TestMethod]
     public void ArrayUnboxingReleasesNativeReferences()
     {
-        NativeInspectable* element = NativeInspectable.Create(runtimeClassName: null);
-        NativeInspectable* box = NativeInspectable.CreateArrayBox("Windows.Foundation.IReferenceArray`1<Object>", element, count: 2);
+        void* element = NativeInspectable.Create(runtimeClassName: null);
+        void* box = NativeInspectable.CreateReferenceArray(
+            runtimeClassName: "Windows.Foundation.IReferenceArray`1<Object>",
+            element: element,
+            count: 2);
 
         try
         {
             AssertConvertsTo(box, typeof(object[]));
 
-            CollectUntil(() => element->ReferenceCount == 1, () => $"box={box->ReferenceCount}, element={element->ReferenceCount}");
-            Assert.AreEqual(1, box->ReferenceCount);
+            new AsyncQueue(((ObjectLifetimeTests.Lifted.App)Application.Current).m_window.DispatcherQueue)
+                .CollectUntilTrue(
+                    fn: () => NativeInspectable.GetReferenceCount(element) == 1,
+                    timeoutMessage: "Array unboxing retained a native reference after collection")
+                .Run();
+
+            Assert.AreEqual(1, NativeInspectable.GetReferenceCount(box));
         }
         finally
         {
@@ -55,20 +70,9 @@ public sealed unsafe class BoxedValueUnboxingTests
 
     // Keeps the converted object out of the test method frame, so it can be collected
     [MethodImpl(MethodImplOptions.NoInlining)]
-    private static void AssertConvertsTo(NativeInspectable* box, Type expectedType)
+    private static void AssertConvertsTo(void* box, Type expectedType)
     {
         Assert.IsInstanceOfType(WindowsRuntimeObjectMarshaller.ConvertToManaged(box), expectedType);
-    }
-
-    private static void CollectUntil(Func<bool> condition, Func<string> state)
-    {
-        for (int i = 0; i < 20 && !condition(); i++)
-        {
-            GC.Collect();
-            GC.WaitForPendingFinalizers();
-        }
-
-        Assert.IsTrue(condition(), $"Unboxing retained a native reference after collection ({state()})");
     }
 
     /// <summary>
@@ -79,7 +83,7 @@ public sealed unsafe class BoxedValueUnboxingTests
     /// The object answers every <c>QueryInterface</c> except for reference tracking, custom marshalling and weak
     /// references. Its state is allocated outside the managed heap, so the count measures native ownership.
     /// </remarks>
-    private struct NativeInspectable
+    private static class NativeInspectable
     {
         private static readonly Guid[] UnsupportedIids =
         [
@@ -88,59 +92,117 @@ public sealed unsafe class BoxedValueUnboxingTests
             new("00000038-0000-0000-C000-000000000046"), // IWeakReferenceSource
         ];
 
-        private void** _vtable;
-        public int ReferenceCount;
-        private char* _runtimeClassName;
-        private NativeInspectable* _value;
-        private uint _count;
+        [FixedAddressValueType]
+        private static readonly IInspectableVftbl InspectableVtable = new()
+        {
+            QueryInterface = &QueryInterface,
+            AddRef = &AddRef,
+            Release = &ReleaseUnmanaged,
+            GetIids = &GetIids,
+            GetRuntimeClassName = &GetRuntimeClassName,
+            GetTrustLevel = &GetTrustLevel
+        };
+
+        [FixedAddressValueType]
+        private static readonly IReferenceVftbl ReferenceVtable = new()
+        {
+            QueryInterface = &QueryInterface,
+            AddRef = &AddRef,
+            Release = &ReleaseUnmanaged,
+            GetIids = &GetIids,
+            GetRuntimeClassName = &GetRuntimeClassName,
+            GetTrustLevel = &GetTrustLevel,
+            get_Value = &GetValue
+        };
+
+        [FixedAddressValueType]
+        private static readonly ReferenceArrayVftbl ReferenceArrayVtable = new()
+        {
+            QueryInterface = &QueryInterface,
+            AddRef = &AddRef,
+            Release = &ReleaseUnmanaged,
+            GetIids = &GetIids,
+            GetRuntimeClassName = &GetRuntimeClassName,
+            GetTrustLevel = &GetTrustLevel,
+            get_Value = &GetArray
+        };
+
+        /// <summary>
+        /// Binding type for the <c>IReferenceArray`1</c> vtable, for arrays of interface pointers.
+        /// </summary>
+        [StructLayout(LayoutKind.Sequential)]
+        private struct ReferenceArrayVftbl
+        {
+            public delegate* unmanaged[MemberFunction]<void*, Guid*, void**, int> QueryInterface;
+            public delegate* unmanaged[MemberFunction]<void*, uint> AddRef;
+            public delegate* unmanaged[MemberFunction]<void*, uint> Release;
+            public delegate* unmanaged[MemberFunction]<void*, uint*, Guid**, int> GetIids;
+            public delegate* unmanaged[MemberFunction]<void*, void**, int> GetRuntimeClassName;
+            public delegate* unmanaged[MemberFunction]<void*, TrustLevel*, int> GetTrustLevel;
+            public delegate* unmanaged[MemberFunction]<void*, uint*, void***, int> get_Value;
+        }
+
+        private struct Instance
+        {
+            public void* Vtable;
+            public int ReferenceCount;
+            public char* RuntimeClassName;
+            public int RuntimeClassNameLength;
+            public Instance* Value;
+            public uint Count;
+        }
 
         [DllImport("combase.dll", ExactSpelling = true)]
         private static extern int WindowsCreateString(char* sourceString, uint length, void** hstring);
 
-        public static NativeInspectable* Create(string runtimeClassName)
+        public static void* Create(string runtimeClassName)
         {
-            void** vtable = (void**)NativeMemory.AllocZeroed((nuint)(7 * sizeof(void*)));
-            vtable[0] = (delegate* unmanaged[MemberFunction]<NativeInspectable*, Guid*, void**, int>)&QueryInterface;
-            vtable[1] = (delegate* unmanaged[MemberFunction]<NativeInspectable*, uint>)&AddRef;
-            vtable[2] = (delegate* unmanaged[MemberFunction]<NativeInspectable*, uint>)&ReleaseUnmanaged;
-            vtable[3] = (delegate* unmanaged[MemberFunction]<NativeInspectable*, uint*, Guid**, int>)&GetIids;
-            vtable[4] = (delegate* unmanaged[MemberFunction]<NativeInspectable*, void**, int>)&GetRuntimeClassName;
-            vtable[5] = (delegate* unmanaged[MemberFunction]<NativeInspectable*, int*, int>)&GetTrustLevel;
-
-            NativeInspectable* instance = (NativeInspectable*)NativeMemory.AllocZeroed((nuint)sizeof(NativeInspectable));
-            instance->_vtable = vtable;
-            instance->ReferenceCount = 1;
-            instance->_runtimeClassName = runtimeClassName is null ? null : (char*)Marshal.StringToHGlobalUni(runtimeClassName);
-            return instance;
+            return Create(runtimeClassName, Unsafe.AsPointer(in InspectableVtable));
         }
 
-        public static NativeInspectable* CreateDelegateBox(string runtimeClassName, NativeInspectable* value)
+        public static void* CreateReference(string runtimeClassName, void* value)
         {
-            NativeInspectable* box = Create(runtimeClassName);
-            box->_vtable[6] = (delegate* unmanaged[MemberFunction]<NativeInspectable*, void**, int>)&GetValue;
-            box->_value = value;
+            Instance* box = Create(runtimeClassName, Unsafe.AsPointer(in ReferenceVtable));
+            box->Value = (Instance*)value;
             return box;
         }
 
-        public static NativeInspectable* CreateArrayBox(string runtimeClassName, NativeInspectable* element, uint count)
+        public static void* CreateReferenceArray(string runtimeClassName, void* element, uint count)
         {
-            NativeInspectable* box = Create(runtimeClassName);
-            box->_vtable[6] = (delegate* unmanaged[MemberFunction]<NativeInspectable*, uint*, void***, int>)&GetArray;
-            box->_value = element;
-            box->_count = count;
+            Instance* box = Create(runtimeClassName, Unsafe.AsPointer(in ReferenceArrayVtable));
+            box->Value = (Instance*)element;
+            box->Count = count;
             return box;
         }
 
-        public static void Release(NativeInspectable* instance)
+        public static int GetReferenceCount(void* pointer) =>
+            Volatile.Read(ref ((Instance*)pointer)->ReferenceCount);
+
+        public static void Release(void* pointer)
         {
-            if (instance is not null)
+            if (pointer is not null)
             {
-                _ = ReleaseCore(instance);
+                _ = ReleaseCore((Instance*)pointer);
             }
         }
 
+        private static Instance* Create(string runtimeClassName, void* vtable)
+        {
+            Instance* instance = (Instance*)NativeMemory.AllocZeroed((nuint)sizeof(Instance));
+            instance->Vtable = vtable;
+            instance->ReferenceCount = 1;
+
+            if (runtimeClassName is not null)
+            {
+                instance->RuntimeClassName = (char*)Marshal.StringToHGlobalUni(runtimeClassName);
+                instance->RuntimeClassNameLength = runtimeClassName.Length;
+            }
+
+            return instance;
+        }
+
         [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
-        private static int QueryInterface(NativeInspectable* instance, Guid* iid, void** result)
+        private static int QueryInterface(void* pointer, Guid* iid, void** result)
         {
             *result = null;
 
@@ -149,20 +211,20 @@ public sealed unsafe class BoxedValueUnboxingTests
                 return unchecked((int)0x80004002);
             }
 
-            _ = Interlocked.Increment(ref instance->ReferenceCount);
-            *result = instance;
+            _ = Interlocked.Increment(ref ((Instance*)pointer)->ReferenceCount);
+            *result = pointer;
             return 0;
         }
 
         [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
-        private static uint AddRef(NativeInspectable* instance) =>
-            (uint)Interlocked.Increment(ref instance->ReferenceCount);
+        private static uint AddRef(void* pointer) =>
+            (uint)Interlocked.Increment(ref ((Instance*)pointer)->ReferenceCount);
 
         [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
-        private static uint ReleaseUnmanaged(NativeInspectable* instance) => ReleaseCore(instance);
+        private static uint ReleaseUnmanaged(void* pointer) => ReleaseCore((Instance*)pointer);
 
         [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
-        private static int GetIids(NativeInspectable* instance, uint* count, Guid** iids)
+        private static int GetIids(void* pointer, uint* count, Guid** iids)
         {
             *count = 0;
             *iids = null;
@@ -170,54 +232,60 @@ public sealed unsafe class BoxedValueUnboxingTests
         }
 
         [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
-        private static int GetRuntimeClassName(NativeInspectable* instance, void** name)
+        private static int GetRuntimeClassName(void* pointer, void** name)
         {
+            Instance* instance = (Instance*)pointer;
+
             *name = null;
 
-            return instance->_runtimeClassName is null
+            return instance->RuntimeClassName is null
                 ? 0
-                : WindowsCreateString(instance->_runtimeClassName, (uint)new string(instance->_runtimeClassName).Length, name);
+                : WindowsCreateString(instance->RuntimeClassName, (uint)instance->RuntimeClassNameLength, name);
         }
 
         [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
-        private static int GetTrustLevel(NativeInspectable* instance, int* trustLevel)
+        private static int GetTrustLevel(void* pointer, TrustLevel* trustLevel)
         {
-            *trustLevel = 0;
+            *trustLevel = TrustLevel.BaseTrust;
             return 0;
         }
 
+        // Returns an owned reference, as required for 'get_Value' outputs
         [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
-        private static int GetValue(NativeInspectable* instance, void** value)
+        private static int GetValue(void* pointer, void* value)
         {
-            _ = Interlocked.Increment(ref instance->_value->ReferenceCount);
-            *value = instance->_value;
+            Instance* instance = (Instance*)pointer;
+
+            _ = Interlocked.Increment(ref instance->Value->ReferenceCount);
+            *(void**)value = instance->Value;
             return 0;
         }
 
+        // Returns an owned buffer of owned element references, as required for 'get_Value' outputs
         [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
-        private static int GetArray(NativeInspectable* instance, uint* count, void*** value)
+        private static int GetArray(void* pointer, uint* count, void*** value)
         {
-            void** array = (void**)Marshal.AllocCoTaskMem((int)instance->_count * sizeof(void*));
+            Instance* instance = (Instance*)pointer;
+            void** array = (void**)Marshal.AllocCoTaskMem((int)instance->Count * sizeof(void*));
 
-            for (uint i = 0; i < instance->_count; i++)
+            for (uint i = 0; i < instance->Count; i++)
             {
-                _ = Interlocked.Increment(ref instance->_value->ReferenceCount);
-                array[i] = instance->_value;
+                _ = Interlocked.Increment(ref instance->Value->ReferenceCount);
+                array[i] = instance->Value;
             }
 
-            *count = instance->_count;
+            *count = instance->Count;
             *value = array;
             return 0;
         }
 
-        private static uint ReleaseCore(NativeInspectable* instance)
+        private static uint ReleaseCore(Instance* instance)
         {
             int count = Interlocked.Decrement(ref instance->ReferenceCount);
 
             if (count == 0)
             {
-                Marshal.FreeHGlobal((nint)instance->_runtimeClassName);
-                NativeMemory.Free(instance->_vtable);
+                Marshal.FreeHGlobal((nint)instance->RuntimeClassName);
                 NativeMemory.Free(instance);
             }
 
