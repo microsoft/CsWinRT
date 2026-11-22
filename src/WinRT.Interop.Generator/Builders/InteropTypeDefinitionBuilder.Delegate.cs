@@ -775,8 +775,9 @@ internal partial class InteropTypeDefinitionBuilder
                 CilOutParameterIndices = [2],
                 CilInstructions =
                 {
+                    // Set the 'wrapperFlags' to 'CreatedWrapperFlags.NonWrapping', as the unboxed delegate is not a wrapper for the box
                     { Ldarg_2 },
-                    { CilInstruction.CreateLdcI4((int)CreatedWrapperFlags.TrackerObject) },
+                    { CilInstruction.CreateLdcI4((int)CreatedWrapperFlags.NonWrapping) },
                     { Stind_I4 },
                     { Ldarg_1 },
                     { Call, get_ReferenceIidMethod },

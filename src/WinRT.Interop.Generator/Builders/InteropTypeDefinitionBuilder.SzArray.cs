@@ -223,6 +223,15 @@ internal partial class InteropTypeDefinitionBuilder
 
             module.TopLevelTypes.Add(callbackType);
 
+            // Declare the local variables:
+            //   [0]: '<ARRAY_TYPE>' (for 'result')
+            CilLocalVariable loc_0_result = new(arrayType);
+
+            // Jump labels
+            CilInstruction ldarg_0_try = new(Ldarg_0);
+            CilInstruction ldarg_0_finally = new(Ldarg_0);
+            CilInstruction ldloc_0_epilogue = new(Ldloc_0);
+
             // Define the 'CreateArray' method as follows:
             //
             // public static Array CreateArray(uint count, void* value)
@@ -235,12 +244,37 @@ internal partial class InteropTypeDefinitionBuilder
                         interopReferences.UInt32,
                         interopReferences.Void.MakePointerType()]))
             {
+                CilLocalVariables = { loc_0_result },
                 CilInstructions =
                 {
-                    { Ldarg_0 },
+                    // <ARRAY_TYPE> result = <MARSHALLER_TYPE>.ConvertToManaged(count, value);
+                    { ldarg_0_try },
                     { Ldarg_1 },
                     { Call, marshallerType.GetMethod("ConvertToManaged"u8) },
+                    { Stloc_0 },
+                    { Leave_S, ldloc_0_epilogue.CreateLabel() },
+
+                    // 'finally' to free the array returned by 'get_Value', which is owned by this method
+                    { ldarg_0_finally },
+                    { Ldarg_1 },
+                    { Call, marshallerType.GetMethod("Free"u8) },
+                    { Endfinally },
+
+                    // return result;
+                    { ldloc_0_epilogue },
                     { Ret }
+                },
+                CilExceptionHandlers =
+                {
+                    // Setup 'try/finally' for 'value'
+                    new CilExceptionHandler
+                    {
+                        HandlerType = CilExceptionHandlerType.Finally,
+                        TryStart = ldarg_0_try.CreateLabel(),
+                        TryEnd = ldarg_0_finally.CreateLabel(),
+                        HandlerStart = ldarg_0_finally.CreateLabel(),
+                        HandlerEnd = ldloc_0_epilogue.CreateLabel()
+                    }
                 }
             };
 

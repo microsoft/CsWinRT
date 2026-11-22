@@ -1,5 +1,6 @@
 using System;
 using System.Runtime.CompilerServices;
+using System.Runtime.ExceptionServices;
 using System.Runtime.InteropServices;
 using System.Threading;
 using Microsoft.UI.Xaml;
@@ -16,6 +17,73 @@ public sealed unsafe class AgileReferenceTests
 
     [DllImport("ole32.dll", ExactSpelling = true)]
     private static extern void CoUninitialize();
+
+    [DllImport("ole32.dll", ExactSpelling = true)]
+    private static extern int CoGetObjectContext(Guid* riid, void** ppv);
+
+    [TestMethod]
+    public void DisposalReleasesContextCallback()
+    {
+        Exception error = null;
+
+        // Use a dedicated apartment, so no other thread can change the reference count of its context
+        Thread thread = new(() =>
+        {
+            void* pointer = NativeUnknown.Create();
+
+            try
+            {
+                int before = GetObjectContextReferenceCount();
+
+                for (int i = 0; i < 100; i++)
+                {
+                    WindowsRuntimeObjectReference reference = WindowsRuntimeComWrappersMarshal.CreateObjectReferenceUnsafe(
+                        externalComObject: pointer,
+                        iid: in NativeUnknown.Iid,
+                        wrapperFlags: out _);
+                    Assert.IsFalse(reference.IsFreeThreaded);
+                    reference.Dispose();
+                }
+
+                Assert.AreEqual(before, GetObjectContextReferenceCount());
+                Assert.AreEqual(1, NativeUnknown.GetReferenceCount(pointer));
+            }
+            catch (Exception e)
+            {
+                error = e;
+            }
+            finally
+            {
+                NativeUnknown.Release(pointer);
+            }
+        });
+        thread.SetApartmentState(ApartmentState.STA);
+        thread.Start();
+        thread.Join();
+
+        if (error is not null)
+        {
+            ExceptionDispatchInfo.Throw(error);
+        }
+    }
+
+    /// <summary>
+    /// Gets the number of references to the object context for the current context, excluding the ones taken to observe it.
+    /// </summary>
+    private static int GetObjectContextReferenceCount()
+    {
+        Guid iid = NativeUnknown.Iid;
+        void* context;
+
+        Marshal.ThrowExceptionForHR(CoGetObjectContext(&iid, &context));
+
+        int count = Marshal.AddRef((nint)context);
+
+        _ = Marshal.Release((nint)context);
+        _ = Marshal.Release((nint)context);
+
+        return count - 2;
+    }
 
     [TestMethod]
     public void CrossContextResolutionReleasesNativeReferences()

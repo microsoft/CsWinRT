@@ -320,6 +320,13 @@ public unsafe partial class WindowsRuntimeObjectReference
             }
         }
 
+        // Context-aware object references also own their context callback, which must be released
+        // even when releasing the wrapped object is suppressed (eg. for COM aggregation scenarios).
+        if (GetType() != typeof(FreeThreadedObjectReference))
+        {
+            Unsafe.As<ContextAwareObjectReference>(this).NativeReleaseContextCallbackUnsafe();
+        }
+
         GC.RemoveMemoryPressure(GCPressureBaseInBytes);
     }
 

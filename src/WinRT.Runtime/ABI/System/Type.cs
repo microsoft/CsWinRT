@@ -149,7 +149,20 @@ public static unsafe class TypeMarshaller
     {
         Type? abi = WindowsRuntimeValueTypeMarshaller.UnboxToManaged<Type>(value);
 
-        return abi.HasValue ? ConvertToManaged(abi.GetValueOrDefault()) : null;
+        if (!abi.HasValue)
+        {
+            return null;
+        }
+
+        // Convert the unboxed value, then release the resources it owns
+        try
+        {
+            return ConvertToManaged(abi.GetValueOrDefault());
+        }
+        finally
+        {
+            Dispose(abi.GetValueOrDefault());
+        }
     }
 
     /// <summary>
@@ -666,17 +679,25 @@ file sealed unsafe class TypeComWrappersMarshallerAttribute : WindowsRuntimeComW
 
         Type abi = WindowsRuntimeValueTypeMarshaller.UnboxToManagedUnsafe<Type>(value, in WellKnownWindowsInterfaceIIDs.IID_IReferenceOfType);
 
-        // Try to marshal the resulting type (it might not actually succeed)
-        global::System.Type? type = TypeMarshaller.ConvertToManaged(abi);
-
-        // Because this is the callback from 'ComWrappers', we're not allowed to return 'null'.
-        // So if we fail to resolve a value entirely, we just throw directy from here instead.
-        if (type is null)
+        try
         {
-            TypeExceptions.ThrowArgumentExceptionForNullType(abi);
-        }
+            // Try to marshal the resulting type (it might not actually succeed)
+            global::System.Type? type = TypeMarshaller.ConvertToManaged(abi);
 
-        return type;
+            // Because this is the callback from 'ComWrappers', we're not allowed to return 'null'.
+            // So if we fail to resolve a value entirely, we just throw directy from here instead.
+            if (type is null)
+            {
+                TypeExceptions.ThrowArgumentExceptionForNullType(abi);
+            }
+
+            return type;
+        }
+        finally
+        {
+            // The unboxed value owns its type name, which we need to release
+            TypeMarshaller.Dispose(abi);
+        }
     }
 }
 

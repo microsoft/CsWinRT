@@ -62,10 +62,10 @@ public static unsafe class WindowsRuntimeArrayMarshaller
             uint count;
             void* result;
 
-            // Unbox the underlying array (we always just discard the outer reference)
+            // Unbox the underlying array, which is returned with ownership
             IReferenceArrayVftbl.get_ValueUnsafe(referencePtr, &count, &result).Assert();
 
-            // Forward to the supplied callback
+            // Forward to the supplied callback, which takes ownership of the array
             return TCallback.CreateArray(count, result);
         }
         finally
