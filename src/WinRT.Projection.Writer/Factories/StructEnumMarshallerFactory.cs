@@ -338,6 +338,9 @@ internal static class StructEnumMarshallerFactory
         if (isEnum || blittableStruct || isNonBlittableStruct)
         {
             IndentedTextWriterCallback iidRefExpr = ObjRefNameGenerator.WriteIidReferenceExpression(type);
+            string propertyValueVtable = isEnum
+                ? (type.IsFlagsEnum ? "UInt32EnumVtable" : "Int32EnumVtable")
+                : "OtherTypeVtable";
 
             // InterfaceEntriesImpl
             writer.WriteLine(isMultiline: true, $$"""
@@ -351,7 +354,7 @@ internal static class StructEnumMarshallerFactory
                         Entries.IReferenceValue.IID = {{iidRefExpr}};
                         Entries.IReferenceValue.Vtable = {{nameStripped}}ReferenceImpl.Vtable;
                         Entries.IPropertyValue.IID = global::WindowsRuntime.InteropServices.WellKnownInterfaceIIDs.IID_IPropertyValue;
-                        Entries.IPropertyValue.Vtable = global::WindowsRuntime.InteropServices.IPropertyValueImpl.OtherTypeVtable;
+                        Entries.IPropertyValue.Vtable = global::WindowsRuntime.InteropServices.IPropertyValueImpl.{{propertyValueVtable}};
                         Entries.IStringable.IID = global::WindowsRuntime.InteropServices.WellKnownInterfaceIIDs.IID_IStringable;
                         Entries.IStringable.Vtable = global::WindowsRuntime.InteropServices.IStringableImpl.Vtable;
                         Entries.IWeakReferenceSource.IID = global::WindowsRuntime.InteropServices.WellKnownInterfaceIIDs.IID_IWeakReferenceSource;

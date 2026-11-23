@@ -215,7 +215,7 @@ file static unsafe class Int32ReferenceImpl
 /// <summary>
 /// The <c>IPropertyValue</c> implementation for <see cref="int"/>.
 /// </summary>
-file static unsafe class Int32PropertyValueImpl
+internal static unsafe class Int32PropertyValueImpl
 {
     /// <summary>
     /// The <see cref="IPropertyValueVftbl"/> value for the managed <c>IPropertyValue</c> implementation.
