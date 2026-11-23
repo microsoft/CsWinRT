@@ -51,7 +51,6 @@ internal unsafe struct ManagedWeakReference
     }
 
     /// <inheritdoc cref="IUnknownVftbl.QueryInterfaceUnsafe(void*, System.Guid*, void**)"/>
-    /// <remarks>This method never throws.</remarks>
     public HRESULT QueryInterface(Guid* riid, void** ppvObject)
     {
         if (ppvObject is null)
@@ -75,14 +74,12 @@ internal unsafe struct ManagedWeakReference
     }
 
     /// <inheritdoc cref="IUnknownVftbl.AddRefUnsafe"/>
-    /// <remarks>This method never throws.</remarks>
     public uint AddRef()
     {
         return Interlocked.Increment(ref _referenceCount);
     }
 
     /// <inheritdoc cref="IUnknownVftbl.ReleaseUnsafe"/>
-    /// <remarks>This method never throws.</remarks>
     public uint Release()
     {
         uint referenceCount = Interlocked.Decrement(ref _referenceCount);
