@@ -68,9 +68,7 @@ internal static unsafe class AgileObjectReferenceExtensions
     /// <remarks>
     /// The returned object reference takes ownership of the COM reference produced by <c>IAgileReference.Resolve</c>.
     /// </remarks>
-    public static WindowsRuntimeObjectReference FromAgileUnsafe(
-        this WindowsRuntimeObjectReference objectReference,
-        in Guid iid)
+    public static WindowsRuntimeObjectReference FromAgileUnsafe(this WindowsRuntimeObjectReference objectReference, in Guid iid)
     {
         void* pObjectReference;
         HRESULT hresult;
