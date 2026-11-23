@@ -5,7 +5,6 @@ using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using WindowsRuntime.InteropServices;
-using WindowsRuntime.InteropServices.Marshalling;
 
 namespace ABI.WindowsRuntime.InteropServices;
 
@@ -72,7 +71,7 @@ internal static unsafe class ManagedWeakReferenceImpl
         }
         catch (Exception e)
         {
-            return RestrictedErrorInfoExceptionMarshaller.ConvertToUnmanaged(e);
+            return e.HResult;
         }
     }
 }

@@ -4,7 +4,6 @@
 using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using WindowsRuntime.InteropServices.Marshalling;
 using static System.Runtime.InteropServices.ComWrappers;
 
 namespace WindowsRuntime.InteropServices;
@@ -60,7 +59,7 @@ public static unsafe class IWeakReferenceSourceImpl
         }
         catch (Exception e)
         {
-            return RestrictedErrorInfoExceptionMarshaller.ConvertToUnmanaged(e);
+            return e.HResult;
         }
     }
 }
