@@ -4,9 +4,8 @@
 using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using WindowsRuntime.InteropServices;
 
-namespace ABI.WindowsRuntime.InteropServices;
+namespace WindowsRuntime.InteropServices;
 
 /// <summary>
 /// The native implementation of <c>IWeakReference</c> for <see cref="ManagedWeakReference"/>.

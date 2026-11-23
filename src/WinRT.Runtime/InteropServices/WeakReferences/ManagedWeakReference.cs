@@ -43,7 +43,7 @@ internal unsafe struct ManagedWeakReference
     {
         ManagedWeakReference* @this = (ManagedWeakReference*)NativeMemory.Alloc((nuint)sizeof(ManagedWeakReference));
 
-        @this->_vftbl = (IWeakReferenceVftbl*)ABI.WindowsRuntime.InteropServices.ManagedWeakReferenceImpl.Vtable;
+        @this->_vftbl = (IWeakReferenceVftbl*)ManagedWeakReferenceImpl.Vtable;
         @this->_weakHandle = WeakGCHandle<object>.ToIntPtr(new WeakGCHandle<object>(targetObject));
         @this->_referenceCount = 1;
 
