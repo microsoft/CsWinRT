@@ -119,8 +119,11 @@ internal static class WindowsRuntimeFeatureSwitches
     public static bool EnableDefaultCustomPropertyProviderSupport { get; } = GetConfigurationValue(EnableDefaultCustomPropertyProviderSupportPropertyName, defaultValue: true);
 
     /// <summary>
-    /// Gets a value indicating whether missing custom property support returns <see langword="null"/> instead of reporting <see cref="NotSupportedException"/> (defaults to <see langword="false"/>).
+    /// Gets a value indicating whether missing custom property support for managed objects returns <see langword="null"/> instead of reporting <see cref="NotSupportedException"/> (defaults to <see langword="false"/>).
     /// </summary>
+    /// <remarks>
+    /// Native object wrappers return <see langword="null"/> for unresolved lookups independently of this switch.
+    /// </remarks>
     [FeatureSwitchDefinition(SuppressCustomPropertyNotSupportedExceptionPropertyName)]
     public static bool SuppressCustomPropertyNotSupportedException { get; } = GetConfigurationValue(SuppressCustomPropertyNotSupportedExceptionPropertyName, defaultValue: false);
 

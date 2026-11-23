@@ -53,36 +53,34 @@ public static unsafe class ICustomPropertyProviderImpl
     }
 
     /// <summary>
-    /// Reports that property binding requires an explicit provider.
+    /// Returns no property for native wrappers, or reports that managed property binding requires an explicit provider.
     /// </summary>
     [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
     private static HRESULT GetCustomProperty(void* thisPtr, HSTRING name, void** property)
     {
         *property = null;
 
-        if (WindowsRuntimeFeatureSwitches.SuppressCustomPropertyNotSupportedException)
-        {
-            return WellKnownErrorCodes.S_OK;
-        }
-
-        try
-        {
-            throw CreatePropertyBindingNotSupportedException(thisPtr);
-        }
-        catch (Exception e)
-        {
-            return RestrictedErrorInfoExceptionMarshaller.ConvertToUnmanaged(e);
-        }
+        return GetPropertyBindingResult(thisPtr);
     }
 
     /// <summary>
-    /// Reports that indexer binding requires an explicit provider.
+    /// Returns no indexer for native wrappers, or reports that managed indexer binding requires an explicit provider.
     /// </summary>
     [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
     private static HRESULT GetIndexedProperty(void* thisPtr, HSTRING name, ABI.System.Type type, void** property)
     {
         *property = null;
 
+        return GetPropertyBindingResult(thisPtr);
+    }
+
+    /// <summary>
+    /// Gets the result of an unresolved lookup through the type-only provider.
+    /// </summary>
+    /// <param name="thisPtr">The COM interface pointer for the managed object.</param>
+    /// <returns>Success for native wrappers or suppressed diagnostics; otherwise, the unsupported-binding error.</returns>
+    private static HRESULT GetPropertyBindingResult(void* thisPtr)
+    {
         if (WindowsRuntimeFeatureSwitches.SuppressCustomPropertyNotSupportedException)
         {
             return WellKnownErrorCodes.S_OK;
@@ -90,7 +88,12 @@ public static unsafe class ICustomPropertyProviderImpl
 
         try
         {
-            throw CreatePropertyBindingNotSupportedException(thisPtr);
+            object instance = ComInterfaceDispatch.GetInstance<object>((ComInterfaceDispatch*)thisPtr);
+
+            // Let XAML continue native binding fallback without suppressing diagnostics for managed subclasses
+            return instance is WindowsRuntimeObject { HasUnwrappableNativeObjectReference: true }
+                ? WellKnownErrorCodes.S_OK
+                : throw CreatePropertyBindingNotSupportedException(instance);
         }
         catch (Exception e)
         {
@@ -145,13 +148,11 @@ public static unsafe class ICustomPropertyProviderImpl
     /// <summary>
     /// Creates the unsupported-binding exception for a type-only provider.
     /// </summary>
-    /// <param name="thisPtr">The COM interface pointer for the managed object.</param>
+    /// <param name="instance">The managed object whose type requires an explicit provider.</param>
     /// <returns>An exception describing how to opt into property binding.</returns>
     [MethodImpl(MethodImplOptions.NoInlining)]
-    private static NotSupportedException CreatePropertyBindingNotSupportedException(void* thisPtr)
+    private static NotSupportedException CreatePropertyBindingNotSupportedException(object instance)
     {
-        object instance = ComInterfaceDispatch.GetInstance<object>((ComInterfaceDispatch*)thisPtr);
-
         return new(
             $"ICustomProperty support used by XAML binding for type '{instance.GetType()}' requires an explicit 'ICustomPropertyProvider' implementation. " +
             "Mark the type with 'WindowsRuntime.Xaml.GeneratedCustomPropertyProviderAttribute' to generate one, or use a wrapper type that provides this support.");

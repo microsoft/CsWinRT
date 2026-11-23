@@ -93,6 +93,7 @@ internal static unsafe partial class DefaultCustomPropertyProviderTests
             if (automaticProvider)
             {
                 CheckStringRepresentationFailure();
+                CheckNativePropertyLookup();
             }
 
             CheckOpaqueObjectLifetime(automaticProvider);
@@ -310,6 +311,58 @@ internal static unsafe partial class DefaultCustomPropertyProviderTests
             WindowsRuntimeMarshal.Free(unknown);
         }
     }
+
+    private static void CheckNativePropertyLookup()
+    {
+        Windows.Data.Json.JsonObject value = new();
+        nint unknown = NativeProviderComWrappers.Instance.GetOrCreateComInterfaceForObject(value, CreateComInterfaceFlags.None);
+        nint provider = 0;
+
+        try
+        {
+            Marshal.ThrowExceptionForHR(Marshal.QueryInterface(unknown, ProviderIid, out provider));
+
+            CheckProperty(provider, "Missing", indexed: false, expected: false, supported: true);
+            CheckProperty(provider, "Item", indexed: true, expected: false, supported: true);
+        }
+        finally
+        {
+            WindowsRuntimeMarshal.Free((void*)provider);
+            WindowsRuntimeMarshal.Free((void*)unknown);
+        }
+    }
+
+    // Expose the CLR provider directly without unwrapping the native object or requiring opaque RCW marshalling
+    private sealed class NativeProviderComWrappers : ComWrappers
+    {
+        public static readonly NativeProviderComWrappers Instance = new();
+        private static readonly ComInterfaceEntry* Entry = CreateEntry();
+
+        private static ComInterfaceEntry* CreateEntry()
+        {
+            ComInterfaceEntry* entry = (ComInterfaceEntry*)RuntimeHelpers.AllocateTypeAssociatedMemory(
+                typeof(NativeProviderComWrappers), sizeof(ComInterfaceEntry));
+
+            *entry = new() { IID = ProviderIid, Vtable = GetDefaultProviderVtable(null) };
+
+            return entry;
+        }
+
+        protected override ComInterfaceEntry* ComputeVtables(object obj, CreateComInterfaceFlags flags, out int count)
+        {
+            count = 1;
+
+            return Entry;
+        }
+
+        protected override object CreateObject(nint externalComObject, CreateObjectFlags flags) => throw new NotSupportedException();
+
+        protected override void ReleaseObjects(System.Collections.IEnumerable objects) => throw new NotSupportedException();
+    }
+
+    [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "get_Vtable")]
+    private static extern nint GetDefaultProviderVtable(
+        [UnsafeAccessorType("WindowsRuntime.InteropServices.ICustomPropertyProviderImpl, WinRT.Runtime")] object unused);
 
     private static void CheckOpaqueObjectLifetime(bool hasProvider)
     {
