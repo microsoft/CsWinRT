@@ -40,24 +40,10 @@ internal unsafe struct ManagedWeakReference
     /// <returns>A pointer to the newly initialized <see cref="ManagedWeakReference"/> instance, with a reference count of 1.</returns>
     public static ManagedWeakReference* Create(object targetObject)
     {
-        // Allocate the handle first, and free it if the native allocation fails (so we never leak either)
-        WeakGCHandle<object> weakHandle = new(targetObject);
-
-        ManagedWeakReference* @this;
-
-        try
-        {
-            @this = (ManagedWeakReference*)NativeMemory.Alloc((nuint)sizeof(ManagedWeakReference));
-        }
-        catch
-        {
-            weakHandle.Dispose();
-
-            throw;
-        }
+        ManagedWeakReference* @this = (ManagedWeakReference*)NativeMemory.Alloc((nuint)sizeof(ManagedWeakReference));
 
         @this->_vftbl = (IWeakReferenceVftbl*)ABI.WindowsRuntime.InteropServices.ManagedWeakReferenceImpl.Vtable;
-        @this->_weakHandle = WeakGCHandle<object>.ToIntPtr(weakHandle);
+        @this->_weakHandle = WeakGCHandle<object>.ToIntPtr(new WeakGCHandle<object>(targetObject));
         @this->_referenceCount = 1;
 
         return @this;
