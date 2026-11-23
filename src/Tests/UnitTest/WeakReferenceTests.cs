@@ -90,7 +90,7 @@ public unsafe class WeakReferenceTests
     }
 
     [TestMethod]
-    public void Resolve_NullArguments_ReturnsPointerError()
+    public void Resolve_NullOutPointer_ReturnsPointerError()
     {
         object target = new();
 
@@ -100,9 +100,7 @@ public unsafe class WeakReferenceTests
         try
         {
             Guid iid = IID_IUnknown;
-            void* result;
 
-            Assert.AreEqual(E_POINTER, Resolve(weakReference, null, &result));
             Assert.AreEqual(E_POINTER, Resolve(weakReference, &iid, null));
         }
         finally

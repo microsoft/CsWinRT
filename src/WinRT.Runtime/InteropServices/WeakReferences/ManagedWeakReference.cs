@@ -72,9 +72,8 @@ internal unsafe struct ManagedWeakReference
             return WellKnownErrorCodes.E_POINTER;
         }
 
-        if (riid is not null &&
-            (riid->Equals(WellKnownWindowsInterfaceIIDs.IID_IUnknown) ||
-             riid->Equals(WellKnownWindowsInterfaceIIDs.IID_IWeakReference)))
+        if (riid->Equals(WellKnownWindowsInterfaceIIDs.IID_IUnknown) ||
+            riid->Equals(WellKnownWindowsInterfaceIIDs.IID_IWeakReference))
         {
             _ = Interlocked.Increment(ref _referenceCount);
 
@@ -119,7 +118,7 @@ internal unsafe struct ManagedWeakReference
     /// <returns>If this method succeeds, then it returns <c>S_OK</c>. Otherwise, it returns an <c>HRESULT</c> error code.</returns>
     public readonly HRESULT Resolve(Guid* riid, void** objectReference)
     {
-        if (riid is null || objectReference is null)
+        if (objectReference is null)
         {
             return WellKnownErrorCodes.E_POINTER;
         }
