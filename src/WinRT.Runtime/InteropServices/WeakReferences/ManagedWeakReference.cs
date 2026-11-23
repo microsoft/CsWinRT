@@ -2,58 +2,153 @@
 // Licensed under the MIT License.
 
 using System;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using System.Runtime.InteropServices.Marshalling;
+using System.Threading;
 
 namespace WindowsRuntime.InteropServices;
 
 /// <summary>
-/// The built-in default implementation of <see cref="IWeakReference"/>, wrapping managed objects.
+/// The built-in default implementation of <see href="https://learn.microsoft.com/windows/win32/api/weakreference/nn-weakreference-iweakreference"><c>IWeakReference</c></see>,
+/// wrapping managed objects. This is a thin native object, which stores a weak GC handle to the target object.
 /// </summary>
-[GeneratedComClass]
-internal sealed unsafe partial class ManagedWeakReference : IWeakReference
+/// <remarks>
+/// This type intentionally doesn't use <see cref="ComWrappers"/> (nor the COM source generators). The object only ever
+/// holds a weak handle to the target, so it can never participate in a reference cycle, and doesn't need tracker support.
+/// </remarks>
+internal unsafe struct ManagedWeakReference
 {
     /// <summary>
-    /// The weak reference for the target object.
+    /// The vtable pointer for the current instance.
     /// </summary>
-    private readonly WeakReference<object> _weakReference;
+    private IWeakReferenceVftbl* _vftbl;
 
     /// <summary>
-    /// Creates a new <see cref="ManagedWeakReference"/> instance with the specified parameters.
+    /// The raw <see cref="WeakGCHandle{T}"/> to the target object.
+    /// </summary>
+    private nint _weakHandle;
+
+    /// <summary>
+    /// The current reference count for the object (from <c>IUnknown</c>).
+    /// </summary>
+    private volatile uint _referenceCount;
+
+    /// <summary>
+    /// Creates a new <see cref="ManagedWeakReference"/> instance for the input target object.
     /// </summary>
     /// <param name="targetObject">The target object to create a weak reference for.</param>
-    public ManagedWeakReference(object targetObject)
+    /// <returns>A pointer to the newly initialized <see cref="ManagedWeakReference"/> instance, with a reference count of 1.</returns>
+    public static ManagedWeakReference* Create(object targetObject)
     {
-        _weakReference = new WeakReference<object>(targetObject);
-    }
+        // Allocate the handle first, and free it if the native allocation fails (so we never leak either)
+        WeakGCHandle<object> weakHandle = new(targetObject);
 
-    /// <inheritdoc/>
-    public HRESULT Resolve(in Guid interfaceId, out void* weakReference)
-    {
-        if (_weakReference.TryGetTarget(out object? targetObject))
+        ManagedWeakReference* @this;
+
+        try
         {
-            // We should already have a CCW for this object, as this path can only be reached from the vtable of one of our CCWs
-            void* thisPtr = (void*)WindowsRuntimeComWrappers.Default.GetOrCreateComInterfaceForObject(targetObject, CreateComInterfaceFlags.TrackerSupport);
+            @this = (ManagedWeakReference*)NativeMemory.Alloc((nuint)sizeof(ManagedWeakReference));
+        }
+        catch
+        {
+            weakHandle.Dispose();
 
-            // If the caller is requesting 'IUnknown', we can avoid a 'QueryInterface' call
-            if (interfaceId == WellKnownWindowsInterfaceIIDs.IID_IUnknown)
-            {
-                weakReference = thisPtr;
-
-                return WellKnownErrorCodes.S_OK;
-            }
-
-            // Try to resolve the specific interface requested from the caller (this path should never really be taken).
-            // Managed weak references are basically only used internally, and we always ask for 'IUnknown' pointers.
-            HRESULT hresult = IUnknownVftbl.QueryInterfaceUnsafe(thisPtr, in interfaceId, out weakReference);
-
-            _ = IUnknownVftbl.ReleaseUnsafe(thisPtr);
-
-            return hresult;
+            throw;
         }
 
-        weakReference = null;
+        @this->_vftbl = (IWeakReferenceVftbl*)ABI.WindowsRuntime.InteropServices.ManagedWeakReferenceImpl.Vtable;
+        @this->_weakHandle = WeakGCHandle<object>.ToIntPtr(weakHandle);
+        @this->_referenceCount = 1;
 
-        return WellKnownErrorCodes.S_OK;
+        return @this;
+    }
+
+    /// <inheritdoc cref="IUnknownVftbl.QueryInterfaceUnsafe(void*, System.Guid*, void**)"/>
+    /// <remarks>This method never throws.</remarks>
+    public HRESULT QueryInterface(Guid* riid, void** ppvObject)
+    {
+        if (ppvObject is null)
+        {
+            return WellKnownErrorCodes.E_POINTER;
+        }
+
+        if (riid is not null &&
+            (riid->Equals(WellKnownWindowsInterfaceIIDs.IID_IUnknown) ||
+             riid->Equals(WellKnownWindowsInterfaceIIDs.IID_IWeakReference)))
+        {
+            _ = Interlocked.Increment(ref _referenceCount);
+
+            *ppvObject = Unsafe.AsPointer(ref this);
+
+            return WellKnownErrorCodes.S_OK;
+        }
+
+        *ppvObject = null;
+
+        return WellKnownErrorCodes.E_NOINTERFACE;
+    }
+
+    /// <inheritdoc cref="IUnknownVftbl.AddRefUnsafe"/>
+    /// <remarks>This method never throws.</remarks>
+    public uint AddRef()
+    {
+        return Interlocked.Increment(ref _referenceCount);
+    }
+
+    /// <inheritdoc cref="IUnknownVftbl.ReleaseUnsafe"/>
+    /// <remarks>This method never throws.</remarks>
+    public uint Release()
+    {
+        uint referenceCount = Interlocked.Decrement(ref _referenceCount);
+
+        if (referenceCount == 0)
+        {
+            WeakGCHandle<object>.FromIntPtr(_weakHandle).Dispose();
+
+            NativeMemory.Free(Unsafe.AsPointer(ref this));
+        }
+
+        return referenceCount;
+    }
+
+    /// <summary>
+    /// Implements <see href="https://learn.microsoft.com/windows/win32/api/weakreference/nf-weakreference-iweakreference-resolve(refiid_iinspectable)"><c>IWeakReference.Resolve</c></see>.
+    /// </summary>
+    /// <param name="riid">A reference to the interface identifier (IID) of the object.</param>
+    /// <param name="objectReference">A strong reference to the object, or <see langword="null"/> if it is no longer alive.</param>
+    /// <returns>If this method succeeds, then it returns <c>S_OK</c>. Otherwise, it returns an <c>HRESULT</c> error code.</returns>
+    public readonly HRESULT Resolve(Guid* riid, void** objectReference)
+    {
+        if (riid is null || objectReference is null)
+        {
+            return WellKnownErrorCodes.E_POINTER;
+        }
+
+        *objectReference = null;
+
+        // If the target is gone, this still succeeds, but returns a null pointer (as per the contract of 'IWeakReference')
+        if (!WeakGCHandle<object>.FromIntPtr(_weakHandle).TryGetTarget(out object? targetObject))
+        {
+            return WellKnownErrorCodes.S_OK;
+        }
+
+        // We should already have a CCW for this object, as this path can only be reached from the vtable of one of our CCWs
+        void* thisPtr = (void*)WindowsRuntimeComWrappers.Default.GetOrCreateComInterfaceForObject(targetObject, CreateComInterfaceFlags.TrackerSupport);
+
+        // If the caller is requesting 'IUnknown', we can avoid a 'QueryInterface' call
+        if (riid->Equals(WellKnownWindowsInterfaceIIDs.IID_IUnknown))
+        {
+            *objectReference = thisPtr;
+
+            return WellKnownErrorCodes.S_OK;
+        }
+
+        // Try to resolve the specific interface requested from the caller. Most callers (including CsWinRT) ask for 'IUnknown', but
+        // native consumers (eg. 'winrt::weak_ref<T>::get()') might also ask for a specific interface, so we need to handle this too.
+        HRESULT hresult = IUnknownVftbl.QueryInterfaceUnsafe(thisPtr, riid, objectReference);
+
+        _ = IUnknownVftbl.ReleaseUnsafe(thisPtr);
+
+        return hresult;
     }
 }
