@@ -9,9 +9,10 @@ using System.Threading;
 namespace WindowsRuntime.InteropServices;
 
 /// <summary>
-/// The built-in default implementation of <see href="https://learn.microsoft.com/windows/win32/api/weakreference/nn-weakreference-iweakreference"><c>IWeakReference</c></see>,
-/// wrapping managed objects. This is a thin native object, which stores a weak GC handle to the target object.
+/// The built-in default implementation of <c>IWeakReference</c>, wrapping managed objects.
+/// This is a thin native object, which stores a weak GC handle to the target object.
 /// </summary>
+/// <see href="https://learn.microsoft.com/windows/win32/api/weakreference/nn-weakreference-iweakreference"/>
 /// <remarks>
 /// This type intentionally doesn't use <see cref="ComWrappers"/> (nor the COM source generators). The object only ever
 /// holds a weak handle to the target, so it can never participate in a reference cycle, and doesn't need tracker support.
@@ -97,11 +98,12 @@ internal unsafe struct ManagedWeakReference
     }
 
     /// <summary>
-    /// Implements <see href="https://learn.microsoft.com/windows/win32/api/weakreference/nf-weakreference-iweakreference-resolve(refiid_iinspectable)"><c>IWeakReference.Resolve</c></see>.
+    /// Implements <c>IWeakReference.Resolve</c>.
     /// </summary>
     /// <param name="riid">A reference to the interface identifier (IID) of the object.</param>
     /// <param name="objectReference">A strong reference to the object, or <see langword="null"/> if it is no longer alive.</param>
     /// <returns>If this method succeeds, then it returns <c>S_OK</c>. Otherwise, it returns an <c>HRESULT</c> error code.</returns>
+    /// <see href="https://learn.microsoft.com/windows/win32/api/weakreference/nf-weakreference-iweakreference-resolve(refiid_iinspectable)"/>
     public readonly HRESULT Resolve(Guid* riid, void** objectReference)
     {
         if (objectReference is null)

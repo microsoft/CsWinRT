@@ -6,11 +6,13 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using WindowsRuntime.InteropServices;
 using WindowsRuntime.InteropServices.Marshalling;
+
 namespace ABI.WindowsRuntime.InteropServices;
 
 /// <summary>
-/// The native implementation of <see href="https://learn.microsoft.com/windows/win32/api/weakreference/nn-weakreference-iweakreference"><c>IWeakReference</c></see> for <see cref="ManagedWeakReference"/>.
+/// The native implementation of <c>IWeakReference</c> for <see cref="ManagedWeakReference"/>.
 /// </summary>
+/// <see href="https://learn.microsoft.com/windows/win32/api/weakreference/nn-weakreference-iweakreference"/>
 internal static unsafe class ManagedWeakReferenceImpl
 {
     /// <summary>
