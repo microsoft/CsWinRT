@@ -26,10 +26,6 @@ public unsafe interface IWindowsRuntimeArrayComWrappersCallback
     /// exactly be a pointer to an array of the exact type expected by callers (and already unboxed).
     /// </para>
     /// <para>
-    /// Implementations take ownership of <paramref name="value"/> and of its elements, and must free them
-    /// before returning, including when the conversion fails.
-    /// </para>
-    /// <para>
     /// This method will be called from the <see cref="ComWrappers.CreateObject(nint, CreateObjectFlags, object?, out CreatedWrapperFlags)"/> method,
     /// so implementations must not call back into <see cref="ComWrappers.CreateObject(nint, CreateObjectFlags, object?, out CreatedWrapperFlags)"/>
     /// themselves, but rather they should just marshal the object directly, and return it. Calling back into
@@ -38,4 +34,11 @@ public unsafe interface IWindowsRuntimeArrayComWrappersCallback
     /// </para>
     /// </remarks>
     static abstract Array CreateArray(uint count, void* value);
+
+    /// <summary>
+    /// Frees a native array with the same type as the ones passed to <see cref="CreateArray"/>, including its elements.
+    /// </summary>
+    /// <param name="count">The length of the native array.</param>
+    /// <param name="value">The native array to free.</param>
+    static abstract void FreeArray(uint count, void* value);
 }

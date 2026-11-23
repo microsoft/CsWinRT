@@ -57,20 +57,25 @@ public static unsafe class WindowsRuntimeArrayMarshaller
         // First, make sure we have the right 'IReferenceArray<T>' interface on 'value'
         IUnknownVftbl.QueryInterfaceUnsafe(value, in iid, out void* referencePtr).Assert();
 
+        uint count;
+        void* result;
+
+        // Unbox the underlying array, which is returned with ownership
+        HRESULT hresult = IReferenceArrayVftbl.get_ValueUnsafe(referencePtr, &count, &result);
+
+        // Always release the temporary interface pointer before possibly throwing
+        WindowsRuntimeUnknownMarshaller.Free(referencePtr);
+
+        hresult.Assert();
+
+        // Forward to the supplied callback, then free the array (and its elements) we own
         try
         {
-            uint count;
-            void* result;
-
-            // Unbox the underlying array, which is returned with ownership
-            IReferenceArrayVftbl.get_ValueUnsafe(referencePtr, &count, &result).Assert();
-
-            // Forward to the supplied callback, which takes ownership of the array
             return TCallback.CreateArray(count, result);
         }
         finally
         {
-            WindowsRuntimeUnknownMarshaller.Free(referencePtr);
+            TCallback.FreeArray(count, result);
         }
     }
 }

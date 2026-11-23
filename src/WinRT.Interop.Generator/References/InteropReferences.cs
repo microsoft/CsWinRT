@@ -2480,6 +2480,16 @@ internal sealed class InteropReferences
                 _corLibTypeFactory.Void.MakePointerType()]));
 
     /// <summary>
+    /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.IWindowsRuntimeArrayComWrappersCallback.FreeArray</c>.
+    /// </summary>
+    public MemberReference IWindowsRuntimeArrayComWrappersCallbackFreeArray => field ??= IWindowsRuntimeArrayComWrappersCallback
+        .CreateMemberReference("FreeArray"u8, MethodSignature.CreateStatic(
+            returnType: _corLibTypeFactory.Void,
+            parameterTypes: [
+                _corLibTypeFactory.UInt32,
+                _corLibTypeFactory.Void.MakePointerType()]));
+
+    /// <summary>
     /// Gets the <see cref="MemberReference"/> for <c>WindowsRuntime.InteropServices.WindowsRuntimeObjectReferenceValue.GetThisPtrUnsafe()</c>.
     /// </summary>
     public MemberReference WindowsRuntimeObjectReferenceValueGetThisPtrUnsafe => field ??= WindowsRuntimeObjectReferenceValue

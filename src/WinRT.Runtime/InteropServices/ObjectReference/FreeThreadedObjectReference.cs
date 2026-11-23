@@ -71,4 +71,10 @@ internal sealed unsafe class FreeThreadedObjectReference : WindowsRuntimeObjectR
     {
         // This method is also never called
     }
+
+    /// <inheritdoc/>
+    private protected override void NativeReleaseContextCallbackUnsafe()
+    {
+        // This method is also never called
+    }
 }

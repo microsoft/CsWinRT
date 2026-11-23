@@ -195,13 +195,8 @@ internal abstract unsafe class ContextAwareObjectReference : WindowsRuntimeObjec
         }
     }
 
-    /// <summary>
-    /// Releases the context callback owned by the current instance.
-    /// </summary>
-    /// <remarks>
-    /// This method must be called exactly once, after all other uses of the context callback have completed.
-    /// </remarks>
-    internal void NativeReleaseContextCallbackUnsafe()
+    /// <inheritdoc/>
+    private protected sealed override void NativeReleaseContextCallbackUnsafe()
     {
         if (_contextCallbackPtr is not null)
         {

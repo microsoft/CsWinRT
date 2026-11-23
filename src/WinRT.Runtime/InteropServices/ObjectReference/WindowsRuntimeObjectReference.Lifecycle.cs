@@ -310,7 +310,7 @@ public unsafe partial class WindowsRuntimeObjectReference
         if (!PreventReleaseOnDispose)
         {
             // Perform the appropriate optimized release, depending on whether we have context
-            if (GetType() == typeof(FreeThreadedObjectReference))
+            if (IsFreeThreaded)
             {
                 NativeReleaseWithoutContextUnsafe();
             }
@@ -322,9 +322,9 @@ public unsafe partial class WindowsRuntimeObjectReference
 
         // Context-aware object references also own their context callback, which must be released
         // even when releasing the wrapped object is suppressed (eg. for COM aggregation scenarios).
-        if (GetType() != typeof(FreeThreadedObjectReference))
+        if (!IsFreeThreaded)
         {
-            Unsafe.As<ContextAwareObjectReference>(this).NativeReleaseContextCallbackUnsafe();
+            NativeReleaseContextCallbackUnsafe();
         }
 
         GC.RemoveMemoryPressure(GCPressureBaseInBytes);
@@ -351,6 +351,14 @@ public unsafe partial class WindowsRuntimeObjectReference
     /// </summary>
     /// <remarks><inheritdoc cref="NativeReleaseWithoutContextUnsafe" path="/summary/node()"/></remarks>
     private protected abstract void NativeReleaseWithContextUnsafe();
+
+    /// <summary>
+    /// Releases the context callback owned by the current instance, if any.
+    /// </summary>
+    /// <remarks>
+    /// This method is only called once, from <see cref="NativeDisposeUnsafe"/>, after all other uses of the context callback have completed.
+    /// </remarks>
+    private protected abstract void NativeReleaseContextCallbackUnsafe();
 
     /// <summary>
     /// Releases the reference from the tracker source, if <see cref="CreateObjectReferenceFlags.PreventReleaseFromTrackerSourceOnDispose"/> is not set.
