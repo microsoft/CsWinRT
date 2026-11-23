@@ -48,6 +48,7 @@ internal static unsafe class Program
             Check(WindowsRuntimeMarshal.TryGetManagedObject(ccw, out object managed) && ReferenceEquals(managed, rcw), "The CCW must wrap the original RCW.");
 
             CheckStandardInterfaces(ccw);
+            CheckMissingCustomProperties(ccw, rcw);
             CheckForwardedInterfaces(ccw, rcw, expectedValueType, isJsonObject);
             CheckIInspectable(ccw, expectedRuntimeClassName);
         }
@@ -99,6 +100,45 @@ internal static unsafe class Program
         int hresult = Marshal.QueryInterface((nint)ccw, in unknownIid, out nint unknown);
 
         Check(hresult == E_NOINTERFACE && unknown == 0, "An unrelated interface must not be available.");
+    }
+
+    private static void CheckMissingCustomProperties(void* ccw, object rcw)
+    {
+        void* provider = QueryInterface(ccw, in ICustomPropertyProviderImpl.IID);
+        void* name = null;
+        ABI.System.Type indexType = default;
+        void* property = null;
+
+        try
+        {
+            Check(WindowsRuntimeMarshal.TryGetManagedObject(provider, out object managed) && ReferenceEquals(managed, rcw),
+                "The property provider must belong to the managed CCW, not the native object.");
+
+            name = HStringMarshaller.ConvertToUnmanaged("Missing");
+            indexType = ABI.System.TypeMarshaller.ConvertToUnmanaged(typeof(int));
+            void** vtable = *(void***)provider;
+
+            property = (void*)1;
+            int hresult = ((delegate* unmanaged[MemberFunction]<void*, void*, void**, int>)vtable[6])(provider, name, &property);
+
+            Check(hresult == 0 && property is null, "A native wrapper's missing property must return S_OK and clear its output.");
+
+            property = (void*)1;
+            hresult = ((delegate* unmanaged[MemberFunction]<void*, void*, ABI.System.Type, void**, int>)vtable[7])(provider, name, indexType, &property);
+
+            Check(hresult == 0 && property is null, "A native wrapper's missing indexer must return S_OK and clear its output.");
+        }
+        finally
+        {
+            if (property != (void*)1)
+            {
+                WindowsRuntimeMarshal.Free(property);
+            }
+
+            ABI.System.TypeMarshaller.Dispose(indexType);
+            HStringMarshaller.Free(name);
+            WindowsRuntimeMarshal.Free(provider);
+        }
     }
 
     private static void CheckForwardedInterfaces(void* ccw, object rcw, JsonValueType expectedValueType, bool isJsonObject)
