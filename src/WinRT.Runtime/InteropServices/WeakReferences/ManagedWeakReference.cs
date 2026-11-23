@@ -117,7 +117,9 @@ internal unsafe struct ManagedWeakReference
             return WellKnownErrorCodes.S_OK;
         }
 
-        // We should already have a CCW for this object, as this path can only be reached from the vtable of one of our CCWs
+        // A CCW existed when this weak reference was created, but it might not exist anymore: native callers can release all their references
+        // to it and only keep this weak reference, while the target stays alive from the managed side. In that case a new CCW has to be created.
+        // There is no public API to only look up an existing CCW, so we always go through 'ComWrappers', which returns the existing one if any.
         void* thisPtr = (void*)WindowsRuntimeComWrappers.Default.GetOrCreateComInterfaceForObject(targetObject, CreateComInterfaceFlags.TrackerSupport);
 
         // If the caller is requesting 'IUnknown', we can avoid a 'QueryInterface' call
