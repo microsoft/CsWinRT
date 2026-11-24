@@ -119,7 +119,8 @@ steps:
         cswinrtprojectionrefgen_arm64=$(Build.SourcesDirectory)\\release_arm64\\net10.0\\native\\cswinrtprojectionrefgen.exe;\
         cswinrtwinmdgen_x64=$(Build.SourcesDirectory)\\release_x64\\net10.0\\native\\cswinrtwinmdgen.exe;\
         cswinrtwinmdgen_arm64=$(Build.SourcesDirectory)\\release_arm64\\net10.0\\native\\cswinrtwinmdgen.exe;\
-        run_cswinrt_generator_task=$(Build.SourcesDirectory)\\release_x86\\netstandard2.0\\WinRT.Generator.Tasks.dll;\
+        run_cswinrt_generator_task_net10=$(Build.SourcesDirectory)\\release_x86\\tasks\\net10.0\\WinRT.Generator.Tasks.dll;\
+        run_cswinrt_generator_task_net472=$(Build.SourcesDirectory)\\release_x86\\tasks\\net472\\WinRT.Generator.Tasks.dll;\
         branch=$(Build.SourceBranchName);\
         commit=$(Build.SourceVersion)"
       packDestination: $(ob_outputDirectory)\packages

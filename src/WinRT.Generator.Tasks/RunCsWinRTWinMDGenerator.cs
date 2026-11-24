@@ -12,6 +12,7 @@ namespace Microsoft.NET.Build.Tasks;
 /// <summary>
 /// The custom MSBuild task that invokes the 'cswinrtwinmdgen' tool.
 /// </summary>
+[MSBuildMultiThreadableTask]
 public sealed class RunCsWinRTWinMDGenerator : ToolTask
 {
     /// <summary>
@@ -90,7 +91,7 @@ public sealed class RunCsWinRTWinMDGenerator : ToolTask
             return false;
         }
 
-        if (string.IsNullOrEmpty(InputAssemblyPath) || !File.Exists(InputAssemblyPath))
+        if (string.IsNullOrEmpty(InputAssemblyPath) || !File.Exists(TaskEnvironment.TryGetAbsolutePath(InputAssemblyPath)))
         {
             Log.LogWarning("Input assembly path '{0}' is invalid or does not exist.", InputAssemblyPath);
             return false;
@@ -114,13 +115,13 @@ public sealed class RunCsWinRTWinMDGenerator : ToolTask
             return false;
         }
 
-        if (CsWinRTToolsDirectory is null || !Directory.Exists(CsWinRTToolsDirectory))
+        if (CsWinRTToolsDirectory is null || !Directory.Exists(TaskEnvironment.TryGetAbsolutePath(CsWinRTToolsDirectory)))
         {
             Log.LogWarning("Tools directory '{0}' is invalid or does not exist.", CsWinRTToolsDirectory);
             return false;
         }
 
-        if (DebugReproDirectory is not null && !Directory.Exists(DebugReproDirectory))
+        if (DebugReproDirectory is not null && !Directory.Exists(TaskEnvironment.TryGetAbsolutePath(DebugReproDirectory)))
         {
             Log.LogWarning("Debug repro directory '{0}' is invalid or does not exist.", DebugReproDirectory);
             return false;
@@ -134,11 +135,12 @@ public sealed class RunCsWinRTWinMDGenerator : ToolTask
     protected override string GenerateFullPathToTool()
     {
         string? effectiveArchitecture = CsWinRTToolsArchitecture;
+        string toolsDirectory = TaskEnvironment.TryGetAbsolutePath(CsWinRTToolsDirectory)!;
 
         // Special case for when 'AnyCPU' is specified (mostly for testing scenarios).
         if (effectiveArchitecture?.Equals("AnyCPU", StringComparison.OrdinalIgnoreCase) is true)
         {
-            return Path.Combine(CsWinRTToolsDirectory, ToolName);
+            return Path.Combine(toolsDirectory, ToolName);
         }
 
         // If the architecture is not specified, determine it based on the current process architecture
@@ -151,7 +153,7 @@ public sealed class RunCsWinRTWinMDGenerator : ToolTask
 
         string architectureDirectory = $"win-{effectiveArchitecture}";
 
-        return Path.Combine(CsWinRTToolsDirectory, architectureDirectory, ToolName);
+        return Path.Combine(toolsDirectory, architectureDirectory, ToolName);
     }
 
     /// <inheritdoc/>

@@ -127,9 +127,15 @@
     <GenerateDocumentationFile Condition="'$(IsPublicProject)' == 'true'">true</GenerateDocumentationFile>
   </PropertyGroup>
 
-  <!-- Set overrides to point to folder where they are built in solution -->
+  <!--
+    Set overrides to point to folder where they are built in solution. The tasks are built for both '.NET Framework'
+    (used when building with Visual Studio or 'MSBuild.exe') and '.NET' (used when building with the 'dotnet' CLI),
+    so this has to select the right one for the current MSBuild runtime.
+  -->
   <PropertyGroup>
-    <CsWinRTGenTasksAssembly>$(MSBuildThisFileDirectory)WinRT.Generator.Tasks\bin\$(Configuration)\netstandard2.0\WinRT.Generator.Tasks.dll</CsWinRTGenTasksAssembly>
+    <_CsWinRTGenTasksTargetFramework Condition="'$(MSBuildRuntimeType)' == 'Core'">net10.0</_CsWinRTGenTasksTargetFramework>
+    <_CsWinRTGenTasksTargetFramework Condition="'$(MSBuildRuntimeType)' != 'Core'">net472</_CsWinRTGenTasksTargetFramework>
+    <CsWinRTGenTasksAssembly>$(MSBuildThisFileDirectory)WinRT.Generator.Tasks\bin\$(Configuration)\$(_CsWinRTGenTasksTargetFramework)\WinRT.Generator.Tasks.dll</CsWinRTGenTasksAssembly>
     <_CsWinRTToolsArchFolder Condition="'$(BuildToolArch)' != ''">win-$(BuildToolArch)\</_CsWinRTToolsArchFolder>
     <CsWinRTInteropGenEffectiveToolsDirectory>$(MSBuildThisFileDirectory)WinRT.Interop.Generator\bin\$(Configuration)\net10.0\$(_CsWinRTToolsArchFolder)</CsWinRTInteropGenEffectiveToolsDirectory>
     <CsWinRTImplEffectiveToolsDirectory>$(MSBuildThisFileDirectory)WinRT.Impl.Generator\bin\$(Configuration)\net10.0\$(_CsWinRTToolsArchFolder)</CsWinRTImplEffectiveToolsDirectory>

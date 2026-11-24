@@ -616,8 +616,8 @@ MSBuild task wrappers that bridge the MSBuild build system with the CLI tools ab
 
 **Project settings:**
 
-- **Target**: `netstandard2.0` (for MSBuild compatibility)
-- **Dependency**: `Microsoft.Build.Utilities.Core`
+- **Target**: `net472;net10.0`. MSBuild runs tasks on .NET Framework (Visual Studio, `MSBuild.exe`) or on .NET (`dotnet` CLI), and the `Microsoft.Build.*` 18.x packages that define the multithreaded build APIs ship only `net472` and `net10.0` assemblies. Both are shipped in the NuGet package (`tools\net472\` and `tools\net10.0\`), and `CsWinRTGenTasksAssembly` selects one with `$(MSBuildRuntimeType)`. `PlatformTarget` is `AnyCPU` so the DLL loads in any MSBuild host.
+- **Dependency**: `Microsoft.Build.Utilities.Core` 18.7.1, the first version where `ToolTask` implements `IMultiThreadableTask`. This makes MSBuild 18.7 the minimum supported version, enforced by the `_CsWinRTValidateMSBuildVersion` target in `nuget/Microsoft.Windows.CsWinRT.targets`.
 
 **Five tasks:**
 
@@ -629,7 +629,9 @@ MSBuild task wrappers that bridge the MSBuild build system with the CLI tools ab
 | `RunCsWinRTInteropGenerator` | `cswinrtinteropgen.exe` | Generate interop sidecar assembly |
 | `RunCsWinRTWinMDGenerator` | `cswinrtwinmdgen.exe` | Generate component `.winmd` metadata |
 
-All tasks extend `ToolTask`, generate response files for their respective CLI tools, and support architecture selection (`win-x86`, `win-x64`, `win-arm64`).
+All tasks extend `ToolTask` (except `GenerateCsWinRTStubExes`, which extends `Task`), generate response files for their respective CLI tools, and support architecture selection (`win-x86`, `win-x64`, `win-arm64`).
+
+**Multithreaded builds (`-mt`):** every task is marked with `[MSBuildMultiThreadableTask]` and implements `IMultiThreadableTask`, so MSBuild can run them in-process. The attribute is not inherited, so each new task needs it (`Test_MultiThreadableTasks` enforces this for both target frameworks). `ToolTask` already implements `IMultiThreadableTask` (and handles the working directory and child process environment through `TaskEnvironment`), while `GenerateCsWinRTStubExes` implements it directly and builds its `cl.exe` process through `TaskEnvironment.GetProcessStartInfo()`. Tasks must never depend on process-level state (current directory, `Environment.*` variables, `Process`/`ProcessStartInfo` created directly): any path a task touches itself (`File`/`Directory` calls, tool paths) must be resolved against the project directory first, via `TaskEnvironment.GetAbsolutePath` (see `TaskEnvironmentExtensions.TryGetAbsolutePath`). Static mutable state must be avoided or made thread-safe.
 
 **Visual Studio file-lock avoidance:** the persistent MSBuild build server keeps `WinRT.Generator.Tasks.dll` loaded (via `UsingTask`), so a full-solution build in VS that tries to rebuild it hits `MSB3027` (file locked). To avoid this, developers build the task DLL out-of-band via `src/cswinrt.buildtasks.slnf` (helper: `src/build-tasks.cmd`) and open `src/cswinrt.dev.slnf` in VS, which includes every project **except** `WinRT.Generator.Tasks`. CI is unaffected: all pipelines build the full `src/cswinrt.slnx` (which includes the task project), so it is still built and packaged normally.
 

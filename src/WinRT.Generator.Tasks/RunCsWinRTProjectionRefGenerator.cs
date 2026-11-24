@@ -14,6 +14,7 @@ namespace Microsoft.NET.Build.Tasks;
 /// reference-projection C# sources. The tool produces .cs files that get included in
 /// the user's library or component compilation via the 'CsWinRTIncludeProjection' target.
 /// </summary>
+[MSBuildMultiThreadableTask]
 public sealed class RunCsWinRTProjectionRefGenerator : ToolTask
 {
     /// <summary>
@@ -177,14 +178,14 @@ public sealed class RunCsWinRTProjectionRefGenerator : ToolTask
             return false;
         }
 
-        if (CsWinRTToolsDirectory is null || !Directory.Exists(CsWinRTToolsDirectory))
+        if (CsWinRTToolsDirectory is null || !Directory.Exists(TaskEnvironment.TryGetAbsolutePath(CsWinRTToolsDirectory)))
         {
             Log.LogWarning("Tools directory '{0}' is invalid or does not exist.", CsWinRTToolsDirectory);
 
             return false;
         }
 
-        if (DebugReproDirectory is not null && !Directory.Exists(DebugReproDirectory))
+        if (DebugReproDirectory is not null && !Directory.Exists(TaskEnvironment.TryGetAbsolutePath(DebugReproDirectory)))
         {
             Log.LogWarning("Debug repro directory '{0}' is invalid or does not exist.", DebugReproDirectory);
 
@@ -210,13 +211,14 @@ public sealed class RunCsWinRTProjectionRefGenerator : ToolTask
     protected override string GenerateFullPathToTool()
     {
         string? effectiveArchitecture = CsWinRTToolsArchitecture;
+        string toolsDirectory = TaskEnvironment.TryGetAbsolutePath(CsWinRTToolsDirectory)!;
 
         // Special case for when 'AnyCPU' is specified (mostly for testing scenarios).
         // We just reuse the exact input directory and assume the architecture matches.
         // This makes it easy to run the task against a local build of 'cswinrtprojectionrefgen'.
         if (effectiveArchitecture?.Equals("AnyCPU", StringComparison.OrdinalIgnoreCase) is true)
         {
-            return Path.Combine(CsWinRTToolsDirectory, ToolName);
+            return Path.Combine(toolsDirectory, ToolName);
         }
 
         // If the architecture is not specified, determine it based on the current process architecture
@@ -230,7 +232,7 @@ public sealed class RunCsWinRTProjectionRefGenerator : ToolTask
         // The tool is inside an architecture-specific subfolder, as it's a native binary
         string architectureDirectory = $"win-{effectiveArchitecture}";
 
-        return Path.Combine(CsWinRTToolsDirectory, architectureDirectory, ToolName);
+        return Path.Combine(toolsDirectory, architectureDirectory, ToolName);
     }
 
     /// <inheritdoc/>
