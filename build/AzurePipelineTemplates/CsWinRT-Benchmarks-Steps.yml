@@ -16,7 +16,7 @@ steps:
     workingDirectory: $(Build.SourcesDirectory)\src
 
 - task: UseDotNet@2
-  displayName: Use .NET Core SDK 10.0
+  displayName: Use .NET Core SDK 11.0
   inputs:
     packageType: sdk
     version: $(_DotnetVersion)
