@@ -43,9 +43,12 @@ internal unsafe struct ManagedWeakReference
     {
         ManagedWeakReference* @this = (ManagedWeakReference*)NativeMemory.Alloc((nuint)sizeof(ManagedWeakReference));
 
+        WeakGCHandle<object> weakHandle;
+
+        // Same as in 'DispatcherQueueProxyHandler.Create'
         try
         {
-            @this->_weakHandle = WeakGCHandle<object>.ToIntPtr(new WeakGCHandle<object>(targetObject));
+            weakHandle = new WeakGCHandle<object>(targetObject);
         }
         catch
         {
@@ -55,6 +58,7 @@ internal unsafe struct ManagedWeakReference
         }
 
         @this->_vftbl = (IWeakReferenceVftbl*)ManagedWeakReferenceImpl.Vtable;
+        @this->_weakHandle = WeakGCHandle<object>.ToIntPtr(weakHandle);
         @this->_referenceCount = 1;
 
         return @this;
