@@ -149,7 +149,7 @@ internal sealed unsafe class UInt32ComWrappersMarshallerAttribute : WindowsRunti
 /// Binding type for the <c>IReference`1</c> implementation for <see cref="uint"/>.
 /// </summary>
 [StructLayout(LayoutKind.Sequential)]
-file unsafe struct UInt32ReferenceVftbl
+internal unsafe struct UInt32ReferenceVftbl
 {
     public delegate* unmanaged[MemberFunction]<void*, Guid*, void**, HRESULT> QueryInterface;
     public delegate* unmanaged[MemberFunction]<void*, uint> AddRef;
@@ -163,7 +163,7 @@ file unsafe struct UInt32ReferenceVftbl
 /// <summary>
 /// The <c>IReference`1</c> implementation for <see cref="uint"/>.
 /// </summary>
-file static unsafe class UInt32ReferenceImpl
+internal static unsafe class UInt32ReferenceImpl
 {
     /// <summary>
     /// The <see cref="UInt32ReferenceVftbl"/> value for the managed <c>IReference`1</c> implementation.
@@ -178,7 +178,7 @@ file static unsafe class UInt32ReferenceImpl
     {
         *(IInspectableVftbl*)Unsafe.AsPointer(ref Vftbl) = *(IInspectableVftbl*)IInspectableImpl.Vtable;
 
-        Vftbl.get_Value = &UInt32PropertyValueImpl.GetUInt32;
+        Vftbl.get_Value = &get_Value;
     }
 
     /// <summary>
@@ -188,6 +188,27 @@ file static unsafe class UInt32ReferenceImpl
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get => (nint)Unsafe.AsPointer(in Vftbl);
+    }
+
+    /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.ireference-1.value"/>
+    [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
+    public static HRESULT get_Value(void* thisPtr, uint* result)
+    {
+        if (result is null)
+        {
+            return WellKnownErrorCodes.E_POINTER;
+        }
+
+        try
+        {
+            *result = (uint)ComInterfaceDispatch.GetInstance<object>((ComInterfaceDispatch*)thisPtr);
+
+            return WellKnownErrorCodes.S_OK;
+        }
+        catch (global::System.Exception e)
+        {
+            return RestrictedErrorInfoExceptionMarshaller.ConvertToUnmanaged(e);
+        }
     }
 }
 
@@ -215,7 +236,7 @@ internal static unsafe class UInt32PropertyValueImpl
         Vftbl.GetInt16 = &GetInt16;
         Vftbl.GetUInt16 = &GetUInt16;
         Vftbl.GetInt32 = &GetInt32;
-        Vftbl.GetUInt32 = &GetUInt32;
+        Vftbl.GetUInt32 = &UInt32ReferenceImpl.get_Value;
         Vftbl.GetInt64 = &GetInt64;
         Vftbl.GetUInt64 = &GetUInt64;
         Vftbl.GetSingle = &GetSingle;
@@ -275,7 +296,7 @@ internal static unsafe class UInt32PropertyValueImpl
 
     /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.ipropertyvalue.getuint8"/>
     [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
-    internal static HRESULT GetUInt8(void* thisPtr, byte* value)
+    public static HRESULT GetUInt8(void* thisPtr, byte* value)
     {
         if (value is null)
         {
@@ -303,7 +324,7 @@ internal static unsafe class UInt32PropertyValueImpl
 
     /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.ipropertyvalue.getint16"/>
     [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
-    internal static HRESULT GetInt16(void* thisPtr, short* value)
+    public static HRESULT GetInt16(void* thisPtr, short* value)
     {
         if (value is null)
         {
@@ -331,7 +352,7 @@ internal static unsafe class UInt32PropertyValueImpl
 
     /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.ipropertyvalue.getuint16"/>
     [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
-    internal static HRESULT GetUInt16(void* thisPtr, ushort* value)
+    public static HRESULT GetUInt16(void* thisPtr, ushort* value)
     {
         if (value is null)
         {
@@ -357,9 +378,9 @@ internal static unsafe class UInt32PropertyValueImpl
         }
     }
 
-    /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.ipropertyvalue.getuint32"/>
+    /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.ipropertyvalue.getint32"/>
     [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
-    internal static HRESULT GetInt32(void* thisPtr, int* value)
+    public static HRESULT GetInt32(void* thisPtr, int* value)
     {
         if (value is null)
         {
@@ -385,30 +406,9 @@ internal static unsafe class UInt32PropertyValueImpl
         }
     }
 
-    /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.ipropertyvalue.getuint32"/>
-    [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
-    internal static HRESULT GetUInt32(void* thisPtr, uint* value)
-    {
-        if (value is null)
-        {
-            return WellKnownErrorCodes.E_POINTER;
-        }
-
-        try
-        {
-            *value = (uint)ComInterfaceDispatch.GetInstance<object>((ComInterfaceDispatch*)thisPtr);
-
-            return WellKnownErrorCodes.S_OK;
-        }
-        catch (global::System.Exception e)
-        {
-            return RestrictedErrorInfoExceptionMarshaller.ConvertToUnmanaged(e);
-        }
-    }
-
     /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.ipropertyvalue.getint64"/>
     [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
-    internal static HRESULT GetInt64(void* thisPtr, long* value)
+    public static HRESULT GetInt64(void* thisPtr, long* value)
     {
         if (value is null)
         {
@@ -429,7 +429,7 @@ internal static unsafe class UInt32PropertyValueImpl
 
     /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.ipropertyvalue.getuint64"/>
     [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
-    internal static HRESULT GetUInt64(void* thisPtr, ulong* value)
+    public static HRESULT GetUInt64(void* thisPtr, ulong* value)
     {
         if (value is null)
         {
@@ -450,7 +450,7 @@ internal static unsafe class UInt32PropertyValueImpl
 
     /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.ipropertyvalue.getsingle"/>
     [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
-    internal static HRESULT GetSingle(void* thisPtr, float* value)
+    public static HRESULT GetSingle(void* thisPtr, float* value)
     {
         if (value is null)
         {
@@ -471,7 +471,7 @@ internal static unsafe class UInt32PropertyValueImpl
 
     /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.ipropertyvalue.getdouble"/>
     [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
-    internal static HRESULT GetDouble(void* thisPtr, double* value)
+    public static HRESULT GetDouble(void* thisPtr, double* value)
     {
         if (value is null)
         {

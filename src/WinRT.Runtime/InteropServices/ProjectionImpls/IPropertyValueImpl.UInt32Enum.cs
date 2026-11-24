@@ -48,7 +48,7 @@ file static unsafe class UInt32EnumPropertyValueImpl
         Vftbl.GetInt16 = &ABI.System.UInt32PropertyValueImpl.GetInt16;
         Vftbl.GetUInt16 = &ABI.System.UInt32PropertyValueImpl.GetUInt16;
         Vftbl.GetInt32 = &ABI.System.UInt32PropertyValueImpl.GetInt32;
-        Vftbl.GetUInt32 = &ABI.System.UInt32PropertyValueImpl.GetUInt32;
+        Vftbl.GetUInt32 = &ABI.System.UInt32ReferenceImpl.get_Value;
         Vftbl.GetInt64 = &ABI.System.UInt32PropertyValueImpl.GetInt64;
         Vftbl.GetUInt64 = &ABI.System.UInt32PropertyValueImpl.GetUInt64;
         Vftbl.GetSingle = &ABI.System.UInt32PropertyValueImpl.GetSingle;
