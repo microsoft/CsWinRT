@@ -32,22 +32,4 @@ internal sealed unsafe class ContextAwareInspectableObjectReference : ContextAwa
         : base(thisPtr, referenceTrackerPtr, flags)
     {
     }
-
-    /// <summary>
-    /// Creates a new <see cref="ContextAwareObjectReference"/> instance with the specified parameters.
-    /// </summary>
-    /// <param name="thisPtr"><inheritdoc cref="WindowsRuntimeObjectReference(void*, void*, CreateObjectReferenceFlags)" path="/param[@name='thisPtr']/node()"/></param>
-    /// <param name="referenceTrackerPtr"><inheritdoc cref="WindowsRuntimeObjectReference(void*, void*, CreateObjectReferenceFlags)" path="/param[@name='referenceTrackerPtr']/node()"/></param>
-    /// <param name="contextCallbackPtr"><inheritdoc cref="WindowsRuntimeObjectReference(void*, void*, CreateObjectReferenceFlags)" path="/param[@name='contextCallbackPtr']/node()"/></param>
-    /// <param name="contextToken"><inheritdoc cref="WindowsRuntimeObjectReference(void*, void*, CreateObjectReferenceFlags)" path="/param[@name='contextToken']/node()"/></param>
-    /// <param name="flags"><inheritdoc cref="WindowsRuntimeObjectReference(void*, void*, CreateObjectReferenceFlags)" path="/param[@name='flags']/node()"/></param>
-    public ContextAwareInspectableObjectReference(
-        void* thisPtr,
-        void* referenceTrackerPtr,
-        void* contextCallbackPtr,
-        nuint contextToken,
-        CreateObjectReferenceFlags flags = CreateObjectReferenceFlags.None)
-        : base(thisPtr, referenceTrackerPtr, contextCallbackPtr, contextToken, flags)
-    {
-    }
 }

@@ -16,6 +16,9 @@ internal abstract unsafe class ContextAwareObjectReference : WindowsRuntimeObjec
     /// <summary>
     /// The context callback instance used to marshal the target COM object across different contexts.
     /// </summary>
+    /// <remarks>
+    /// The current instance owns this reference, and releases it when releasing its native resources.
+    /// </remarks>
     /// <seealso cref="IContextCallbackVftbl"/>
     private readonly void* _contextCallbackPtr;
 
@@ -56,26 +59,6 @@ internal abstract unsafe class ContextAwareObjectReference : WindowsRuntimeObjec
     {
         _contextCallbackPtr = WindowsRuntimeImports.CoGetObjectContext(in WellKnownWindowsInterfaceIIDs.IID_IContextCallback);
         _contextToken = WindowsRuntimeImports.CoGetContextToken();
-    }
-
-    /// <summary>
-    /// Creates a new <see cref="ContextAwareObjectReference"/> instance with the specified parameters.
-    /// </summary>
-    /// <param name="thisPtr"><inheritdoc cref="WindowsRuntimeObjectReference(void*, void*, CreateObjectReferenceFlags)" path="/param[@name='thisPtr']/node()"/></param>
-    /// <param name="referenceTrackerPtr"><inheritdoc cref="WindowsRuntimeObjectReference(void*, void*, CreateObjectReferenceFlags)" path="/param[@name='referenceTrackerPtr']/node()"/></param>
-    /// <param name="flags"><inheritdoc cref="WindowsRuntimeObjectReference(void*, void*, CreateObjectReferenceFlags)" path="/param[@name='flags']/node()"/></param>
-    /// <param name="contextCallbackPtr"><inheritdoc cref="_contextCallbackPtr" path="/summary/node()"/></param>
-    /// <param name="contextToken"><inheritdoc cref="_contextToken" path="/summary/node()"/></param>
-    protected ContextAwareObjectReference(
-        void* thisPtr,
-        void* referenceTrackerPtr,
-        void* contextCallbackPtr,
-        nuint contextToken,
-        CreateObjectReferenceFlags flags = CreateObjectReferenceFlags.None)
-        : base(thisPtr, referenceTrackerPtr, flags)
-    {
-        _contextCallbackPtr = contextCallbackPtr;
-        _contextToken = contextToken;
     }
 
     /// <summary>
@@ -209,6 +192,15 @@ internal abstract unsafe class ContextAwareObjectReference : WindowsRuntimeObjec
         if (hresult.Failed)
         {
             base.NativeReleaseWithoutContextUnsafe();
+        }
+    }
+
+    /// <inheritdoc/>
+    private protected sealed override void NativeReleaseContextCallbackUnsafe()
+    {
+        if (_contextCallbackPtr is not null)
+        {
+            _ = IUnknownVftbl.ReleaseUnsafe(_contextCallbackPtr);
         }
     }
 

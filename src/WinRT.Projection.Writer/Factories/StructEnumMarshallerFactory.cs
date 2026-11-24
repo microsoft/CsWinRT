@@ -311,7 +311,18 @@ internal static class StructEnumMarshallerFactory
                 public static {{projected}}? UnboxToManaged(void* value)
                 {
                     {{abi}}? abi = WindowsRuntimeValueTypeMarshaller.UnboxToManaged<{{abi}}>(value);
-                    return abi.HasValue ? ConvertToManaged(abi.GetValueOrDefault()) : null;
+                    if (!abi.HasValue)
+                    {
+                        return null;
+                    }
+                    try
+                    {
+                        return ConvertToManaged(abi.GetValueOrDefault());
+                    }
+                    finally
+                    {
+                        Dispose(abi.GetValueOrDefault());
+                    }
                 }
                 """);
         }
@@ -386,7 +397,17 @@ internal static class StructEnumMarshallerFactory
                 {
                     IndentedTextWriterCallback abiFq = TypedefNameWriter.WriteTypedefName(context, type, TypedefNameType.ABI, true);
 
-                    writer.Write($"return {nameStripped}Marshaller.ConvertToManaged(WindowsRuntimeValueTypeMarshaller.UnboxToManagedUnsafe<{abiFq}>(value, in {iidRefExpr}));");
+                    writer.Write(isMultiline: true, $$"""
+                        {{abiFq}} abi = WindowsRuntimeValueTypeMarshaller.UnboxToManagedUnsafe<{{abiFq}}>(value, in {{iidRefExpr}});
+                        try
+                        {
+                            return {{nameStripped}}Marshaller.ConvertToManaged(abi);
+                        }
+                        finally
+                        {
+                            {{nameStripped}}Marshaller.Dispose(abi);
+                        }
+                        """);
                 }
                 else
                 {

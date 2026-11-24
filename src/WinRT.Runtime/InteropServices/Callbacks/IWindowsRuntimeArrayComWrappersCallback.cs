@@ -34,4 +34,11 @@ public unsafe interface IWindowsRuntimeArrayComWrappersCallback
     /// </para>
     /// </remarks>
     static abstract Array CreateArray(uint count, void* value);
+
+    /// <summary>
+    /// Frees a native array with the same type as the ones passed to <see cref="CreateArray"/>, including its elements.
+    /// </summary>
+    /// <param name="count">The length of the native array.</param>
+    /// <param name="value">The native array to free.</param>
+    static abstract void FreeArray(uint count, void* value);
 }

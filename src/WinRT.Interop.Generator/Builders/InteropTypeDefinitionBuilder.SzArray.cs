@@ -248,6 +248,32 @@ internal partial class InteropTypeDefinitionBuilder
             callbackType.AddMethodImplementation(
                 declaration: interopReferences.IWindowsRuntimeArrayComWrappersCallbackCreateArray,
                 method: createArrayMethod);
+
+            // Define the 'FreeArray' method as follows:
+            //
+            // public static void FreeArray(uint count, void* value)
+            MethodDefinition freeArrayMethod = new(
+                name: "FreeArray"u8,
+                attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static,
+                signature: MethodSignature.CreateStatic(
+                    returnType: interopReferences.Void,
+                    parameterTypes: [
+                        interopReferences.UInt32,
+                        interopReferences.Void.MakePointerType()]))
+            {
+                CilInstructions =
+                {
+                    { Ldarg_0 },
+                    { Ldarg_1 },
+                    { Call, marshallerType.GetMethod("Free"u8) },
+                    { Ret }
+                }
+            };
+
+            // Add and implement 'FreeArray'
+            callbackType.AddMethodImplementation(
+                declaration: interopReferences.IWindowsRuntimeArrayComWrappersCallbackFreeArray,
+                method: freeArrayMethod);
         }
 
         /// <summary>
