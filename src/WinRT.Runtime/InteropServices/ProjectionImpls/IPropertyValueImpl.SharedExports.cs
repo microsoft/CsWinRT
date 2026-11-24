@@ -4,15 +4,33 @@
 using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using Windows.Foundation;
 using WindowsRuntime.InteropServices.Marshalling;
 
-#pragma warning disable IDE0060, IDE1006
+#pragma warning disable IDE0060, IDE1006, CA1416
 
 namespace WindowsRuntime.InteropServices;
 
 /// <inheritdoc cref="IPropertyValueImpl"/>
 public unsafe partial class IPropertyValueImpl
 {
+    /// <summary>
+    /// Shared stub that returns <see cref="PropertyType.OtherType"/>.
+    /// </summary>
+    /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.ipropertyvalue.type"/>
+    [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
+    internal static HRESULT get_TypeOtherType(void* thisPtr, PropertyType* value)
+    {
+        if (value is null)
+        {
+            return WellKnownErrorCodes.E_POINTER;
+        }
+
+        *value = PropertyType.OtherType;
+
+        return WellKnownErrorCodes.S_OK;
+    }
+
     /// <summary>
     /// Shared stub that returns <see langword="true"/>.
     /// </summary>

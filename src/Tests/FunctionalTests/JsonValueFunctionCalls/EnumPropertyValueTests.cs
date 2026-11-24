@@ -52,6 +52,18 @@ internal static unsafe class EnumPropertyValueTests
                 Check(int32 == expected, "Enum GetInt32 returned an incorrect value.");
             }
 
+            uint uint32 = 0;
+            hresult = ((delegate* unmanaged[MemberFunction]<nint, uint*, int>)vtable[12])(propertyValue, &uint32);
+            if (expected < 0)
+            {
+                Check(hresult == unchecked((int)0x8002000A), "Negative enum coercion to UInt32 must report DISP_E_OVERFLOW.");
+            }
+            else
+            {
+                Marshal.ThrowExceptionForHR(hresult);
+                Check(uint32 == (uint)expected, "Enum GetUInt32 returned an incorrect value.");
+            }
+
             long int64 = 0;
             Marshal.ThrowExceptionForHR(((delegate* unmanaged[MemberFunction]<nint, long*, int>)vtable[13])(propertyValue, &int64));
             Check(int64 == expected, "Enum GetInt64 returned an incorrect value.");

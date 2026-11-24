@@ -3,7 +3,6 @@
 
 using System;
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 using Windows.Foundation;
 
 #pragma warning disable IDE1006, CA1416
@@ -41,7 +40,7 @@ file static unsafe class OtherTypePropertyValueImpl
     {
         *(IInspectableVftbl*)Unsafe.AsPointer(ref Vftbl) = *(IInspectableVftbl*)IInspectableImpl.Vtable;
 
-        Vftbl.get_Type = &get_Type;
+        Vftbl.get_Type = &IPropertyValueImpl.get_TypeOtherType;
         Vftbl.get_IsNumericScalar = &IPropertyValueImpl.get_IsNumericScalarFalse;
         Vftbl.GetUInt8 = &IPropertyValueImpl.ThrowStubForGetOverloads;
         Vftbl.GetInt16 = &IPropertyValueImpl.ThrowStubForGetOverloads;
@@ -80,19 +79,5 @@ file static unsafe class OtherTypePropertyValueImpl
         Vftbl.GetPointArray = (delegate* unmanaged[MemberFunction]<void*, uint*, Point**, HRESULT>)(delegate* unmanaged[MemberFunction]<void*, uint*, void**, HRESULT>)&IPropertyValueImpl.ThrowStubForGetArrayOverloads;
         Vftbl.GetSizeArray = (delegate* unmanaged[MemberFunction]<void*, uint*, Size**, HRESULT>)(delegate* unmanaged[MemberFunction]<void*, uint*, void**, HRESULT>)&IPropertyValueImpl.ThrowStubForGetArrayOverloads;
         Vftbl.GetRectArray = (delegate* unmanaged[MemberFunction]<void*, uint*, Rect**, HRESULT>)(delegate* unmanaged[MemberFunction]<void*, uint*, void**, HRESULT>)&IPropertyValueImpl.ThrowStubForGetArrayOverloads;
-    }
-
-    /// <see href="https://learn.microsoft.com/uwp/api/windows.foundation.ipropertyvalue.type"/>
-    [UnmanagedCallersOnly(CallConvs = [typeof(CallConvMemberFunction)])]
-    private static HRESULT get_Type(void* thisPtr, PropertyType* value)
-    {
-        if (value is null)
-        {
-            return WellKnownErrorCodes.E_POINTER;
-        }
-
-        *value = PropertyType.OtherType;
-
-        return WellKnownErrorCodes.S_OK;
     }
 }
