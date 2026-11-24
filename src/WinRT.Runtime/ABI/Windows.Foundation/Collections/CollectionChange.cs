@@ -88,7 +88,7 @@ file static class CollectionChangeInterfaceEntriesImpl
         Entries.IReferenceOfCollectionChange.IID = WellKnownWindowsInterfaceIIDs.IID_IReferenceOfCollectionChange;
         Entries.IReferenceOfCollectionChange.Vtable = IReferenceImpl.Int32Enum;
         Entries.IPropertyValue.IID = WellKnownWindowsInterfaceIIDs.IID_IPropertyValue;
-        Entries.IPropertyValue.Vtable = IPropertyValueImpl.OtherTypeVtable;
+        Entries.IPropertyValue.Vtable = IPropertyValueImpl.Int32EnumVtable;
         Entries.IStringable.IID = WellKnownWindowsInterfaceIIDs.IID_IStringable;
         Entries.IStringable.Vtable = IStringableImpl.Vtable;
         Entries.IWeakReferenceSource.IID = WellKnownWindowsInterfaceIIDs.IID_IWeakReferenceSource;

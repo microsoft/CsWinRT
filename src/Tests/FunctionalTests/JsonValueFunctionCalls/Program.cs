@@ -1,4 +1,5 @@
 using System;
+using JsonValueFunctionCalls;
 using Windows.Foundation;
 
 
@@ -21,6 +22,7 @@ foreach (var str in a)
 result += (int)(a[1] as Windows.Data.Json.JsonValue).GetNumber();
 
 CheckBoxedEnum();
+EnumPropertyValueTests.Run();
 
 return result == 17 ? 100 : 101;
 

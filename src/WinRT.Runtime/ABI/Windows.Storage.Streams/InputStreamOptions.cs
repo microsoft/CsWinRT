@@ -88,7 +88,7 @@ file static class InputStreamOptionsInterfaceEntriesImpl
         Entries.IReferenceOfInputStreamOptions.IID = WellKnownWindowsInterfaceIIDs.IID_IReferenceOfInputStreamOptions;
         Entries.IReferenceOfInputStreamOptions.Vtable = IReferenceImpl.UInt32Enum;
         Entries.IPropertyValue.IID = WellKnownWindowsInterfaceIIDs.IID_IPropertyValue;
-        Entries.IPropertyValue.Vtable = IPropertyValueImpl.OtherTypeVtable;
+        Entries.IPropertyValue.Vtable = IPropertyValueImpl.UInt32EnumVtable;
         Entries.IStringable.IID = WellKnownWindowsInterfaceIIDs.IID_IStringable;
         Entries.IStringable.Vtable = IStringableImpl.Vtable;
         Entries.IWeakReferenceSource.IID = WellKnownWindowsInterfaceIIDs.IID_IWeakReferenceSource;
