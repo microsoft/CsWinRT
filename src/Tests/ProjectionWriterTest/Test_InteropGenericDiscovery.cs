@@ -498,7 +498,7 @@ public partial class Test_InteropGenericDiscovery
                 ],
                 treatWarningsAsErrors: !succeeds,
                 // 'all' also scans every BCL assembly, which can exceed the default limit on loaded CI agents.
-                timeout: mode == "all" ? TimeSpan.FromMinutes(2) : null);
+                timeout: mode == "all" ? TimeSpan.FromMinutes(4) : null);
 
             if (optIn && optOut)
             {
