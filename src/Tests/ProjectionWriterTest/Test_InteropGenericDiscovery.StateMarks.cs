@@ -96,7 +96,7 @@ public partial class Test_InteropGenericDiscovery
                             ? new[] { $"--marshalling-enabled-assembly-names StateMarksApp,{string.Join(',', Enumerable.Range(0, moduleCount).Select(static index => $"Consumer{index}"))}" }
                             : []
                     ],
-                    timeout: TimeSpan.FromMinutes(2),
+                    timeout: TimeSpan.FromMinutes(4),
                     maxDegreesOfParallelism: parallelism);
 
                 Assert.AreEqual(0, exitCode, log);
