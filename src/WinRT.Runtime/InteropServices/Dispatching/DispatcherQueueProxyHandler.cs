@@ -46,7 +46,7 @@ internal unsafe struct DispatcherQueueProxyHandler
         DispatcherQueueProxyHandler* @this = (DispatcherQueueProxyHandler*)NativeMemory.Alloc((nuint)sizeof(DispatcherQueueProxyHandler));
 
         GCHandle<SendOrPostCallback> callbackHandle = default;
-        GCHandle<object> stateHandle;
+        GCHandle<object> stateHandle = default;
 
         // The handles are created into locals first, as the native memory is not initialized. If creating
         // any of them fails, we need to clean up everything created so far, so that nothing is leaked.
@@ -58,6 +58,7 @@ internal unsafe struct DispatcherQueueProxyHandler
         catch
         {
             callbackHandle.Dispose();
+            stateHandle.Dispose();
 
             NativeMemory.Free(@this);
 
