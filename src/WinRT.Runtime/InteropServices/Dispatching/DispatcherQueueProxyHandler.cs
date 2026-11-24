@@ -45,9 +45,28 @@ internal unsafe struct DispatcherQueueProxyHandler
     {
         DispatcherQueueProxyHandler* @this = (DispatcherQueueProxyHandler*)NativeMemory.Alloc((nuint)sizeof(DispatcherQueueProxyHandler));
 
+        GCHandle<SendOrPostCallback> callbackHandle = default;
+        GCHandle<object> stateHandle;
+
+        // The handles are created into locals first, as the native memory is not initialized. If creating
+        // any of them fails, we need to clean up everything created so far, so that nothing is leaked.
+        try
+        {
+            callbackHandle = new GCHandle<SendOrPostCallback>(handler);
+            stateHandle = state is not null ? new GCHandle<object>(state) : default;
+        }
+        catch
+        {
+            callbackHandle.Dispose();
+
+            NativeMemory.Free(@this);
+
+            throw;
+        }
+
         @this->_vftbl = (IDispatcherQueueHandlerVftbl*)ABI.WindowsRuntime.InteropServices.DispatcherQueueProxyHandlerImpl.Vtable;
-        @this->_callbackHandle = new GCHandle<SendOrPostCallback>(handler);
-        @this->_stateHandle = state is not null ? new GCHandle<object>(state) : default;
+        @this->_callbackHandle = callbackHandle;
+        @this->_stateHandle = stateHandle;
         @this->_referenceCount = 1;
 
         return @this;
