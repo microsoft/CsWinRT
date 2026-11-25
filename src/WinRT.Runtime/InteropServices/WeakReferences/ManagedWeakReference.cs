@@ -57,7 +57,7 @@ internal unsafe struct ManagedWeakReference
             throw;
         }
 
-        @this->_vftbl = (IWeakReferenceVftbl*)ManagedWeakReferenceImpl.Vtable;
+        @this->_vftbl = (IWeakReferenceVftbl*)IWeakReferenceImpl.Vtable;
         @this->_weakHandle = WeakGCHandle<object>.ToIntPtr(weakHandle);
         @this->_referenceCount = 1;
 

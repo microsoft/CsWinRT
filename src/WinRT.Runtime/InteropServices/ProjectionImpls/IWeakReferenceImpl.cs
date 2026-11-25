@@ -8,10 +8,13 @@ using System.Runtime.InteropServices;
 namespace WindowsRuntime.InteropServices;
 
 /// <summary>
-/// The native implementation of <c>IWeakReference</c> for <see cref="ManagedWeakReference"/>.
+/// The <c>IWeakReference</c> implementation for <see cref="ManagedWeakReference"/>.
 /// </summary>
+/// <remarks>
+/// This type is specifically for <see cref="ManagedWeakReference"/>, which is the only <c>IWeakReference</c> implementation for managed types.
+/// </remarks>
 /// <see href="https://learn.microsoft.com/windows/win32/api/weakreference/nn-weakreference-iweakreference"/>
-internal static unsafe class ManagedWeakReferenceImpl
+internal static unsafe class IWeakReferenceImpl
 {
     /// <summary>
     /// The <see cref="IWeakReferenceVftbl"/> value for the <see cref="ManagedWeakReference"/> implementation.
@@ -22,7 +25,7 @@ internal static unsafe class ManagedWeakReferenceImpl
     /// <summary>
     /// Initializes <see cref="Vftbl"/>.
     /// </summary>
-    static ManagedWeakReferenceImpl()
+    static IWeakReferenceImpl()
     {
         Vftbl.QueryInterface = &QueryInterface;
         Vftbl.AddRef = &AddRef;
