@@ -1374,6 +1374,7 @@ namespace WinRT
 #else
                     Marshal.PtrToStructure((IntPtr)data, AbiType);
 #endif
+                MarshalNonBlittable<T>.DisposeAbi(abi_element);
                 data += abi_element_size;
             }
 #pragma warning restore IL3050
