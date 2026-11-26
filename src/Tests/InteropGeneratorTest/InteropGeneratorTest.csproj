@@ -37,6 +37,7 @@
     <Compile Include="..\..\WinRT.Interop.Generator\Writers\InteropModuleWriter.cs" Link="Helpers\Writers\InteropModuleWriter.cs" />
     <Compile Include="..\..\WinRT.Generator.Tasks\InteropGeneratorGCPolicy.cs" Link="Helpers\InteropGeneratorGCPolicy.cs" />
     <Compile Include="..\..\WinRT.Generator.Tasks\Helpers\ProjectPathQualifier.cs" Link="Helpers\ProjectPathQualifier.cs" />
+    <Compile Include="..\..\WinRT.Generator.Tasks\Extensions\PathExtensions.cs" Link="Helpers\PathExtensions.cs" />
     <AdditionalFiles Include="..\..\WinRT.Generator.Tasks\NativeMethods.txt" Link="NativeMethods.txt" />
     <AdditionalFiles Include="..\..\WinRT.Generator.Tasks\NativeMethods.json" Link="NativeMethods.json" />
   </ItemGroup>

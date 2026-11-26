@@ -31,11 +31,8 @@ internal static class ProjectPathQualifier
             return path;
         }
 
-        // Root-relative path (eg. '\foo'), but not a UNC or device path (eg. '\\server\share', '\\?\C:\foo'), which are fully
-        // qualified, nor an NT object path (eg. '\??\C:\foo'), which is not relative to the drive of the project either.
-        if (IsDirectorySeparator(path[0]) &&
-            (path.Length == 1 || !IsDirectorySeparator(path[1])) &&
-            !path.StartsWith(@"\??\", StringComparison.Ordinal))
+        // Root-relative path (eg. '\foo'), which resolves against the drive (or share) of the project
+        if (Path.IsRootRelative(path))
         {
             string? root = Path.GetPathRoot(projectDirectory);
 
@@ -48,24 +45,11 @@ internal static class ProjectPathQualifier
         }
 
         // Drive-relative path (eg. 'C:foo'), which resolves against the project directory if it's on the same drive
-        if (path.Length >= 2 &&
-            path[1] == ':' &&
-            (path.Length == 2 || !IsDirectorySeparator(path[2])) &&
-            projectDirectory.Length >= 2 &&
-            projectDirectory[1] == ':' &&
-            char.ToUpperInvariant(path[0]) == char.ToUpperInvariant(projectDirectory[0]))
+        if (Path.IsDriveRelative(path) && Path.IsOnSameDrive(path, projectDirectory))
         {
             return Path.Combine(projectDirectory, path[2..]);
         }
 
         return path;
-    }
-
-    /// <summary>
-    /// Checks whether a character is a directory separator.
-    /// </summary>
-    private static bool IsDirectorySeparator(char c)
-    {
-        return c == Path.DirectorySeparatorChar || c == Path.AltDirectorySeparatorChar;
     }
 }
