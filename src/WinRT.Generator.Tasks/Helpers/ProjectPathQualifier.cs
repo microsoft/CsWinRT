@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+#pragma warning disable IDE0046
+
 namespace Microsoft.NET.Build.Tasks;
 
 /// <summary>
@@ -37,20 +39,26 @@ internal static class ProjectPathQualifier
         {
             string? root = Path.GetPathRoot(projectDirectory);
 
-            return string.IsNullOrEmpty(root)
-                ? path
-                : Path.Combine(root, path.TrimStart(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar));
+            if (string.IsNullOrEmpty(root))
+            {
+                return path;
+            }
+
+            return Path.Combine(root, path.TrimStart(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar));
         }
 
         // Drive-relative path (eg. 'C:foo'), which resolves against the project directory if it's on the same drive
-        return path.Length >= 2 &&
+        if (path.Length >= 2 &&
             path[1] == ':' &&
             (path.Length == 2 || !IsDirectorySeparator(path[2])) &&
             projectDirectory.Length >= 2 &&
             projectDirectory[1] == ':' &&
-            char.ToUpperInvariant(path[0]) == char.ToUpperInvariant(projectDirectory[0])
-            ? Path.Combine(projectDirectory, path[2..])
-            : path;
+            char.ToUpperInvariant(path[0]) == char.ToUpperInvariant(projectDirectory[0]))
+        {
+            return Path.Combine(projectDirectory, path[2..]);
+        }
+
+        return path;
     }
 
     /// <summary>

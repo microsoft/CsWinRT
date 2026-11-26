@@ -4,6 +4,8 @@
 using System.Diagnostics.CodeAnalysis;
 using Microsoft.Build.Framework;
 
+#pragma warning disable IDE0046
+
 namespace Microsoft.NET.Build.Tasks;
 
 /// <summary>
@@ -32,9 +34,12 @@ internal static class TaskEnvironmentExtensions
         {
             // 'GetAbsolutePath' doesn't report failures (it returns a struct and throws on invalid input), so validate the input
             // upfront instead of catching exceptions. Paths containing invalid characters are returned as is, like empty paths.
-            return path is null || path.Length == 0 || path.IndexOfAny(Path.GetInvalidPathChars()) >= 0
-                ? path
-                : ProjectPathQualifier.Qualify(taskEnvironment.GetAbsolutePath(path).Value, taskEnvironment.ProjectDirectory.Value);
+            if (path is null || path.Length == 0 || path.IndexOfAny(Path.GetInvalidPathChars()) >= 0)
+            {
+                return path;
+            }
+
+            return ProjectPathQualifier.Qualify(taskEnvironment.GetAbsolutePath(path).Value, taskEnvironment.ProjectDirectory.Value);
         }
     }
 }
