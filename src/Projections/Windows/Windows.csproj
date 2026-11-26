@@ -8,7 +8,12 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\WinRT.Generator.Tasks\WinRT.Generator.Tasks.csproj" ReferenceOutputAssembly="false" />
+    <!--
+      Build both task assemblies explicitly. A project reference to a multi-targeted project only builds the target framework
+      that is compatible with the referencing project (here, 'net10.0'), but desktop MSBuild loads the 'net472' tasks instead.
+    -->
+    <ProjectReference Include="..\..\WinRT.Generator.Tasks\WinRT.Generator.Tasks.csproj" SetTargetFramework="TargetFramework=net10.0" ReferenceOutputAssembly="false" />
+    <ProjectReference Include="..\..\WinRT.Generator.Tasks\WinRT.Generator.Tasks.csproj" SetTargetFramework="TargetFramework=net472" ReferenceOutputAssembly="false" />
     <ProjectReference Include="..\..\WinRT.Runtime\WinRT.Runtime.csproj" />
   </ItemGroup>
 
