@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -142,6 +143,17 @@ public sealed class RunCsWinRTForwarderImplGenerator : ToolTask
         }
 
         return true;
+    }
+
+    /// <inheritdoc/>
+    protected override ProcessStartInfo GetProcessStartInfo(string pathToTool, string commandLineCommands, string responseFileSwitch)
+    {
+        ProcessStartInfo startInfo = base.GetProcessStartInfo(pathToTool, commandLineCommands, responseFileSwitch);
+
+        // 'ToolTask' uses the tool path as is, so a relative 'ToolPath' would be resolved against the current directory of the MSBuild process
+        startInfo.ResolveFileName(TaskEnvironment);
+
+        return startInfo;
     }
 
     /// <inheritdoc/>

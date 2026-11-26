@@ -35,9 +35,16 @@ public sealed class Test_MultiThreadableTasks
                 $"Task '{task.FullName}' is missing '[MSBuildMultiThreadableTask]'.");
 
             // Tool tasks inherit 'IMultiThreadableTask' from 'ToolTask', all other tasks need to implement it directly
+            bool isToolTask = task.BaseType?.Name?.Value == "ToolTask";
+
             Assert.IsTrue(
-                task.BaseType?.Name?.Value == "ToolTask" || task.Interfaces.Any(static i => i.Interface?.Name?.Value == "IMultiThreadableTask"),
+                isToolTask || task.Interfaces.Any(static i => i.Interface?.Name?.Value == "IMultiThreadableTask"),
                 $"Task '{task.FullName}' does not implement 'IMultiThreadableTask'.");
+
+            // 'ToolTask' doesn't make a relative tool path absolute, so each tool task has to resolve it ('ResolveFileName')
+            Assert.IsTrue(
+                !isToolTask || task.Methods.Any(static method => method.Name?.Value == "GetProcessStartInfo"),
+                $"Tool task '{task.FullName}' does not override 'GetProcessStartInfo'.");
         }
     }
 }

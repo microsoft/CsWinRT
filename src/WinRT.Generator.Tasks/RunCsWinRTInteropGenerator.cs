@@ -307,6 +307,9 @@ public sealed class RunCsWinRTInteropGenerator : ToolTask
     {
         ProcessStartInfo startInfo = base.GetProcessStartInfo(pathToTool, commandLineCommands, responseFileSwitch);
 
+        // 'ToolTask' uses the tool path as is, so a relative 'ToolPath' would be resolved against the current directory of the MSBuild process
+        startInfo.ResolveFileName(TaskEnvironment);
+
         // Set the child's GC mode: explicit property first, existing environment next, otherwise automatic selection
         if (!string.IsNullOrEmpty(EnableServerGC))
         {
