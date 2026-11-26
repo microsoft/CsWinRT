@@ -36,6 +36,8 @@
     <Compile Include="..\..\WinRT.Interop.Generator\Writers\CustomAttributePayloadCache.cs" Link="Helpers\Writers\CustomAttributePayloadCache.cs" />
     <Compile Include="..\..\WinRT.Interop.Generator\Writers\InteropModuleWriter.cs" Link="Helpers\Writers\InteropModuleWriter.cs" />
     <Compile Include="..\..\WinRT.Generator.Tasks\InteropGeneratorGCPolicy.cs" Link="Helpers\InteropGeneratorGCPolicy.cs" />
+    <Compile Include="..\..\WinRT.Generator.Tasks\Helpers\ProjectPathQualifier.cs" Link="Helpers\ProjectPathQualifier.cs" />
+    <Compile Include="..\..\WinRT.Generator.Tasks\Extensions\PathExtensions.cs" Link="Helpers\PathExtensions.cs" />
     <AdditionalFiles Include="..\..\WinRT.Generator.Tasks\NativeMethods.txt" Link="NativeMethods.txt" />
     <AdditionalFiles Include="..\..\WinRT.Generator.Tasks\NativeMethods.json" Link="NativeMethods.json" />
   </ItemGroup>
@@ -43,7 +45,18 @@
   <ItemGroup>
     <ProjectReference Include="..\..\WinRT.Runtime\WinRT.Runtime.csproj"
                       UndefineProperties="BuildToolArch;PublishBuildTool;RuntimeIdentifier;SelfContained;Platform" />
+    <!--
+      Build both task assemblies explicitly. A project reference to a multi-targeted project only builds the target framework
+      that is compatible with the referencing project (here, 'net10.0'), but the tests inspect both assemblies, and projects
+      built with desktop MSBuild load the 'net472' one. So explicitly request each target framework.
+    -->
     <ProjectReference Include="..\..\WinRT.Generator.Tasks\WinRT.Generator.Tasks.csproj"
+                      SetTargetFramework="TargetFramework=net10.0"
+                      ReferenceOutputAssembly="false"
+                      UndefineProperties="BuildToolArch;PublishBuildTool;RuntimeIdentifier;SelfContained;Platform"
+                      Private="false" />
+    <ProjectReference Include="..\..\WinRT.Generator.Tasks\WinRT.Generator.Tasks.csproj"
+                      SetTargetFramework="TargetFramework=net472"
                       ReferenceOutputAssembly="false"
                       UndefineProperties="BuildToolArch;PublishBuildTool;RuntimeIdentifier;SelfContained;Platform"
                       Private="false" />
@@ -60,10 +73,13 @@
     <AssemblyMetadata Include="NetStandard20ReferenceDirectory"
                       Value="$(NuGetPackageRoot)netstandard.library\2.0.3\build\netstandard2.0\ref" />
     <AssemblyMetadata Include="GeneratorTasksAssemblyPath"
-                      Value="$(MSBuildThisFileDirectory)..\..\WinRT.Generator.Tasks\bin\$(Configuration)\netstandard2.0\WinRT.Generator.Tasks.dll" />
+                      Value="$(MSBuildThisFileDirectory)..\..\WinRT.Generator.Tasks\bin\$(Configuration)\net10.0\WinRT.Generator.Tasks.dll" />
+    <AssemblyMetadata Include="GeneratorTasksNetFrameworkAssemblyPath"
+                      Value="$(MSBuildThisFileDirectory)..\..\WinRT.Generator.Tasks\bin\$(Configuration)\net472\WinRT.Generator.Tasks.dll" />
     <AssemblyMetadata Include="CsWinRTTargetsPath"
                       Value="$(MSBuildThisFileDirectory)..\..\..\nuget\Microsoft.Windows.CsWinRT.CsWinRTGen.targets" />
     <Using Include="Microsoft.VisualStudio.TestTools.UnitTesting" />
     <Using Include="System" />
+    <Using Include="System.IO" />
   </ItemGroup>
 </Project>

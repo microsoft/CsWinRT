@@ -8,8 +8,13 @@ Copyright (C) Microsoft Corporation. All rights reserved.
   <!-- Keep shared generator defaults in one place for all downstream targets -->
   <PropertyGroup>
 
-    <!-- Allow SDK and local builds to override the packaged task assembly -->
-    <CsWinRTGenTasksAssembly Condition="'$(CsWinRTGenTasksAssembly)' == ''">$(MSBuildThisFileDirectory)..\tools\WinRT.Generator.Tasks.dll</CsWinRTGenTasksAssembly>
+    <!--
+      Allow SDK and local builds to override the packaged task assembly. The tasks are shipped both for .NET Framework (used
+      by Visual Studio and 'MSBuild.exe') and for .NET (used by the 'dotnet' CLI), so the right one is selected by runtime.
+    -->
+    <_CsWinRTGenTasksTargetFramework Condition="'$(MSBuildRuntimeType)' == 'Core'">net10.0</_CsWinRTGenTasksTargetFramework>
+    <_CsWinRTGenTasksTargetFramework Condition="'$(MSBuildRuntimeType)' != 'Core'">net472</_CsWinRTGenTasksTargetFramework>
+    <CsWinRTGenTasksAssembly Condition="'$(CsWinRTGenTasksAssembly)' == ''">$(MSBuildThisFileDirectory)..\tools\$(_CsWinRTGenTasksTargetFramework)\WinRT.Generator.Tasks.dll</CsWinRTGenTasksAssembly>
 
     <!-- Use the package's tasks instead of the .NET SDK's duplicate tasks -->
     <CsWinRTGeneratorTasksOverriden>true</CsWinRTGeneratorTasksOverriden>

@@ -72,7 +72,8 @@ namespace Microsoft.NET.Build.Tasks;
 ///   </item>
 /// </list>
 /// </remarks>
-public sealed class GenerateCsWinRTStubExes : Microsoft.Build.Utilities.Task
+[MSBuildMultiThreadableTask]
+public sealed class GenerateCsWinRTStubExes : Microsoft.Build.Utilities.Task, IMultiThreadableTask
 {
     /// <summary>
     /// Gets or sets the collection of stub executables to generate.
@@ -243,6 +244,9 @@ public sealed class GenerateCsWinRTStubExes : Microsoft.Build.Utilities.Task
     public ITaskItem[]? GeneratedStubExes { get; set; }
 
     /// <inheritdoc/>
+    public TaskEnvironment TaskEnvironment { get; set; } = TaskEnvironment.Fallback;
+
+    /// <inheritdoc/>
     public override bool Execute()
     {
         if (!ValidateParameters())
@@ -278,7 +282,7 @@ public sealed class GenerateCsWinRTStubExes : Microsoft.Build.Utilities.Task
             return false;
         }
 
-        if (string.IsNullOrEmpty(NativeLibraryPath) || !File.Exists(NativeLibraryPath))
+        if (string.IsNullOrEmpty(NativeLibraryPath) || !File.Exists(TaskEnvironment.TryGetAbsolutePath(NativeLibraryPath)))
         {
             Log.LogError("The native library '{0}' does not exist.", NativeLibraryPath);
 
@@ -311,12 +315,12 @@ public sealed class GenerateCsWinRTStubExes : Microsoft.Build.Utilities.Task
         // Validate MSVC/SDK paths when not using environmental tools
         if (!UseEnvironmentalTools)
         {
-            if (string.IsNullOrEmpty(MsvcIncludePath) || !Directory.Exists(MsvcIncludePath) ||
-                string.IsNullOrEmpty(WindowsSdkUcrtIncludePath) || !Directory.Exists(WindowsSdkUcrtIncludePath) ||
-                string.IsNullOrEmpty(WindowsSdkUmIncludePath) || !Directory.Exists(WindowsSdkUmIncludePath) ||
-                string.IsNullOrEmpty(MsvcLibPath) || !Directory.Exists(MsvcLibPath) ||
-                string.IsNullOrEmpty(WindowsSdkUcrtLibPath) || !Directory.Exists(WindowsSdkUcrtLibPath) ||
-                string.IsNullOrEmpty(WindowsSdkUmLibPath) || !Directory.Exists(WindowsSdkUmLibPath))
+            if (string.IsNullOrEmpty(MsvcIncludePath) || !Directory.Exists(TaskEnvironment.TryGetAbsolutePath(MsvcIncludePath)) ||
+                string.IsNullOrEmpty(WindowsSdkUcrtIncludePath) || !Directory.Exists(TaskEnvironment.TryGetAbsolutePath(WindowsSdkUcrtIncludePath)) ||
+                string.IsNullOrEmpty(WindowsSdkUmIncludePath) || !Directory.Exists(TaskEnvironment.TryGetAbsolutePath(WindowsSdkUmIncludePath)) ||
+                string.IsNullOrEmpty(MsvcLibPath) || !Directory.Exists(TaskEnvironment.TryGetAbsolutePath(MsvcLibPath)) ||
+                string.IsNullOrEmpty(WindowsSdkUcrtLibPath) || !Directory.Exists(TaskEnvironment.TryGetAbsolutePath(WindowsSdkUcrtLibPath)) ||
+                string.IsNullOrEmpty(WindowsSdkUmLibPath) || !Directory.Exists(TaskEnvironment.TryGetAbsolutePath(WindowsSdkUmLibPath)))
             {
                 Log.LogError(
                     "Failed to find the paths for the include and library folders to pass to MSVC, which are needed to compile stub executables. " +
@@ -384,7 +388,7 @@ public sealed class GenerateCsWinRTStubExes : Microsoft.Build.Utilities.Task
         }
         else if (!string.IsNullOrEmpty(sourceFile))
         {
-            if (!File.Exists(sourceFile))
+            if (!File.Exists(TaskEnvironment.TryGetAbsolutePath(sourceFile)))
             {
                 Log.LogError("The source file '{0}' specified for stub '{1}' does not exist.", sourceFile, stubName);
 
@@ -393,7 +397,7 @@ public sealed class GenerateCsWinRTStubExes : Microsoft.Build.Utilities.Task
         }
         else if (!string.IsNullOrEmpty(DefaultSourceFilePath))
         {
-            if (!File.Exists(DefaultSourceFilePath))
+            if (!File.Exists(TaskEnvironment.TryGetAbsolutePath(DefaultSourceFilePath)))
             {
                 Log.LogError("The default stub .exe source file '{0}' does not exist.", DefaultSourceFilePath);
 
@@ -447,16 +451,19 @@ public sealed class GenerateCsWinRTStubExes : Microsoft.Build.Utilities.Task
         // Resolve manifest path to full path so it works regardless of working directory
         if (!string.IsNullOrEmpty(win32Manifest))
         {
-            win32Manifest = Path.GetFullPath(win32Manifest);
+            win32Manifest = Path.GetFullPath(TaskEnvironment.TryGetAbsolutePath(win32Manifest));
         }
 
-        // Prepare paths for the intermediate working directory for this stub
-        string stubIntermediateDir = Path.Combine(IntermediateOutputDirectory, stubName);
+        // Prepare paths for the intermediate working directory for this stub (all resolved against
+        // the project directory, so that nothing depends on the current directory of the process)
+        string intermediateOutputDirectory = TaskEnvironment.TryGetAbsolutePath(IntermediateOutputDirectory)!;
+        string destinationDirectory = TaskEnvironment.TryGetAbsolutePath(DestinationDirectory)!;
+        string stubIntermediateDir = Path.Combine(intermediateOutputDirectory, stubName);
         string sourceFileName = stubName + ".c";
         string sourceFilePath = Path.Combine(stubIntermediateDir, sourceFileName);
         string binaryFileName = stubName + ".exe";
         string binaryOutputFilePath = Path.Combine(stubIntermediateDir, binaryFileName);
-        string binaryDestinationFilePath = Path.Combine(DestinationDirectory, binaryFileName);
+        string binaryDestinationFilePath = Path.Combine(destinationDirectory, binaryFileName);
 
         Log.LogMessage(MessageImportance.Normal, "Generating stub .exe '{0}'", stubName);
 
@@ -464,7 +471,7 @@ public sealed class GenerateCsWinRTStubExes : Microsoft.Build.Utilities.Task
         {
             // Ensure the intermediate and destination directories exist
             _ = Directory.CreateDirectory(stubIntermediateDir);
-            _ = Directory.CreateDirectory(DestinationDirectory);
+            _ = Directory.CreateDirectory(destinationDirectory);
 
             // Write the source for this stub (priority: SourceText > SourceFile > DefaultSourceFilePath)
             if (!string.IsNullOrEmpty(sourceText))
@@ -473,11 +480,11 @@ public sealed class GenerateCsWinRTStubExes : Microsoft.Build.Utilities.Task
             }
             else if (!string.IsNullOrEmpty(sourceFile))
             {
-                File.Copy(sourceFile, sourceFilePath, overwrite: true);
+                File.Copy(TaskEnvironment.TryGetAbsolutePath(sourceFile), sourceFilePath, overwrite: true);
             }
             else
             {
-                File.Copy(DefaultSourceFilePath, sourceFilePath, overwrite: true);
+                File.Copy(TaskEnvironment.TryGetAbsolutePath(DefaultSourceFilePath)!, sourceFilePath, overwrite: true);
             }
 
             // Delete any previously-generated broken .exe in the destination (see https://github.com/dotnet/runtime/issues/111313)
@@ -555,9 +562,9 @@ public sealed class GenerateCsWinRTStubExes : Microsoft.Build.Utilities.Task
         // If not using environmental tools, pass the paths to the required include folders
         if (!UseEnvironmentalTools)
         {
-            AppendQuoted(args, "/I", MsvcIncludePath!);
-            AppendQuoted(args, "/I", WindowsSdkUcrtIncludePath!);
-            AppendQuoted(args, "/I", WindowsSdkUmIncludePath!);
+            AppendQuoted(args, "/I", TaskEnvironment.TryGetAbsolutePath(MsvcIncludePath)!);
+            AppendQuoted(args, "/I", TaskEnvironment.TryGetAbsolutePath(WindowsSdkUcrtIncludePath)!);
+            AppendQuoted(args, "/I", TaskEnvironment.TryGetAbsolutePath(WindowsSdkUmIncludePath)!);
         }
 
         // Configure the C runtime library linking behavior:
@@ -572,14 +579,14 @@ public sealed class GenerateCsWinRTStubExes : Microsoft.Build.Utilities.Task
 
         // Source file and native library
         AppendQuotedPath(args, sourceFilePath);
-        AppendQuotedPath(args, NativeLibraryPath!);
+        AppendQuotedPath(args, TaskEnvironment.TryGetAbsolutePath(NativeLibraryPath)!);
 
         // If not using environmental tools, pass the paths to the required lib folders
         if (!UseEnvironmentalTools)
         {
-            AppendQuotedWildcard(args, MsvcLibPath!);
-            AppendQuotedWildcard(args, WindowsSdkUcrtLibPath!);
-            AppendQuotedWildcard(args, WindowsSdkUmLibPath!);
+            AppendQuotedWildcard(args, TaskEnvironment.TryGetAbsolutePath(MsvcLibPath)!);
+            AppendQuotedWildcard(args, TaskEnvironment.TryGetAbsolutePath(WindowsSdkUcrtLibPath)!);
+            AppendQuotedWildcard(args, TaskEnvironment.TryGetAbsolutePath(WindowsSdkUmLibPath)!);
         }
 
         // Start linker options (https://learn.microsoft.com/cpp/build/reference/compiler-command-line-syntax)
@@ -657,26 +664,29 @@ public sealed class GenerateCsWinRTStubExes : Microsoft.Build.Utilities.Task
     /// <returns><see langword="true"/> if the compiler exited successfully; otherwise, <see langword="false"/>.</returns>
     private bool InvokeCompiler(string arguments, string workingDirectory, string stubName)
     {
-        ProcessStartInfo startInfo = new()
-        {
-            FileName = ClExePath,
-            Arguments = arguments,
-            WorkingDirectory = workingDirectory,
-            UseShellExecute = false,
-            RedirectStandardOutput = true,
-            RedirectStandardError = true,
-            CreateNoWindow = true
-        };
+        // Start from the environment of the project being built, rather than the one of the (possibly shared) MSBuild process
+        ProcessStartInfo startInfo = TaskEnvironment.GetProcessStartInfo();
+
+        startInfo.FileName = ClExePath;
+        startInfo.Arguments = arguments;
+        startInfo.WorkingDirectory = workingDirectory;
+        startInfo.UseShellExecute = false;
+        startInfo.RedirectStandardOutput = true;
+        startInfo.RedirectStandardError = true;
+        startInfo.CreateNoWindow = true;
 
         // Add extra directories to the PATH if needed (e.g. for mt.exe and rc.exe)
         if (!string.IsNullOrEmpty(AdditionalPath))
         {
             string currentPath = startInfo.EnvironmentVariables.ContainsKey("PATH")
-                ? startInfo.EnvironmentVariables["PATH"]
+                ? startInfo.EnvironmentVariables["PATH"] ?? ""
                 : "";
 
             startInfo.EnvironmentVariables["PATH"] = currentPath + ";" + AdditionalPath;
         }
+
+        // Look up 'cl.exe' in the 'PATH' of the task environment (not the one of the MSBuild process, which can differ in '-mt' builds)
+        startInfo.ResolveFileName(TaskEnvironment);
 
         try
         {

@@ -1,9 +1,25 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
+
+    <!--
+      MSBuild runs tasks on .NET Framework when building from Visual Studio or 'MSBuild.exe', and on .NET when building
+      with the 'dotnet' CLI. The 'Microsoft.Build.*' packages that define the multithreaded build APIs ('IMultiThreadableTask',
+      'TaskEnvironment', etc.) only ship 'net472' and 'net10.0' assemblies (and no 'netstandard2.0' one), so we need to
+      build the tasks for both of those. The nuget package ships both, and the targets pick the right one at build time.
+    -->
+    <TargetFrameworks>net472;net10.0</TargetFrameworks>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+
+    <!-- The tasks only ever run inside MSBuild, so none of the AOT and trimming analyzers are relevant -->
+    <IsAotCompatible>false</IsAotCompatible>
+
+    <!-- The CsWin32 P/Invokes use 'SetLastError', which needs runtime marshalling (the tasks don't need it to be disabled, they only run in MSBuild) -->
+    <GenerateDisableRuntimeMarshallingAttribute>false</GenerateDisableRuntimeMarshallingAttribute>
+
+    <!-- The tasks have to load in any MSBuild process, regardless of the architecture of the host (eg. 32-bit, 64-bit, or ARM64 Visual Studio) -->
+    <PlatformTarget>AnyCPU</PlatformTarget>
 
     <!-- Common metadata properties for publishing -->
     <Description>C#/WinRT Generator Tasks v$(VersionString)</Description>
@@ -17,9 +33,30 @@
     <AssemblyOriginatorKeyFile>..\WinRT.Runtime\key.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
 
+  <ItemGroup Condition="'$(TargetFramework)' == 'net10.0'">
+
+    <!--
+      The tasks only ever run on Windows (the CLI tools they invoke are Windows executables), and they use Windows-only APIs (eg. to
+      query the installed physical memory). Ask the .NET SDK to emit '[assembly: SupportedOSPlatform]' for this. The attribute doesn't
+      exist on .NET Framework, where the platform compatibility analyzer is not active either, so this is only needed for 'net10.0'.
+    -->
+    <AssemblyAttribute Include="System.Runtime.Versioning.SupportedOSPlatformAttribute">
+      <_Parameter1>windows6.0.6000</_Parameter1>
+    </AssemblyAttribute>
+  </ItemGroup>
+
   <ItemGroup>
-    <PackageReference Include="Microsoft.Build.Utilities.Core" VersionOverride="17.14.8" ExcludeAssets="Runtime" />
+
+    <!--
+      The tasks need MSBuild 18.7 or later, which is the first version where 'ToolTask' supports multithreaded builds (it
+      implements 'IMultiThreadableTask'). The same version is used for both targets, so we don't accidentally rely on newer APIs.
+      The reference is not copied to the output, as the tasks always run in an MSBuild process which already has these assemblies.
+    -->
+    <PackageReference Include="Microsoft.Build.Utilities.Core" VersionOverride="18.7.1" ExcludeAssets="Runtime" />
     <PackageReference Include="Microsoft.Windows.CsWin32" PrivateAssets="all" />
+
+    <!-- Polyfills for the APIs and attributes that are missing on .NET Framework (eg. '[NotNullIfNotNull]') -->
+    <PackageReference Include="PolySharp" PrivateAssets="all" />
   </ItemGroup>
 	
 </Project>

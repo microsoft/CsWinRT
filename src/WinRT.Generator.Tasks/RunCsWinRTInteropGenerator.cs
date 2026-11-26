@@ -13,6 +13,7 @@ namespace Microsoft.NET.Build.Tasks;
 /// <summary>
 /// The custom MSBuild task that invokes the 'cswinrtinteropgen' tool.
 /// </summary>
+[MSBuildMultiThreadableTask]
 public sealed class RunCsWinRTInteropGenerator : ToolTask
 {
     /// <summary>
@@ -233,28 +234,28 @@ public sealed class RunCsWinRTInteropGenerator : ToolTask
             return false;
         }
 
-        if (InteropAssemblyDirectory is null || !Directory.Exists(InteropAssemblyDirectory))
+        if (InteropAssemblyDirectory is null || !Directory.Exists(TaskEnvironment.TryGetAbsolutePath(InteropAssemblyDirectory)))
         {
             Log.LogWarning("Generated assembly directory '{0}' is invalid or does not exist.", InteropAssemblyDirectory);
 
             return false;
         }
 
-        if (DebugReproDirectory is not null && !Directory.Exists(DebugReproDirectory))
+        if (DebugReproDirectory is not null && !Directory.Exists(TaskEnvironment.TryGetAbsolutePath(DebugReproDirectory)))
         {
             Log.LogWarning("Debug repro directory '{0}' is invalid or does not exist.", DebugReproDirectory);
 
             return false;
         }
 
-        if (LogDirectory is not null && !Directory.Exists(LogDirectory))
+        if (LogDirectory is not null && !Directory.Exists(TaskEnvironment.TryGetAbsolutePath(LogDirectory)))
         {
             Log.LogError("Interop generator log directory '{0}' is invalid or does not exist.", LogDirectory);
 
             return false;
         }
 
-        if (CsWinRTToolsDirectory is null || !Directory.Exists(CsWinRTToolsDirectory))
+        if (CsWinRTToolsDirectory is null || !Directory.Exists(TaskEnvironment.TryGetAbsolutePath(CsWinRTToolsDirectory)))
         {
             Log.LogWarning("Tools directory '{0}' is invalid or does not exist.", CsWinRTToolsDirectory);
 
@@ -306,6 +307,9 @@ public sealed class RunCsWinRTInteropGenerator : ToolTask
     {
         ProcessStartInfo startInfo = base.GetProcessStartInfo(pathToTool, commandLineCommands, responseFileSwitch);
 
+        // 'ToolTask' uses the tool path as is, so a relative 'ToolPath' would be resolved against the current directory of the MSBuild process
+        startInfo.ResolveFileName(TaskEnvironment);
+
         // Set the child's GC mode: explicit property first, existing environment next, otherwise automatic selection
         if (!string.IsNullOrEmpty(EnableServerGC))
         {
@@ -347,13 +351,14 @@ public sealed class RunCsWinRTInteropGenerator : ToolTask
     protected override string GenerateFullPathToTool()
     {
         string? effectiveArchitecture = CsWinRTToolsArchitecture;
+        string toolsDirectory = TaskEnvironment.TryGetAbsolutePath(CsWinRTToolsDirectory)!;
 
         // Special case for when 'AnyCPU' is specified (mostly for testing scenarios).
         // We just reuse the exact input directory and assume the architecture matches.
         // This makes it easy to run the task against a local build of 'cswinrtinteropgen'.
         if (effectiveArchitecture?.Equals("AnyCPU", StringComparison.OrdinalIgnoreCase) is true)
         {
-            return Path.Combine(CsWinRTToolsDirectory, ToolName);
+            return Path.Combine(toolsDirectory, ToolName);
         }
 
         // If the architecture is not specified, determine it based on the current process architecture
@@ -367,7 +372,7 @@ public sealed class RunCsWinRTInteropGenerator : ToolTask
         // The tool is inside an architecture-specific subfolder, as it's a native binary
         string architectureDirectory = $"win-{effectiveArchitecture}";
 
-        return Path.Combine(CsWinRTToolsDirectory, architectureDirectory, ToolName);
+        return Path.Combine(toolsDirectory, architectureDirectory, ToolName);
     }
 
     /// <inheritdoc/>

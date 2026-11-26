@@ -267,7 +267,8 @@ set cswinrtimplgen_%cswinrt_platform%=%this_dir%WinRT.Impl.Generator\bin\%cswinr
 set cswinrtprojectiongen_%cswinrt_platform%=%this_dir%WinRT.Projection.Generator\bin\%cswinrt_configuration%\net10.0\win-%cswinrt_platform%\publish\cswinrtprojectiongen.exe
 set cswinrtprojectionrefgen_%cswinrt_platform%=%this_dir%WinRT.Projection.Ref.Generator\bin\%cswinrt_configuration%\net10.0\win-%cswinrt_platform%\publish\cswinrtprojectionrefgen.exe
 set cswinrtwinmdgen_%cswinrt_platform%=%this_dir%WinRT.WinMD.Generator\bin\%cswinrt_configuration%\net10.0\win-%cswinrt_platform%\publish\cswinrtwinmdgen.exe
-set run_cswinrt_generator_task=%this_dir%WinRT.Generator.Tasks\bin\%cswinrt_configuration%\netstandard2.0\WinRT.Generator.Tasks.dll
+set run_cswinrt_generator_task_net10=%this_dir%WinRT.Generator.Tasks\bin\%cswinrt_configuration%\net10.0\WinRT.Generator.Tasks.dll
+set run_cswinrt_generator_task_net472=%this_dir%WinRT.Generator.Tasks\bin\%cswinrt_configuration%\net472\WinRT.Generator.Tasks.dll
 
 set "cswinrt_nuspec=%this_dir%..\nuget\Microsoft.Windows.CsWinRT.nuspec"
 set "cswinrt_nuget_exe=%nuget_dir%\nuget.exe"
@@ -284,7 +285,7 @@ set "cswinrt_package_properties=cswinrt_nuget_version=%cswinrt_version_string%;"
 for %%p in (
   interop_winmd
   net10_runtime net10_runtime_ref net10_runtime_ref_xml
-  source_generator winrt_shim run_cswinrt_generator_task
+  source_generator winrt_shim run_cswinrt_generator_task_net10 run_cswinrt_generator_task_net472
   winrt_host_x86 winrt_host_x64 winrt_host_arm winrt_host_arm64
   winrt_host_resource_x86 winrt_host_resource_x64
   winrt_host_resource_arm winrt_host_resource_arm64
@@ -465,7 +466,8 @@ set "net10_runtime_ref=%cswinrt_artifacts_dir%\product\x64\ref\WinRT.Runtime.dll
 set "net10_runtime_ref_xml=%cswinrt_artifacts_dir%\product\x64\ref\WinRT.Runtime.xml"
 set "source_generator=%cswinrt_artifacts_dir%\product\x64\WinRT.SourceGenerator.dll"
 set "winrt_shim=%cswinrt_artifacts_dir%\product\x64\WinRT.Host.Shim.dll"
-set "run_cswinrt_generator_task=%cswinrt_artifacts_dir%\product\x64\WinRT.Generator.Tasks.dll"
+set "run_cswinrt_generator_task_net10=%cswinrt_artifacts_dir%\product\x64\net10.0\WinRT.Generator.Tasks.dll"
+set "run_cswinrt_generator_task_net472=%cswinrt_artifacts_dir%\product\x64\net472\WinRT.Generator.Tasks.dll"
 for %%a in (x86 x64 arm64) do (
   set "winrt_host_%%a=%cswinrt_artifacts_dir%\product\%%a\native\WinRT.Host.dll"
   set "winrt_host_resource_%%a=%cswinrt_artifacts_dir%\product\%%a\native\WinRT.Host.dll.mui"
@@ -608,7 +610,9 @@ if /I "%cswinrt_platform%"=="x64" (
   if errorlevel 1 exit /b !errorlevel!
   call :copyproduct "%this_dir%Authoring\WinRT.Host.Shim\bin\%cswinrt_configuration%\net10.0\WinRT.Host.Shim.dll" "%cswinrt_stage%"
   if errorlevel 1 exit /b !errorlevel!
-  call :copyproduct "%this_dir%WinRT.Generator.Tasks\bin\%cswinrt_configuration%\netstandard2.0\WinRT.Generator.Tasks.dll" "%cswinrt_stage%"
+  call :copyproduct "%this_dir%WinRT.Generator.Tasks\bin\%cswinrt_configuration%\net10.0\WinRT.Generator.Tasks.dll" "%cswinrt_stage%\net10.0"
+  if errorlevel 1 exit /b !errorlevel!
+  call :copyproduct "%this_dir%WinRT.Generator.Tasks\bin\%cswinrt_configuration%\net472\WinRT.Generator.Tasks.dll" "%cswinrt_stage%\net472"
   if errorlevel 1 exit /b !errorlevel!
   call :copyproduct "%this_dir%WinRT.Internal\bin\%cswinrt_configuration%\net10.0-windows10.0.26100.1\WindowsRuntime.Internal.winmd" "%cswinrt_stage%\native"
   if errorlevel 1 exit /b !errorlevel!

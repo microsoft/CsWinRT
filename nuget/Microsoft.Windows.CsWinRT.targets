@@ -148,6 +148,17 @@ Copyright (C) Microsoft Corporation. All rights reserved.
     </PropertyGroup>
   </Target>
 
+  <!--
+    The CsWinRT build tasks use the multithreaded build APIs of MSBuild ('IMultiThreadableTask', 'TaskEnvironment'),
+    which are only available starting from MSBuild 18.7. Fail early with a clear message, rather than failing later
+    when loading the tasks with an obscure error. This requires a newer .NET SDK (or Visual Studio) to be used.
+  -->
+  <Target Name="_CsWinRTValidateMSBuildVersion" BeforeTargets="PrepareForBuild" Condition="$(CsWinRTEnabled)">
+    <Error
+      Condition="$([MSBuild]::VersionLessThan('$(MSBuildVersion)', '18.7'))"
+      Text="C#/WinRT 3.0 requires MSBuild 18.7 or later (the current version is $(MSBuildVersion)). Update to a newer version of the .NET SDK or Visual Studio." />
+  </Target>
+
   <!-- Remove Windows.Winmd reference to prevent compile collisions-->
   <Target Name="CsWinRTRemoveWindowsReference" Outputs="@(Reference)" Condition="$(CsWinRTEnabled)">
    <ItemGroup>

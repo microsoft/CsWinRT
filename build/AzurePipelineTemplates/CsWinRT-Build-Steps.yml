@@ -332,14 +332,24 @@ steps:
         TargetFolder: $(StagingFolder)\net10.0\native
 
     - task: CopyFiles@2
-      displayName: Stage WinRT.Generator.Tasks
+      displayName: Stage WinRT.Generator.Tasks (net10.0)
       condition: and(succeeded(), eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildConfiguration'], 'release'))
       inputs:
-        SourceFolder: $(Build.SourcesDirectory)\src\WinRT.Generator.Tasks\bin\$(BuildConfiguration)\netstandard2.0
+        SourceFolder: $(Build.SourcesDirectory)\src\WinRT.Generator.Tasks\bin\$(BuildConfiguration)\net10.0
         Contents: |
           WinRT.Generator.Tasks.dll
           WinRT.Generator.Tasks.pdb
-        TargetFolder: $(StagingFolder)\netstandard2.0
+        TargetFolder: $(StagingFolder)\tasks\net10.0
+
+    - task: CopyFiles@2
+      displayName: Stage WinRT.Generator.Tasks (net472)
+      condition: and(succeeded(), eq(variables['BuildPlatform'], 'x86'), eq(variables['BuildConfiguration'], 'release'))
+      inputs:
+        SourceFolder: $(Build.SourcesDirectory)\src\WinRT.Generator.Tasks\bin\$(BuildConfiguration)\net472
+        Contents: |
+          WinRT.Generator.Tasks.dll
+          WinRT.Generator.Tasks.pdb
+        TargetFolder: $(StagingFolder)\tasks\net472
 
     # Build and stage merged Windows SDK projections for each supported OS version.
     # Package versions come from pipeline variables (SdkPackageVersion_XXXXX), which can be
