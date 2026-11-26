@@ -203,22 +203,79 @@ public static unsafe class RestrictedErrorInfo
         {
             Throw(errorCode);
         }
+    }
 
-        [MethodImpl(MethodImplOptions.NoInlining)]
-        static void Throw(HRESULT errorCode)
+    /// <summary>
+    /// Throws the appropriate exception for an <c>HRESULT</c> error code returned by a call on a given object, if it represents a failure.
+    /// </summary>
+    /// <param name="errorCode">The <c>HRESULT</c> to check.</param>
+    /// <param name="thisReference">The <see cref="WindowsRuntimeObjectReference"/> instance for the object that returned <paramref name="errorCode"/>.</param>
+    /// <remarks>
+    /// <para>
+    /// This method should be used for calls on cached activation factories. If <paramref name="errorCode"/> indicates that the server for
+    /// <paramref name="thisReference"/> is no longer available (eg. an out-of-process server died), <paramref name="thisReference"/> is marked
+    /// as disconnected, so that a new activation factory is resolved on the next access (the failing call is not retried, and it still throws).
+    /// </para>
+    /// <para>
+    /// This method otherwise behaves exactly like <see cref="ThrowExceptionForHR(int)"/>.
+    /// </para>
+    /// </remarks>
+    /// <exception cref="Exception">Thrown if <paramref name="errorCode"/> represents a failure.</exception>
+    /// <seealso cref="WindowsRuntimeObjectReference.GetActivationFactory(ref WindowsRuntimeObjectReference?, string, in Guid)"/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static void ThrowExceptionForHR(HRESULT errorCode, WindowsRuntimeObjectReference thisReference)
+    {
+        if (errorCode.Failed)
         {
-            // The 'HRESULT' is guaranteed to be a failure, so the exception will never be 'null'
-            Exception exception = GetExceptionForHR(errorCode, out bool restoredExceptionFromGlobalState)!;
-
-            if (restoredExceptionFromGlobalState)
-            {
-                ExceptionDispatchInfo.Capture(exception).Throw();
-            }
-            else
-            {
-                throw exception;
-            }
+            Throw(errorCode, thisReference);
         }
+    }
+
+    /// <summary>
+    /// Throws the appropriate exception for a failure <c>HRESULT</c> error code.
+    /// </summary>
+    /// <param name="errorCode">The <c>HRESULT</c> to throw an exception for (it must represent a failure).</param>
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    [StackTraceHidden]
+    private static void Throw(HRESULT errorCode)
+    {
+        // The 'HRESULT' is guaranteed to be a failure, so the exception will never be 'null'
+        Exception exception = GetExceptionForHR(errorCode, out bool restoredExceptionFromGlobalState)!;
+
+        if (restoredExceptionFromGlobalState)
+        {
+            ExceptionDispatchInfo.Capture(exception).Throw();
+        }
+        else
+        {
+            throw exception;
+        }
+    }
+
+    /// <summary>
+    /// Throws the appropriate exception for a failure <c>HRESULT</c> error code returned by a call on a given object.
+    /// </summary>
+    /// <param name="errorCode">The <c>HRESULT</c> to throw an exception for (it must represent a failure).</param>
+    /// <param name="thisReference">The <see cref="WindowsRuntimeObjectReference"/> instance for the object that returned <paramref name="errorCode"/>.</param>
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    [StackTraceHidden]
+    private static void Throw(HRESULT errorCode, WindowsRuntimeObjectReference thisReference)
+    {
+        // Mark the object reference as disconnected if its server is definitely gone, so a new activation factory is resolved on the next access.
+        // 'RPC_S_CALL_FAILED' is excluded because the server might still be alive: a static event handler registered through the old factory
+        // would then keep firing, and could never be removed (removing it through the new factory is a no-op). If the server is gone, the
+        // next call on the dead proxy returns 'RPC_S_SERVER_UNAVAILABLE' and flags it, so excluding it costs at most one extra failed call.
+        if (errorCode is
+            WellKnownErrorCodes.RPC_E_DISCONNECTED or
+            WellKnownErrorCodes.RPC_E_SERVER_DIED or
+            WellKnownErrorCodes.RPC_E_SERVER_DIED_DNE or
+            WellKnownErrorCodes.RPC_S_SERVER_UNAVAILABLE or
+            WellKnownErrorCodes.RPC_S_CALL_FAILED_DNE)
+        {
+            thisReference.MarkDisconnected();
+        }
+
+        Throw(errorCode);
     }
 
     /// <summary>

@@ -20,6 +20,10 @@ For sealed runtime classes like `WinRTClass`, the generated constructors are rel
 ```csharp
 public sealed class WinRTClass : WindowsRuntimeObject
 {
+    // Cached activation factory (resolved and managed by 'WindowsRuntimeObjectReference')
+    private static WindowsRuntimeObjectReference _objRef_global__MyLib_WinRTClass =>
+        WindowsRuntimeObjectReference.GetActivationFactory(ref field, "MyLib.WinRTClass");
+
     // Default constructor - uses activation factory directly
     public WinRTClass()
         : base(_objRef_global__MyLib_WinRTClass, in IID_MyLib_WinRTClass)
@@ -46,6 +50,8 @@ public sealed class WinRTClass : WindowsRuntimeObject
     // Other members...
 }
 ```
+
+The `_objRef_*` property for the activation factory is a one-liner over its own backing field (the C# `field` keyword): `WindowsRuntimeObjectReference.GetActivationFactory(ref field, ...)` resolves the activation factory on first use, and again whenever the cached one can't be used anymore (from a different COM context, or after a call on it failed because its out-of-process server died, in which case that call still throws and only the next access uses a new activation factory). The same pattern is used for the activation factories of static and factory interfaces (including composable factories), which also take the IID of the interface to resolve.
 
 In this example, we have a parameterless constructor and one with a `string` parameter. Any additional constructors taking parameters would use the same callback pattern (see details below), where the parameters are passed via a `ReadOnlySpan<object?>`.
 
@@ -179,8 +185,7 @@ private static unsafe void ActivationCallback(
     out void* innerInterface,
     out void* defaultInterface)
 {
-    using WindowsRuntimeObjectReferenceValue activationFactoryValue =
-        _objRef_global__Windows_Data_Json_JsonArray.AsValue();
+    using WindowsRuntimeObjectReferenceValue activationFactoryValue = _objRef_global__MyLib_IUnsealedWinRTClassFactory.AsValue();
 
     string? name = (string?)additionalParameters[0];
     fixed (char* namePtr = name)
@@ -196,7 +201,8 @@ private static unsafe void ActivationCallback(
                 innerInterface: innerInterfacePtr,
                 instance: defaultInterfacePtr);
 
-            RestrictedErrorInfo.ThrowExceptionForHR(hresult);
+            // Marks the activation factory that was called as disconnected if its server died, so that a new one is used for the next activation
+            RestrictedErrorInfo.ThrowExceptionForHR(hresult, activationFactoryValue.GetUnderlyingObjectReferenceUnsafe());
         }
     }
 }

@@ -86,6 +86,19 @@ public readonly unsafe ref struct WindowsRuntimeObjectReferenceValue
     }
 
     /// <summary>
+    /// Gets the underlying <see cref="WindowsRuntimeObjectReference"/> instance wrapped by the current instance.
+    /// </summary>
+    /// <returns>The underlying <see cref="WindowsRuntimeObjectReference"/> instance wrapped by the current instance.</returns>
+    /// <remarks>
+    /// This method must only be used on values created from a <see cref="WindowsRuntimeObjectReference"/> instance (ie. from <see cref="WindowsRuntimeObjectReference.AsValue()"/>).
+    /// </remarks>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public WindowsRuntimeObjectReference GetUnderlyingObjectReferenceUnsafe()
+    {
+        return _objectReference!;
+    }
+
+    /// <summary>
     /// Gets the underlying pointer owned by the current instance.
     /// </summary>
     /// <returns>The underlying pointer owned by the current instance.</returns>

@@ -627,9 +627,13 @@ internal static partial class ConstructorFactory
                   &__innerInterface
                 """);
         }
+
+        // Close the vtable call, and pass the activation factory object reference to 'ThrowExceptionForHR', so that it
+        // can be marked as disconnected if the server is no longer available (and a new one is resolved on the next access)
         writer.WriteLine(isMultiline: true, """
             ,
-              &__retval));
+              &__retval),
+              activationFactoryValue.GetUnderlyingObjectReferenceUnsafe());
             """);
         if (isComposable)
         {

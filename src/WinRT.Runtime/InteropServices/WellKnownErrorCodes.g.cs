@@ -135,8 +135,17 @@ internal static class WellKnownErrorCodes
     /// <summary>The object invoked has disconnected from its clients.</summary>
     public const HRESULT RPC_E_DISCONNECTED = unchecked((int)0x80010108);
 
+    /// <summary>The callee (server [not server application]) is not available and disappeared; all connections are invalid. The call may have executed.</summary>
+    public const HRESULT RPC_E_SERVER_DIED = unchecked((int)0x80010007);
+
+    /// <summary>The callee (server [not server application]) is not available and disappeared; all connections are invalid. The call did not execute.</summary>
+    public const HRESULT RPC_E_SERVER_DIED_DNE = unchecked((int)0x80010012);
+
     /// <summary>The RPC server is unavailable.</summary>
     public const HRESULT RPC_S_SERVER_UNAVAILABLE = unchecked((int)0x800706BA);
+
+    /// <summary>The remote procedure call failed and did not execute.</summary>
+    public const HRESULT RPC_S_CALL_FAILED_DNE = unchecked((int)0x800706BF);
 
     /// <summary>Cannot execute script.</summary>
     public const HRESULT JSCRIPT_E_CANTEXECUTE = unchecked((int)0x89020001);

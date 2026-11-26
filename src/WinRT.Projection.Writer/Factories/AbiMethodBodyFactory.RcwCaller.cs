@@ -19,9 +19,14 @@ namespace WindowsRuntime.ProjectionWriter.Factories;
 
 internal static partial class AbiMethodBodyFactory
 {
-    /// <inheritdoc cref="EmitAbiMethodBodyIfSimple(IndentedTextWriter, ProjectionEmitContext, MethodSignatureInfo, int, string?, bool)"/>
+    /// <inheritdoc cref="EmitAbiMethodBodyIfSimple(IndentedTextWriter, ProjectionEmitContext, MethodSignatureInfo, int, string?, bool, bool)"/>
     /// <returns>A callback emitting the parameter name with its modifier.</returns>
-    public static IndentedTextWriterCallback EmitAbiMethodBodyIfSimple(ProjectionEmitContext context, MethodSignatureInfo sig, int slot, string? paramNameOverride = null, bool isNoExcept = false)
+    public static IndentedTextWriterCallback EmitAbiMethodBodyIfSimple(
+        ProjectionEmitContext context,
+        MethodSignatureInfo sig,
+        int slot,
+        string? paramNameOverride = null,
+        bool isNoExcept = false)
     {
         return writer => EmitAbiMethodBodyIfSimple(writer, context, sig, slot, paramNameOverride, isNoExcept);
     }
@@ -39,9 +44,21 @@ internal static partial class AbiMethodBodyFactory
     /// <c>RestrictedErrorInfo.ThrowExceptionForHR(...)</c> wrap (methods/properties annotated with
     /// <c>[Windows.Foundation.Metadata.NoExceptionAttribute]</c>, or remove-overload methods,
     /// contractually return <c>S_OK</c>).</param>
+    /// <param name="isActivationFactory">
+    /// When true, the method is on an activation factory interface (see <see cref="AbiTypeHelpers.IsActivationFactoryInterface"/>),
+    /// so <c>thisReference</c> is passed to <c>RestrictedErrorInfo.ThrowExceptionForHR(...)</c> as well, so that it can be marked
+    /// as disconnected if its server is no longer available (which causes a new activation factory to be resolved on the next access).
+    /// </param>
     [SuppressMessage("Style", "IDE0045:Convert to conditional expression",
         Justification = "if/else if chains over type-class predicates are more readable than nested ternaries.")]
-    public static void EmitAbiMethodBodyIfSimple(IndentedTextWriter writer, ProjectionEmitContext context, MethodSignatureInfo sig, int slot, string? paramNameOverride = null, bool isNoExcept = false)
+    public static void EmitAbiMethodBodyIfSimple(
+        IndentedTextWriter writer,
+        ProjectionEmitContext context,
+        MethodSignatureInfo sig,
+        int slot,
+        string? paramNameOverride = null,
+        bool isNoExcept = false,
+        bool isActivationFactory = false)
     {
         // Generic instantiations over 'IReference<TypeName>' / 'IReference<HResult>' cannot be marshalled:
         // 'System.Type' and 'System.Exception' are reference types with no 'Nullable<T>' shape, so the
@@ -855,8 +872,16 @@ internal static partial class AbiMethodBodyFactory
                 """);
         }
 
-        // Close the vtable call. One less ')' when noexcept (no ThrowExceptionForHR wrap).
-        writer.WriteLine(isNoExcept ? ");" : "));");
+        // Close the vtable call. One less ')' when noexcept (no ThrowExceptionForHR wrap). For activation factories,
+        // also pass the object reference, so that it can be marked as disconnected if its server is no longer available.
+        if (isNoExcept)
+        {
+            writer.WriteLine(");");
+        }
+        else
+        {
+            writer.WriteLine(isActivationFactory ? "), thisReference);" : "));");
+        }
 
         // After call: copy native-filled values back into the user's managed Span<T> for
         // FillArray of non-blittable element types. The native callee wrote into our
