@@ -50,7 +50,7 @@ internal static partial class ProjectionGenerator
             // Removing the last supplemental reference must not leave a stale projection behind.
             runner.RunPhase(
                 phaseName: "emit",
-                body: args => File.Delete(Path.Combine(args.GeneratedAssemblyDirectory, args.AssemblyName + ".dll")));
+                body: DeleteProjectionFiles);
 
             return;
         }

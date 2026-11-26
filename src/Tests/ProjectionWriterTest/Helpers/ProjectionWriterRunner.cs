@@ -234,7 +234,7 @@ internal static class ProjectionWriterRunner
                 MetadataReference.CreateFromFile(typeof(WindowsRuntimeObject).Assembly.Location),
                 .. additionalReferences.Select(path => MetadataReference.CreateFromFile(path))
             ],
-            new CSharpCompilationOptions(outputKind, allowUnsafe: true,
+            new CSharpCompilationOptions(outputKind, allowUnsafe: true, deterministic: true,
                 specificDiagnosticOptions: [new("CS9091", ReportDiagnostic.Error)]));
         using FileStream stream = File.Create(assemblyPath);
         EmitResult result = compilation.Emit(stream,
@@ -390,7 +390,7 @@ internal static class ProjectionWriterRunner
     /// Deletes a directory recursively, ignoring failures (best effort cleanup).
     /// </summary>
     /// <param name="directory">The directory to delete.</param>
-    private static void TryDeleteDirectory(string directory)
+    public static void TryDeleteDirectory(string directory)
     {
         try
         {

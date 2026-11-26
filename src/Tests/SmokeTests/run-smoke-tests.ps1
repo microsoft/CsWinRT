@@ -17,7 +17,8 @@
         implementing an SDK interface and taking an SDK type in a constructor. This validates
         component projection generation against SDK forwarders without duplicate type definitions
         or missing SDK assembly identities. The component's output must not be marked as a reference
-        projection when the app resolves it.
+        projection when the app resolves it. On CoreCLR, its generated projections must also be regenerated
+        when a reference recorded next to them changes, even if that record ('<AssemblyName>.references') is missing.
 
       * ExclusiveToConsumption: a .NET app consumes packed standalone exclusive interfaces whose
         runtime classes stay in the SDK projections. Native JSON objects exercise allowed and denied
@@ -424,6 +425,87 @@ function Invoke-ConsumptionSmokeTest {
     if ($LASTEXITCODE -ne 0) {
         throw "$Name smoke test crashed or failed with exit code $LASTEXITCODE."
     }
+}
+
+# Each projection generated for a project is recorded next to it with the references it was compiled against ('<AssemblyName>.references'),
+# which is the only way some of those are tracked (eg. the 'WinRT.Runtime' implementation assembly). Verifies that a projection whose record is
+# missing (eg. deleted, or not restored from a build cache) is regenerated rather than skipped for good, and that a regenerated projection is
+# then up-to-date. The implementation assembly is swapped for a private copy, so making it newer never affects the shared package cache.
+function Assert-ProjectionReferencesAreTracked {
+    param ([Parameter(Mandatory = $true)] [string] $Project)
+
+    $properties = (Invoke-MSBuildQuery -Project $Project -Arguments @('-getProperty:_CsWinRTGeneratorComponentAssemblyPath,CsWinRTRuntimeImplementationAssemblyPath')).Properties
+    $intermediateDirectory = [IO.Path]::GetDirectoryName($properties._CsWinRTGeneratorComponentAssemblyPath)
+    $runtimeDirectory = Join-Path $smokeTestsRoot "obj\runtime-$([Guid]::NewGuid().ToString('N').Substring(0, 8))"
+    $runtime = Join-Path $runtimeDirectory 'WinRT.Runtime.dll'
+    $buildArgs = @('build', $Project, "-p:CsWinRTRuntimeImplementationAssemblyPath=$runtime") + $commonBuildArgs
+
+    $null = New-Item -ItemType Directory -Path $runtimeDirectory
+    Copy-Item -LiteralPath $properties.CsWinRTRuntimeImplementationAssemblyPath -Destination $runtime
+
+    # Projections generated before were compiled against the original assembly (and only track that one), so start over from new ones
+    Get-ChildItem -Path (Join-Path $intermediateDirectory 'WinRT.*.references') | ForEach-Object {
+        Remove-Item -LiteralPath $_.FullName, ([IO.Path]::ChangeExtension($_.FullName, '.dll')) -ErrorAction SilentlyContinue
+    }
+
+    Invoke-Dotnet $buildArgs
+
+    $manifests = @(Get-ChildItem -LiteralPath $intermediateDirectory -Filter 'WinRT.*.references' | ForEach-Object { $_.FullName })
+    $projections = @($manifests | ForEach-Object { [IO.Path]::ChangeExtension($_, '.dll') })
+
+    if ($manifests -notcontains [IO.Path]::ChangeExtension($properties._CsWinRTGeneratorComponentAssemblyPath, '.references')) {
+        throw "The component projection in '$intermediateDirectory' was not recorded with the references it was compiled against."
+    }
+
+    foreach ($manifest in $manifests) {
+        if (@(Get-Content -LiteralPath $manifest) -notcontains $runtime) {
+            throw "'$manifest' does not list the 'WinRT.Runtime' implementation assembly '$runtime'."
+        }
+    }
+
+    function Get-ProjectionSnapshot {
+        return @($projections + $manifests | ForEach-Object {
+            if (Test-Path -LiteralPath $_) { "$_|$((Get-Item -LiteralPath $_).LastWriteTimeUtc.Ticks)" } else { "$_|missing" }
+        }) -join ';'
+    }
+
+    # Makes the 'WinRT.Runtime' copy newer than the projections, builds, and verifies they were all regenerated (with their
+    # records), and that building again does not regenerate them (which it would if any record was left older than that copy).
+    function Assert-ProjectionsRegenerated {
+        param ([Parameter(Mandatory = $true)] [string] $Reason)
+
+        $touched = [DateTime]::UtcNow
+        (Get-Item -LiteralPath $runtime).LastWriteTimeUtc = $touched
+        Invoke-Dotnet $buildArgs
+
+        foreach ($path in $projections + $manifests) {
+            if (-not (Test-Path -LiteralPath $path) -or (Get-Item -LiteralPath $path).LastWriteTimeUtc -le $touched) {
+                throw "'$path' was not regenerated after $Reason."
+            }
+        }
+
+        $snapshot = Get-ProjectionSnapshot
+        Invoke-Dotnet $buildArgs
+
+        if ((Get-ProjectionSnapshot) -ne $snapshot) {
+            throw "The projections were regenerated again by a no-op build after $Reason."
+        }
+    }
+
+    $snapshot = Get-ProjectionSnapshot
+    Invoke-Dotnet $buildArgs
+
+    if ((Get-ProjectionSnapshot) -ne $snapshot) {
+        throw 'A no-op build regenerated the projections.'
+    }
+
+    Assert-ProjectionsRegenerated -Reason "the 'WinRT.Runtime' implementation assembly changed"
+
+    # Without its record, nothing tracks the 'WinRT.Runtime' copy anymore, so the missing record has to regenerate the projection
+    Remove-Item -LiteralPath $manifests
+    Assert-ProjectionsRegenerated -Reason "their records were deleted and the 'WinRT.Runtime' implementation assembly changed"
+
+    Write-Host "Verified the projections of '$([IO.Path]::GetFileName($Project))' track the references they record, even when that record is missing." -ForegroundColor DarkGray
 }
 
 function Invoke-PreinitializationSmokeTest {
@@ -1092,6 +1174,7 @@ if ($Test -in @('All', 'MixedConsumption')) {
     # An authored component is not a reference projection (this build-time metadata is the same for both runtimes)
     if ($Runtime -eq 'CoreCLR') {
         Assert-ProjectReferenceMetadata -Project $mixedConsumptionProject -ReferenceName 'Authoring' -IsReferenceProjection $false
+        Assert-ProjectionReferencesAreTracked -Project $mixedConsumptionProject
     }
 }
 
