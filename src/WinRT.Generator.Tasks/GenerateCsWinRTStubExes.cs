@@ -664,15 +664,10 @@ public sealed class GenerateCsWinRTStubExes : Microsoft.Build.Utilities.Task, IM
     /// <returns><see langword="true"/> if the compiler exited successfully; otherwise, <see langword="false"/>.</returns>
     private bool InvokeCompiler(string arguments, string workingDirectory, string stubName)
     {
-        // A bare tool name (e.g. 'cl') has to be left as is, so it can be found through the 'PATH' environment variable
-        string clExePath = ClExePath!.IndexOfAny([Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar, Path.VolumeSeparatorChar]) >= 0
-            ? TaskEnvironment.TryGetAbsolutePath(ClExePath)
-            : ClExePath;
-
         // Start from the environment of the project being built, rather than the one of the (possibly shared) MSBuild process
         ProcessStartInfo startInfo = TaskEnvironment.GetProcessStartInfo();
 
-        startInfo.FileName = clExePath;
+        startInfo.FileName = ClExePath;
         startInfo.Arguments = arguments;
         startInfo.WorkingDirectory = workingDirectory;
         startInfo.UseShellExecute = false;
@@ -689,6 +684,9 @@ public sealed class GenerateCsWinRTStubExes : Microsoft.Build.Utilities.Task, IM
 
             startInfo.EnvironmentVariables["PATH"] = currentPath + ";" + AdditionalPath;
         }
+
+        // Look up 'cl.exe' in the 'PATH' of the task environment (not the one of the MSBuild process, which can differ in '-mt' builds)
+        startInfo.ResolveFileName(TaskEnvironment);
 
         try
         {
