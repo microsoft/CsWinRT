@@ -36,6 +36,7 @@
     <Compile Include="..\..\WinRT.Interop.Generator\Writers\CustomAttributePayloadCache.cs" Link="Helpers\Writers\CustomAttributePayloadCache.cs" />
     <Compile Include="..\..\WinRT.Interop.Generator\Writers\InteropModuleWriter.cs" Link="Helpers\Writers\InteropModuleWriter.cs" />
     <Compile Include="..\..\WinRT.Generator.Tasks\InteropGeneratorGCPolicy.cs" Link="Helpers\InteropGeneratorGCPolicy.cs" />
+    <Compile Include="..\..\WinRT.Generator.Tasks\Helpers\ProjectPathQualifier.cs" Link="Helpers\ProjectPathQualifier.cs" />
     <AdditionalFiles Include="..\..\WinRT.Generator.Tasks\NativeMethods.txt" Link="NativeMethods.txt" />
     <AdditionalFiles Include="..\..\WinRT.Generator.Tasks\NativeMethods.json" Link="NativeMethods.json" />
   </ItemGroup>
@@ -78,5 +79,6 @@
                       Value="$(MSBuildThisFileDirectory)..\..\..\nuget\Microsoft.Windows.CsWinRT.CsWinRTGen.targets" />
     <Using Include="Microsoft.VisualStudio.TestTools.UnitTesting" />
     <Using Include="System" />
+    <Using Include="System.IO" />
   </ItemGroup>
 </Project>

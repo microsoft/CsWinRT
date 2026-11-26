@@ -22,6 +22,11 @@ internal static class TaskEnvironmentExtensions
         /// (eg. it contains invalid characters), it is returned unchanged. This makes the result safe to pass to APIs such
         /// as <see cref="File.Exists(string)"/> or <see cref="Directory.Exists(string)"/>, which report such inputs as missing.
         /// </returns>
+        /// <remarks>
+        /// <see cref="TaskEnvironment.GetAbsolutePath"/> leaves root-relative paths (eg. <c>\foo\bar.c</c>) and drive-relative paths
+        /// (eg. <c>C:foo\bar.c</c>) as they are, and Windows would then resolve them against the current drive and the current directory
+        /// of that drive in the MSBuild process, which aren't the ones of the project. So these are qualified against the project too.
+        /// </remarks>
         [return: NotNullIfNotNull(nameof(path))]
         public string? TryGetAbsolutePath(string? path)
         {
@@ -29,7 +34,7 @@ internal static class TaskEnvironmentExtensions
             // upfront instead of catching exceptions. Paths containing invalid characters are returned as is, like empty paths.
             return path is null || path.Length == 0 || path.IndexOfAny(Path.GetInvalidPathChars()) >= 0
                 ? path
-                : taskEnvironment.GetAbsolutePath(path).Value;
+                : ProjectPathQualifier.Qualify(taskEnvironment.GetAbsolutePath(path).Value, taskEnvironment.ProjectDirectory.Value);
         }
     }
 }
